@@ -1,0 +1,219 @@
+<!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout).
+     El título "Usuarios" ya viene de data.title en la ruta. -->
+<div class="page-toolbar">
+    <p class="page-subtitle">Gestiona los usuarios con acceso a la plataforma.</p>
+    <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo usuario</button>
+  </div>
+
+  <div class="filters-bar">
+    <div class="search-box">
+      <input type="text" placeholder="Buscar por nombre, DNI o correo..." [(ngModel)]="busqueda" />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="filtroEmpresa">
+      <option value="Todas">Empresa: Todas</option>
+      <option *ngFor="let empresa of empresasDisponibles" [value]="empresa.id">{{ empresa.nombre }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="filtroRol">
+      <option value="Todos">Rol: Todos</option>
+      <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="filtroEstado">
+      <option value="Todos">Estado: Todos</option>
+      <option value="activo">Activo</option>
+      <option value="retirado">Retirado</option>
+    </select>
+
+    <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
+  </div>
+
+  <div class="content">
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Usuarios</h2>
+        <p>{{ usuariosFiltrados.length }} resultados encontrados</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="usuariosFiltrados.length > 0">
+        <div class="table-row table-head">
+          <span>Usuario</span>
+          <span>DNI</span>
+          <span>Empresa</span>
+          <span>Local</span>
+          <span>Rol</span>
+          <span>Estado</span>
+          <span>Alta</span>
+          <span>Acciones</span>
+        </div>
+
+        <div class="table-row" *ngFor="let usuario of usuariosFiltrados">
+          <div class="usuario-cell">
+            <div class="usuario-avatar" [class.tiene-foto]="usuario.fotoUrl">
+              <img *ngIf="usuario.fotoUrl" [src]="usuario.fotoUrl" [alt]="usuario.nombre" />
+              <span *ngIf="!usuario.fotoUrl">{{ iniciales(usuario.nombre, usuario.apellido) }}</span>
+            </div>
+            <div>
+              <div class="usuario-nombre">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+              <div class="usuario-correo">{{ usuario.correo }}</div>
+            </div>
+          </div>
+          <span>{{ usuario.dni || '—' }}</span>
+          <span>{{ nombreEmpresa(usuario.empresaId) }}</span>
+          <span>{{ nombreLocal(usuario.empresaId, usuario.localId) }}</span>
+          <span><span class="rol-pill" [ngClass]="rolStyle[usuario.rol]">{{ usuario.rol }}</span></span>
+          <span><span class="status-pill" [class.active]="usuario.estado === 'activo'">{{ usuario.estado }}</span></span>
+          <span>{{ usuario.fechaAlta }}</span>
+          <span>
+            <button class="btn-toggle-estado" [class.reactivar]="usuario.estado === 'retirado'" (click)="cambiarEstado(usuario)">
+              {{ usuario.estado === 'activo' ? 'Retirar' : 'Reactivar' }}
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <p class="empty-state" *ngIf="usuariosFiltrados.length === 0">No se encontraron usuarios con estos filtros.</p>
+    </div>
+  </div>
+
+<!-- ══ MODAL: Nuevo usuario ══ -->
+<div class="modal-overlay" *ngIf="modalNuevoAbierto" (click)="cerrarModalNuevo()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalNuevo()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+      <div class="modal-brand-sub">SaaS Platform</div>
+    </div>
+
+    <div class="modal-header">
+      <h2>Nuevo usuario</h2>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputNombreUsuario">Nombre</label>
+          <input id="inputNombreUsuario" type="text" class="form-input" placeholder="Ingresar nombre" [(ngModel)]="nuevoUsuario.nombre" />
+        </div>
+        <div class="form-group">
+          <label for="inputApellidoUsuario">Apellido</label>
+          <input id="inputApellidoUsuario" type="text" class="form-input" placeholder="Ingresar apellido" [(ngModel)]="nuevoUsuario.apellido" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputDniUsuario">DNI</label>
+          <input id="inputDniUsuario" type="text" class="form-input" placeholder="Ingresar DNI" maxlength="8" inputmode="numeric" [(ngModel)]="nuevoUsuario.dni" />
+        </div>
+        <div class="form-group">
+          <label for="inputCorreoUsuario">Correo</label>
+          <input id="inputCorreoUsuario" type="email" class="form-input" placeholder="Ingresar correo" [(ngModel)]="nuevoUsuario.correo" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputRolUsuario">Rol</label>
+          <select id="inputRolUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.rol" (ngModelChange)="onRolChange()">
+            <option value="" disabled>Selecciona el rol</option>
+            <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputPasswordUsuario">Contraseña</label>
+          <input id="inputPasswordUsuario" type="password" class="form-input" placeholder="Ingresar contraseña" [(ngModel)]="nuevoUsuario.password" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group" [class.form-group-disabled]="!empresaHabilitada">
+          <label for="inputEmpresaUsuario">Empresa</label>
+          <select
+            id="inputEmpresaUsuario"
+            class="form-input form-select"
+            [(ngModel)]="nuevoUsuario.empresaId"
+            (ngModelChange)="onEmpresaChange()"
+            [disabled]="!empresaHabilitada"
+          >
+            <option [value]="null" disabled>Selecciona la empresa</option>
+            <option *ngFor="let empresa of empresasDisponibles" [value]="empresa.id">{{ empresa.nombre }}</option>
+          </select>
+        </div>
+        <div class="form-group" [class.form-group-disabled]="!localHabilitado">
+          <label for="inputLocalUsuario">Local</label>
+          <select id="inputLocalUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.localId" [disabled]="!localHabilitado">
+            <option [value]="null" disabled>Selecciona el local</option>
+            <option *ngFor="let local of localesDelFormulario" [value]="local.id">{{ local.nombre }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Foto (opcional)</label>
+        <div class="foto-field-wrapper">
+          <div class="foto-preview-container" (click)="fotoInput.click()" title="Clic para elegir foto">
+            <img *ngIf="fotoPreview" [src]="fotoPreview" alt="Vista previa" />
+            <span *ngIf="!fotoPreview">+</span>
+          </div>
+          <div class="foto-field-info">
+            <div class="foto-field-row">
+              <input type="text" class="form-input" [value]="fotoNombreArchivo || 'Selecciona una imagen...'" readonly (click)="fotoInput.click()" />
+              <button type="button" class="btn-quitar-foto" *ngIf="fotoPreview" (click)="quitarFoto()" title="Quitar foto">×</button>
+            </div>
+            <span class="foto-hint">JPG, PNG o WEBP · máx. 1.5 MB</span>
+            <span class="foto-error" *ngIf="fotoError">{{ fotoError }}</span>
+          </div>
+          <input #fotoInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onFotoSeleccionada($event)" />
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalNuevo()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioValido" (click)="crearUsuario()">Crear usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Confirmación de creación ══ -->
+<div class="modal-overlay" *ngIf="modalConfirmacionAbierto" (click)="cerrarModalConfirmacion()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalConfirmacion()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="confirmacion-icono">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+
+    <h2 class="confirmacion-titulo">Usuario creado con éxito</h2>
+    <p class="confirmacion-desc" *ngIf="usuarioRecienCreado">
+      <strong>{{ usuarioRecienCreado.nombre }} {{ usuarioRecienCreado.apellido }}</strong> quedó registrado como
+      {{ usuarioRecienCreado.rol }}.
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn-primary btn-full" (click)="cerrarModalConfirmacion()">Cerrar</button>
+    </div>
+  </div>
+</div>

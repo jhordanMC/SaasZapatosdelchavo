@@ -1,0 +1,15 @@
+<app-sidebar
+  [items]="navItems"
+  avatarLabel="A"
+  userName="Admin ALBA"
+  userRole="Administrador"
+  brandName="VILCAS"
+  brandSub="SaaS Platform"
+  logoSrc="/vilcas.png"
+></app-sidebar>
+
+<div class="main">
+  <app-topbar [title]="pageTitleService.title()" company="ALBA Corporation" avatarLabel="A"></app-topbar>
+
+  <router-outlet></router-outlet>
+</div>

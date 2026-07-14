@@ -1,0 +1,193 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <img [src]="logoSrc" alt="Logo" class="brand-logo" (error)="onLogoError($event)" />
+    <svg *ngIf="showLogoFallback" class="brand-logo" width="52" height="52" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+      <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+    </svg>
+    <div class="brand-name">
+      <span
+        *ngFor="let char of brandName.split(''); let i = index"
+        [ngClass]="{ dk: i !== brandAccentIndex, gd: i === brandAccentIndex }"
+      >
+        {{ char }}
+      </span>
+    </div>
+    <span class="brand-sub">{{ brandSub }}</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ng-container *ngFor="let item of items">
+      <a
+        *ngIf="item.route"
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+      >
+        <span class="nav-icon" [ngClass]="item.icon">
+          <ng-container [ngSwitch]="item.icon">
+            <svg *ngSwitchCase="'dashboard'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <svg *ngSwitchCase="'empresas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/>
+              <path d="M7 21V12h10v9"/>
+              <path d="M9 7V4h6v3"/>
+            </svg>
+            <svg *ngSwitchCase="'usuarios'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <svg *ngSwitchCase="'reportes'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19h16"/><path d="M4 15h10"/><path d="M4 11h8"/><path d="M4 7h16"/>
+            </svg>
+            <svg *ngSwitchCase="'inventario'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <svg *ngSwitchCase="'ventas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <svg *ngSwitchCase="'finanzas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <svg *ngSwitchCase="'analitica'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              <path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+            </svg>
+            <svg *ngSwitchCase="'config'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.11a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.01.69.42 1.29 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <svg *ngSwitchDefault width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </ng-container>
+        </span>
+        {{ item.label }}
+      </a>
+      <a *ngIf="item.href && !item.route" class="nav-item" [href]="item.href">
+        <span class="nav-icon" [ngClass]="item.icon">
+          <ng-container [ngSwitch]="item.icon">
+            <svg *ngSwitchCase="'dashboard'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <svg *ngSwitchCase="'empresas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/>
+              <path d="M7 21V12h10v9"/>
+              <path d="M9 7V4h6v3"/>
+            </svg>
+            <svg *ngSwitchCase="'usuarios'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <svg *ngSwitchCase="'reportes'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19h16"/><path d="M4 15h10"/><path d="M4 11h8"/><path d="M4 7h16"/>
+            </svg>
+            <svg *ngSwitchCase="'inventario'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <svg *ngSwitchCase="'ventas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <svg *ngSwitchCase="'finanzas'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <svg *ngSwitchCase="'analitica'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              <path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+            </svg>
+            <svg *ngSwitchCase="'config'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.11a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.01.69.42 1.29 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <svg *ngSwitchDefault width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </ng-container>
+        </span>
+        {{ item.label }}
+      </a>
+    </ng-container>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card" (click)="openProfile()">
+      <div class="user-avatar">
+        <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" (error)="showAvatarFallback = true" />
+        <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ userName }}</div>
+        <div class="user-role">{{ userRole }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MODAL: Ver perfil ══ -->
+<div class="profile-modal-overlay" *ngIf="showProfileModal" (click)="closeProfile()">
+  <div class="profile-modal-card" (click)="$event.stopPropagation()">
+    <button class="profile-modal-close" (click)="closeProfile()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="profile-modal-brand">
+      <img [src]="logoSrc" alt="VILCAS" class="profile-modal-logo" />
+      <div class="profile-modal-brand-name">
+        <span
+          *ngFor="let char of brandName.split(''); let i = index"
+          [ngClass]="{ dk: i !== brandAccentIndex, gd: i === brandAccentIndex }"
+        >{{ char }}</span>
+      </div>
+      <div class="profile-modal-brand-sub">{{ brandSub }}</div>
+    </div>
+
+    <div class="profile-modal-body">
+      <div class="profile-avatar-lg">
+        <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" />
+        <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
+      </div>
+      <div class="profile-name">{{ userName }}</div>
+      <div class="profile-role">{{ userRole }}</div>
+    </div>
+
+    <div class="profile-info-list">
+      <div class="profile-info-row">
+        <span class="profile-info-label">ID de usuario</span>
+        <span class="profile-info-value">{{ userId }}</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">DNI</span>
+        <span class="profile-info-value">{{ userDni }}</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">Correo</span>
+        <span class="profile-info-value">{{ userEmail }}</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">Teléfono</span>
+        <span class="profile-info-value">{{ userPhone }}</span>
+      </div>
+    </div>
+
+    <div class="profile-modal-actions">
+      <button class="profile-btn-secondary" (click)="closeProfile()">Cerrar</button>
+    </div>
+  </div>
+</div>

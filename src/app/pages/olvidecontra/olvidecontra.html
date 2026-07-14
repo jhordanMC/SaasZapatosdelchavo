@@ -1,0 +1,229 @@
+<!-- Fondo -->
+<div class="bg-dots"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Cards flotantes -->
+<div class="float-card fc-tl">
+  <div class="fc-icon" style="background:rgba(100,213,156,0.15);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3db87a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+    </svg>
+  </div>
+  <div class="fc-label">Inventario activo</div>
+  <div class="fc-value">12,480</div>
+  <div class="fc-sub">SKUs gestionados hoy</div>
+  <div class="fc-badge">+3.2% este mes</div>
+</div>
+
+<div class="float-card fc-bl">
+  <div class="fc-icon" style="background:rgba(218,158,11,0.12);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DA9E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </div>
+  <div class="fc-quote">"Vilcas transformó cómo gestionamos nuestro stock. Eficiencia al 100%."</div>
+  <div class="fc-author">— María G., Directora de Ops</div>
+</div>
+
+<div class="float-card fc-tr">
+  <div class="fc-icon" style="background:rgba(2,75,64,0.10);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#024B40" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  </div>
+  <div class="fc-label">Tiempo de respuesta</div>
+  <div class="fc-value">0.3s</div>
+  <div class="fc-sub">Sincronización en tiempo real</div>
+  <div class="fc-badge">99.9% uptime</div>
+</div>
+
+<div class="float-card fc-br">
+  <div class="fc-icon" style="background:rgba(100,213,156,0.15);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3db87a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+  </div>
+  <div class="fc-quote">"La plataforma más confiable que hemos usado para gestión empresarial."</div>
+  <div class="fc-author">— Carlos R., CEO Logística Sur</div>
+</div>
+
+<div class="float-card fc-mr">
+  <div class="fc-icon" style="background:rgba(218,158,11,0.12);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DA9E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  </div>
+  <div class="fc-label">Seguridad</div>
+  <div class="fc-value">SSL/TLS</div>
+  <div class="fc-sub">Cifrado empresarial</div>
+</div>
+
+<!-- Olvidé contraseña -->
+<div class="card-wrap">
+
+  <!-- Borde SVG animado (idéntico al login) -->
+  <svg class="ring-svg" viewBox="0 0 676 676" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="arcGrad" x1="1" y1="0" x2="0.3" y2="1" gradientUnits="objectBoundingBox">
+        <stop offset="0%"   stop-color="#64D59C" stop-opacity="0.0"/>
+        <stop offset="30%"  stop-color="#64D59C" stop-opacity="0.4"/>
+        <stop offset="60%"  stop-color="#718EBF" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#718EBF" stop-opacity="1.0"/>
+      </linearGradient>
+
+      <linearGradient id="spinGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%"   stop-color="#64D59C" stop-opacity="0"/>
+        <stop offset="40%"  stop-color="#64D59C" stop-opacity="0.6"/>
+        <stop offset="70%"  stop-color="#3db87a" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#718EBF" stop-opacity="1"/>
+      </linearGradient>
+
+      <linearGradient id="spinGrad2" x1="1" y1="1" x2="0" y2="0">
+        <stop offset="0%"   stop-color="#DA9E0B" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#DA9E0B" stop-opacity="0.3"/>
+      </linearGradient>
+    </defs>
+
+    <path
+      d="M 338,12 A 326,326 0 0 1 664,338 A 326,326 0 0 1 338,664"
+      fill="none" stroke="url(#arcGrad)" stroke-width="14"
+      stroke-linecap="round" opacity="0.9"
+    />
+
+    <g style="transform-origin:338px 338px">
+      <animateTransform
+        attributeName="transform" type="rotate"
+        from="0 338 338" to="360 338 338"
+        dur="6s" repeatCount="indefinite"/>
+      <path
+        d="M 338,5 A 333,333 0 0 1 671,338"
+        fill="none" stroke="url(#spinGrad)" stroke-width="5"
+        stroke-linecap="round" opacity="0.7"
+      />
+    </g>
+
+    <g style="transform-origin:338px 338px">
+      <animateTransform
+        attributeName="transform" type="rotate"
+        from="360 338 338" to="0 338 338"
+        dur="10s" repeatCount="indefinite"/>
+      <path
+        d="M 338,671 A 333,333 0 0 1 5,338"
+        fill="none" stroke="url(#spinGrad2)" stroke-width="4"
+        stroke-linecap="round" opacity="0.5"
+      />
+    </g>
+
+    <circle r="6" fill="#64D59C" opacity="0.9" filter="url(#glow)">
+      <animateMotion
+        path="M 338,12 A 326,326 0 1 1 337.99,12"
+        dur="6s" repeatCount="indefinite" rotate="auto"/>
+    </circle>
+
+    <circle r="4" fill="#DA9E0B" opacity="0.7">
+      <animateMotion
+        path="M 338,12 A 326,326 0 1 0 337.99,12"
+        dur="10s" repeatCount="indefinite" rotate="auto"/>
+    </circle>
+
+    <defs>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="card">
+
+    <div class="logo-area">
+      <img src="vilcas.png" alt="Vilcas" class="logo-img"
+        (error)="onLogoError($event)"/>
+      <svg *ngIf="showLogoFallback" id="svgfb" class="logo-svg-fb" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+      <span class="brand-sub">SaaS Platform</span>
+    </div>
+
+    <!-- Estado: formulario -->
+    <ng-container *ngIf="!emailSent">
+      <div class="icon-circle">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#024B40" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <circle cx="12" cy="16" r="1.6" fill="#024B40" stroke="none"/>
+        </svg>
+      </div>
+
+      <div class="heading">¿Olvidaste tu contraseña?</div>
+      <div class="subheading">Ingresa tu correo y te enviaremos un enlace para restablecerla</div>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="field">
+          <span class="icon-l">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+            </svg>
+          </span>
+          <input type="email" placeholder="Correo electrónico" autocomplete="email" name="email" [(ngModel)]="email" required/>
+        </div>
+
+        <button class="btn-login" type="submit" [disabled]="loading">
+          <span *ngIf="!loading">Enviar enlace</span>
+          <span *ngIf="loading">Enviando...</span>
+          <svg *ngIf="!loading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </form>
+
+      <a routerLink="/login" class="back-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Volver a iniciar sesión
+      </a>
+    </ng-container>
+
+    <!-- Estado: enlace enviado -->
+    <ng-container *ngIf="emailSent">
+      <div class="icon-circle icon-circle-ok">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3db87a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+
+      <div class="heading">¡Revisa tu correo!</div>
+      <div class="subheading">
+        Enviamos un enlace de recuperación a<br/>
+        <strong>{{ email }}</strong>
+      </div>
+
+      <button class="btn-login" type="button" (click)="onResend()" [disabled]="loading">
+        <span *ngIf="!loading">Reenviar enlace</span>
+        <span *ngIf="loading">Enviando...</span>
+      </button>
+
+      <a routerLink="/login" class="back-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Volver a iniciar sesión
+      </a>
+    </ng-container>
+
+    <div class="security-line">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Powered by Alba
+    </div>
+
+  </div>
+</div>

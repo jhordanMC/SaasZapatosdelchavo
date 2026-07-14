@@ -1,0 +1,82 @@
+<!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout).
+     El título (nombre de la empresa) se setea dinámicamente vía PageTitleService,
+     ver empresa-detalle.ts -->
+<ng-container *ngIf="empresa; else noEncontrada">
+    <div class="page-toolbar">
+      <div>
+        <button class="btn-volver" (click)="volver()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Empresas
+        </button>
+        <p class="page-subtitle">Locales registrados de {{ empresa.nombre }}.</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="empresa-summary-card">
+        <div class="empresa-summary-id">
+          <div class="empresa-avatar empresa-avatar-lg">{{ iniciales(empresa.nombre) }}</div>
+          <div>
+            <div class="empresa-summary-name">{{ empresa.nombre }}</div>
+            <div class="empresa-summary-tags">
+              <span class="tipo-pill" [ngClass]="tipoStyle[empresa.tipo]">{{ empresa.tipo }}</span>
+              <span class="status-pill" [class.active]="empresa.estado === 'activo'">{{ empresa.estado }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="empresa-summary-metrics">
+          <div class="summary-metric">
+            <span class="summary-metric-label">Plan</span>
+            <span class="summary-metric-value">{{ empresa.plan }}</span>
+          </div>
+          <div class="summary-metric">
+            <span class="summary-metric-label">Locales</span>
+            <span class="summary-metric-value">{{ empresa.locales.length }}</span>
+          </div>
+          <div class="summary-metric">
+            <span class="summary-metric-label">Score</span>
+            <span class="summary-metric-value">{{ empresa.scorePromedio }}%</span>
+          </div>
+          <div class="summary-metric">
+            <span class="summary-metric-label">Ingresos/mes</span>
+            <span class="summary-metric-value">{{ fmtUSD(empresa.ingresosMes) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div>
+            <h2>Locales</h2>
+            <p>{{ empresa.locales.length }} {{ empresa.locales.length === 1 ? 'local registrado' : 'locales registrados' }}</p>
+          </div>
+        </div>
+
+        <div class="locales-grid" *ngIf="empresa.locales.length > 0">
+          <div class="local-card" *ngFor="let local of empresa.locales">
+            <div class="local-card-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span class="local-card-nombre">{{ local.nombre }}</span>
+            </div>
+            <p class="local-card-direccion">{{ local.direccion }}</p>
+            <p class="local-card-descripcion" *ngIf="local.descripcion">{{ local.descripcion }}</p>
+          </div>
+        </div>
+
+        <p class="empty-state" *ngIf="empresa.locales.length === 0">Esta empresa aún no tiene locales registrados.</p>
+      </div>
+    </div>
+</ng-container>
+
+<ng-template #noEncontrada>
+  <div class="content">
+    <p class="empty-state">No se encontró la empresa solicitada.</p>
+    <button class="btn-primary" (click)="volver()">Volver a Empresas</button>
+  </div>
+</ng-template>

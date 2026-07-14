@@ -1,0 +1,272 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* .main ahora vive en shared/admin-layout/admin-layout.css */
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 28px;
+  background: white;
+  border-bottom: 1px solid rgba(226, 229, 229, 0.9);
+  box-shadow: 0 12px 32px rgba(2, 75, 64, 0.05);
+}
+
+.page-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #5a8a78;
+}
+
+.btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #024b40;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-volver:hover {
+  text-decoration: underline;
+}
+
+.content {
+  padding: 24px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #f4fbf6;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(5, 244, 49, 0.25);
+  color: #024b40;
+  border: 1px solid rgba(2, 75, 64, 0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: rgba(5, 244, 49, 0.4);
+}
+
+/* ── Tarjeta resumen de la empresa ────────────────────────── */
+
+.empresa-summary-card {
+  background: white;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid #e8f1ec;
+  box-shadow: 0 14px 24px rgba(2, 75, 64, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.empresa-summary-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.empresa-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #e8f8f0, #c8f0dc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #024b40;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+}
+
+.empresa-avatar-lg {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  font-size: 18px;
+}
+
+.empresa-summary-name {
+  font-weight: 800;
+  color: #0c3a2e;
+  font-size: 18px;
+}
+
+.empresa-summary-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.empresa-summary-metrics {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.summary-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-metric-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5a8a78;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #083a30;
+}
+
+/* ── Tabla / grid de locales ──────────────────────────────── */
+
+.table-card {
+  background: white;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid #e8f1ec;
+  box-shadow: 0 14px 24px rgba(2, 75, 64, 0.05);
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.table-header h2 {
+  margin: 0;
+  font-size: 17px;
+  color: #024b40;
+}
+
+.table-header p {
+  margin: 0;
+  color: #6b8a7d;
+  font-size: 13px;
+}
+
+.locales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.local-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8faf7;
+  border: 1px solid #e8f1ec;
+  border-radius: 16px;
+  padding: 16px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.local-card:hover {
+  border-color: #cdeadb;
+  transform: translateY(-2px);
+}
+
+.local-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #024b40;
+}
+
+.local-card-nombre {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0c3a2e;
+}
+
+.local-card-direccion {
+  margin: 0;
+  font-size: 12.5px;
+  color: #4f6f5f;
+}
+
+.local-card-descripcion {
+  margin: 0;
+  font-size: 12px;
+  color: #6b8a7d;
+  line-height: 1.4;
+}
+
+.empty-state {
+  margin: 24px 0 0;
+  color: #6b8a7d;
+  text-align: center;
+}
+
+.tipo-pill,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pill {
+  color: #145d44;
+  background: #e4f4ea;
+}
+
+.status-pill.active {
+  background: #d1f1d5;
+  color: #0f502f;
+}
+
+.tipo-pill {
+  color: #16603e;
+  background: #ecf9ef;
+}
+
+.tipo-banca { background: #eff6ff; color: #2563eb; }
+.tipo-seguros { background: #f5f3ff; color: #7c3aed; }
+.tipo-telco { background: #ecfeff; color: #0891b2; }
+.tipo-retail { background: #fff7ed; color: #ea580c; }
+.tipo-financiero { background: #ecfdf5; color: #059669; }
+
+@media (max-width: 700px) {
+  .empresa-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

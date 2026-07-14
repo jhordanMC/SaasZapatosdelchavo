@@ -1,0 +1,164 @@
+<app-sidebar
+  [items]="[
+    { label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard', exact: true },
+    { label: 'Inventario', route: '/admin/inventario', icon: 'inventario' },
+    { label: 'Ventas', href: '#', icon: 'ventas' },
+    { label: 'Finanzas', href: '#', icon: 'finanzas' },
+    { label: 'Analítica', href: '#', icon: 'analitica' },
+    { label: 'Configuración', href: '#', icon: 'config' }
+  ]"
+  avatarLabel="A"
+  userName="Admin ALBA"
+  userRole="Administrador"
+  brandName="VILCAS"
+  brandSub="SaaS Platform"
+  logoSrc="vilcas.png"
+></app-sidebar>
+
+<!-- ════════════════════════════════════════
+     MAIN
+════════════════════════════════════════ -->
+<div class="main">
+
+  <app-topbar title="Dashboard" company="ALBA Corporation" avatarLabel="A"></app-topbar>
+
+  <!-- Scrollable content -->
+  <div class="content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p>Resumen general del inventario y ventas</p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Total Inventario</span>
+          <div class="kpi-icon blue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value">{{ totalInventario }}</div>
+        <div class="kpi-sub">{{ productosUnicos }} productos únicos</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Ingresos Totales</span>
+          <div class="kpi-icon green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value">{{ '$' + (ingresosTotales | number:'1.2-2') }}</div>
+        <div class="kpi-trend up">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          +12.5% vs mes anterior
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Ventas Completadas</span>
+          <div class="kpi-icon purple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value">{{ ventasCompletadas }}</div>
+        <div class="kpi-trend up">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          +8.3% vs mes anterior
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Alertas de Stock</span>
+          <div class="kpi-icon red">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value">{{ alertasStock }}</div>
+        <div class="kpi-trend warn">Productos con stock bajo</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="card-title">Tendencia de Ingresos</div>
+        <div class="chart-wrap">
+          <canvas #lineChart></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title">Distribución por Categoría</div>
+        <div class="chart-wrap">
+          <canvas #pieChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables -->
+    <div class="tables-row">
+      <!-- Ventas recientes -->
+      <div class="table-card">
+        <div class="card-title">Ventas Recientes</div>
+        <div>
+          <div class="sale-row" *ngFor="let s of ventasRecientes">
+            <div>
+              <div class="sale-name">{{ s.productName }}</div>
+              <div class="sale-meta">{{ s.customer }} · {{ s.quantity }} unidades</div>
+            </div>
+            <div style="text-align:right">
+              <div class="sale-amount">{{ '$' + (s.total | number:'1.2-2') }}</div>
+              <span class="badge" [ngClass]="s.status">{{ statusLabel(s.status) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertas stock bajo -->
+      <div class="table-card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Alertas de Stock Bajo
+        </div>
+        <div>
+          <p *ngIf="stockBajo.length === 0" style="color:#7aaa95;text-align:center;padding:32px 0;font-size:13px;">
+            No hay productos con stock bajo
+          </p>
+          <div class="stock-row" *ngFor="let p of stockBajo">
+            <div>
+              <div class="stock-name">{{ p.name }}</div>
+              <div class="stock-sku">SKU: {{ p.sku }} · {{ p.location }}</div>
+              <div class="stock-bar-wrap">
+                <div class="stock-bar-bg"><div class="stock-bar-fill" [style.width.%]="stockPct(p)"></div></div>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:16px;">
+              <div class="stock-qty">{{ p.stock }} unidades</div>
+              <div class="stock-min">Mín: {{ p.minStock }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main -->
