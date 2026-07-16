@@ -1,0 +1,148 @@
+<div class="page-toolbar">
+  <div class="search-box">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" placeholder="Ingresa el producto a buscar" [(ngModel)]="busqueda" />
+  </div>
+
+  <div class="sexo-toggle">
+    <button [class.active]="filtroSexo === 'Hombre'" (click)="filtroSexo = filtroSexo === 'Hombre' ? 'Todos' : 'Hombre'">Hombre</button>
+    <button [class.active]="filtroSexo === 'Mujer'" (click)="filtroSexo = filtroSexo === 'Mujer' ? 'Todos' : 'Mujer'">Mujer</button>
+    <button [class.active]="filtroSexo === 'Unisex'" (click)="filtroSexo = filtroSexo === 'Unisex' ? 'Todos' : 'Unisex'">Unisex</button>
+  </div>
+</div>
+
+<div class="categorias-bar">
+  <button
+    *ngFor="let c of categorias"
+    class="chip"
+    [class.active]="filtroCategoria === c"
+    (click)="filtroCategoria = c"
+  >{{ c }}</button>
+</div>
+
+<div class="ventas-layout">
+  <div class="catalogo">
+    <div class="ventas-grid">
+      <div class="venta-card" *ngFor="let p of productos" (click)="abrirSelectorVariante(p)">
+        <div class="venta-foto">
+          <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" alt="{{ p.nombre }}" />
+          <span *ngIf="!p.fotoUrl" class="foto-placeholder">Sin foto</span>
+        </div>
+        <div class="venta-nombre">{{ p.nombre }}</div>
+        <div class="venta-footer">
+          <span class="venta-precio">S/{{ p.precioVenta }}</span>
+          <span class="venta-stock">{{ stockTotal(p) }} unidades</span>
+        </div>
+      </div>
+
+      <div class="sin-resultados" *ngIf="productos.length === 0">
+        No hay productos que coincidan con la búsqueda.
+      </div>
+    </div>
+  </div>
+
+  <div class="carrito-panel">
+    <h3>Carrito</h3>
+    <div class="carrito-vacio" *ngIf="ventasService.carrito().length === 0">Aún no agregaste productos.</div>
+
+    <div class="carrito-item" *ngFor="let item of ventasService.carrito()">
+      <div>
+        <div class="carrito-item-nombre">{{ item.nombre }}</div>
+        <div class="carrito-item-detalle">{{ item.cantidad }} x S/{{ item.precioUnitario }}</div>
+      </div>
+      <button class="btn-icon-danger" (click)="quitarDelCarrito(item.varianteId)">✕</button>
+    </div>
+
+    <div class="carrito-total" *ngIf="ventasService.carrito().length > 0">
+      <span>Total</span>
+      <span>S/{{ totalCarrito.toFixed(2) }}</span>
+    </div>
+
+    <button
+      class="btn-completar"
+      [disabled]="ventasService.carrito().length === 0"
+      (click)="abrirCheckout()"
+    >
+      {{ ventasService.carrito().length }} productos en el carrito · Completar venta
+    </button>
+  </div>
+</div>
+
+<!-- Selector de talla/cantidad -->
+<div class="modal-overlay" *ngIf="showVariantePicker" (click)="cerrarSelectorVariante()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ showVariantePicker.nombre }}</h3>
+      <button class="modal-close" (click)="cerrarSelectorVariante()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Talla</label>
+        <select [(ngModel)]="varianteSeleccionadaId">
+          <option *ngFor="let v of showVariantePicker.variantes" [value]="v.id" [disabled]="v.stock === 0">
+            {{ v.talla }} — {{ v.stock }} disponibles ({{ v.local }})
+          </option>
+        </select>
+      </div>
+      <div class="form-row form-row-2">
+        <div>
+          <label>Cantidad</label>
+          <input type="number" [(ngModel)]="cantidadSeleccionada" min="1" />
+        </div>
+        <div>
+          <label>Descuento (S/)</label>
+          <input type="number" [(ngModel)]="descuentoSeleccionado" min="0" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarSelectorVariante()">Cancelar</button>
+      <button class="btn-primary" (click)="confirmarAgregado()">Agregar al carrito</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout -->
+<div class="modal-overlay" *ngIf="showCheckout" (click)="cerrarCheckout()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ ventaConfirmada ? 'Venta registrada' : 'Completar venta' }}</h3>
+      <button class="modal-close" (click)="cerrarCheckout()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="!ventaConfirmada">
+      <div class="form-row">
+        <label>Método de pago</label>
+        <select [(ngModel)]="metodoPago">
+          <option value="efectivo">Efectivo</option>
+          <option value="yape">Yape</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+
+      <div class="form-row" *ngIf="metodoPago === 'efectivo'">
+        <label>Monto pagado por el cliente (S/)</label>
+        <input type="number" [(ngModel)]="montoPagado" min="0" />
+      </div>
+
+      <div class="resumen-total">
+        <span>Total a cobrar</span>
+        <span>S/{{ totalCarrito.toFixed(2) }}</span>
+      </div>
+
+      <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
+    </div>
+
+    <div class="modal-body confirmacion" *ngIf="ventaConfirmada">
+      <p>Venta por <strong>S/{{ ventaConfirmada.total.toFixed(2) }}</strong> registrada correctamente.</p>
+      <p *ngIf="ventaConfirmada.vuelto > 0">Vuelto a entregar: <strong>S/{{ ventaConfirmada.vuelto.toFixed(2) }}</strong></p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarTodo()">{{ ventaConfirmada ? 'Cerrar' : 'Cancelar' }}</button>
+      <button class="btn-primary" *ngIf="!ventaConfirmada" (click)="confirmarVenta()">Confirmar venta</button>
+    </div>
+  </div>
+</div>

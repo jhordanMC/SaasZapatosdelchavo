@@ -1,0 +1,131 @@
+<div class="page-toolbar">
+  <div>
+    <p class="page-subtitle">Digitaliza tu inventario físico por producto, talla y sexo.</p>
+  </div>
+  <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo producto</button>
+</div>
+
+<div class="filters-bar">
+  <div class="search-box">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" placeholder="Buscar producto..." [(ngModel)]="busqueda" />
+  </div>
+
+  <select class="filter-select" [(ngModel)]="filtroCategoria">
+    <option value="Todas">Categoría: Todas</option>
+    <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+  </select>
+
+  <select class="filter-select" [(ngModel)]="filtroSexo">
+    <option value="Todos">Sexo: Todos</option>
+    <option *ngFor="let s of sexos" [value]="s">{{ s }}</option>
+  </select>
+
+  <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+    Limpiar
+  </button>
+</div>
+
+<div class="content">
+  <div class="productos-grid">
+    <div class="producto-card" *ngFor="let p of productos">
+      <div class="producto-foto">
+        <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" alt="{{ p.nombre }}" />
+        <span *ngIf="!p.fotoUrl" class="foto-placeholder">Sin foto</span>
+      </div>
+      <div class="producto-info">
+        <div class="producto-nombre">{{ p.nombre }}</div>
+        <div class="producto-tags">
+          <span class="tag">{{ p.categoria }}</span>
+          <span class="tag tag-sexo">{{ p.sexo }}</span>
+        </div>
+        <div class="producto-precios">
+          <span class="precio-venta">S/{{ p.precioVenta }}</span>
+          <span class="margen">Margen: S/{{ margen(p) }}</span>
+        </div>
+        <div class="producto-stock" [class.stock-bajo]="stockTotal(p) <= 5">
+          {{ stockTotal(p) }} unidades en stock
+        </div>
+        <div class="producto-acciones">
+          <button class="btn-secondary" (click)="abrirModalEditar(p)">Editar</button>
+          <button class="btn-danger" (click)="eliminar(p)">Eliminar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sin-resultados" *ngIf="productos.length === 0">
+      No se encontraron productos con estos filtros.
+    </div>
+  </div>
+</div>
+
+<!-- Modal crear/editar producto -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editandoId ? 'Editar producto' : 'Nuevo producto' }}</h3>
+      <button class="modal-close" (click)="cerrarModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <label class="foto-upload">
+        <img *ngIf="form.fotoUrl" [src]="form.fotoUrl" alt="Vista previa" />
+        <span *ngIf="!form.fotoUrl">Tomar / subir foto</span>
+        <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" hidden />
+      </label>
+
+      <div class="form-row">
+        <label>Nombre del producto</label>
+        <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Zapatos Ejecutivos Confort" />
+      </div>
+
+      <div class="form-row form-row-2">
+        <div>
+          <label>Categoría</label>
+          <select [(ngModel)]="form.categoria">
+            <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select [(ngModel)]="form.sexo">
+            <option *ngFor="let s of sexos" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row form-row-2">
+        <div>
+          <label>Costo de compra (S/)</label>
+          <input type="number" [(ngModel)]="form.costoCompra" min="0" />
+        </div>
+        <div>
+          <label>Precio de venta (S/)</label>
+          <input type="number" [(ngModel)]="form.precioVenta" min="0" />
+        </div>
+      </div>
+
+      <div class="variantes-header">
+        <label>Tallas y stock por almacén</label>
+        <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
+      </div>
+
+      <div class="variante-fila" *ngFor="let v of form.variantes; let i = index">
+        <input type="text" placeholder="Talla" [(ngModel)]="v.talla" />
+        <input type="number" placeholder="Stock" [(ngModel)]="v.stock" min="0" />
+        <input type="text" placeholder="Almacén (ej: Trujillo)" [(ngModel)]="v.local" />
+        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)">✕</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardar()">Guardar producto</button>
+    </div>
+  </div>
+</div>

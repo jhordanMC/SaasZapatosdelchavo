@@ -1,0 +1,15 @@
+<div class="content">
+  <div class="panel">
+    <h3>Clientes por segmento (según sexo del producto vendido)</h3>
+    <table class="tabla">
+      <thead><tr><th>Segmento</th><th>Unidades vendidas</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of ventasPorSegmento">
+          <td>{{ s.segmento }}</td>
+          <td>{{ s.unidades }}</td>
+        </tr>
+        <tr *ngIf="ventasPorSegmento.length === 0"><td colspan="2">Aún no hay ventas registradas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

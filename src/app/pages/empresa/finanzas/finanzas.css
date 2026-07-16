@@ -1,0 +1,61 @@
+:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 28px;
+  background: white;
+  border-bottom: 1px solid #e8f1ea;
+}
+.page-subtitle { margin: 0; font-size: 13px; color: #5a8a78; }
+
+.btn-primary {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  background: #024b40;
+  color: white;
+  cursor: pointer;
+}
+
+.content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.kpi-card { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 16px; }
+.kpi-label { font-size: 12px; color: #5a8a78; }
+.kpi-value { font-size: 20px; font-weight: 700; color: #024b40; margin-top: 6px; }
+.kpi-card.kpi-positivo .kpi-value { color: #1d7a4c; }
+.kpi-card.kpi-negativo .kpi-value { color: #b23a3a; }
+
+.banner { padding: 14px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+.banner-positivo { background: #e5f6ec; color: #1d7a4c; }
+.banner-negativo { background: #fdecec; color: #b23a3a; }
+
+.panel { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 18px; }
+.panel h3 { margin: 0 0 12px; font-size: 14px; color: #024b40; }
+
+.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabla th { text-align: left; padding: 8px; color: #5a8a78; font-weight: 600; border-bottom: 1px solid #e8f1ea; }
+.tabla td { padding: 8px; color: #1f4034; border-bottom: 1px solid #f0f4f1; }
+
+.btn-icon-danger { border: none; background: #fdecec; color: #b23a3a; border-radius: 8px; width: 24px; height: 24px; cursor: pointer; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(2, 30, 25, 0.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal-card { background: white; border-radius: 18px; width: 420px; max-width: 92vw; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #e8f1ea; }
+.modal-header h3 { margin: 0; font-size: 15px; color: #024b40; }
+.modal-close { border: none; background: none; font-size: 16px; cursor: pointer; color: #5a8a78; }
+.modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.form-row { display: flex; flex-direction: column; gap: 6px; }
+.form-row label { font-size: 12px; font-weight: 600; color: #1f4034; }
+.form-row input, .form-row select {
+  padding: 10px 12px; font-size: 13px; border: 1px solid #d8e6dd; border-radius: 10px; background: #f8faf7; color: #1f4034; outline: none;
+}
+.form-row-2 { flex-direction: row; gap: 12px; }
+.form-row-2 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid #e8f1ea; }
+.btn-secondary { padding: 10px 16px; font-size: 13px; border: 1px solid #d8e6dd; border-radius: 10px; background: white; color: #024b40; cursor: pointer; }

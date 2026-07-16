@@ -1,0 +1,52 @@
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Inventario total</div>
+      <div class="kpi-value">{{ stockTotalInventario }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Productos únicos</div>
+      <div class="kpi-value">{{ productos.length }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ingresos totales</div>
+      <div class="kpi-value">S/{{ ingresosTotales.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ventas completadas</div>
+      <div class="kpi-value">{{ ventasCompletadas }}</div>
+    </div>
+    <div class="kpi-card" [class.alerta]="productosBajoStock.length > 0">
+      <div class="kpi-label">Alertas de stock</div>
+      <div class="kpi-value">{{ productosBajoStock.length }}</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Top 3 modelos más vendidos</h3>
+    <table class="tabla">
+      <thead><tr><th>Modelo</th><th>Unidades vendidas</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let m of topModelos">
+          <td>{{ m.nombre }}</td>
+          <td>{{ m.unidades }}</td>
+        </tr>
+        <tr *ngIf="topModelos.length === 0"><td colspan="2">Aún no hay ventas registradas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel" *ngIf="productosBajoStock.length > 0">
+    <h3>Aproximado de merma (bajo stock)</h3>
+    <table class="tabla">
+      <thead><tr><th>Producto</th><th>Talla</th><th>Stock</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of productosBajoStock">
+          <td>{{ item.producto.nombre }}</td>
+          <td>{{ item.variante.talla }}</td>
+          <td>{{ item.variante.stock }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

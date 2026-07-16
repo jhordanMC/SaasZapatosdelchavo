@@ -1,0 +1,97 @@
+<div class="page-toolbar">
+  <p class="page-subtitle">Costos operativos, rentabilidad y flujo de caja de tu negocio.</p>
+  <button class="btn-primary" (click)="abrirModal()">+ Registrar gasto</button>
+</div>
+
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Ingresos del mes</div>
+      <div class="kpi-value">S/{{ ingresosMes.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ingresos de la semana</div>
+      <div class="kpi-value">S/{{ ingresosSemana.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Gasto operativo mensual</div>
+      <div class="kpi-value">S/{{ gastoOperativoMensual.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card" [class.kpi-positivo]="generandoGanancia" [class.kpi-negativo]="!generandoGanancia">
+      <div class="kpi-label">Ganancia neta mensual</div>
+      <div class="kpi-value">S/{{ gananciaNeta.toFixed(2) }}</div>
+    </div>
+  </div>
+
+  <div class="banner" [class.banner-positivo]="generandoGanancia" [class.banner-negativo]="!generandoGanancia">
+    {{ generandoGanancia ? '✅ Estás generando ganancia este mes.' : '⚠️ Aún no cubres tus costos operativos este mes.' }}
+  </div>
+
+  <div class="panel">
+    <h3>Rentabilidad por producto</h3>
+    <table class="tabla">
+      <thead>
+        <tr><th>Producto</th><th>Margen unitario</th><th>Stock</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of productosRentabilidad">
+          <td>{{ p.nombre }}</td>
+          <td>S/{{ p.margen }}</td>
+          <td>{{ p.stock }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3>Gastos operativos registrados</h3>
+    <table class="tabla">
+      <thead>
+        <tr><th>Tipo</th><th>Monto</th><th>Periodo</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let g of finanzasService.gastos()">
+          <td>{{ g.tipo }}</td>
+          <td>S/{{ g.monto }}</td>
+          <td>{{ g.periodo }}</td>
+          <td><button class="btn-icon-danger" (click)="eliminarGasto(g.id)">✕</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Registrar gasto operativo</h3>
+      <button class="modal-close" (click)="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Tipo de gasto</label>
+        <select [(ngModel)]="form.tipo">
+          <option *ngFor="let t of tiposGasto" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div class="form-row form-row-2">
+        <div>
+          <label>Monto (S/)</label>
+          <input type="number" [(ngModel)]="form.monto" min="0" />
+        </div>
+        <div>
+          <label>Periodo</label>
+          <select [(ngModel)]="form.periodo">
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardarGasto()">Guardar</button>
+    </div>
+  </div>
+</div>

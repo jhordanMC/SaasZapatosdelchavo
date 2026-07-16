@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { AuthService } from '../../core/auth';
 
 @Component({
   selector: 'app-login',
@@ -54,7 +55,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   private shakeEmailTimeout: ReturnType<typeof setTimeout> | null = null;
   private shakePwTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngAfterViewInit(): void {
     this.hintTimeout = setTimeout(() => (this.showHint = true), 3000);
@@ -205,10 +206,15 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
       this.loading = false;
       this.success = true;
 
-      // TODO: conectar con el servicio de autenticación real
-      console.log('Login intento:', { email: this.email, remember: this.remember });
+      const usuario = this.authService.login(this.email, this.password);
+      const destino =
+        usuario.rol === 'admin'
+          ? '/admin/dashboard'
+          : usuario.rol === 'dueño'
+          ? '/empresa/dashboard'
+          : '/empresa/ventas';
 
-      setTimeout(() => this.router.navigate(['/admin/dashboard']), 1200);
+      setTimeout(() => this.router.navigate([destino]), 1200);
     }, 1600);
   }
 

@@ -1,0 +1,12 @@
+:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+.content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.kpi-card { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 16px; }
+.kpi-card.alerta { border-color: #f0c4c4; background: #fdf5f5; }
+.kpi-label { font-size: 12px; color: #5a8a78; }
+.kpi-value { font-size: 20px; font-weight: 700; color: #024b40; margin-top: 6px; }
+.panel { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 18px; }
+.panel h3 { margin: 0 0 12px; font-size: 14px; color: #024b40; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabla th { text-align: left; padding: 8px; color: #5a8a78; font-weight: 600; border-bottom: 1px solid #e8f1ea; }
+.tabla td { padding: 8px; color: #1f4034; border-bottom: 1px solid #f0f4f1; }
