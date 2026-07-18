@@ -10,6 +10,7 @@
   display: block;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: 'Inter', sans-serif;
   color: #0f2d25;
 }
@@ -98,7 +99,7 @@
 /* ── PÁGINA ── */
 .page {
   position: relative; z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -271,6 +272,14 @@
 }
 
 /* ════════════════════════════════════════════
+   RESPONSIVE — TABLET
+   ════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .card-wrap { width: clamp(320px, 46vmin, 400px); }
+  .fc { max-width: 190px; padding: 14px 16px; }
+}
+
+/* ════════════════════════════════════════════
    RESPONSIVE — MÓVIL
    ════════════════════════════════════════════ */
 @media (max-width: 680px) {
@@ -278,27 +287,77 @@
 
   .cur, .cur-ring, .fc, .click-counter { display: none !important; }
 
+  /* Velo sutil sobre la foto de fondo: sin las float cards decorativas,
+     el fondo necesita un poco más de contraste para que la card resalte */
+  .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 8%, rgba(1, 30, 24, 0) 0%, rgba(1, 30, 24, 0.35) 100%),
+      linear-gradient(180deg, rgba(1, 30, 24, 0.12) 0%, rgba(1, 30, 24, 0.28) 100%);
+  }
+
   .page {
-    height: auto; min-height: 100vh;
+    height: auto; min-height: 100vh; min-height: 100dvh;
     align-items: center; justify-content: center;
-    padding: 26px 16px;
+    padding: max(26px, env(safe-area-inset-top)) 16px max(26px, env(safe-area-inset-bottom));
   }
 
   .card-wrap {
     width: 100%; max-width: 400px;
     border-radius: 26px; padding: 2.5px;
+    box-shadow: 0 20px 60px rgba(1, 20, 15, 0.5);
   }
   .card {
     width: 100%; border-radius: 24px;
-    padding: 30px 24px 30px;
+    padding: 32px 24px 28px;
   }
 
-  .logo-img, .logo-fallback { width: 54px; }
-  .brand-name { font-size: 20px; }
-  .sec-line { font-size: 15px; }
+  .logo-img, .logo-fallback { width: 52px; margin-bottom: 6px; }
+  .brand-name { font-size: 19px; letter-spacing: .18em; }
+  .brand-sub { font-size: 10.5px; }
+
+  /* Inputs a 16px: evita el auto-zoom molesto de iOS al enfocar el campo */
+  .field { margin-bottom: 12px; }
+  .field input {
+    font-size: 16px;
+    padding: 13px 42px 13px 40px;
+  }
+  .ico-l, .ico-r { transform: translateY(-50%) scale(1.05); }
+
+  .extras { margin: 6px 0 18px; }
+  .remember, .forgot { font-size: 12.5px; }
+
+  .btn-login, .btn-sso {
+    padding: 14px 20px;
+    font-size: 14.5px;
+  }
+
+  .reg { font-size: 12.5px; }
+  .sec-line { font-size: 11.5px; margin-top: 18px; }
+  .alba-logo { height: 20px; }
+
+  .suc-title { font-size: 17px; }
+  .suc-sub { font-size: 12.5px; }
 }
 
+/* Teléfonos angostos */
 @media (max-width: 360px) {
-  .card { padding: 26px 18px 26px; }
-  .extras { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .card { padding: 26px 18px 24px; }
+  .extras { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .logo-img, .logo-fallback { width: 46px; }
+  .brand-name { font-size: 17px; }
+}
+
+/* Pantallas muy bajas (móvil en horizontal): evita que la card se corte */
+@media (max-height: 480px) and (orientation: landscape) {
+  .page { align-items: flex-start; padding-top: 18px; padding-bottom: 18px; }
+  .card { padding: 20px 24px; }
+  .logo-area { margin-bottom: 10px; }
+  .logo-img, .logo-fallback { width: 40px; margin-bottom: 4px; }
+  .field { margin-bottom: 8px; }
+  .extras { margin: 4px 0 10px; }
+  .divider { margin: 10px 0 8px; }
+  .sec-line { margin-top: 10px; }
 }
