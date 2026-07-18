@@ -13,7 +13,17 @@
 ></app-sidebar>
 
 <div class="main">
-  <app-topbar [title]="pageTitleService.title()" company="Mi Empresa" [avatarLabel]="iniciales()"></app-topbar>
+  <app-topbar
+    [title]="pageTitleService.title()"
+    company="Mi Empresa"
+    [avatarLabel]="iniciales()"
+    [userName]="usuario()?.nombre ?? 'Usuario'"
+    [userRole]="rolEtiqueta()"
+    [userId]="usuario()?.idUsuario ?? '—'"
+    [userDni]="usuario()?.dni ?? '—'"
+    [userEmail]="usuario()?.correo ?? '—'"
+    [userPhone]="usuario()?.telefono ?? '—'"
+  ></app-topbar>
 
   <router-outlet></router-outlet>
 </div>

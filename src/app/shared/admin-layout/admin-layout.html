@@ -13,7 +13,17 @@
 ></app-sidebar>
 
 <div class="main">
-  <app-topbar [title]="pageTitleService.title()" company="ALBA Corporation" [avatarLabel]="iniciales()"></app-topbar>
+  <app-topbar
+    [title]="pageTitleService.title()"
+    company="ALBA Corporation"
+    [avatarLabel]="iniciales()"
+    [userName]="usuario()?.nombre ?? 'Usuario'"
+    userRole="Administrador"
+    [userId]="usuario()?.idUsuario ?? '—'"
+    [userDni]="usuario()?.dni ?? '—'"
+    [userEmail]="usuario()?.correo ?? '—'"
+    [userPhone]="usuario()?.telefono ?? '—'"
+  ></app-topbar>
 
   <router-outlet></router-outlet>
 </div>
