@@ -264,7 +264,7 @@
 .btn-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-eliminar-full { width: 100%; justify-content: center; }
 
-.confirmacion-icono-peligro { background: #fbe3e2; color: #b3413a; }
+.confirmacion-icono.confirmacion-icono-peligro { background: #fbe3e2; color: #b3413a; }
 
 .empty-state { margin: 24px 0 0; color: #6b8a7d; text-align: center; }
 .empty-state.error { color: #b3413a; }
