@@ -6,11 +6,23 @@
     <input type="text" placeholder="Ingresa el producto a buscar" [(ngModel)]="busqueda" />
   </div>
 
+  <select class="filter-select" [(ngModel)]="filtroTalla" title="Filtrar por talla">
+    <option value="Todas">Talla: Todas</option>
+    <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
+  </select>
+
   <div class="sexo-toggle">
-    <button [class.active]="filtroSexo === 'Hombre'" (click)="filtroSexo = filtroSexo === 'Hombre' ? 'Todos' : 'Hombre'">Hombre</button>
-    <button [class.active]="filtroSexo === 'Mujer'" (click)="filtroSexo = filtroSexo === 'Mujer' ? 'Todos' : 'Mujer'">Mujer</button>
-    <button [class.active]="filtroSexo === 'Unisex'" (click)="filtroSexo = filtroSexo === 'Unisex' ? 'Todos' : 'Unisex'">Unisex</button>
+    <button [class.active]="filtroSexo === 'Hombre'" (click)="toggleSexo('Hombre')">Hombre</button>
+    <button [class.active]="filtroSexo === 'Mujer'" (click)="toggleSexo('Mujer')">Mujer</button>
+    <button [class.active]="filtroSexo === 'Unisex'" (click)="toggleSexo('Unisex')">Unisex</button>
   </div>
+
+  <button class="btn-clear" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()" title="Limpiar filtros">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+    Limpiar
+  </button>
 </div>
 
 <div class="categorias-bar">
@@ -44,15 +56,67 @@
   </div>
 
   <div class="carrito-panel">
-    <h3>Carrito</h3>
-    <div class="carrito-vacio" *ngIf="ventasService.carrito().length === 0">Aún no agregaste productos.</div>
+    <div class="carrito-panel-header">
+      <h3>Tu carrito</h3>
+      <span class="carrito-contador" *ngIf="ventasService.carrito().length > 0">{{ ventasService.carrito().length }}</span>
+    </div>
 
-    <div class="carrito-item" *ngFor="let item of ventasService.carrito()">
-      <div>
-        <div class="carrito-item-nombre">{{ item.nombre }}</div>
-        <div class="carrito-item-detalle">{{ item.cantidad }} x S/{{ item.precioUnitario }}</div>
+    <div class="carrito-vacio" *ngIf="ventasService.carrito().length === 0">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+      </svg>
+      <p>Aún no agregaste productos.<br>Toca un producto del catálogo para empezar.</p>
+    </div>
+
+    <div class="carrito-lista" *ngIf="ventasService.carrito().length > 0">
+      <div class="carrito-item" *ngFor="let item of ventasService.carrito()">
+        <ng-container *ngIf="editandoVarianteId !== item.varianteId; else edicionTpl">
+          <div class="carrito-item-foto">
+            <img *ngIf="item.fotoUrl" [src]="item.fotoUrl" alt="{{ item.nombre }}" />
+            <span *ngIf="!item.fotoUrl" class="foto-placeholder-mini">👟</span>
+          </div>
+          <div class="carrito-item-info">
+            <div class="carrito-item-nombre">{{ item.nombre }}</div>
+            <div class="carrito-item-detalle">{{ item.cantidad }} x S/{{ item.precioUnitario }}</div>
+            <div class="carrito-item-descuento" *ngIf="item.descuento > 0">
+              <span class="badge-descuento">{{ item.tipoDescuento === 'unidad' ? 'Dscto x unidad' : 'Dscto x producto' }}</span>
+              -S/{{ item.tipoDescuento === 'unidad' ? (item.descuento * item.cantidad) : item.descuento }}
+            </div>
+          </div>
+          <div class="carrito-item-derecha">
+            <div class="carrito-item-subtotal">S/{{ totalItem(item).toFixed(2) }}</div>
+            <div class="carrito-item-acciones">
+              <button class="btn-icon" title="Editar" (click)="iniciarEdicion(item)">✎</button>
+              <button class="btn-icon-danger" title="Eliminar" (click)="quitarDelCarrito(item.varianteId)">✕</button>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #edicionTpl>
+          <div class="carrito-item-edicion">
+            <div class="carrito-item-nombre">{{ item.nombre }}</div>
+            <div class="form-row-2">
+              <div>
+                <label>Cantidad</label>
+                <input type="number" [(ngModel)]="edicionCantidad" min="1" />
+              </div>
+              <div>
+                <label>Descuento (S/)</label>
+                <input type="number" [(ngModel)]="edicionDescuento" min="0" />
+              </div>
+            </div>
+            <div class="tipo-descuento-toggle" *ngIf="edicionDescuento > 0">
+              <button type="button" [class.active]="edicionTipoDescuento === 'producto'" (click)="edicionTipoDescuento = 'producto'">Por producto</button>
+              <button type="button" [class.active]="edicionTipoDescuento === 'unidad'" (click)="edicionTipoDescuento = 'unidad'">Por unidad</button>
+            </div>
+            <div class="carrito-item-acciones-edicion">
+              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+              <button class="btn-primary" (click)="guardarEdicion(item)">Guardar</button>
+            </div>
+          </div>
+        </ng-template>
       </div>
-      <button class="btn-icon-danger" (click)="quitarDelCarrito(item.varianteId)">✕</button>
     </div>
 
     <div class="carrito-total" *ngIf="ventasService.carrito().length > 0">
@@ -65,7 +129,7 @@
       [disabled]="ventasService.carrito().length === 0"
       (click)="abrirCheckout()"
     >
-      {{ ventasService.carrito().length }} productos en el carrito · Completar venta
+      Completar venta · S/{{ totalCarrito.toFixed(2) }}
     </button>
   </div>
 </div>
@@ -78,6 +142,10 @@
       <button class="modal-close" (click)="cerrarSelectorVariante()">✕</button>
     </div>
     <div class="modal-body">
+      <div class="producto-modal-foto">
+        <img *ngIf="showVariantePicker.fotoUrl" [src]="showVariantePicker.fotoUrl" alt="{{ showVariantePicker.nombre }}" />
+        <span *ngIf="!showVariantePicker.fotoUrl" class="foto-placeholder">Sin foto</span>
+      </div>
       <div class="form-row">
         <label>Talla</label>
         <select [(ngModel)]="varianteSeleccionadaId">
@@ -96,6 +164,27 @@
           <input type="number" [(ngModel)]="descuentoSeleccionado" min="0" />
         </div>
       </div>
+      <div class="form-row" *ngIf="descuentoSeleccionado > 0">
+        <label>¿Cómo se aplica el descuento?</label>
+        <div class="tipo-descuento-toggle">
+          <button
+            type="button"
+            [class.active]="tipoDescuentoSeleccionado === 'producto'"
+            (click)="tipoDescuentoSeleccionado = 'producto'"
+          >Por producto (una vez)</button>
+          <button
+            type="button"
+            [class.active]="tipoDescuentoSeleccionado === 'unidad'"
+            (click)="tipoDescuentoSeleccionado = 'unidad'"
+          >Por unidad (x cantidad)</button>
+        </div>
+        <p class="hint-text" *ngIf="tipoDescuentoSeleccionado === 'producto'">
+          Se descuenta S/{{ descuentoSeleccionado }} una sola vez del total de esta línea.
+        </p>
+        <p class="hint-text" *ngIf="tipoDescuentoSeleccionado === 'unidad'">
+          Se descuenta S/{{ descuentoSeleccionado }} por cada una de las {{ cantidadSeleccionada }} unidades (S/{{ descuentoSeleccionado * cantidadSeleccionada }} en total).
+        </p>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarSelectorVariante()">Cancelar</button>
@@ -105,44 +194,160 @@
 </div>
 
 <!-- Checkout -->
-<div class="modal-overlay" *ngIf="showCheckout" (click)="cerrarCheckout()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ ventaConfirmada ? 'Venta registrada' : 'Completar venta' }}</h3>
-      <button class="modal-close" (click)="cerrarCheckout()">✕</button>
-    </div>
+<div class="modal-overlay" *ngIf="showCheckout" (click)="pasoCheckout === 'formulario' ? cerrarCheckout() : null">
+  <div class="modal-card modal-checkout" (click)="$event.stopPropagation()">
 
-    <div class="modal-body" *ngIf="!ventaConfirmada">
-      <div class="form-row">
-        <label>Método de pago</label>
-        <select [(ngModel)]="metodoPago">
-          <option value="efectivo">Efectivo</option>
-          <option value="yape">Yape</option>
-          <option value="transferencia">Transferencia</option>
-        </select>
+    <!-- Paso 1: método de pago -->
+    <ng-container *ngIf="pasoCheckout === 'formulario'">
+      <div class="modal-header">
+        <h3>Completar venta</h3>
+        <button class="modal-close" (click)="cerrarCheckout()">✕</button>
       </div>
 
-      <div class="form-row" *ngIf="metodoPago === 'efectivo'">
-        <label>Monto pagado por el cliente (S/)</label>
-        <input type="number" [(ngModel)]="montoPagado" min="0" />
+      <div class="modal-body">
+        <div class="resumen-total resumen-top">
+          <span>Total a cobrar</span>
+          <span>S/{{ totalCarrito.toFixed(2) }}</span>
+        </div>
+
+        <div class="form-row">
+          <label>Método de pago</label>
+          <div class="metodo-pago-grid">
+            <button type="button" class="metodo-btn" [class.active]="metodoPago === 'efectivo'" (click)="metodoPago = 'efectivo'">
+              <span class="metodo-icono">💵</span> Efectivo
+            </button>
+            <button type="button" class="metodo-btn" [class.active]="metodoPago === 'yape'" (click)="metodoPago = 'yape'">
+              <span class="metodo-icono">📱</span> Yape
+            </button>
+            <button type="button" class="metodo-btn" [class.active]="metodoPago === 'plin'" (click)="metodoPago = 'plin'">
+              <span class="metodo-icono">📱</span> Plin
+            </button>
+            <button type="button" class="metodo-btn" [class.active]="metodoPago === 'transferencia'" (click)="metodoPago = 'transferencia'">
+              <span class="metodo-icono">🏦</span> Transferencia
+            </button>
+          </div>
+        </div>
+
+        <ng-container *ngIf="metodoPago === 'efectivo'">
+          <div class="form-row">
+            <label>Monto recibido del cliente (S/)</label>
+            <input type="number" [(ngModel)]="montoPagado" min="0" />
+          </div>
+          <div class="vuelto-preview" *ngIf="montoPagado > 0">
+            <span *ngIf="vueltoEstimado > 0">Vuelto a entregar: <strong>S/{{ vueltoEstimado.toFixed(2) }}</strong></span>
+            <span *ngIf="vueltoEstimado === 0 && montoPagado >= totalCarrito">Monto exacto, sin vuelto.</span>
+          </div>
+        </ng-container>
+
+        <div class="form-row" *ngIf="requiereFotoComprobante">
+          <label>
+            Foto de la {{ metodoPago === 'transferencia' ? 'transferencia' : 'transacción' }}
+            <span class="obligatorio">*obligatorio</span>
+          </label>
+          <div class="foto-venta-box" *ngIf="!fotoVentaUrl">
+            <input type="file" accept="image/*" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInput" class="foto-venta-input" />
+            <label for="fotoVentaInput" class="btn-secondary foto-venta-label">📷 Tomar / subir foto del comprobante</label>
+          </div>
+          <div class="foto-venta-preview" *ngIf="fotoVentaUrl">
+            <img [src]="fotoVentaUrl" alt="Foto del comprobante" />
+            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()">✕</button>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="!requiereFotoComprobante">
+          <label>Foto del efectivo contado (opcional)</label>
+          <div class="foto-venta-box" *ngIf="!fotoVentaUrl">
+            <input type="file" accept="image/*" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInputEfectivo" class="foto-venta-input" />
+            <label for="fotoVentaInputEfectivo" class="btn-secondary foto-venta-label">📷 Tomar / subir foto</label>
+          </div>
+          <div class="foto-venta-preview" *ngIf="fotoVentaUrl">
+            <img [src]="fotoVentaUrl" alt="Foto de la venta" />
+            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()">✕</button>
+          </div>
+        </div>
+
+        <p class="error-text" *ngIf="errorFoto">{{ errorFoto }}</p>
+        <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
       </div>
 
-      <div class="resumen-total">
-        <span>Total a cobrar</span>
-        <span>S/{{ totalCarrito.toFixed(2) }}</span>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cerrarCheckout()">Cancelar</button>
+        <button class="btn-primary" (click)="irAConfirmar()">Continuar</button>
+      </div>
+    </ng-container>
+
+    <!-- Paso 2: confirmación final con fotos de los productos -->
+    <ng-container *ngIf="pasoCheckout === 'confirmar'">
+      <div class="modal-header">
+        <h3>Confirma tu venta</h3>
+        <button class="modal-close" (click)="cerrarCheckout()">✕</button>
       </div>
 
-      <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
-    </div>
+      <div class="modal-body">
+        <p class="confirmar-subtitulo">Estos son los productos que estás por vender:</p>
 
-    <div class="modal-body confirmacion" *ngIf="ventaConfirmada">
-      <p>Venta por <strong>S/{{ ventaConfirmada.total.toFixed(2) }}</strong> registrada correctamente.</p>
-      <p *ngIf="ventaConfirmada.vuelto > 0">Vuelto a entregar: <strong>S/{{ ventaConfirmada.vuelto.toFixed(2) }}</strong></p>
-    </div>
+        <div class="confirmar-productos">
+          <div class="confirmar-producto-item" *ngFor="let item of itemsCarrito">
+            <div class="confirmar-producto-foto">
+              <img *ngIf="item.fotoUrl" [src]="item.fotoUrl" alt="{{ item.nombre }}" />
+              <span *ngIf="!item.fotoUrl" class="foto-placeholder-mini">👟</span>
+            </div>
+            <div class="confirmar-producto-info">
+              <div class="confirmar-producto-nombre">{{ item.nombre }}</div>
+              <div class="confirmar-producto-detalle">{{ item.cantidad }} unidad(es) · S/{{ totalItem(item).toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
 
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarTodo()">{{ ventaConfirmada ? 'Cerrar' : 'Cancelar' }}</button>
-      <button class="btn-primary" *ngIf="!ventaConfirmada" (click)="confirmarVenta()">Confirmar venta</button>
-    </div>
+        <div class="confirmar-pago">
+          <div class="confirmar-pago-fila">
+            <span>Método de pago</span>
+            <strong>{{ metodoPago === 'efectivo' ? 'Efectivo' : metodoPago === 'yape' ? 'Yape' : metodoPago === 'plin' ? 'Plin' : 'Transferencia' }}</strong>
+          </div>
+          <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo'">
+            <span>Monto recibido</span>
+            <strong>S/{{ montoPagado.toFixed(2) }}</strong>
+          </div>
+          <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo' && vueltoEstimado > 0">
+            <span>Vuelto a entregar</span>
+            <strong>S/{{ vueltoEstimado.toFixed(2) }}</strong>
+          </div>
+          <div class="confirmar-pago-fila" *ngIf="fotoVentaUrl">
+            <span>Comprobante</span>
+            <img class="confirmar-comprobante-mini" [src]="fotoVentaUrl" alt="Comprobante de pago" />
+          </div>
+        </div>
+
+        <div class="resumen-total">
+          <span>Total a cobrar</span>
+          <span>S/{{ totalCarrito.toFixed(2) }}</span>
+        </div>
+
+        <p class="pregunta-confirmacion">¿Estás segura(o) de procesar esta venta?</p>
+        <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="volverAFormulario()">← Volver</button>
+        <button class="btn-primary" (click)="confirmarVenta()">Sí, confirmar venta</button>
+      </div>
+    </ng-container>
+
+    <!-- Paso 3: éxito -->
+    <ng-container *ngIf="pasoCheckout === 'exito'">
+      <div class="modal-header">
+        <h3>Venta registrada</h3>
+        <button class="modal-close" (click)="cerrarTodo()">✕</button>
+      </div>
+      <div class="modal-body confirmacion">
+        <div class="exito-icono">✅</div>
+        <p>Venta por <strong>S/{{ ventaConfirmada?.total?.toFixed(2) }}</strong> registrada correctamente.</p>
+        <p *ngIf="ventaConfirmada && ventaConfirmada.vuelto > 0">Vuelto entregado: <strong>S/{{ ventaConfirmada.vuelto.toFixed(2) }}</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="cerrarTodo()">Cerrar</button>
+      </div>
+    </ng-container>
+
   </div>
 </div>

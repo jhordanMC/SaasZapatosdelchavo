@@ -38,6 +38,27 @@ export class FinanzasComponent {
   get gananciaNeta() { return this.finanzasService.gananciaNetaMensual(); }
   get generandoGanancia() { return this.finanzasService.estaGenerandoGanancia(); }
 
+  // Panel de decisiones
+  get ticketPromedio() { return this.finanzasService.ticketPromedio(); }
+  get margenPromedio() { return this.finanzasService.margenPromedioPorcentaje(); }
+  get puntoEquilibrio() { return this.finanzasService.puntoEquilibrioMensual(); }
+  get progresoEquilibrio() { return this.finanzasService.progresoPuntoEquilibrio(); }
+  get proyeccionMes() { return this.finanzasService.proyeccionCierreMes(); }
+  get crecimientoSemanal() { return this.finanzasService.crecimientoSemanal(); }
+  get productoEstrella() { return this.finanzasService.productoEstrella(); }
+  get productoMasRentable() { return this.finanzasService.productoMasRentable(); }
+  get alertasStockBajo() { return this.finanzasService.alertasStockBajo(); }
+  get recomendacion() { return this.finanzasService.recomendacion(); }
+  get ingresosPorSemana() { return this.finanzasService.ingresosPorSemana(4); }
+
+  get maxSemana(): number {
+    return Math.max(1, ...this.ingresosPorSemana.map((p) => p.total));
+  }
+
+  alturaBarra(total: number): number {
+    return Math.round((total / this.maxSemana) * 100);
+  }
+
   get productosRentabilidad() {
     return this.productosService.getProductos()().map((p) => ({
       nombre: p.nombre,

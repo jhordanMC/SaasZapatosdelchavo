@@ -1,16 +1,24 @@
 import { Injectable, signal } from '@angular/core';
 import { ProductosService } from './productos';
 
-export type MetodoPago = 'yape' | 'efectivo' | 'transferencia';
+export type MetodoPago = 'yape' | 'plin' | 'efectivo' | 'transferencia';
+export type TipoDescuento = 'producto' | 'unidad';
+
+/** Métodos de pago que exigen adjuntar una foto del comprobante (transacción/transferencia). */
+export function requiereComprobante(metodo: MetodoPago): boolean {
+  return metodo === 'yape' || metodo === 'plin' || metodo === 'transferencia';
+}
 
 export interface ItemCarrito {
   productoId: string;
   varianteId: string;
   nombre: string;
   talla: string;
+  fotoUrl: string | null;
   precioUnitario: number;
   cantidad: number;
   descuento: number;
+  tipoDescuento: TipoDescuento;
 }
 
 export interface Venta {
@@ -22,6 +30,8 @@ export interface Venta {
   vuelto: number;
   total: number;
   vendedor: string;
+  /** Foto del comprobante de pago (Yape/Plin/Transferencia) o del efectivo contado, si se adjuntó. */
+  fotoUrl: string | null;
 }
 
 let autoId = 0;
@@ -53,20 +63,45 @@ export class VentasService {
     this.carrito.update((lista) => lista.filter((i) => i.varianteId !== varianteId));
   }
 
+  editarItemCarrito(
+    varianteId: string,
+    cambios: Partial<Pick<ItemCarrito, 'cantidad' | 'descuento' | 'tipoDescuento'>>
+  ): void {
+    this.carrito.update((lista) =>
+      lista.map((i) => (i.varianteId === varianteId ? { ...i, ...cambios } : i))
+    );
+  }
+
   vaciarCarrito(): void {
     this.carrito.set([]);
   }
 
   totalCarrito(): number {
-    return this.carrito().reduce(
-      (acc, i) => acc + (i.precioUnitario * i.cantidad - i.descuento),
-      0
-    );
+    return this.carrito().reduce((acc, i) => acc + this.totalItem(i), 0);
   }
 
-  confirmarVenta(metodoPago: MetodoPago, montoPagado: number, vendedor: string): Venta {
+  totalItem(i: ItemCarrito): number {
+    const subtotal = i.precioUnitario * i.cantidad;
+    const descuentoTotal = i.tipoDescuento === 'unidad' ? i.descuento * i.cantidad : i.descuento;
+    return Math.max(0, subtotal - descuentoTotal);
+  }
+
+  confirmarVenta(
+    metodoPago: MetodoPago,
+    montoPagado: number,
+    vendedor: string,
+    fotoUrl: string | null = null
+  ): Venta {
     const items = this.carrito();
     const total = this.totalCarrito();
+
+    // Regla de negocio: Yape, Plin y Transferencia siempre deben quedar respaldados con una foto.
+    if (requiereComprobante(metodoPago) && !fotoUrl) {
+      throw new Error('Esta venta requiere una foto del comprobante de pago.');
+    }
+    if (metodoPago === 'efectivo' && montoPagado < total) {
+      throw new Error('El monto pagado es menor al total de la venta.');
+    }
 
     for (const item of items) {
       this.productosService.actualizarStockVariante(item.productoId, item.varianteId, -item.cantidad);
@@ -81,6 +116,7 @@ export class VentasService {
       vuelto: metodoPago === 'efectivo' ? Math.max(0, montoPagado - total) : 0,
       total,
       vendedor,
+      fotoUrl,
     };
 
     this.historial.update((lista) => [venta, ...lista]);
@@ -102,5 +138,33 @@ export class VentasService {
     return this.historial()
       .filter((v) => new Date(v.fecha).getTime() >= desde)
       .reduce((acc, v) => acc + v.total, 0);
+  }
+
+  /** Ventas registradas entre hace `desdeDias` y hace `hastaDias` (ambos en días atrás desde ahora). */
+  ventasEnRango(desdeDias: number, hastaDias: number): Venta[] {
+    const ahora = Date.now();
+    const inicio = ahora - desdeDias * 24 * 60 * 60 * 1000;
+    const fin = ahora - hastaDias * 24 * 60 * 60 * 1000;
+    return this.historial().filter((v) => {
+      const t = new Date(v.fecha).getTime();
+      return t >= inicio && t < fin;
+    });
+  }
+
+  cantidadVentasPeriodo(dias: number): number {
+    const desde = Date.now() - dias * 24 * 60 * 60 * 1000;
+    return this.historial().filter((v) => new Date(v.fecha).getTime() >= desde).length;
+  }
+
+  unidadesVendidasPorProducto(): { productoId: string; nombre: string; unidades: number }[] {
+    const mapa = new Map<string, { productoId: string; nombre: string; unidades: number }>();
+    for (const venta of this.historial()) {
+      for (const item of venta.items) {
+        const actual = mapa.get(item.productoId) ?? { productoId: item.productoId, nombre: item.nombre, unidades: 0 };
+        actual.unidades += item.cantidad;
+        mapa.set(item.productoId, actual);
+      }
+    }
+    return Array.from(mapa.values()).sort((a, b) => b.unidades - a.unidades);
   }
 }

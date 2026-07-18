@@ -115,11 +115,18 @@
         <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
       </div>
 
+      <div class="variante-columnas" *ngIf="form.variantes.length > 0">
+        <span>Talla</span>
+        <span>Stock</span>
+        <span>Almacén</span>
+        <span></span>
+      </div>
+
       <div class="variante-fila" *ngFor="let v of form.variantes; let i = index">
-        <input type="text" placeholder="Talla" [(ngModel)]="v.talla" />
-        <input type="number" placeholder="Stock" [(ngModel)]="v.stock" min="0" />
-        <input type="text" placeholder="Almacén (ej: Trujillo)" [(ngModel)]="v.local" />
-        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)">✕</button>
+        <input type="text" placeholder="Ej: 39" [(ngModel)]="v.talla" aria-label="Talla" />
+        <input type="number" placeholder="Ej: 5" [(ngModel)]="v.stock" min="0" aria-label="Stock" />
+        <input type="text" placeholder="Ej: Trujillo" [(ngModel)]="v.local" aria-label="Almacén" />
+        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla">✕</button>
       </div>
     </div>
 

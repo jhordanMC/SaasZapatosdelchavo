@@ -24,7 +24,81 @@
   </div>
 
   <div class="banner" [class.banner-positivo]="generandoGanancia" [class.banner-negativo]="!generandoGanancia">
-    {{ generandoGanancia ? '✅ Estás generando ganancia este mes.' : '⚠️ Aún no cubres tus costos operativos este mes.' }}
+    <div class="banner-icono">{{ generandoGanancia ? '📈' : '⚠️' }}</div>
+    <div class="banner-texto">
+      <div class="banner-titulo">
+        {{ generandoGanancia ? 'Estás generando ganancia este mes' : 'Aún no cubres tus costos operativos' }}
+      </div>
+      <div class="banner-detalle">{{ recomendacion }}</div>
+    </div>
+    <div class="banner-progreso">
+      <div class="banner-progreso-track">
+        <div class="banner-progreso-fill" [style.width.%]="progresoEquilibrio > 100 ? 100 : progresoEquilibrio"></div>
+      </div>
+      <span>{{ progresoEquilibrio.toFixed(0) }}% del punto de equilibrio</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Panel de decisiones</h3>
+    <p class="panel-subtitulo">Indicadores clave para ayudarte a decidir sobre tu negocio.</p>
+
+    <div class="decision-grid">
+      <div class="decision-card">
+        <div class="decision-label">Ticket promedio</div>
+        <div class="decision-valor">S/{{ ticketPromedio.toFixed(2) }}</div>
+        <div class="decision-nota">por venta, últimos 30 días</div>
+      </div>
+      <div class="decision-card">
+        <div class="decision-label">Margen promedio</div>
+        <div class="decision-valor">{{ margenPromedio.toFixed(0) }}%</div>
+        <div class="decision-nota">sobre precio de venta</div>
+      </div>
+      <div class="decision-card">
+        <div class="decision-label">Punto de equilibrio</div>
+        <div class="decision-valor">S/{{ puntoEquilibrio.toFixed(0) }}</div>
+        <div class="decision-nota">ventas necesarias al mes</div>
+      </div>
+      <div class="decision-card">
+        <div class="decision-label">Proyección de cierre</div>
+        <div class="decision-valor">S/{{ proyeccionMes.toFixed(0) }}</div>
+        <div class="decision-nota">si mantienes el ritmo actual</div>
+      </div>
+      <div class="decision-card" [class.decision-positiva]="crecimientoSemanal >= 0" [class.decision-negativa]="crecimientoSemanal < 0">
+        <div class="decision-label">Crecimiento semanal</div>
+        <div class="decision-valor">{{ crecimientoSemanal >= 0 ? '+' : '' }}{{ crecimientoSemanal.toFixed(0) }}%</div>
+        <div class="decision-nota">vs. semana anterior</div>
+      </div>
+      <div class="decision-card" [class.decision-negativa]="alertasStockBajo > 0">
+        <div class="decision-label">Tallas con stock bajo</div>
+        <div class="decision-valor">{{ alertasStockBajo }}</div>
+        <div class="decision-nota">revisa inventario</div>
+      </div>
+    </div>
+
+    <div class="decision-destacados">
+      <div class="destacado-card" *ngIf="productoEstrella">
+        <span class="destacado-tag">🏆 Producto estrella</span>
+        <span class="destacado-nombre">{{ productoEstrella.nombre }}</span>
+        <span class="destacado-nota">{{ productoEstrella.unidades }} unidades vendidas</span>
+      </div>
+      <div class="destacado-card" *ngIf="productoMasRentable">
+        <span class="destacado-tag">💎 Más rentable</span>
+        <span class="destacado-nombre">{{ productoMasRentable.nombre }}</span>
+        <span class="destacado-nota">S/{{ productoMasRentable.margen }} de margen por unidad</span>
+      </div>
+    </div>
+
+    <div class="mini-chart">
+      <div class="mini-chart-titulo">Ingresos por semana</div>
+      <div class="mini-chart-barras">
+        <div class="mini-chart-col" *ngFor="let p of ingresosPorSemana">
+          <div class="mini-chart-bar" [style.height.%]="alturaBarra(p.total)" [title]="'S/' + p.total.toFixed(2)"></div>
+          <span class="mini-chart-valor">S/{{ p.total.toFixed(0) }}</span>
+          <span class="mini-chart-label">{{ p.etiqueta }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="panel">
