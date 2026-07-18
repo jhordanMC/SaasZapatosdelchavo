@@ -20,8 +20,6 @@ import { AuthService } from '../../core/auth';
 })
 export class LoginComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('cur') curRef?: ElementRef<HTMLDivElement>;
-  @ViewChild('crn') crnRef?: ElementRef<HTMLDivElement>;
   @ViewChild('cardWrap') cardWrapRef!: ElementRef<HTMLDivElement>;
 
   // ── Formulario ──
@@ -45,9 +43,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   revealed: boolean[] = [false, false, false, false];
   showHint = false;
 
-  // ── Cursor / parallax ──
-  private cx = 0; private cy = 0;
-  private rx = 0; private ry = 0;
+  // ── Parallax de la card (mouse en desktop, touch en móvil) ──
   private tx = 0; private ty = 0;
   private ox = 0; private oy = 0;
   private rafId: number | null = null;
@@ -70,15 +66,8 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     if (this.shakePwTimeout) clearTimeout(this.shakePwTimeout);
   }
 
-  // ── Loop del cursor con inercia + parallax de la card ──
+  // ── Loop de inercia del parallax de la card ──
   private loop(): void {
-    this.rx += (this.cx - this.rx) * 0.12;
-    this.ry += (this.cy - this.ry) * 0.12;
-    if (this.crnRef) {
-      this.crnRef.nativeElement.style.left = this.rx + 'px';
-      this.crnRef.nativeElement.style.top = this.ry + 'px';
-    }
-
     this.ox += (this.tx - this.ox) * 0.06;
     this.oy += (this.ty - this.oy) * 0.06;
     if (this.cardWrapRef?.nativeElement.classList.contains('in')) {
@@ -88,34 +77,28 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.rafId = requestAnimationFrame(() => this.loop());
   }
 
+  private setParallaxTarget(clientX: number, clientY: number): void {
+    this.tx = (clientX / window.innerWidth - 0.5) * 16;
+    this.ty = (clientY / window.innerHeight - 0.5) * 10;
+  }
+
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(e: MouseEvent): void {
-    this.cx = e.clientX;
-    this.cy = e.clientY;
-    if (this.curRef) {
-      this.curRef.nativeElement.style.left = this.cx + 'px';
-      this.curRef.nativeElement.style.top = this.cy + 'px';
-    }
-    this.tx = (e.clientX / window.innerWidth - 0.5) * 16;
-    this.ty = (e.clientY / window.innerHeight - 0.5) * 10;
+    this.setParallaxTarget(e.clientX, e.clientY);
   }
 
-  onCursorEnter(): void {
-    if (!this.curRef || !this.crnRef) return;
-    this.curRef.nativeElement.style.width = '14px';
-    this.curRef.nativeElement.style.height = '14px';
-    this.crnRef.nativeElement.style.width = '42px';
-    this.crnRef.nativeElement.style.height = '42px';
-    this.crnRef.nativeElement.style.borderColor = 'rgba(100,213,156,.85)';
+  @HostListener('document:touchmove', ['$event'])
+  onTouchMove(e: TouchEvent): void {
+    const touch = e.touches[0];
+    if (!touch) return;
+    this.setParallaxTarget(touch.clientX, touch.clientY);
   }
 
-  onCursorLeave(): void {
-    if (!this.curRef || !this.crnRef) return;
-    this.curRef.nativeElement.style.width = '8px';
-    this.curRef.nativeElement.style.height = '8px';
-    this.crnRef.nativeElement.style.width = '30px';
-    this.crnRef.nativeElement.style.height = '30px';
-    this.crnRef.nativeElement.style.borderColor = 'rgba(100,213,156,.65)';
+  @HostListener('document:touchstart', ['$event'])
+  onTouchStart(e: TouchEvent): void {
+    const touch = e.touches[0];
+    if (!touch) return;
+    this.setParallaxTarget(touch.clientX, touch.clientY);
   }
 
   // ── Revelado de float cards al hacer click en el fondo ──

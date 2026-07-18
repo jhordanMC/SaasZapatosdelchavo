@@ -76,7 +76,7 @@
   background: conic-gradient(from var(--a), var(--mint), var(--green2), var(--gold), var(--mint));
   box-shadow: 0 28px 70px rgba(2,24,18,0.45);
   opacity: 0; transform: translateY(22px) scale(.97);
-  animation: rotBorder 7s linear infinite, cardIn .85s cubic-bezier(.22,.8,.35,1) both .15s;
+  animation: rotBorder 4s linear infinite, cardIn .85s cubic-bezier(.22,.8,.35,1) both .15s;
 }
 @keyframes rotBorder { to { --a: 360deg; } }
 @keyframes cardIn { to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -101,7 +101,6 @@
 .logo-fallback { width: 56px; margin-bottom: 8px; }
 .brand-name { font-family: 'Inter', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: .22em; color: var(--green); }
 .brand-name .gd { color: var(--gold); }
-.brand-sub  { font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 3px; letter-spacing: .04em; }
 
 /* Ícono circular (olvidé contraseña) */
 .icon-circle {
@@ -183,6 +182,7 @@
 /* Link "Volver a iniciar sesión" */
 .back-link {
   display: flex; align-items: center; gap: 6px;
+  margin-top: 16px;
   font-size: 12.5px; color: var(--green2); font-weight: 600;
   text-decoration: none;
   transition: color .2s;
