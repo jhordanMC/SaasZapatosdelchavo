@@ -7,6 +7,7 @@ import {
   HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
@@ -185,20 +186,34 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     }
 
     this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      this.success = true;
+    this.authService.login(this.email, this.password).subscribe({
+      next: (usuario) => {
+        this.loading = false;
+        this.success = true;
 
-      const usuario = this.authService.login(this.email, this.password);
-      const destino =
-        usuario.rol === 'admin'
-          ? '/admin/dashboard'
-          : usuario.rol === 'dueño'
-          ? '/empresa/dashboard'
-          : '/empresa/ventas';
+        const destino =
+          usuario.rol === 'admin'
+            ? '/admin/dashboard'
+            : usuario.rol === 'dueño'
+            ? '/empresa/dashboard'
+            : '/empresa/ventas';
 
-      setTimeout(() => this.router.navigate([destino]), 1200);
-    }, 1600);
+        setTimeout(() => this.router.navigate([destino]), 1200);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading = false;
+        this.errorMessage = this.mensajeError(error);
+        this.showError = true;
+        this.shake('password');
+      },
+    });
+  }
+
+  private mensajeError(error: HttpErrorResponse): string {
+    if (error.status === 401) return 'Email o contraseña incorrectos.';
+    if (error.status === 429) return 'Demasiados intentos. Espera un momento antes de volver a intentar.';
+    if (error.status === 0) return 'No se pudo conectar con el servidor. Intenta de nuevo.';
+    return 'Ocurrió un error inesperado. Intenta de nuevo.';
   }
 
   onSubmit(): void {
