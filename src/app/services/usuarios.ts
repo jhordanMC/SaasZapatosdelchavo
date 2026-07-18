@@ -1,186 +1,74 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { EmpresasService } from './empresas';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-export type RolUsuario = 'Admin VILCAS' | 'Empresa' | 'Trabajador de Local';
+export type EstadoUsuario = 'activo' | 'inactivo' | 'suspendido';
 
 export interface Usuario {
-  id: string;
+  id_usuario: string;
+  id_empresa: string;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  telefono: string | null;
+  dni: string | null;
+  id_foto_perfil: string | null;
+  estado: EstadoUsuario;
+  ultimo_login_en: string | null;
+  creado_en: string;
+}
+
+export interface Rol {
+  id_rol: string;
+  id_empresa: string | null;
   nombre: string;
-  apellido: string;
-  dni: string;
-  correo: string;
-  rol: RolUsuario;
-  empresaId: string | null;
-  localId: string | null;
-  fotoUrl: string | null;
-  estado: 'activo' | 'retirado';
-  fechaAlta: string;
+  descripcion: string | null;
+  es_sistema: boolean;
+  esta_activo: boolean;
+  creado_en: string;
 }
 
-export interface CampoJerarquia {
-  empresa: boolean;
-  local: boolean;
+export interface UsuarioCreateInput {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  password: string;
+  telefono?: string | null;
+  dni?: string | null;
 }
 
-// Reglas por rol: qué campos de jerarquía están habilitados/son requeridos.
-export const ROLES_RULES: Record<RolUsuario, { enabled: CampoJerarquia; required: CampoJerarquia }> = {
-  'Admin VILCAS': {
-    enabled: { empresa: false, local: false },
-    required: { empresa: false, local: false },
-  },
-  Empresa: {
-    enabled: { empresa: true, local: false },
-    required: { empresa: true, local: false },
-  },
-  'Trabajador de Local': {
-    enabled: { empresa: true, local: true },
-    required: { empresa: true, local: true },
-  },
-};
-
-let usuarioAutoId = 0;
-function nuevoUsuarioId(): string {
-  usuarioAutoId += 1;
-  return `usuario-${usuarioAutoId}`;
-}
-
+/**
+ * Nota importante: /iam/usuarios opera SIEMPRE sobre la empresa del
+ * usuario autenticado (nunca cross-tenant) — a diferencia de
+ * EmpresasService, este servicio solo administra usuarios de la propia
+ * empresa de ALBA, no de las empresas-cliente.
+ */
 @Injectable({ providedIn: 'root' })
 export class UsuariosService {
-  private usuarios: Usuario[];
+  private readonly apiUrl = environment.apiUrl;
 
-  constructor(private empresasService: EmpresasService) {
-    this.usuarios = this.crearMockInicial();
+  constructor(private http: HttpClient) {}
+
+  listarUsuarios(limit = 100, offset = 0): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.apiUrl}/iam/usuarios`, {
+      params: { limit, offset },
+    });
   }
 
-  private crearMockInicial(): Usuario[] {
-    const empresas = this.empresasService.getEmpresas();
-    const [continental, seguros, telco] = empresas;
-
-    const mock: Usuario[] = [
-      {
-        id: nuevoUsuarioId(),
-        nombre: 'Rodrigo',
-        apellido: 'Salazar',
-        dni: '45678912',
-        correo: 'rodrigo.salazar@vilcas.pe',
-        rol: 'Admin VILCAS',
-        empresaId: null,
-        localId: null,
-        fotoUrl: null,
-        estado: 'activo',
-        fechaAlta: '2026-01-10',
-      },
-    ];
-
-    if (continental) {
-      mock.push({
-        id: nuevoUsuarioId(),
-        nombre: 'Claudia',
-        apellido: 'Fernández',
-        dni: '41234567',
-        correo: 'claudia.fernandez@bancocontinental.pe',
-        rol: 'Empresa',
-        empresaId: continental.id,
-        localId: null,
-        fotoUrl: null,
-        estado: 'activo',
-        fechaAlta: '2026-01-18',
-      });
-
-      if (continental.locales[0]) {
-        mock.push({
-          id: nuevoUsuarioId(),
-          nombre: 'Jhordan',
-          apellido: 'Medina',
-          dni: '48765432',
-          correo: 'jhordan.medina@bancocontinental.pe',
-          rol: 'Trabajador de Local',
-          empresaId: continental.id,
-          localId: continental.locales[0].id,
-          fotoUrl: null,
-          estado: 'activo',
-          fechaAlta: '2026-02-02',
-        });
-      }
-    }
-
-    if (seguros?.locales[0]) {
-      mock.push({
-        id: nuevoUsuarioId(),
-        nombre: 'Ana',
-        apellido: 'Torres',
-        dni: '42345678',
-        correo: 'ana.torres@segurosdelsur.pe',
-        rol: 'Trabajador de Local',
-        empresaId: seguros.id,
-        localId: seguros.locales[0].id,
-        fotoUrl: null,
-        estado: 'retirado',
-        fechaAlta: '2026-02-10',
-      });
-    }
-
-    if (telco) {
-      mock.push({
-        id: nuevoUsuarioId(),
-        nombre: 'Diego',
-        apellido: 'Ramírez',
-        dni: '47891234',
-        correo: 'diego.ramirez@telcoexpress.pe',
-        rol: 'Empresa',
-        empresaId: telco.id,
-        localId: null,
-        fotoUrl: null,
-        estado: 'activo',
-        fechaAlta: '2026-02-20',
-      });
-    }
-
-    return mock;
+  crearUsuario(datos: UsuarioCreateInput): Observable<Usuario> {
+    return this.http.post<Usuario>(`${this.apiUrl}/iam/usuarios`, datos);
   }
 
-  getUsuarios(): Usuario[] {
-    return this.usuarios;
+  actualizarEstado(idUsuario: string, estado: EstadoUsuario): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiUrl}/iam/usuarios/${idUsuario}`, { estado });
   }
 
-  getEmpresasDisponibles() {
-    return this.empresasService.getEmpresas();
+  listarRoles(): Observable<Rol[]> {
+    return this.http.get<Rol[]>(`${this.apiUrl}/iam/roles`);
   }
 
-  getLocalesDeEmpresa(empresaId: string | null) {
-    if (!empresaId) return [];
-    return this.empresasService.getEmpresaById(empresaId)?.locales ?? [];
-  }
-
-  agregarUsuario(datos: {
-    nombre: string;
-    apellido: string;
-    dni: string;
-    correo: string;
-    rol: RolUsuario;
-    empresaId: string | null;
-    localId: string | null;
-    fotoUrl: string | null;
-  }): Usuario {
-    const usuarioCreado: Usuario = {
-      id: nuevoUsuarioId(),
-      nombre: datos.nombre.trim(),
-      apellido: datos.apellido.trim(),
-      dni: datos.dni.trim(),
-      correo: datos.correo.trim(),
-      rol: datos.rol,
-      empresaId: datos.empresaId,
-      localId: datos.localId,
-      fotoUrl: datos.fotoUrl,
-      estado: 'activo',
-      fechaAlta: new Date().toISOString().slice(0, 10),
-    };
-
-    this.usuarios = [usuarioCreado, ...this.usuarios];
-    return usuarioCreado;
-  }
-
-  cambiarEstado(id: string, estado: 'activo' | 'retirado'): void {
-    this.usuarios = this.usuarios.map((usuario) => (usuario.id === id ? { ...usuario, estado } : usuario));
+  asignarRol(idUsuario: string, idRol: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/iam/usuarios/${idUsuario}/roles`, { id_rol: idRol });
   }
 }

@@ -10,26 +10,19 @@
       <input type="text" placeholder="Buscar por nombre, DNI o correo..." [(ngModel)]="busqueda" />
     </div>
 
-    <select class="filter-select" [(ngModel)]="filtroEmpresa">
-      <option value="Todas">Empresa: Todas</option>
-      <option *ngFor="let empresa of empresasDisponibles" [value]="empresa.id">{{ empresa.nombre }}</option>
-    </select>
-
-    <select class="filter-select" [(ngModel)]="filtroRol">
-      <option value="Todos">Rol: Todos</option>
-      <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
-    </select>
-
     <select class="filter-select" [(ngModel)]="filtroEstado">
       <option value="Todos">Estado: Todos</option>
       <option value="activo">Activo</option>
-      <option value="retirado">Retirado</option>
+      <option value="inactivo">Inactivo</option>
+      <option value="suspendido">Suspendido</option>
     </select>
 
     <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
   </div>
 
   <div class="content">
+    <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
     <div class="table-card">
       <div class="table-header">
         <h2>Usuarios</h2>
@@ -40,9 +33,7 @@
         <div class="table-row table-head">
           <span>Usuario</span>
           <span>DNI</span>
-          <span>Empresa</span>
-          <span>Local</span>
-          <span>Rol</span>
+          <span>Teléfono</span>
           <span>Estado</span>
           <span>Alta</span>
           <span>Acciones</span>
@@ -50,30 +41,28 @@
 
         <div class="table-row" *ngFor="let usuario of usuariosFiltrados">
           <div class="usuario-cell">
-            <div class="usuario-avatar" [class.tiene-foto]="usuario.fotoUrl">
-              <img *ngIf="usuario.fotoUrl" [src]="usuario.fotoUrl" [alt]="usuario.nombre" />
-              <span *ngIf="!usuario.fotoUrl">{{ iniciales(usuario.nombre, usuario.apellido) }}</span>
+            <div class="usuario-avatar">
+              <span>{{ iniciales(usuario.nombres, usuario.apellidos) }}</span>
             </div>
             <div>
-              <div class="usuario-nombre">{{ usuario.nombre }} {{ usuario.apellido }}</div>
-              <div class="usuario-correo">{{ usuario.correo }}</div>
+              <div class="usuario-nombre">{{ usuario.nombres }} {{ usuario.apellidos }}</div>
+              <div class="usuario-correo">{{ usuario.email }}</div>
             </div>
           </div>
           <span>{{ usuario.dni || '—' }}</span>
-          <span>{{ nombreEmpresa(usuario.empresaId) }}</span>
-          <span>{{ nombreLocal(usuario.empresaId, usuario.localId) }}</span>
-          <span><span class="rol-pill" [ngClass]="rolStyle[usuario.rol]">{{ usuario.rol }}</span></span>
+          <span>{{ usuario.telefono || '—' }}</span>
           <span><span class="status-pill" [class.active]="usuario.estado === 'activo'">{{ usuario.estado }}</span></span>
-          <span>{{ usuario.fechaAlta }}</span>
+          <span>{{ usuario.creado_en.slice(0, 10) }}</span>
           <span>
-            <button class="btn-toggle-estado" [class.reactivar]="usuario.estado === 'retirado'" (click)="cambiarEstado(usuario)">
+            <button class="btn-toggle-estado" [class.reactivar]="usuario.estado !== 'activo'" (click)="cambiarEstado(usuario)">
               {{ usuario.estado === 'activo' ? 'Retirar' : 'Reactivar' }}
             </button>
           </span>
         </div>
       </div>
 
-      <p class="empty-state" *ngIf="usuariosFiltrados.length === 0">No se encontraron usuarios con estos filtros.</p>
+      <p class="empty-state" *ngIf="cargando()">Cargando usuarios…</p>
+      <p class="empty-state" *ngIf="!cargando() && usuariosFiltrados.length === 0">No se encontraron usuarios con estos filtros.</p>
     </div>
   </div>
 
@@ -106,85 +95,45 @@
     <div class="modal-body">
       <div class="form-grid-2">
         <div class="form-group">
-          <label for="inputNombreUsuario">Nombre</label>
-          <input id="inputNombreUsuario" type="text" class="form-input" placeholder="Ingresar nombre" [(ngModel)]="nuevoUsuario.nombre" />
+          <label for="inputNombreUsuario">Nombres</label>
+          <input id="inputNombreUsuario" type="text" class="form-input" placeholder="Ingresar nombres" [(ngModel)]="nuevoUsuario.nombres" />
         </div>
         <div class="form-group">
-          <label for="inputApellidoUsuario">Apellido</label>
-          <input id="inputApellidoUsuario" type="text" class="form-input" placeholder="Ingresar apellido" [(ngModel)]="nuevoUsuario.apellido" />
+          <label for="inputApellidoUsuario">Apellidos</label>
+          <input id="inputApellidoUsuario" type="text" class="form-input" placeholder="Ingresar apellidos" [(ngModel)]="nuevoUsuario.apellidos" />
         </div>
       </div>
 
       <div class="form-grid-2">
         <div class="form-group">
-          <label for="inputDniUsuario">DNI</label>
+          <label for="inputDniUsuario">DNI (opcional)</label>
           <input id="inputDniUsuario" type="text" class="form-input" placeholder="Ingresar DNI" maxlength="8" inputmode="numeric" [(ngModel)]="nuevoUsuario.dni" />
         </div>
         <div class="form-group">
           <label for="inputCorreoUsuario">Correo</label>
-          <input id="inputCorreoUsuario" type="email" class="form-input" placeholder="Ingresar correo" [(ngModel)]="nuevoUsuario.correo" />
+          <input id="inputCorreoUsuario" type="email" class="form-input" placeholder="Ingresar correo" [(ngModel)]="nuevoUsuario.email" />
         </div>
       </div>
 
       <div class="form-grid-2">
         <div class="form-group">
           <label for="inputRolUsuario">Rol</label>
-          <select id="inputRolUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.rol" (ngModelChange)="onRolChange()">
+          <select id="inputRolUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.idRol">
             <option value="" disabled>Selecciona el rol</option>
-            <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+            <option *ngFor="let rol of roles()" [value]="rol.id_rol">{{ rol.nombre }}</option>
           </select>
         </div>
         <div class="form-group">
           <label for="inputPasswordUsuario">Contraseña</label>
-          <input id="inputPasswordUsuario" type="password" class="form-input" placeholder="Ingresar contraseña" [(ngModel)]="nuevoUsuario.password" />
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group" [class.form-group-disabled]="!empresaHabilitada">
-          <label for="inputEmpresaUsuario">Empresa</label>
-          <select
-            id="inputEmpresaUsuario"
-            class="form-input form-select"
-            [(ngModel)]="nuevoUsuario.empresaId"
-            (ngModelChange)="onEmpresaChange()"
-            [disabled]="!empresaHabilitada"
-          >
-            <option [value]="null" disabled>Selecciona la empresa</option>
-            <option *ngFor="let empresa of empresasDisponibles" [value]="empresa.id">{{ empresa.nombre }}</option>
-          </select>
-        </div>
-        <div class="form-group" [class.form-group-disabled]="!localHabilitado">
-          <label for="inputLocalUsuario">Local</label>
-          <select id="inputLocalUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.localId" [disabled]="!localHabilitado">
-            <option [value]="null" disabled>Selecciona el local</option>
-            <option *ngFor="let local of localesDelFormulario" [value]="local.id">{{ local.nombre }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Foto (opcional)</label>
-        <div class="foto-field-wrapper">
-          <div class="foto-preview-container" (click)="fotoInput.click()" title="Clic para elegir foto">
-            <img *ngIf="fotoPreview" [src]="fotoPreview" alt="Vista previa" />
-            <span *ngIf="!fotoPreview">+</span>
-          </div>
-          <div class="foto-field-info">
-            <div class="foto-field-row">
-              <input type="text" class="form-input" [value]="fotoNombreArchivo || 'Selecciona una imagen...'" readonly (click)="fotoInput.click()" />
-              <button type="button" class="btn-quitar-foto" *ngIf="fotoPreview" (click)="quitarFoto()" title="Quitar foto">×</button>
-            </div>
-            <span class="foto-hint">JPG, PNG o WEBP · máx. 1.5 MB</span>
-            <span class="foto-error" *ngIf="fotoError">{{ fotoError }}</span>
-          </div>
-          <input #fotoInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onFotoSeleccionada($event)" />
+          <input id="inputPasswordUsuario" type="password" class="form-input" placeholder="Mínimo 8 caracteres" [(ngModel)]="nuevoUsuario.password" />
         </div>
       </div>
 
       <div class="modal-actions modal-actions-split">
         <button class="btn-clear" (click)="cerrarModalNuevo()">Cancelar</button>
-        <button class="btn-primary" [disabled]="!formularioValido" (click)="crearUsuario()">Crear usuario</button>
+        <button class="btn-primary" [disabled]="!formularioValido || guardando" (click)="crearUsuario()">
+          {{ guardando ? 'Creando…' : 'Crear usuario' }}
+        </button>
       </div>
     </div>
   </div>
@@ -208,8 +157,7 @@
 
     <h2 class="confirmacion-titulo">Usuario creado con éxito</h2>
     <p class="confirmacion-desc" *ngIf="usuarioRecienCreado">
-      <strong>{{ usuarioRecienCreado.nombre }} {{ usuarioRecienCreado.apellido }}</strong> quedó registrado como
-      {{ usuarioRecienCreado.rol }}.
+      <strong>{{ usuarioRecienCreado.nombres }} {{ usuarioRecienCreado.apellidos }}</strong> quedó registrado.
     </p>
 
     <div class="modal-actions">

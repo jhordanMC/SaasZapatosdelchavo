@@ -1,20 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Empresa, EmpresasService, Local, TipoEmpresa } from '../../../services/empresas';
+import { forkJoin } from 'rxjs';
+import { Empresa, EmpresasService, Local, LocalInput } from '../../../services/empresas';
 
 interface NuevaEmpresaForm {
   nombre: string;
-  tipo: TipoEmpresa | '';
-  plan: 'Básico' | 'Pro';
   locales: number;
-}
-
-interface NuevoLocalForm {
-  nombre: string;
-  direccion: string;
-  descripcion: string;
 }
 
 @Component({
@@ -24,90 +17,86 @@ interface NuevoLocalForm {
   templateUrl: './empresas.html',
   styleUrls: ['./empresas.css'],
 })
-export class EmpresasComponent {
+export class EmpresasComponent implements OnInit {
   constructor(private empresasService: EmpresasService, private router: Router) {}
 
+  empresas = signal<Empresa[]>([]);
+  cargando = signal(true);
+  error = signal<string | null>(null);
+
   busqueda = '';
-  filtroTipo: TipoEmpresa | 'Todos' = 'Todos';
   fechaDesde = '';
   fechaHasta = '';
   vistaModo: 'cards' | 'tabla' = 'cards';
 
-  tipos: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
-
-  get todasEmpresas(): Empresa[] {
-    return this.empresasService.getEmpresas();
+  ngOnInit(): void {
+    this.cargarEmpresas();
   }
 
-  // ── Modal "Nueva empresa" (3 pasos) ────────────────────
+  private cargarEmpresas(): void {
+    this.cargando.set(true);
+    this.empresasService.listarEmpresas().subscribe({
+      next: (empresas) => {
+        this.empresas.set(empresas);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.error.set('No se pudo cargar la lista de empresas.');
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  // ── Modal "Nueva empresa" (2 pasos: datos + locales) ────
   modalNuevaAbierto = false;
   pasoModal: 1 | 2 | 3 = 1;
-  nuevaEmpresa: NuevaEmpresaForm = { nombre: '', tipo: '', plan: 'Básico', locales: 1 };
+  nuevaEmpresa: NuevaEmpresaForm = { nombre: '', locales: 1 };
   modalLogoError = false;
+  guardando = false;
 
   // ── Paso 3: alta de locales uno a uno ──────────────────
-  nuevoLocal: NuevoLocalForm = { nombre: '', direccion: '', descripcion: '' };
-  localesCreadosTemp: Local[] = [];
+  nuevoLocal: LocalInput = { nombre: '', direccion: '', descripcion: '' };
+  localesCreadosTemp: (LocalInput & { id: string })[] = [];
 
   // ── Modal de confirmación tras crear la empresa ────────
   modalConfirmacionAbierto = false;
   empresaRecienCreada: Empresa | null = null;
-
-  tipoStyle: Record<TipoEmpresa, string> = {
-    Banca: 'tipo-banca',
-    Seguros: 'tipo-seguros',
-    Telecomunicaciones: 'tipo-telco',
-    Retail: 'tipo-retail',
-    Financiero: 'tipo-financiero',
-  };
+  localesRecienCreados: Local[] = [];
 
   get empresasFiltradas(): Empresa[] {
-    return this.todasEmpresas.filter((empresa) => {
+    return this.empresas().filter((empresa) => {
       if (this.busqueda && !empresa.nombre.toLowerCase().includes(this.busqueda.toLowerCase())) return false;
-      if (this.filtroTipo !== 'Todos' && empresa.tipo !== this.filtroTipo) return false;
-      if (this.fechaDesde && empresa.fechaAlta < this.fechaDesde) return false;
-      if (this.fechaHasta && empresa.fechaAlta > this.fechaHasta) return false;
+      const fechaAlta = empresa.creado_en.slice(0, 10);
+      if (this.fechaDesde && fechaAlta < this.fechaDesde) return false;
+      if (this.fechaHasta && fechaAlta > this.fechaHasta) return false;
       return true;
     });
   }
 
   get totalEmpresas(): number {
-    return this.todasEmpresas.length;
+    return this.empresas().length;
   }
 
   get empresasActivas(): number {
-    return this.todasEmpresas.filter((empresa) => empresa.estado === 'activo').length;
+    return this.empresas().filter((empresa) => empresa.estado === 'activa').length;
   }
 
-  get totalIngresos(): number {
-    return this.todasEmpresas.reduce((sum, empresa) => sum + empresa.ingresosMes, 0);
-  }
-
-  get totalPlanesPro(): number {
-    return this.todasEmpresas.filter((empresa) => empresa.plan === 'Pro').length;
+  get empresasSuspendidas(): number {
+    return this.empresas().filter((empresa) => empresa.estado !== 'activa').length;
   }
 
   get hayFiltros(): boolean {
-    return !!(this.busqueda || this.filtroTipo !== 'Todos' || this.fechaDesde || this.fechaHasta);
+    return !!(this.busqueda || this.fechaDesde || this.fechaHasta);
   }
 
   limpiarFiltros(): void {
     this.busqueda = '';
-    this.filtroTipo = 'Todos';
     this.fechaDesde = '';
     this.fechaHasta = '';
   }
 
-  fmtUSD(value: number): string {
-    return value === 0 ? '—' : `$${value.toLocaleString('en-US')}`;
-  }
-
-  scoreLabel(score: number): string {
-    return score >= 85 ? 'Alto' : score >= 70 ? 'Medio' : 'Bajo';
-  }
-
-  scoreClass(score: number): string {
-    return score >= 85 ? 'score-high' : score >= 70 ? 'score-mid' : 'score-low';
+  fechaAlta(empresa: Empresa): string {
+    return empresa.creado_en.slice(0, 10);
   }
 
   iniciales(nombre: string): string {
@@ -117,12 +106,12 @@ export class EmpresasComponent {
   }
 
   verLocales(empresa: Empresa): void {
-    this.router.navigate(['/admin/empresas', empresa.id]);
+    this.router.navigate(['/admin/empresas', empresa.id_empresa]);
   }
 
   // ── Flujo modal "Nueva empresa" ────────────────────────
   abrirModalNueva(): void {
-    this.nuevaEmpresa = { nombre: '', tipo: '', plan: 'Básico', locales: 1 };
+    this.nuevaEmpresa = { nombre: '', locales: 1 };
     this.nuevoLocal = { nombre: '', direccion: '', descripcion: '' };
     this.localesCreadosTemp = [];
     this.pasoModal = 1;
@@ -134,7 +123,7 @@ export class EmpresasComponent {
   }
 
   get paso1Valido(): boolean {
-    return this.nuevaEmpresa.nombre.trim().length > 0 && this.nuevaEmpresa.tipo !== '';
+    return this.nuevaEmpresa.nombre.trim().length > 0;
   }
 
   irAPasoLocales(): void {
@@ -190,35 +179,51 @@ export class EmpresasComponent {
     this.nuevoLocal = { nombre: '', direccion: '', descripcion: '' };
   }
 
-  quitarLocalTemp(local: Local): void {
+  quitarLocalTemp(local: { id: string }): void {
     this.localesCreadosTemp = this.localesCreadosTemp.filter((item) => item.id !== local.id);
   }
 
   confirmarCrearEmpresa(): void {
-    if (!this.paso1Valido || this.localesCreadosTemp.length === 0) return;
+    if (!this.paso1Valido || this.localesCreadosTemp.length === 0 || this.guardando) return;
 
-    const empresaCreada = this.empresasService.agregarEmpresa({
-      nombre: this.nuevaEmpresa.nombre,
-      tipo: this.nuevaEmpresa.tipo as TipoEmpresa,
-      plan: this.nuevaEmpresa.plan,
-      locales: this.localesCreadosTemp.map((local) =>
-        this.empresasService.crearLocal(local.nombre, local.direccion, local.descripcion)
-      ),
+    this.guardando = true;
+    this.empresasService.crearEmpresa(this.nuevaEmpresa.nombre.trim()).subscribe({
+      next: (empresaCreada) => {
+        const creaciones = this.localesCreadosTemp.map((local) =>
+          this.empresasService.crearLocal(empresaCreada.id_empresa, local)
+        );
+        forkJoin(creaciones).subscribe({
+          next: (locales) => {
+            this.guardando = false;
+            this.empresas.set([empresaCreada, ...this.empresas()]);
+            this.empresaRecienCreada = empresaCreada;
+            this.localesRecienCreados = locales;
+            this.cerrarModalNueva();
+            this.modalConfirmacionAbierto = true;
+          },
+          error: () => {
+            this.guardando = false;
+            this.error.set('La empresa se creó, pero hubo un error al registrar sus locales.');
+            this.cerrarModalNueva();
+          },
+        });
+      },
+      error: () => {
+        this.guardando = false;
+        this.error.set('No se pudo crear la empresa.');
+      },
     });
-
-    this.empresaRecienCreada = empresaCreada;
-    this.cerrarModalNueva();
-    this.modalConfirmacionAbierto = true;
   }
 
   cerrarModalConfirmacion(): void {
     this.modalConfirmacionAbierto = false;
     this.empresaRecienCreada = null;
+    this.localesRecienCreados = [];
   }
 
   irADetalleDesdeConfirmacion(): void {
     if (!this.empresaRecienCreada) return;
-    const id = this.empresaRecienCreada.id;
+    const id = this.empresaRecienCreada.id_empresa;
     this.cerrarModalConfirmacion();
     this.router.navigate(['/admin/empresas', id]);
   }

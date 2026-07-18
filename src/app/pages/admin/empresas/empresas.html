@@ -15,11 +15,6 @@
       <input type="text" placeholder="Buscar empresa..." [(ngModel)]="busqueda" />
     </div>
 
-    <select class="filter-select" [(ngModel)]="filtroTipo">
-      <option value="Todos">Tipo: Todos</option>
-      <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
-    </select>
-
     <div class="date-field">
       <span>Desde</span>
       <input type="date" [(ngModel)]="fechaDesde" />
@@ -39,6 +34,8 @@
   </div>
 
   <div class="content">
+    <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
     <div class="summary-grid">
       <div class="kpi-card">
         <div class="kpi-label">Total Empresas</div>
@@ -49,12 +46,8 @@
         <div class="kpi-value">{{ empresasActivas }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ingresos Totales</div>
-        <div class="kpi-value">{{ fmtUSD(totalIngresos) }}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Planes Pro</div>
-        <div class="kpi-value">{{ totalPlanesPro }}</div>
+        <div class="kpi-label">Suspendidas / Canceladas</div>
+        <div class="kpi-value">{{ empresasSuspendidas }}</div>
       </div>
     </div>
 
@@ -102,24 +95,23 @@
                 <div class="empresa-name">{{ empresa.nombre }}</div>
 
                 <button class="empresa-locales-link" (click)="verLocales(empresa)" title="Ver locales de la empresa">
-                  Plan {{ empresa.plan }} · {{ empresa.locales.length }} {{ empresa.locales.length === 1 ? 'local' : 'locales' }}
+                  Ver locales
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </button>
               </div>
             </div>
-            <span class="empresa-status-dot" [class.off]="empresa.estado !== 'activo'" [title]="empresa.estado"></span>
+            <span class="empresa-status-dot" [class.off]="empresa.estado !== 'activa'" [title]="empresa.estado"></span>
           </div>
 
           <div class="empresa-body">
-            <span class="tipo-pill" [ngClass]="tipoStyle[empresa.tipo]">{{ empresa.tipo }}</span>
-            <span class="score-pill" [ngClass]="scoreClass(empresa.scorePromedio)">Score {{ empresa.scorePromedio }}%</span>
+            <span class="status-pill" [class.active]="empresa.estado === 'activa'">{{ empresa.estado }}</span>
+            <span class="empresa-slug">{{ empresa.slug }}</span>
           </div>
 
           <div class="empresa-metrics">
-            <div class="empresa-revenue">{{ fmtUSD(empresa.ingresosMes) }}<span>/mes</span></div>
-            <div class="empresa-date">Alta: {{ empresa.fechaAlta }}</div>
+            <div class="empresa-date">Alta: {{ fechaAlta(empresa) }}</div>
           </div>
         </div>
       </div>
@@ -127,13 +119,10 @@
       <div class="table-wrap" *ngIf="vistaModo === 'tabla' && empresasFiltradas.length > 0">
         <div class="table-row table-head">
           <span>Empresa</span>
-          <span>Tipo</span>
-          <span>Plan</span>
-          <span>Locales</span>
-          <span>Score</span>
+          <span>Slug</span>
           <span>Estado</span>
-          <span>Ingresos</span>
           <span>Alta</span>
+          <span></span>
         </div>
 
         <div class="table-row" *ngFor="let empresa of empresasFiltradas">
@@ -141,21 +130,19 @@
             <div class="empresa-avatar empresa-avatar-sm">{{ iniciales(empresa.nombre) }}</div>
             <div class="empresa-name">{{ empresa.nombre }}</div>
           </div>
-          <span><span class="tipo-pill" [ngClass]="tipoStyle[empresa.tipo]">{{ empresa.tipo }}</span></span>
-          <span>{{ empresa.plan }}</span>
+          <span>{{ empresa.slug }}</span>
+          <span><span class="status-pill" [class.active]="empresa.estado === 'activa'">{{ empresa.estado }}</span></span>
+          <span>{{ fechaAlta(empresa) }}</span>
           <span>
             <button class="locales-count-link" (click)="verLocales(empresa)" title="Ver locales de la empresa">
-              {{ empresa.locales.length }}
+              Ver locales
             </button>
           </span>
-          <span><span class="score-pill" [ngClass]="scoreClass(empresa.scorePromedio)">{{ empresa.scorePromedio }}%</span></span>
-          <span><span class="status-pill" [class.active]="empresa.estado === 'activo'">{{ empresa.estado }}</span></span>
-          <span>{{ fmtUSD(empresa.ingresosMes) }}</span>
-          <span>{{ empresa.fechaAlta }}</span>
         </div>
       </div>
 
-      <p class="empty-state" *ngIf="empresasFiltradas.length === 0">No se encontraron empresas con estos filtros.</p>
+      <p class="empty-state" *ngIf="cargando()">Cargando empresas…</p>
+      <p class="empty-state" *ngIf="!cargando() && empresasFiltradas.length === 0">No se encontraron empresas con estos filtros.</p>
     </div>
   </div>
 
@@ -206,22 +193,6 @@
           placeholder="Ej. Banco Continental"
           [(ngModel)]="nuevaEmpresa.nombre"
         />
-      </div>
-
-      <div class="form-group">
-        <label for="inputTipoEmpresa">Tipo de empresa</label>
-        <select id="inputTipoEmpresa" class="form-input form-select" [(ngModel)]="nuevaEmpresa.tipo">
-          <option value="" disabled>Selecciona un tipo</option>
-          <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="inputPlanEmpresa">Plan</label>
-        <select id="inputPlanEmpresa" class="form-input form-select" [(ngModel)]="nuevaEmpresa.plan">
-          <option value="Básico">Básico</option>
-          <option value="Pro">Pro</option>
-        </select>
       </div>
 
       <div class="modal-actions">
@@ -316,8 +287,8 @@
 
       <div class="modal-actions modal-actions-split">
         <button class="btn-clear" (click)="volverAPasoCantidad()">Atrás</button>
-        <button class="btn-primary" [disabled]="localesCreadosTemp.length === 0" (click)="confirmarCrearEmpresa()">
-          Crear empresa
+        <button class="btn-primary" [disabled]="localesCreadosTemp.length === 0 || guardando" (click)="confirmarCrearEmpresa()">
+          {{ guardando ? 'Creando…' : 'Crear empresa' }}
         </button>
       </div>
     </div>
@@ -342,8 +313,8 @@
 
     <h2 class="confirmacion-titulo">Empresa creada con éxito</h2>
     <p class="confirmacion-desc" *ngIf="empresaRecienCreada">
-      <strong>{{ empresaRecienCreada.nombre }}</strong> se registró con {{ empresaRecienCreada.locales.length }}
-      {{ empresaRecienCreada.locales.length === 1 ? 'local' : 'locales' }}.
+      <strong>{{ empresaRecienCreada.nombre }}</strong> se registró con {{ localesRecienCreados.length }}
+      {{ localesRecienCreados.length === 1 ? 'local' : 'locales' }}.
     </p>
 
     <div class="modal-actions modal-actions-split">
