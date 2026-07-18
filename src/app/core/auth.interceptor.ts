@@ -1,15 +1,15 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { AuthService } from './auth';
+import { TokenStore } from './token-store';
 
 const RUTAS_SIN_TOKEN = ['/iam/auth/login', '/iam/auth/refresh', '/iam/auth/recuperar-password', '/iam/auth/resetear-password'];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
+  const tokenStore = inject(TokenStore);
   const esRutaPublica = RUTAS_SIN_TOKEN.some((ruta) => req.url.includes(ruta));
 
-  const accessToken = authService.accessToken();
+  const accessToken = tokenStore.accessToken();
   const conToken = accessToken && !esRutaPublica
     ? req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } })
     : req;
@@ -19,7 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status !== 401 || esRutaPublica) {
         return throwError(() => error);
       }
-      return authService.refrescarSesion().pipe(
+      return tokenStore.refrescar().pipe(
         switchMap((nuevoAccessToken) => {
           if (!nuevoAccessToken) {
             return throwError(() => error);

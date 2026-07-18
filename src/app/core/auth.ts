@@ -1,7 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { Observable, ReplaySubject, catchError, map, of, switchMap, take, tap, throwError, forkJoin } from 'rxjs';
+import { Observable, ReplaySubject, catchError, forkJoin, map, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { TokenResponse, TokenStore } from './token-store';
 
 export type Rol = 'admin' | 'dueño' | 'vendedor';
 
@@ -10,12 +11,6 @@ export interface SesionUsuario {
   correo: string;
   rol: Rol;
   empresaId: string | null;
-}
-
-interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
 }
 
 interface MiPerfilResponse {
@@ -27,9 +22,6 @@ interface MiPerfilResponse {
   estado: string;
   roles: string[];
 }
-
-const CLAVE_ACCESS_TOKEN = 'alba_access_token';
-const CLAVE_REFRESH_TOKEN = 'alba_refresh_token';
 
 // Nombres exactos de los roles de sistema sembrados en el backend
 // (app/scripts/seed_catalogo_rbac.py). Un usuario puede tener varios
@@ -46,7 +38,6 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
 
   private sesion = signal<SesionUsuario | null>(null);
-  private tokenAcceso = signal<string | null>(localStorage.getItem(CLAVE_ACCESS_TOKEN));
 
   // Se emite una vez que el intento de restaurar sesión (al recargar la
   // página) terminó, haya encontrado sesión válida o no. Los guards de
@@ -55,14 +46,13 @@ export class AuthService {
   private inicializacion$ = new ReplaySubject<void>(1);
 
   usuarioActual = this.sesion.asReadonly();
-  accessToken = this.tokenAcceso.asReadonly();
 
-  constructor(private http: HttpClient) {
-    if (this.tokenAcceso()) {
+  constructor(private http: HttpClient, private tokenStore: TokenStore) {
+    if (this.tokenStore.accessToken()) {
       this.cargarPerfilYPermisos().subscribe({
         next: () => this.finalizarInicializacion(),
         error: () => {
-          this.limpiarSesion();
+          this.tokenStore.limpiar();
           this.finalizarInicializacion();
         },
       });
@@ -106,53 +96,23 @@ export class AuthService {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
       .pipe(
-        tap((tokens) => this.guardarTokens(tokens)),
+        tap((tokens) => this.tokenStore.guardar(tokens)),
         switchMap(() => this.cargarPerfilYPermisos()),
         catchError((error) => {
-          this.limpiarSesion();
+          this.tokenStore.limpiar();
+          this.sesion.set(null);
           return throwError(() => error);
         }),
       );
   }
 
   logout(): void {
-    const refreshToken = localStorage.getItem(CLAVE_REFRESH_TOKEN);
-    this.limpiarSesion();
+    const refreshToken = this.tokenStore.refreshToken;
+    this.tokenStore.limpiar();
+    this.sesion.set(null);
     if (refreshToken) {
       this.http.post(`${this.apiUrl}/iam/auth/logout`, { refresh_token: refreshToken }).subscribe();
     }
-  }
-
-  /** Usado por el interceptor HTTP para reintentar tras un 401. */
-  refrescarSesion(): Observable<string | null> {
-    const refreshToken = localStorage.getItem(CLAVE_REFRESH_TOKEN);
-    if (!refreshToken) {
-      this.limpiarSesion();
-      return of(null);
-    }
-    return this.http.post<TokenResponse>(`${this.apiUrl}/iam/auth/refresh`, { refresh_token: refreshToken }).pipe(
-      map((tokens) => {
-        this.guardarTokens(tokens);
-        return tokens.access_token;
-      }),
-      catchError(() => {
-        this.limpiarSesion();
-        return of(null);
-      }),
-    );
-  }
-
-  private guardarTokens(tokens: TokenResponse): void {
-    localStorage.setItem(CLAVE_ACCESS_TOKEN, tokens.access_token);
-    localStorage.setItem(CLAVE_REFRESH_TOKEN, tokens.refresh_token);
-    this.tokenAcceso.set(tokens.access_token);
-  }
-
-  private limpiarSesion(): void {
-    localStorage.removeItem(CLAVE_ACCESS_TOKEN);
-    localStorage.removeItem(CLAVE_REFRESH_TOKEN);
-    this.tokenAcceso.set(null);
-    this.sesion.set(null);
   }
 
   estaAutenticado(): boolean {
