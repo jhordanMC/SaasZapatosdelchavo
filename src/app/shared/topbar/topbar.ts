@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/auth';
 
 @Component({
   selector: 'app-topbar',
@@ -9,6 +11,8 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./topbar.css'],
 })
 export class TopbarComponent {
+  constructor(private authService: AuthService, private router: Router) {}
+
   @Input() title = 'Dashboard';
   @Input() company = 'ALBA Corporation';
   @Input() avatarLabel = 'A';
@@ -33,5 +37,11 @@ export class TopbarComponent {
 
   closeProfile(): void {
     this.showProfileModal = false;
+  }
+
+  cerrarSesion(): void {
+    this.showProfileModal = false;
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

@@ -489,3 +489,13 @@
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .content, .page-toolbar, .filters-bar { padding-left: 16px; padding-right: 16px; }
 }
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .page-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .filters-bar { gap: 8px; }
+  .search-box input { width: 100%; }
+  .filter-count { margin-left: 0; }
+  .charts-row { gap: 12px; }
+  .chart-card, .table-card { padding: 14px 16px; }
+}

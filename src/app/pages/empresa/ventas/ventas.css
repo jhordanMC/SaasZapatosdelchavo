@@ -190,7 +190,7 @@
   justify-content: center;
 }
 .carrito-item-foto img { width: 100%; height: 100%; object-fit: cover; }
-.foto-placeholder-mini { font-size: 16px; }
+.foto-placeholder-mini { color: #b7c9bd; }
 .carrito-item-info { flex: 1; min-width: 0; }
 .carrito-item-nombre { font-size: 12px; font-weight: 600; color: #1f4034; }
 .carrito-item-detalle { font-size: 11px; color: #94a798; margin-top: 2px; }
@@ -221,8 +221,10 @@
   border-radius: 8px;
   width: 24px;
   height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 12px;
 }
 
 .carrito-item-edicion {
@@ -266,7 +268,13 @@
 
 .foto-venta-box { display: flex; }
 .foto-venta-input { display: none; }
-.foto-venta-label { display: inline-block; text-align: center; }
+.foto-venta-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
 .foto-venta-preview { position: relative; width: 100%; max-height: 180px; border-radius: 12px; overflow: hidden; }
 .foto-venta-preview img { width: 100%; max-height: 180px; object-fit: cover; display: block; }
 .foto-venta-preview .btn-icon-danger { position: absolute; top: 8px; right: 8px; }
@@ -302,6 +310,9 @@
   border-radius: 8px;
   width: 24px;
   height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -315,10 +326,23 @@
   justify-content: center;
   z-index: 50;
 }
-.modal-card { background: white; border-radius: 18px; width: 420px; max-width: 92vw; }
+.modal-card { background: white; border-radius: 22px; width: 420px; max-width: 92vw; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #e8f1ea; }
 .modal-header h3 { margin: 0; font-size: 15px; color: #024b40; }
-.modal-close { border: none; background: none; font-size: 16px; cursor: pointer; color: #5a8a78; }
+.modal-close {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #d8e6dd;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: #5a8a78;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.modal-close:hover { background: #f4fbf6; border-color: #024b40; color: #024b40; }
 .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
 .form-row { display: flex; flex-direction: column; gap: 6px; }
 .form-row label { font-size: 12px; font-weight: 600; color: #1f4034; }
@@ -389,7 +413,7 @@
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.metodo-btn .metodo-icono { font-size: 15px; }
+.metodo-btn .metodo-icono { flex-shrink: 0; }
 .metodo-btn.active { background: #024b40; color: white; border-color: #024b40; }
 
 .vuelto-preview {
@@ -445,6 +469,46 @@
 
 .pregunta-confirmacion { font-size: 13px; font-weight: 700; color: #024b40; text-align: center; margin: 4px 0 0; }
 
-.exito-icono { font-size: 34px; text-align: center; margin-bottom: 4px; }
+.exito-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1d7a4c;
+  margin-bottom: 4px;
+}
 .confirmacion { align-items: center; text-align: center; }
 .confirmacion p { font-size: 13px; color: #1f4034; }
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 1024px) {
+  .ventas-layout { flex-direction: column; }
+  .carrito-panel { width: 100%; }
+  .carrito-lista { max-height: none; }
+}
+
+@media (max-width: 768px) {
+  .page-toolbar {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .search-box { flex: 1 1 100%; max-width: none; }
+  .sexo-toggle { flex-wrap: wrap; }
+  .categorias-bar { padding: 12px 16px; }
+  .ventas-layout { padding: 16px; gap: 16px; }
+  .ventas-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .modal-card, .modal-checkout { width: 100%; max-width: 94vw; }
+}
+
+@media (max-width: 480px) {
+  .ventas-grid { grid-template-columns: repeat(2, 1fr); }
+  .metodo-pago-grid { grid-template-columns: 1fr; }
+  .form-row-2,
+  .carrito-item-edicion .form-row-2 { flex-direction: column; }
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer button { width: 100%; }
+  .confirmar-pago-fila { flex-wrap: wrap; gap: 4px; }
+  .btn-clear span, .btn-clear { white-space: nowrap; }
+}

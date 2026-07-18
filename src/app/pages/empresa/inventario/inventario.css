@@ -177,7 +177,7 @@
 
 .modal-card {
   background: white;
-  border-radius: 18px;
+  border-radius: 22px;
   width: 520px;
   max-width: 92vw;
   max-height: 88vh;
@@ -192,7 +192,20 @@
   border-bottom: 1px solid #e8f1ea;
 }
 .modal-header h3 { margin: 0; font-size: 16px; color: #024b40; }
-.modal-close { border: none; background: none; font-size: 16px; cursor: pointer; color: #5a8a78; }
+.modal-close {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #d8e6dd;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: #5a8a78;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.modal-close:hover { background: #f4fbf6; border-color: #024b40; color: #024b40; }
 
 .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
 
@@ -264,6 +277,9 @@
   border-radius: 8px;
   width: 28px;
   height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -273,4 +289,26 @@
   gap: 10px;
   padding: 16px 22px;
   border-top: 1px solid #e8f1ea;
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 768px) {
+  .page-toolbar { flex-wrap: wrap; padding: 14px 16px; gap: 10px; }
+  .filters-bar { padding: 14px 16px; }
+  .search-box { flex: 1 1 100%; }
+  .content { padding: 16px; }
+  .productos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .modal-card { width: 100%; max-width: 94vw; }
+}
+
+@media (max-width: 480px) {
+  .productos-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-row-2 { flex-direction: column; }
+  .variante-columnas,
+  .variante-fila { grid-template-columns: 1fr 1fr; }
+  .producto-acciones { flex-wrap: wrap; }
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer button { width: 100%; }
 }

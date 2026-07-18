@@ -16,7 +16,6 @@ import { AuthService } from '../../core/auth';
 })
 export class EmpresaLayoutComponent implements OnInit, OnDestroy {
   usuario;
-  navItems: SidebarItem[];
 
   constructor(
     private router: Router,
@@ -25,7 +24,9 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     public pageTitleService: PageTitleService
   ) {
     this.usuario = this.authService.usuarioActual;
+  }
 
+  get navItems(): SidebarItem[] {
     const esDueño = this.authService.tieneRol('dueño');
     const base: SidebarItem[] = [
       { label: 'Dashboard', route: '/empresa/dashboard', icon: 'dashboard', exact: true },
@@ -39,7 +40,7 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
       );
     }
     base.push({ label: 'Configuración', href: '#', icon: 'config' });
-    this.navItems = base;
+    return base;
   }
 
   rolEtiqueta(): string {

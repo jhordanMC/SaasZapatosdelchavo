@@ -497,6 +497,19 @@
   .content { padding-left: 16px; padding-right: 16px; }
   .summary-grid { grid-template-columns: 1fr; }
   .empresas-grid { grid-template-columns: 1fr; }
+  .table-header { flex-wrap: wrap; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .page-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .search-box { flex: 1 1 auto; }
+  .date-field { width: 100%; }
+  .date-field input { flex: 1; }
+  .filter-count { margin-left: 0; }
+  .modal-card, .modal-card-wide { max-width: 94vw; }
+  .local-form-grid { grid-template-columns: 1fr; }
+  .modal-actions-split { flex-direction: column; }
 }
 
 /* ══════════════════════════════

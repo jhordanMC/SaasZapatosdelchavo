@@ -364,6 +364,30 @@
 
 .profile-modal-actions {
   padding: 20px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-btn-logout {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fdecec;
+  color: #b23a3a;
+  border: 1px solid #f3caca;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-btn-logout:hover {
+  background: #fbdede;
 }
 
 .profile-btn-secondary {
@@ -381,4 +405,118 @@
 
 .profile-btn-secondary:hover {
   background: #e8f1ec;
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+
+/* Botón hamburguesa flotante: solo visible en móvil */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(2, 75, 64, 0.15);
+  background: white;
+  color: #024B40;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 75, 64, 0.15);
+  z-index: 250;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Tablet: sidebar se reduce a un riel de solo íconos (sigue siempre visible, sin necesidad de hamburguesa) */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 84px;
+    border-bottom-right-radius: 24px;
+  }
+  .sidebar-brand { padding: 20px 8px 14px; }
+  .brand-logo { width: 38px; margin-bottom: 0; }
+  .brand-name, .brand-sub { display: none; }
+  .sidebar-nav { padding: 14px 10px; align-items: center; }
+  .nav-item {
+    justify-content: center;
+    padding: 12px;
+    gap: 0;
+    font-size: 0;
+    line-height: 0;
+  }
+  .nav-icon { width: 34px; height: 34px; }
+  .sidebar-footer { padding: 14px 10px; }
+  .user-card { justify-content: center; padding: 10px; }
+  .user-info { display: none; }
+}
+
+/* Móvil: sidebar pasa a ser un drawer lateral oculto, controlado por el botón hamburguesa */
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    min-height: 100vh;
+    background: #eafaf1;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.22, 0.8, 0.35, 1);
+    border-radius: 0;
+    box-shadow: 0 0 50px rgba(1, 20, 16, 0.25);
+    z-index: 210;
+    overflow-y: auto;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 20, 16, 0.45);
+    z-index: 205;
+    animation: backdropIn 0.2s ease both;
+  }
+
+  @keyframes backdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Dentro del drawer se restaura la vista completa (con textos), no el riel de íconos */
+  .sidebar-brand { padding: 26px 20px 18px; }
+  .brand-logo { width: 78px; margin-bottom: 10px; }
+  .brand-name, .brand-sub { display: inline-flex; }
+  .brand-sub { display: block; }
+  .sidebar-nav { padding: 16px 12px; align-items: stretch; }
+  .nav-item {
+    justify-content: flex-start;
+    padding: 12px 14px;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .nav-icon { width: 30px; height: 30px; }
+  .sidebar-footer { padding: 16px 12px; }
+  .user-card { justify-content: flex-start; padding: 12px; }
+  .user-info { display: block; }
+}
+
+@media (max-width: 420px) {
+  .profile-modal-overlay { padding: 12px; }
+  .profile-modal-card { max-width: 100%; }
 }

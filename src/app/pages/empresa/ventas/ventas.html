@@ -74,7 +74,11 @@
         <ng-container *ngIf="editandoVarianteId !== item.varianteId; else edicionTpl">
           <div class="carrito-item-foto">
             <img *ngIf="item.fotoUrl" [src]="item.fotoUrl" alt="{{ item.nombre }}" />
-            <span *ngIf="!item.fotoUrl" class="foto-placeholder-mini">👟</span>
+            <svg *ngIf="!item.fotoUrl" class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
           </div>
           <div class="carrito-item-info">
             <div class="carrito-item-nombre">{{ item.nombre }}</div>
@@ -87,8 +91,18 @@
           <div class="carrito-item-derecha">
             <div class="carrito-item-subtotal">S/{{ totalItem(item).toFixed(2) }}</div>
             <div class="carrito-item-acciones">
-              <button class="btn-icon" title="Editar" (click)="iniciarEdicion(item)">✎</button>
-              <button class="btn-icon-danger" title="Eliminar" (click)="quitarDelCarrito(item.varianteId)">✕</button>
+              <button class="btn-icon" title="Editar" (click)="iniciarEdicion(item)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                </svg>
+              </button>
+              <button class="btn-icon-danger" title="Eliminar" (click)="quitarDelCarrito(item.varianteId)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
           </div>
         </ng-container>
@@ -139,7 +153,10 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ showVariantePicker.nombre }}</h3>
-      <button class="modal-close" (click)="cerrarSelectorVariante()">✕</button>
+      <button class="modal-close" (click)="cerrarSelectorVariante()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
     </div>
     <div class="modal-body">
       <div class="producto-modal-foto">
@@ -201,7 +218,10 @@
     <ng-container *ngIf="pasoCheckout === 'formulario'">
       <div class="modal-header">
         <h3>Completar venta</h3>
-        <button class="modal-close" (click)="cerrarCheckout()">✕</button>
+        <button class="modal-close" (click)="cerrarCheckout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
       </div>
 
       <div class="modal-body">
@@ -214,16 +234,38 @@
           <label>Método de pago</label>
           <div class="metodo-pago-grid">
             <button type="button" class="metodo-btn" [class.active]="metodoPago === 'efectivo'" (click)="metodoPago = 'efectivo'">
-              <span class="metodo-icono">💵</span> Efectivo
+              <svg class="metodo-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                <circle cx="12" cy="12" r="2.5"/>
+                <line x1="6" y1="9" x2="6" y2="9.01"/>
+                <line x1="18" y1="15" x2="18" y2="15.01"/>
+              </svg>
+              Efectivo
             </button>
             <button type="button" class="metodo-btn" [class.active]="metodoPago === 'yape'" (click)="metodoPago = 'yape'">
-              <span class="metodo-icono">📱</span> Yape
+              <svg class="metodo-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="2" width="12" height="20" rx="2"/>
+                <line x1="11" y1="18" x2="13" y2="18"/>
+              </svg>
+              Yape
             </button>
             <button type="button" class="metodo-btn" [class.active]="metodoPago === 'plin'" (click)="metodoPago = 'plin'">
-              <span class="metodo-icono">📱</span> Plin
+              <svg class="metodo-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="2" width="12" height="20" rx="2"/>
+                <line x1="11" y1="18" x2="13" y2="18"/>
+              </svg>
+              Plin
             </button>
             <button type="button" class="metodo-btn" [class.active]="metodoPago === 'transferencia'" (click)="metodoPago = 'transferencia'">
-              <span class="metodo-icono">🏦</span> Transferencia
+              <svg class="metodo-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 8 22 8 12 2"/>
+                <line x1="4" y1="8" x2="4" y2="20"/>
+                <line x1="9" y1="8" x2="9" y2="20"/>
+                <line x1="15" y1="8" x2="15" y2="20"/>
+                <line x1="20" y1="8" x2="20" y2="20"/>
+                <line x1="2" y1="20" x2="22" y2="20"/>
+              </svg>
+              Transferencia
             </button>
           </div>
         </div>
@@ -246,11 +288,20 @@
           </label>
           <div class="foto-venta-box" *ngIf="!fotoVentaUrl">
             <input type="file" accept="image/*" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInput" class="foto-venta-input" />
-            <label for="fotoVentaInput" class="btn-secondary foto-venta-label">📷 Tomar / subir foto del comprobante</label>
+            <label for="fotoVentaInput" class="btn-secondary foto-venta-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Tomar / subir foto del comprobante
+            </label>
           </div>
           <div class="foto-venta-preview" *ngIf="fotoVentaUrl">
             <img [src]="fotoVentaUrl" alt="Foto del comprobante" />
-            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()">✕</button>
+            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg></button>
           </div>
         </div>
 
@@ -258,11 +309,20 @@
           <label>Foto del efectivo contado (opcional)</label>
           <div class="foto-venta-box" *ngIf="!fotoVentaUrl">
             <input type="file" accept="image/*" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInputEfectivo" class="foto-venta-input" />
-            <label for="fotoVentaInputEfectivo" class="btn-secondary foto-venta-label">📷 Tomar / subir foto</label>
+            <label for="fotoVentaInputEfectivo" class="btn-secondary foto-venta-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Tomar / subir foto
+            </label>
           </div>
           <div class="foto-venta-preview" *ngIf="fotoVentaUrl">
             <img [src]="fotoVentaUrl" alt="Foto de la venta" />
-            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()">✕</button>
+            <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg></button>
           </div>
         </div>
 
@@ -280,7 +340,10 @@
     <ng-container *ngIf="pasoCheckout === 'confirmar'">
       <div class="modal-header">
         <h3>Confirma tu venta</h3>
-        <button class="modal-close" (click)="cerrarCheckout()">✕</button>
+        <button class="modal-close" (click)="cerrarCheckout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
       </div>
 
       <div class="modal-body">
@@ -290,7 +353,11 @@
           <div class="confirmar-producto-item" *ngFor="let item of itemsCarrito">
             <div class="confirmar-producto-foto">
               <img *ngIf="item.fotoUrl" [src]="item.fotoUrl" alt="{{ item.nombre }}" />
-              <span *ngIf="!item.fotoUrl" class="foto-placeholder-mini">👟</span>
+              <svg *ngIf="!item.fotoUrl" class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
             </div>
             <div class="confirmar-producto-info">
               <div class="confirmar-producto-nombre">{{ item.nombre }}</div>
@@ -337,10 +404,18 @@
     <ng-container *ngIf="pasoCheckout === 'exito'">
       <div class="modal-header">
         <h3>Venta registrada</h3>
-        <button class="modal-close" (click)="cerrarTodo()">✕</button>
+        <button class="modal-close" (click)="cerrarTodo()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
       </div>
       <div class="modal-body confirmacion">
-        <div class="exito-icono">✅</div>
+        <div class="exito-icono">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
         <p>Venta por <strong>S/{{ ventaConfirmada?.total?.toFixed(2) }}</strong> registrada correctamente.</p>
         <p *ngIf="ventaConfirmada && ventaConfirmada.vuelto > 0">Vuelto entregado: <strong>S/{{ ventaConfirmada.vuelto.toFixed(2) }}</strong></p>
       </div>

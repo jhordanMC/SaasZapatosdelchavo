@@ -24,7 +24,17 @@
   </div>
 
   <div class="banner" [class.banner-positivo]="generandoGanancia" [class.banner-negativo]="!generandoGanancia">
-    <div class="banner-icono">{{ generandoGanancia ? '📈' : '⚠️' }}</div>
+    <div class="banner-icono">
+      <svg *ngIf="generandoGanancia" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+        <polyline points="17 6 23 6 23 12"/>
+      </svg>
+      <svg *ngIf="!generandoGanancia" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
     <div class="banner-texto">
       <div class="banner-titulo">
         {{ generandoGanancia ? 'Estás generando ganancia este mes' : 'Aún no cubres tus costos operativos' }}
@@ -78,12 +88,28 @@
 
     <div class="decision-destacados">
       <div class="destacado-card" *ngIf="productoEstrella">
-        <span class="destacado-tag">🏆 Producto estrella</span>
+        <span class="destacado-tag">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 21h8"/>
+            <path d="M12 17v4"/>
+            <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+            <path d="M7 5H4a2 2 0 0 0 0 4h3"/>
+            <path d="M17 5h3a2 2 0 0 1 0 4h-3"/>
+          </svg>
+          Producto estrella
+        </span>
         <span class="destacado-nombre">{{ productoEstrella.nombre }}</span>
         <span class="destacado-nota">{{ productoEstrella.unidades }} unidades vendidas</span>
       </div>
       <div class="destacado-card" *ngIf="productoMasRentable">
-        <span class="destacado-tag">💎 Más rentable</span>
+        <span class="destacado-tag">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h12l4 6-10 12L2 9z"/>
+            <path d="M2 9h20"/>
+            <path d="M9 3 8 9l4 12 4-12-1-6"/>
+          </svg>
+          Más rentable
+        </span>
         <span class="destacado-nombre">{{ productoMasRentable.nombre }}</span>
         <span class="destacado-nota">S/{{ productoMasRentable.margen }} de margen por unidad</span>
       </div>
@@ -128,7 +154,10 @@
           <td>{{ g.tipo }}</td>
           <td>S/{{ g.monto }}</td>
           <td>{{ g.periodo }}</td>
-          <td><button class="btn-icon-danger" (click)="eliminarGasto(g.id)">✕</button></td>
+          <td><button class="btn-icon-danger" (click)="eliminarGasto(g.id)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button></td>
         </tr>
       </tbody>
     </table>
@@ -139,7 +168,10 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Registrar gasto operativo</h3>
-      <button class="modal-close" (click)="cerrarModal()">✕</button>
+      <button class="modal-close" (click)="cerrarModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
     </div>
     <div class="modal-body">
       <div class="form-row">

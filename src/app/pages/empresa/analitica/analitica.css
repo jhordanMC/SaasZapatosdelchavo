@@ -5,3 +5,8 @@
 .tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tabla th { text-align: left; padding: 8px; color: #5a8a78; font-weight: 600; border-bottom: 1px solid #e8f1ea; }
 .tabla td { padding: 8px; color: #1f4034; border-bottom: 1px solid #f0f4f1; }
+
+@media (max-width: 768px) {
+  .content { padding: 16px; }
+  .tabla { display: block; overflow-x: auto; white-space: nowrap; }
+}

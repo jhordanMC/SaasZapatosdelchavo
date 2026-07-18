@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth';
 
 export interface SidebarItem {
   label: string;
@@ -18,6 +19,8 @@ export interface SidebarItem {
   styleUrls: ['./sidebar.css'],
 })
 export class SidebarComponent {
+  constructor(private authService: AuthService, private router: Router) {}
+
   @Input() items: SidebarItem[] = [];
   @Input() avatarLabel = 'A';
   @Input() avatarSrc = '/LogoAlba.png';
@@ -35,6 +38,7 @@ export class SidebarComponent {
   showLogoFallback = false;
   showAvatarFallback = false;
   showProfileModal = false;
+  mobileOpen = false;
 
   onLogoError(event: Event): void {
     this.showLogoFallback = true;
@@ -47,5 +51,20 @@ export class SidebarComponent {
 
   closeProfile(): void {
     this.showProfileModal = false;
+  }
+
+  toggleMobile(): void {
+    this.mobileOpen = !this.mobileOpen;
+  }
+
+  closeMobile(): void {
+    this.mobileOpen = false;
+  }
+
+  cerrarSesion(): void {
+    this.showProfileModal = false;
+    this.mobileOpen = false;
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

@@ -465,8 +465,22 @@
   width: 100%;
 }
 
+@media (max-width: 900px) {
+  .table-row { grid-template-columns: 1fr; gap: 6px; padding: 14px 10px; }
+  .table-head { display: none; }
+}
+
 @media (max-width: 700px) {
   .page-toolbar,
   .filters-bar,
   .content { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (max-width: 480px) {
+  .page-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .foto-field-wrapper { flex-wrap: wrap; }
+  .modal-card, .modal-card-wide { max-width: 94vw; }
+  .modal-actions-split { flex-direction: column; }
 }

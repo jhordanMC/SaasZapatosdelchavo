@@ -264,6 +264,30 @@
 
 .profile-modal-actions {
   padding: 20px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-btn-logout {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fdecec;
+  color: #b23a3a;
+  border: 1px solid #f3caca;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-btn-logout:hover {
+  background: #fbdede;
 }
 
 .profile-btn-secondary {
@@ -281,4 +305,28 @@
 
 .profile-btn-secondary:hover {
   background: #e8f1ec;
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 768px) {
+  .topbar { padding: 12px 16px 12px 64px; gap: 10px; }
+  .topbar-title {
+    font-size: 14px;
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .topbar-badge { display: none; }
+  .topbar-company { display: none; }
+  .topbar-action { width: 36px; height: 36px; border-radius: 12px; }
+  .topbar-avatar { width: 36px; height: 36px; }
+}
+
+@media (max-width: 420px) {
+  .topbar { padding: 10px 12px 10px 60px; }
+  .topbar-right { gap: 8px; }
+  .topbar-title { max-width: 32vw; }
 }

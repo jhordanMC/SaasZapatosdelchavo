@@ -269,4 +269,13 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  .page-toolbar,
+  .content { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (max-width: 480px) {
+  .page-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .empresa-summary-metrics { gap: 16px; }
+  .locales-grid { grid-template-columns: 1fr; }
+  .table-header { flex-wrap: wrap; gap: 8px; }
 }
