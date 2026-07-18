@@ -1,11 +1,15 @@
 <!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout).
      El título "Usuarios" ya viene de data.title en la ruta. -->
 <div class="page-toolbar">
-    <p class="page-subtitle">Gestiona los usuarios con acceso a la plataforma.</p>
-    <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo usuario</button>
+    <p class="page-subtitle">Gestiona los usuarios con acceso a la plataforma, por empresa.</p>
+    <button class="btn-primary" [disabled]="!empresaSeleccionadaId" (click)="abrirModalNuevo()">+ Nuevo usuario</button>
   </div>
 
   <div class="filters-bar">
+    <select class="filter-select" [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="onCambiarEmpresa()">
+      <option *ngFor="let empresa of empresas()" [value]="empresa.id_empresa">{{ empresa.nombre }}</option>
+    </select>
+
     <div class="search-box">
       <input type="text" placeholder="Buscar por nombre, DNI o correo..." [(ngModel)]="busqueda" />
     </div>
@@ -59,6 +63,7 @@
             <button class="btn-toggle-estado" [class.reactivar]="usuario.estado !== 'activo'" (click)="cambiarEstado(usuario)">
               {{ usuario.estado === 'activo' ? 'Retirar' : 'Reactivar' }}
             </button>
+            <button class="btn-eliminar" (click)="abrirModalEliminar(usuario)" title="Eliminar usuario">Eliminar</button>
           </span>
         </div>
       </div>
@@ -178,6 +183,18 @@
       </svg>
     </button>
 
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+      <div class="modal-brand-sub">SaaS Platform</div>
+    </div>
+
     <div class="modal-header">
       <h2>Datos del usuario</h2>
     </div>
@@ -203,6 +220,12 @@
         <div class="ver-usuario-item">
           <span class="ver-usuario-label">Estado</span>
           <span class="status-pill" [class.active]="u.estado === 'activo'">{{ u.estado }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Rol</span>
+          <span class="ver-usuario-valor">
+            {{ rolesDeUsuarioViendo.length > 0 ? rolesDeUsuarioViendo[0].nombre : 'Sin rol asignado' }}
+          </span>
         </div>
         <div class="ver-usuario-item">
           <span class="ver-usuario-label">Fecha de alta</span>
@@ -231,6 +254,18 @@
       </svg>
     </button>
 
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+      <div class="modal-brand-sub">SaaS Platform</div>
+    </div>
+
     <div class="modal-header">
       <h2>Editar usuario</h2>
     </div>
@@ -258,13 +293,22 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="inputEditarEstado">Estado</label>
-        <select id="inputEditarEstado" class="form-input form-select" [(ngModel)]="editarUsuario.estado">
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-          <option value="suspendido">Suspendido</option>
-        </select>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarEstado">Estado</label>
+          <select id="inputEditarEstado" class="form-input form-select" [(ngModel)]="editarUsuario.estado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="suspendido">Suspendido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputEditarRol">Rol</label>
+          <select id="inputEditarRol" class="form-input form-select" [(ngModel)]="editarUsuario.idRol" [disabled]="cargandoRolActual">
+            <option value="" disabled>{{ cargandoRolActual ? 'Cargando…' : 'Selecciona el rol' }}</option>
+            <option *ngFor="let rol of roles()" [value]="rol.id_rol">{{ rol.nombre }}</option>
+          </select>
+        </div>
       </div>
 
       <div class="modal-actions modal-actions-split">
@@ -273,6 +317,40 @@
           {{ guardandoEdicion ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Eliminar usuario (confirmación) ══ -->
+<div class="modal-overlay" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEliminar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="confirmacion-icono confirmacion-icono-peligro">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/>
+        <path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+
+    <h2 class="confirmacion-titulo">¿Eliminar usuario?</h2>
+    <p class="confirmacion-desc" *ngIf="usuarioEliminando">
+      Esta acción elimina a <strong>{{ usuarioEliminando.nombres }} {{ usuarioEliminando.apellidos }}</strong> y no se puede deshacer.
+    </p>
+
+    <div class="modal-actions modal-actions-split">
+      <button class="btn-clear" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn-eliminar btn-eliminar-full" [disabled]="eliminando" (click)="confirmarEliminar()">
+        {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
     </div>
   </div>
 </div>

@@ -249,6 +249,23 @@
 .btn-toggle-estado.reactivar { border-color: #a8e0c0; color: #0f513d; }
 .btn-toggle-estado.reactivar:hover { background: #eaf8f0; }
 
+.btn-eliminar {
+  background: #b3413a;
+  border: 1px solid #b3413a;
+  color: white;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.btn-eliminar:hover { background: #962f29; }
+.btn-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-eliminar-full { width: 100%; justify-content: center; }
+
+.confirmacion-icono-peligro { background: #fbe3e2; color: #b3413a; }
+
 .empty-state { margin: 24px 0 0; color: #6b8a7d; text-align: center; }
 .empty-state.error { color: #b3413a; }
 

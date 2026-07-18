@@ -47,10 +47,10 @@ export interface UsuarioUpdateInput {
 }
 
 /**
- * Nota importante: /iam/usuarios opera SIEMPRE sobre la empresa del
- * usuario autenticado (nunca cross-tenant) — a diferencia de
- * EmpresasService, este servicio solo administra usuarios de la propia
- * empresa de ALBA, no de las empresas-cliente.
+ * Cross-tenant a propósito, igual que EmpresasService: todo opera sobre
+ * /empresas/{idEmpresa}/usuarios (y sus roles), exclusivo del staff de
+ * ALBA — permite crear/editar usuarios de CUALQUIER empresa-cliente,
+ * no solo la propia.
  */
 @Injectable({ providedIn: 'root' })
 export class UsuariosService {
@@ -58,29 +58,39 @@ export class UsuariosService {
 
   constructor(private http: HttpClient) {}
 
-  listarUsuarios(limit = 100, offset = 0): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/iam/usuarios`, {
+  listarUsuarios(idEmpresa: string, limit = 100, offset = 0): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios`, {
       params: { limit, offset },
     });
   }
 
-  crearUsuario(datos: UsuarioCreateInput): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/iam/usuarios`, datos);
+  crearUsuario(idEmpresa: string, datos: UsuarioCreateInput): Observable<Usuario> {
+    return this.http.post<Usuario>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios`, datos);
   }
 
-  actualizarUsuario(idUsuario: string, datos: UsuarioUpdateInput): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/iam/usuarios/${idUsuario}`, datos);
+  actualizarUsuario(idEmpresa: string, idUsuario: string, datos: UsuarioUpdateInput): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}`, datos);
   }
 
-  actualizarEstado(idUsuario: string, estado: EstadoUsuario): Observable<Usuario> {
-    return this.actualizarUsuario(idUsuario, { estado });
+  eliminarUsuario(idEmpresa: string, idUsuario: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}`);
   }
 
-  listarRoles(): Observable<Rol[]> {
-    return this.http.get<Rol[]>(`${this.apiUrl}/iam/roles`);
+  listarRolesDeEmpresa(idEmpresa: string): Observable<Rol[]> {
+    return this.http.get<Rol[]>(`${this.apiUrl}/empresas/${idEmpresa}/roles`);
   }
 
-  asignarRol(idUsuario: string, idRol: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/iam/usuarios/${idUsuario}/roles`, { id_rol: idRol });
+  listarRolesDeUsuario(idEmpresa: string, idUsuario: string): Observable<Rol[]> {
+    return this.http.get<Rol[]>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/roles`);
+  }
+
+  asignarRol(idEmpresa: string, idUsuario: string, idRol: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/roles`, {
+      id_rol: idRol,
+    });
+  }
+
+  quitarRol(idEmpresa: string, idUsuario: string, idRol: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/roles/${idRol}`);
   }
 }
