@@ -13,6 +13,7 @@
   min-height: 100dvh;
   font-family: 'Inter', sans-serif;
   color: #0f2d25;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── FONDO: imagen fija tal cual, sin oscurecer y sin zoom ── */
@@ -245,15 +246,10 @@
 
   .fc, .click-counter { display: none !important; }
 
-  /* Velo sutil sobre la foto de fondo: sin las float cards decorativas,
-     el fondo necesita un poco más de contraste para que la card resalte */
-  .bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(120% 90% at 50% 8%, rgba(1, 30, 24, 0) 0%, rgba(1, 30, 24, 0.35) 100%),
-      linear-gradient(180deg, rgba(1, 30, 24, 0.12) 0%, rgba(1, 30, 24, 0.28) 100%);
+  /* La imagen de fondo se ve completa, sin velos oscuros: el contraste
+     de la card lo da su propia sombra (box-shadow del card-wrap) */
+  .bg {
+    background-position: center 38%;
   }
 
   .page {
@@ -265,7 +261,7 @@
   .card-wrap {
     width: 100%; max-width: 400px;
     border-radius: 26px; padding: 2.5px;
-    box-shadow: 0 20px 60px rgba(1, 20, 15, 0.5);
+    box-shadow: 0 24px 70px rgba(1, 20, 15, 0.55);
   }
   .card {
     width: 100%; border-radius: 24px;
