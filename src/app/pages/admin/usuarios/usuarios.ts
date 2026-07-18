@@ -13,6 +13,14 @@ interface NuevoUsuarioForm {
   idRol: string;
 }
 
+interface EditarUsuarioForm {
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  telefono: string;
+  estado: EstadoUsuario;
+}
+
 @Component({
   selector: 'app-usuarios',
   standalone: true,
@@ -168,5 +176,77 @@ export class UsuariosComponent implements OnInit {
       },
       error: () => this.error.set('No se pudo cambiar el estado del usuario.'),
     });
+  }
+
+  // ── Modal "Ver usuario" ─────────────────────────────────
+  modalVerAbierto = false;
+  usuarioViendo: Usuario | null = null;
+
+  abrirModalVer(usuario: Usuario): void {
+    this.usuarioViendo = usuario;
+    this.modalVerAbierto = true;
+  }
+
+  cerrarModalVer(): void {
+    this.modalVerAbierto = false;
+    this.usuarioViendo = null;
+  }
+
+  // ── Modal "Editar usuario" ──────────────────────────────
+  modalEditarAbierto = false;
+  editarUsuario: EditarUsuarioForm = this.formularioEdicionVacio();
+  guardandoEdicion = false;
+  private usuarioEditandoId: string | null = null;
+
+  private formularioEdicionVacio(): EditarUsuarioForm {
+    return { nombres: '', apellidos: '', dni: '', telefono: '', estado: 'activo' };
+  }
+
+  abrirModalEditar(usuario: Usuario): void {
+    this.usuarioEditandoId = usuario.id_usuario;
+    this.editarUsuario = {
+      nombres: usuario.nombres,
+      apellidos: usuario.apellidos,
+      dni: usuario.dni ?? '',
+      telefono: usuario.telefono ?? '',
+      estado: usuario.estado,
+    };
+    this.modalEditarAbierto = true;
+  }
+
+  cerrarModalEditar(): void {
+    this.modalEditarAbierto = false;
+    this.usuarioEditandoId = null;
+  }
+
+  get formularioEdicionValido(): boolean {
+    if (!this.editarUsuario.nombres.trim() || !this.editarUsuario.apellidos.trim()) return false;
+    if (this.editarUsuario.dni && !/^[0-9]{8}$/.test(this.editarUsuario.dni)) return false;
+    return true;
+  }
+
+  guardarEdicion(): void {
+    if (!this.formularioEdicionValido || !this.usuarioEditandoId || this.guardandoEdicion) return;
+
+    this.guardandoEdicion = true;
+    this.usuariosService
+      .actualizarUsuario(this.usuarioEditandoId, {
+        nombres: this.editarUsuario.nombres.trim(),
+        apellidos: this.editarUsuario.apellidos.trim(),
+        dni: this.editarUsuario.dni.trim() || null,
+        telefono: this.editarUsuario.telefono.trim() || null,
+        estado: this.editarUsuario.estado,
+      })
+      .subscribe({
+        next: (actualizado) => {
+          this.guardandoEdicion = false;
+          this.usuarios.set(this.usuarios().map((u) => (u.id_usuario === actualizado.id_usuario ? actualizado : u)));
+          this.cerrarModalEditar();
+        },
+        error: () => {
+          this.guardandoEdicion = false;
+          this.error.set('No se pudo guardar los cambios del usuario.');
+        },
+      });
   }
 }

@@ -38,6 +38,14 @@ export interface UsuarioCreateInput {
   dni?: string | null;
 }
 
+export interface UsuarioUpdateInput {
+  nombres?: string;
+  apellidos?: string;
+  telefono?: string | null;
+  dni?: string | null;
+  estado?: EstadoUsuario;
+}
+
 /**
  * Nota importante: /iam/usuarios opera SIEMPRE sobre la empresa del
  * usuario autenticado (nunca cross-tenant) — a diferencia de
@@ -60,8 +68,12 @@ export class UsuariosService {
     return this.http.post<Usuario>(`${this.apiUrl}/iam/usuarios`, datos);
   }
 
+  actualizarUsuario(idUsuario: string, datos: UsuarioUpdateInput): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiUrl}/iam/usuarios/${idUsuario}`, datos);
+  }
+
   actualizarEstado(idUsuario: string, estado: EstadoUsuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/iam/usuarios/${idUsuario}`, { estado });
+    return this.actualizarUsuario(idUsuario, { estado });
   }
 
   listarRoles(): Observable<Rol[]> {

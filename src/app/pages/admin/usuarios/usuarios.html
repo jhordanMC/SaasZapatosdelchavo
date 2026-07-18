@@ -53,7 +53,9 @@
           <span>{{ usuario.telefono || '—' }}</span>
           <span><span class="status-pill" [class.active]="usuario.estado === 'activo'">{{ usuario.estado }}</span></span>
           <span>{{ usuario.creado_en.slice(0, 10) }}</span>
-          <span>
+          <span class="acciones-cell">
+            <button class="btn-accion" (click)="abrirModalVer(usuario)" title="Ver usuario">Ver</button>
+            <button class="btn-accion" (click)="abrirModalEditar(usuario)" title="Editar usuario">Editar</button>
             <button class="btn-toggle-estado" [class.reactivar]="usuario.estado !== 'activo'" (click)="cambiarEstado(usuario)">
               {{ usuario.estado === 'activo' ? 'Retirar' : 'Reactivar' }}
             </button>
@@ -162,6 +164,115 @@
 
     <div class="modal-actions">
       <button class="btn-primary btn-full" (click)="cerrarModalConfirmacion()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Ver usuario ══ -->
+<div class="modal-overlay" *ngIf="modalVerAbierto" (click)="cerrarModalVer()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalVer()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <h2>Datos del usuario</h2>
+    </div>
+
+    <div class="modal-body" *ngIf="usuarioViendo as u">
+      <div class="ver-usuario-header">
+        <div class="usuario-avatar usuario-avatar-lg"><span>{{ iniciales(u.nombres, u.apellidos) }}</span></div>
+        <div>
+          <div class="usuario-nombre">{{ u.nombres }} {{ u.apellidos }}</div>
+          <div class="usuario-correo">{{ u.email }}</div>
+        </div>
+      </div>
+
+      <div class="ver-usuario-grid">
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">DNI</span>
+          <span class="ver-usuario-valor">{{ u.dni || '—' }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Teléfono</span>
+          <span class="ver-usuario-valor">{{ u.telefono || '—' }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Estado</span>
+          <span class="status-pill" [class.active]="u.estado === 'activo'">{{ u.estado }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Fecha de alta</span>
+          <span class="ver-usuario-valor">{{ u.creado_en.slice(0, 10) }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Último ingreso</span>
+          <span class="ver-usuario-valor">{{ u.ultimo_login_en ? u.ultimo_login_en.slice(0, 10) : 'Nunca' }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary btn-full" (click)="cerrarModalVer()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Editar usuario ══ -->
+<div class="modal-overlay" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEditar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <h2>Editar usuario</h2>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarNombre">Nombres</label>
+          <input id="inputEditarNombre" type="text" class="form-input" [(ngModel)]="editarUsuario.nombres" />
+        </div>
+        <div class="form-group">
+          <label for="inputEditarApellido">Apellidos</label>
+          <input id="inputEditarApellido" type="text" class="form-input" [(ngModel)]="editarUsuario.apellidos" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarDni">DNI (opcional)</label>
+          <input id="inputEditarDni" type="text" class="form-input" maxlength="8" inputmode="numeric" [(ngModel)]="editarUsuario.dni" />
+        </div>
+        <div class="form-group">
+          <label for="inputEditarTelefono">Teléfono (opcional)</label>
+          <input id="inputEditarTelefono" type="text" class="form-input" [(ngModel)]="editarUsuario.telefono" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inputEditarEstado">Estado</label>
+        <select id="inputEditarEstado" class="form-input form-select" [(ngModel)]="editarUsuario.estado">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="suspendido">Suspendido</option>
+        </select>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioEdicionValido || guardandoEdicion" (click)="guardarEdicion()">
+          {{ guardandoEdicion ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
