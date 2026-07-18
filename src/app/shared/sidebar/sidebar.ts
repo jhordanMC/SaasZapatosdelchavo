@@ -31,7 +31,6 @@ export class SidebarComponent {
   @Input() userEmail = 'admin@vilcas.pe';
   @Input() userPhone = '+51 999 999 999';
   @Input() brandName = 'VILCAS';
-  @Input() brandSub = 'SaaS Platform';
   @Input() logoSrc = '/vilcas.png';
   @Input() brandAccentIndex = 4;
 

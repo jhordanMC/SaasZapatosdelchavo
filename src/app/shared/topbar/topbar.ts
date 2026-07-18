@@ -25,7 +25,6 @@ export class TopbarComponent {
   @Input() userPhone = '+51 999 999 999';
   @Input() logoSrc = '/vilcas.png';
   @Input() brandName = 'VILCAS';
-  @Input() brandSub = 'SaaS Platform';
   @Input() brandAccentIndex = 4;
 
   showAvatarFallback = false;
