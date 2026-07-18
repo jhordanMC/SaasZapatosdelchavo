@@ -7,8 +7,11 @@ import { TokenResponse, TokenStore } from './token-store';
 export type Rol = 'admin' | 'dueño' | 'vendedor';
 
 export interface SesionUsuario {
+  idUsuario: string;
   nombre: string;
   correo: string;
+  telefono: string | null;
+  dni: string | null;
   rol: Rol;
   empresaId: string | null;
 }
@@ -19,6 +22,8 @@ interface MiPerfilResponse {
   nombres: string;
   apellidos: string;
   email: string;
+  telefono: string | null;
+  dni: string | null;
   estado: string;
   roles: string[];
 }
@@ -77,8 +82,11 @@ export class AuthService {
     }).pipe(
       map(({ perfil }) => {
         const usuario: SesionUsuario = {
+          idUsuario: perfil.id_usuario,
           nombre: `${perfil.nombres} ${perfil.apellidos}`.trim(),
           correo: perfil.email,
+          telefono: perfil.telefono,
+          dni: perfil.dni,
           rol: mapearRol(perfil.roles),
           empresaId: perfil.id_empresa,
         };

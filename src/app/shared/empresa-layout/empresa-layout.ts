@@ -26,12 +26,19 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
   ) {
     this.usuario = this.authService.usuarioActual;
 
+    // El Vendedor no tiene acceso a dashboard/finanzas/analítica (el
+    // roleGuard de esas rutas exige 'dueño') — antes el sidebar siempre
+    // mostraba "Dashboard" sin importar el rol, y el Vendedor terminaba
+    // clickeando un link que el guard le rebotaba a /login.
     const esDueño = this.authService.tieneRol('dueño');
-    const base: SidebarItem[] = [
-      { label: 'Dashboard', route: '/empresa/dashboard', icon: 'dashboard', exact: true },
+    const base: SidebarItem[] = [];
+    if (esDueño) {
+      base.push({ label: 'Dashboard', route: '/empresa/dashboard', icon: 'dashboard', exact: true });
+    }
+    base.push(
       { label: 'Inventario', route: '/empresa/inventario', icon: 'inventario' },
       { label: 'Ventas', route: '/empresa/ventas', icon: 'ventas' },
-    ];
+    );
     if (esDueño) {
       base.push(
         { label: 'Finanzas', route: '/empresa/finanzas', icon: 'finanzas' },
@@ -47,6 +54,14 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     if (rol === 'dueño') return 'Dueño';
     if (rol === 'vendedor') return 'Vendedor';
     return 'Usuario';
+  }
+
+  iniciales(): string {
+    const nombre = this.usuario()?.nombre?.trim();
+    if (!nombre) return 'U';
+    const palabras = nombre.split(/\s+/);
+    if (palabras.length === 1) return palabras[0].substring(0, 2).toUpperCase();
+    return (palabras[0][0] + palabras[1][0]).toUpperCase();
   }
 
   private routerSub?: Subscription;

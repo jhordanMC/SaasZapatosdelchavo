@@ -5,6 +5,7 @@ import { Subscription, filter } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
 import { PageTitleService } from './page-title';
+import { AuthService } from '../../core/auth';
 
 /**
  * Layout único para toda la sección /admin.
@@ -23,11 +24,16 @@ import { PageTitleService } from './page-title';
   styleUrls: ['./admin-layout.css'],
 })
 export class AdminLayoutComponent implements OnInit, OnDestroy {
+  usuario;
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private authService: AuthService,
     public pageTitleService: PageTitleService
-  ) {}
+  ) {
+    this.usuario = this.authService.usuarioActual;
+  }
 
   // ── Fuente única del menú de navegación admin ──────────
   navItems: SidebarItem[] = [
@@ -37,6 +43,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { label: 'Reportes', href: '#', icon: 'reportes' },
     { label: 'Configuración', href: '#', icon: 'config' },
   ];
+
+  iniciales(): string {
+    const nombre = this.usuario()?.nombre?.trim();
+    if (!nombre) return 'A';
+    const palabras = nombre.split(/\s+/);
+    if (palabras.length === 1) return palabras[0].substring(0, 2).toUpperCase();
+    return (palabras[0][0] + palabras[1][0]).toUpperCase();
+  }
 
   private routerSub?: Subscription;
 

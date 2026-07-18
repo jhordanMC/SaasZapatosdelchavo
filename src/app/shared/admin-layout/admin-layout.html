@@ -1,15 +1,19 @@
 <app-sidebar
   [items]="navItems"
-  avatarLabel="A"
-  userName="Admin ALBA"
+  [avatarLabel]="iniciales()"
+  [userName]="usuario()?.nombre ?? 'Usuario'"
   userRole="Administrador"
+  [userId]="usuario()?.idUsuario ?? '—'"
+  [userDni]="usuario()?.dni ?? '—'"
+  [userEmail]="usuario()?.correo ?? '—'"
+  [userPhone]="usuario()?.telefono ?? '—'"
   brandName="VILCAS"
   brandSub="SaaS Platform"
   logoSrc="/vilcas.png"
 ></app-sidebar>
 
 <div class="main">
-  <app-topbar [title]="pageTitleService.title()" company="ALBA Corporation" avatarLabel="A"></app-topbar>
+  <app-topbar [title]="pageTitleService.title()" company="ALBA Corporation" [avatarLabel]="iniciales()"></app-topbar>
 
   <router-outlet></router-outlet>
 </div>
