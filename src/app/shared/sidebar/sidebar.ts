@@ -7,7 +7,7 @@ export interface SidebarItem {
   label: string;
   route?: string;
   href?: string;
-  icon: 'dashboard' | 'empresas' | 'usuarios' | 'reportes' | 'config' | 'inventario' | 'ventas' | 'finanzas' | 'analitica';
+  icon: 'dashboard' | 'empresas' | 'usuarios' | 'reportes' | 'config' | 'inventario' | 'ventas' | 'finanzas' | 'analitica' | 'actividad';
   exact?: boolean;
 }
 
