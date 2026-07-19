@@ -34,6 +34,13 @@ interface FilaTipo {
   scorePromedio: number;
 }
 
+interface FilaPlan {
+  plan: string;
+  cantidad: number;
+  ingresos: number;
+  pct: number;
+}
+
 interface PuntoMes {
   etiqueta: string;
   altas: number;
@@ -193,6 +200,26 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
   get maxIngresoTipo(): number {
     return Math.max(1, ...this.distribucionPorTipo.map((f) => f.ingresos));
+  }
+
+  /* ── Distribución por plan contratado ── */
+  get distribucionPorPlan(): FilaPlan[] {
+    const mapa = new Map<string, { cantidad: number; ingresos: number }>();
+    for (const e of this.todasEmpresas) {
+      const actual = mapa.get(e.plan) ?? { cantidad: 0, ingresos: 0 };
+      actual.cantidad += 1;
+      actual.ingresos += e.ingresosMes;
+      mapa.set(e.plan, actual);
+    }
+    const totalIngresos = this.ingresosTotal;
+    return Array.from(mapa.entries())
+      .map(([plan, v]) => ({
+        plan,
+        cantidad: v.cantidad,
+        ingresos: v.ingresos,
+        pct: totalIngresos > 0 ? (v.ingresos / totalIngresos) * 100 : 0,
+      }))
+      .sort((a, b) => b.ingresos - a.ingresos);
   }
 
   /* ── Rankings de empresas ── */
