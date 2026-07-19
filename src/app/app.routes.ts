@@ -6,6 +6,7 @@ import { DashboardAdminComponent } from './pages/admin/dashboard/dashboard';
 import { EmpresasComponent } from './pages/admin/empresas/empresas';
 import { EmpresaDetalleComponent } from './pages/admin/empresa-detalle/empresa-detalle';
 import { UsuariosComponent } from './pages/admin/usuarios/usuarios';
+import { ActividadComponent } from './pages/admin/actividad/actividad';
 import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
@@ -30,6 +31,7 @@ export const routes: Routes = [
       { path: 'empresas', component: EmpresasComponent, data: { title: 'Empresas' } },
       { path: 'empresas/:id', component: EmpresaDetalleComponent, data: { title: 'Detalle de empresa' } },
       { path: 'usuarios', component: UsuariosComponent, data: { title: 'Usuarios' } },
+      { path: 'actividad', component: ActividadComponent, data: { title: 'Actividad' } },
     ],
   },
 

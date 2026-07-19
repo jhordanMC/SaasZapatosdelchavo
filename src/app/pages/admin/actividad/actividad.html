@@ -1,0 +1,137 @@
+<!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout). -->
+<div class="page-toolbar">
+  <p class="page-subtitle">Historial de actividad (auditoría) por empresa.</p>
+</div>
+
+<div class="filters-bar">
+  <select class="filter-select" [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="cargarRegistros()">
+    <option *ngFor="let empresa of empresas()" [value]="empresa.id_empresa">{{ empresa.nombre }}</option>
+  </select>
+
+  <div class="search-box">
+    <input type="text" placeholder="Acción (ej. login, categoria_creada)..." [(ngModel)]="accion" (keydown.enter)="cargarRegistros()" />
+  </div>
+
+  <div class="search-box">
+    <input type="text" placeholder="Tabla afectada (ej. productos)..." [(ngModel)]="tablaAfectada" (keydown.enter)="cargarRegistros()" />
+  </div>
+
+  <div class="date-field">
+    <span>Desde</span>
+    <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="cargarRegistros()" />
+  </div>
+  <div class="date-field">
+    <span>Hasta</span>
+    <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="cargarRegistros()" />
+  </div>
+
+  <button class="btn-primary" (click)="cargarRegistros()">Filtrar</button>
+  <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
+</div>
+
+<div class="content">
+  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h2>Actividad</h2>
+      <p>{{ registros().length }} registros encontrados</p>
+    </div>
+
+    <div class="table-wrap" *ngIf="registros().length > 0">
+      <div class="table-row table-head">
+        <span>Fecha</span>
+        <span>Usuario</span>
+        <span>Acción</span>
+        <span>Tabla afectada</span>
+        <span>IP</span>
+        <span></span>
+      </div>
+
+      <div class="table-row" *ngFor="let registro of registros()">
+        <span>{{ fechaHora(registro.creado_en) }}</span>
+        <div class="usuario-cell">
+          <div class="usuario-avatar"><span>{{ iniciales(registro.nombre_usuario) }}</span></div>
+          <span>{{ registro.nombre_usuario || 'Sistema' }}</span>
+        </div>
+        <span><span class="accion-pill">{{ registro.accion }}</span></span>
+        <span>{{ registro.tabla_afectada || '—' }}</span>
+        <span>{{ registro.ip_origen || '—' }}</span>
+        <span>
+          <button class="btn-accion" (click)="abrirDetalle(registro)">Ver detalle</button>
+        </span>
+      </div>
+    </div>
+
+    <p class="empty-state" *ngIf="cargando()">Cargando actividad…</p>
+    <p class="empty-state" *ngIf="!cargando() && registros().length === 0">No hay actividad registrada con estos filtros.</p>
+  </div>
+</div>
+
+<!-- ══ MODAL: Ver detalle de un registro ══ -->
+<div class="modal-overlay" *ngIf="modalDetalleAbierto" (click)="cerrarDetalle()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarDetalle()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" />
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+      <div class="modal-brand-sub">SaaS Platform</div>
+    </div>
+
+    <div class="modal-header">
+      <h2>Detalle del registro</h2>
+    </div>
+
+    <div class="modal-body" *ngIf="registroViendo as r">
+      <div class="detalle-grid">
+        <div class="detalle-item">
+          <span class="detalle-label">Fecha</span>
+          <span class="detalle-valor">{{ fechaHora(r.creado_en) }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Usuario</span>
+          <span class="detalle-valor">{{ r.nombre_usuario || 'Sistema' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Acción</span>
+          <span class="accion-pill">{{ r.accion }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Tabla afectada</span>
+          <span class="detalle-valor">{{ r.tabla_afectada || '—' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Registro afectado</span>
+          <span class="detalle-valor detalle-mono">{{ r.id_registro_afectado || '—' }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">IP de origen</span>
+          <span class="detalle-valor">{{ r.ip_origen || '—' }}</span>
+        </div>
+      </div>
+
+      <div class="detalle-json-grid">
+        <div class="detalle-json-block">
+          <span class="detalle-label">Datos anteriores</span>
+          <pre class="detalle-json">{{ formatearJson(r.datos_anteriores) }}</pre>
+        </div>
+        <div class="detalle-json-block">
+          <span class="detalle-label">Datos nuevos</span>
+          <pre class="detalle-json">{{ formatearJson(r.datos_nuevos) }}</pre>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary btn-full" (click)="cerrarDetalle()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
