@@ -24,7 +24,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: Tahoma, Geneva, Verdana, sans-serif;
   background: #f3f8f5;
   color: #1a2e28;
   overflow: hidden;
@@ -472,6 +472,19 @@
 .more-btn:hover { color: var(--slate-500); }
 
 .empty-msg { font-size: 12px; color: var(--slate-400); text-align: center; padding: 32px 0; }
+
+/* ══════════════════════════════════════
+   GRÁFICO DE BARRAS (evolución de altas)
+══════════════════════════════════════ */
+.chart-barras { display: flex; align-items: flex-end; gap: 12px; height: 130px; padding: 4px 4px 0; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.chart-bar {
+  width: 100%; max-width: 40px; min-height: 3px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--green-dark), var(--mint));
+}
+.chart-valor { font-size: 11px; font-weight: 700; color: var(--green-dark); }
+.chart-label { font-size: 10px; color: var(--slate-400); white-space: nowrap; }
 
 /* ══════════════════════════════════════
    RESPONSIVE

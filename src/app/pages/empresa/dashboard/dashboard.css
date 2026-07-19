@@ -1,28 +1,168 @@
-:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
-.content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.content {
+  padding: 24px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ══════════════════════════════
+   KPI — Resumen ejecutivo
+══════════════════════════════ */
 .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-.kpi-card { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 16px; }
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid #e8f1ea;
+  border-radius: 14px;
+  padding: 16px;
+}
 .kpi-card.alerta { border-color: #f0c4c4; background: #fdf5f5; }
-.kpi-label { font-size: 12px; color: #5a8a78; }
+.kpi-card.kpi-positivo { border-color: #c9ecd8; }
+.kpi-card.kpi-negativo { border-color: #f0c4c4; background: #fdf5f5; }
+.kpi-label { font-size: 12px; color: #5a8a78; font-weight: 600; }
 .kpi-value { font-size: 20px; font-weight: 700; color: #024b40; margin-top: 6px; }
-.panel { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 18px; }
-.panel h3 { margin: 0 0 12px; font-size: 14px; color: #024b40; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-.tabla th { text-align: left; padding: 8px; color: #5a8a78; font-weight: 600; border-bottom: 1px solid #e8f1ea; }
-.tabla td { padding: 8px; color: #1f4034; border-bottom: 1px solid #f0f4f1; }
+.kpi-card.kpi-negativo .kpi-value { color: #b23a3a; }
+.kpi-nota { font-size: 10.5px; color: #94a798; margin-top: 3px; }
+
+/* ══════════════════════════════
+   Paneles base
+══════════════════════════════ */
+.panel {
+  background: #ffffff;
+  border: 1px solid #e8f1ea;
+  border-radius: 14px;
+  padding: 20px;
+}
+.panel-head { margin-bottom: 14px; }
+.panel h3 { margin: 0; font-size: 14.5px; font-weight: 700; color: #024b40; }
+.panel-sub { margin: 4px 0 0; font-size: 12px; color: #5a8a78; line-height: 1.5; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+/* ══════════════════════════════
+   Tablas
+══════════════════════════════ */
+.tabla { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tabla th { text-align: left; padding: 9px 8px; color: #5a8a78; font-weight: 700; border-bottom: 1px solid #e8f1ea; white-space: nowrap; }
+.tabla td { padding: 9px 8px; color: #1f4034; border-bottom: 1px solid #f0f4f1; }
+.tabla-vacia { font-size: 12.5px; color: #94a798; margin: 0; }
+
+.mini-bar-track { display: inline-block; width: 60px; height: 6px; border-radius: 4px; background: #eef5f0; overflow: hidden; vertical-align: middle; margin-right: 6px; }
+.mini-bar { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #64d59c, #024b40); }
+.mini-bar-pct { font-size: 11px; color: #5a8a78; font-weight: 600; }
+
+/* ══════════════════════════════
+   Waterfall financiero (ingresos → costo → utilidad)
+══════════════════════════════ */
+.waterfall { display: flex; flex-direction: column; gap: 10px; }
+.wf-row {
+  display: grid;
+  grid-template-columns: 190px 1fr 150px;
+  align-items: center;
+  gap: 12px;
+}
+.wf-label { font-size: 12.5px; font-weight: 600; color: #1f4034; }
+.wf-bar-track { height: 10px; border-radius: 6px; background: #eef5f0; overflow: hidden; }
+.wf-bar { display: block; height: 100%; border-radius: 6px; }
+.wf-bar-in { background: linear-gradient(90deg, #64d59c, #024b40); }
+.wf-bar-costo { background: #e8a33d; }
+.wf-bar-bruta { background: #3db87a; }
+.wf-bar-neta { background: #024b40; }
+.wf-valor { font-size: 13px; font-weight: 700; color: #024b40; text-align: right; }
+.wf-valor small { font-weight: 600; color: #5a8a78; }
+.wf-valor-resta { color: #b57a1f; }
+.wf-resta .wf-label { color: #8a6a2f; font-weight: 500; }
+.wf-subtotal { padding-top: 4px; border-top: 1px dashed #e8f1ea; }
+.wf-total { padding-top: 8px; border-top: 2px solid #e8f1ea; }
+.wf-total .wf-label { font-weight: 700; color: #024b40; }
+.wf-total.wf-total-negativo .wf-valor { color: #b23a3a; }
+
+/* ══════════════════════════════
+   Callouts (producto destacado / alerta)
+══════════════════════════════ */
+.callout {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.callout-tag { font-size: 11px; font-weight: 700; }
+.callout-nombre { font-size: 14px; font-weight: 700; color: #024b40; }
+.callout-detalle { font-size: 11.5px; color: #5a8a78; line-height: 1.4; }
+.callout-positivo { background: linear-gradient(135deg, #f2f9f5, #e6f6ec); }
+.callout-positivo .callout-tag { color: #1d7a4c; }
+.callout-alerta { background: linear-gradient(135deg, #fdf8ee, #fbf0da); }
+.callout-alerta .callout-tag { color: #a5771f; }
+.callout-riesgo { background: linear-gradient(135deg, #fdf1f1, #fbe4e4); margin-bottom: 14px; }
+.callout-riesgo .callout-tag { color: #b23a3a; }
+
+.nota-inline { font-size: 12px; color: #5a8a78; margin: -8px 0 0; padding: 0 4px; }
+
+/* ══════════════════════════════
+   Badges de estado (rotación)
+══════════════════════════════ */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+.badge-saludable { background: #e5f6ec; color: #1d7a4c; }
+.badge-lenta { background: #fdf3de; color: #a5771f; }
+.badge-riesgo { background: #fdecec; color: #b23a3a; }
+.badge-sin-movimiento { background: #f1e3e3; color: #7a2f2f; }
+
+/* ══════════════════════════════
+   Listas de barras horizontales (talla / gastos)
+══════════════════════════════ */
+.bar-list { display: flex; flex-direction: column; gap: 10px; }
+.bar-list-row { display: grid; grid-template-columns: 100px 1fr 50px; align-items: center; gap: 10px; }
+.bar-list-label { font-size: 12px; font-weight: 600; color: #1f4034; }
+.bar-list-track { height: 10px; border-radius: 6px; background: #eef5f0; overflow: hidden; }
+.bar-list-fill { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #64d59c, #024b40); }
+.bar-list-fill-gasto { background: linear-gradient(90deg, #f0c869, #da9e0b); }
+.bar-list-valor { font-size: 12.5px; font-weight: 700; color: #024b40; text-align: right; }
+
+/* ══════════════════════════════
+   Gráficos de barras verticales (semana / mes / día)
+══════════════════════════════ */
+.chart-barras { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding: 0 4px; }
+.chart-barras-dias { height: 130px; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.chart-bar { width: 100%; max-width: 38px; min-height: 3px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #024b40, #036b58); }
+.chart-bar-mes { background: linear-gradient(180deg, #024b40, #3db87a); }
+.chart-bar-dia { background: linear-gradient(180deg, #5a8a78, #a9c9bb); }
+.chart-col-best .chart-bar-dia { background: linear-gradient(180deg, #024b40, #64d59c); }
+.chart-valor { font-size: 10px; font-weight: 700; color: #024b40; white-space: nowrap; }
+.chart-label { font-size: 10px; color: #94a798; white-space: nowrap; }
+.chart-col-best .chart-label { color: #024b40; font-weight: 700; }
+
+.trend-up { color: #1d7a4c; font-weight: 700; }
+.trend-down { color: #b23a3a; font-weight: 700; }
 
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
 @media (max-width: 1024px) {
   .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .wf-row { grid-template-columns: 150px 1fr 120px; }
 }
 @media (max-width: 768px) {
   .content { padding: 16px; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .panel { overflow-x: auto; }
+  .panel { padding: 16px; overflow-x: auto; }
   .tabla { display: block; overflow-x: auto; white-space: nowrap; }
+  .wf-row { grid-template-columns: 1fr; gap: 4px; text-align: left; }
+  .wf-valor { text-align: left; }
+  .bar-list-row { grid-template-columns: 80px 1fr 44px; }
+  .chart-barras { gap: 6px; }
 }
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
+  .chart-label { display: none; }
 }

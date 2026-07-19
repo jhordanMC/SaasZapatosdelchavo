@@ -1,9 +1,18 @@
-import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { mountLiveline, unmountLiveline } from '../../../livelinewc/liveline-wrapper';
+import { Empresa as EmpresaReal, EmpresasService } from '../../../services/empresas';
 
-/* ── Tipos ── */
+/**
+ * Tipo/plan/score/ingresos/asesores/entrenadores NO existen en el
+ * backend real (la tabla `empresas` solo tiene nombre/slug/estado/
+ * creado_en — ver services/empresas.ts) — son datos de negocio que
+ * llegarán con el módulo de billing/planes, todavía no construido.
+ * Mientras tanto se generan de forma ESTÁTICA (determinística por
+ * índice, no aleatoria en cada render) a partir de la empresa real,
+ * a pedido explícito: "ponle con datos estáticos por ahora".
+ */
 type TipoEmpresa = 'Banca' | 'Seguros' | 'Telecomunicaciones' | 'Retail' | 'Financiero';
 
 interface Empresa {
@@ -18,6 +27,22 @@ interface Empresa {
   ingresosMes: number;
 }
 
+interface FilaTipo {
+  tipo: TipoEmpresa;
+  cantidad: number;
+  ingresos: number;
+  scorePromedio: number;
+}
+
+interface PuntoMes {
+  etiqueta: string;
+  altas: number;
+}
+
+const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const TIPOS_ESTATICOS: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
+const PLANES_ESTATICOS = ['Básico', 'Pro'];
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -25,23 +50,18 @@ interface Empresa {
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class DashboardAdminComponent implements AfterViewInit, OnDestroy {
+export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('liveChartHost', { static: true }) liveChartHost!: ElementRef<HTMLDivElement>;
 
   showLogoFallback = false;
   showTip: string | null = null;
 
-  /* ── Datos de empresas (mock, reemplazar luego por servicio real) ── */
-  todasEmpresas: Empresa[] = [
-    { nombre: 'Banco Continental', tipo: 'Banca',              asesores: 24, entrenadores: 3, scorePromedio: 84, plan: 'Pro',    estado: 'activo',   fechaAlta: '2026-01-05', ingresosMes: 4800 },
-    { nombre: 'Seguros del Sur',   tipo: 'Seguros',            asesores: 12, entrenadores: 2, scorePromedio: 77, plan: 'Básico', estado: 'activo',   fechaAlta: '2026-01-20', ingresosMes: 1200 },
-    { nombre: 'Telco Express',     tipo: 'Telecomunicaciones', asesores: 31, entrenadores: 4, scorePromedio: 91, plan: 'Pro',    estado: 'activo',   fechaAlta: '2026-02-03', ingresosMes: 6200 },
-    { nombre: 'Retail Max',        tipo: 'Retail',             asesores: 8,  entrenadores: 1, scorePromedio: 68, plan: 'Básico', estado: 'inactivo', fechaAlta: '2026-02-15', ingresosMes: 0    },
-    { nombre: 'Financiera Norte',  tipo: 'Financiero',         asesores: 19, entrenadores: 3, scorePromedio: 80, plan: 'Pro',    estado: 'activo',   fechaAlta: '2026-03-01', ingresosMes: 3800 },
-  ];
+  /** Empresas reales (GET /empresas), enriquecidas con los campos
+   *  estáticos de negocio que el backend aún no tiene — ver nota arriba. */
+  todasEmpresas: Empresa[] = [];
 
-  tipos: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
+  tipos: TipoEmpresa[] = TIPOS_ESTATICOS;
 
   tipoStyle: Record<TipoEmpresa, string> = {
     Banca: 'tipo-banca',
@@ -64,12 +84,43 @@ export class DashboardAdminComponent implements AfterViewInit, OnDestroy {
   private liveInterval?: ReturnType<typeof setInterval>;
   liveValueActual = 0;
 
-  constructor() {
+  constructor(private empresasService: EmpresasService) {
     const today = new Date().toLocaleDateString('es-ES', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
     this.capitalizedDate = today.charAt(0).toUpperCase() + today.slice(1);
   }
+
+  ngOnInit(): void {
+    this.empresasService.listarEmpresas().subscribe({
+      next: (empresas) => {
+        this.todasEmpresas = empresas.map((e, i) => this.enriquecerEmpresa(e, i));
+      },
+      error: () => {
+        this.todasEmpresas = [];
+      },
+    });
+  }
+
+  private enriquecerEmpresa(empresa: EmpresaReal, index: number): Empresa {
+    const activa = empresa.estado === 'activa';
+    return {
+      nombre: empresa.nombre,
+      tipo: TIPOS_ESTATICOS[index % TIPOS_ESTATICOS.length],
+      asesores: 5 + ((index * 3) % 18),
+      entrenadores: 1 + (index % 4),
+      scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
+      plan: PLANES_ESTATICOS[index % PLANES_ESTATICOS.length],
+      estado: activa ? 'activo' : 'inactivo',
+      fechaAlta: empresa.creado_en.slice(0, 10),
+      ingresosMes: activa ? 800 + ((index * 437) % 5200) : 0,
+    };
+  }
+
+  /** Estático — agregar usuarios reales cross-tenant requeriría sumar
+   *  uno por uno de cada empresa; se deja pendiente hasta que haga falta. */
+  usuariosActivosEstatico = 132;
+  usuariosRetiradosEstatico = 9;
 
   ngAfterViewInit(): void {
     mountLiveline(this.liveChartHost.nativeElement);
@@ -93,14 +144,97 @@ export class DashboardAdminComponent implements AfterViewInit, OnDestroy {
   get totalEntrenadores(): number {
     return this.todasEmpresas.reduce((a, e) => a + e.entrenadores, 0);
   }
+  get ratioAsesorPorEntrenador(): number {
+    return this.totalEntrenadores > 0 ? this.totalAsesores / this.totalEntrenadores : 0;
+  }
   get scoreGlobal(): number {
-    return Math.round(this.todasEmpresas.reduce((a, e) => a + e.scorePromedio, 0) / this.todasEmpresas.length);
+    const conScore = this.todasEmpresas.filter((e) => e.scorePromedio > 0);
+    if (conScore.length === 0) return 0;
+    return Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length);
   }
   get empresasActivas(): number {
     return this.todasEmpresas.filter(e => e.estado === 'activo').length;
   }
   get ingresosTotal(): number {
     return this.todasEmpresas.reduce((a, e) => a + e.ingresosMes, 0);
+  }
+  get usuariosActivos(): number {
+    return this.usuariosActivosEstatico;
+  }
+  get usuariosRetirados(): number {
+    return this.usuariosRetiradosEstatico;
+  }
+  get empresasAltaEsteMes(): number {
+    const hoy = new Date();
+    return this.todasEmpresas.filter((e) => {
+      const f = new Date(e.fechaAlta);
+      return f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
+    }).length;
+  }
+  /** Empresas en riesgo de baja: inactivas o con score de desempeño bajo. */
+  get empresasEnRiesgo(): Empresa[] {
+    return this.todasEmpresas.filter((e) => e.estado === 'inactivo' || (e.scorePromedio > 0 && e.scorePromedio < 70));
+  }
+
+  /* ── Distribución por sector (tipo de empresa) ── */
+  get distribucionPorTipo(): FilaTipo[] {
+    return this.tipos
+      .map((tipo) => {
+        const grupo = this.todasEmpresas.filter((e) => e.tipo === tipo);
+        const ingresos = grupo.reduce((a, e) => a + e.ingresosMes, 0);
+        const conScore = grupo.filter((e) => e.scorePromedio > 0);
+        const scorePromedio = conScore.length > 0
+          ? Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length)
+          : 0;
+        return { tipo, cantidad: grupo.length, ingresos, scorePromedio };
+      })
+      .filter((f) => f.cantidad > 0)
+      .sort((a, b) => b.ingresos - a.ingresos);
+  }
+  get maxIngresoTipo(): number {
+    return Math.max(1, ...this.distribucionPorTipo.map((f) => f.ingresos));
+  }
+
+  /* ── Rankings de empresas ── */
+  get topEmpresasPorIngreso(): Empresa[] {
+    return [...this.todasEmpresas].sort((a, b) => b.ingresosMes - a.ingresosMes).slice(0, 5);
+  }
+  get empresasMenorScore(): Empresa[] {
+    return [...this.todasEmpresas]
+      .filter((e) => e.scorePromedio > 0)
+      .sort((a, b) => a.scorePromedio - b.scorePromedio)
+      .slice(0, 5);
+  }
+
+  /* ── Evolución de altas de empresas (últimos 6 meses) — real, basada en creado_en ── */
+  get evolucionAltas(): PuntoMes[] {
+    const hoy = new Date();
+    const buckets = new Map<string, number>();
+    const orden: string[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      buckets.set(key, 0);
+      orden.push(key);
+    }
+
+    for (const e of this.todasEmpresas) {
+      const f = new Date(e.fechaAlta);
+      const key = `${f.getFullYear()}-${f.getMonth()}`;
+      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+
+    return orden.map((key) => {
+      const mesIdx = Number(key.split('-')[1]);
+      return { etiqueta: MESES[mesIdx], altas: buckets.get(key) ?? 0 };
+    });
+  }
+  get maxAltasMes(): number {
+    return Math.max(1, ...this.evolucionAltas.map((p) => p.altas));
+  }
+  alturaBarra(valor: number, max: number): number {
+    return Math.round((valor / max) * 100);
   }
 
   /* ── Filtro de tabla ── */
@@ -154,12 +288,14 @@ export class DashboardAdminComponent implements AfterViewInit, OnDestroy {
   }
 
   private initRealtimeValue(): void {
-    let agentes = 72;
+    const base = Math.max(10, Math.round(this.totalAsesores * 0.6));
+    const techo = Math.max(base + 20, this.totalAsesores + this.totalEntrenadores);
+    let agentes = base;
     this.liveValueActual = agentes;
 
     this.liveInterval = setInterval(() => {
       const f = Math.floor(Math.random() * 8) - 4;
-      agentes = Math.max(30, Math.min(120, agentes + f));
+      agentes = Math.max(5, Math.min(techo, agentes + f));
       this.liveValueActual = agentes;
     }, 3000);
   }

@@ -1,52 +1,257 @@
 <div class="content">
+
+  <!-- ═══════════════ 1. RESUMEN EJECUTIVO ═══════════════ -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Inventario total</div>
-      <div class="kpi-value">{{ stockTotalInventario }}</div>
+      <div class="kpi-label">Ingresos del mes</div>
+      <div class="kpi-value">S/{{ ingresosMes.toFixed(2) }}</div>
+      <div class="kpi-nota">últimos 30 días</div>
+    </div>
+    <div class="kpi-card" [class.kpi-positivo]="utilidadNetaMes >= 0" [class.kpi-negativo]="utilidadNetaMes < 0">
+      <div class="kpi-label">Utilidad neta real</div>
+      <div class="kpi-value">S/{{ utilidadNetaMes.toFixed(2) }}</div>
+      <div class="kpi-nota">ingresos − costo − gastos</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Productos únicos</div>
-      <div class="kpi-value">{{ productos.length }}</div>
+      <div class="kpi-label">Ticket promedio</div>
+      <div class="kpi-value">S/{{ ticketPromedio.toFixed(2) }}</div>
+      <div class="kpi-nota">por venta</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Ingresos totales</div>
-      <div class="kpi-value">S/{{ ingresosTotales.toFixed(2) }}</div>
+      <div class="kpi-label">Valor de inventario</div>
+      <div class="kpi-value">S/{{ valorTotalInventarioCosto.toFixed(0) }}</div>
+      <div class="kpi-nota">a costo de compra</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Ventas completadas</div>
-      <div class="kpi-value">{{ ventasCompletadas }}</div>
-    </div>
-    <div class="kpi-card" [class.alerta]="productosBajoStock.length > 0">
-      <div class="kpi-label">Alertas de stock</div>
-      <div class="kpi-value">{{ productosBajoStock.length }}</div>
+    <div class="kpi-card" [class.alerta]="productosEnRiesgo.length > 0">
+      <div class="kpi-label">Productos en riesgo de merma</div>
+      <div class="kpi-value">{{ productosEnRiesgo.length }}</div>
+      <div class="kpi-nota">rotación lenta o nula</div>
     </div>
   </div>
 
+  <!-- ═══════════════ 2. SALUD FINANCIERA REAL ═══════════════ -->
   <div class="panel">
-    <h3>Top 3 modelos más vendidos</h3>
-    <table class="tabla">
-      <thead><tr><th>Modelo</th><th>Unidades vendidas</th></tr></thead>
+    <div class="panel-head">
+      <h3>De la venta a la ganancia real</h3>
+      <p class="panel-sub">Lo que entra, lo que cuesta reponer mercadería y lo que realmente te queda — últimos 30 días.</p>
+    </div>
+
+    <div class="waterfall">
+      <div class="wf-row">
+        <span class="wf-label">Ingresos por ventas</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-in" style="width:100%"></span></span>
+        <span class="wf-valor">S/{{ ingresosMes.toFixed(2) }}</span>
+      </div>
+      <div class="wf-row wf-resta">
+        <span class="wf-label">− Costo de mercadería vendida</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="ingresosMes > 0 ? (costoMercaderiaVendidaMes / ingresosMes * 100) : 0"></span></span>
+        <span class="wf-valor wf-valor-resta">−S/{{ costoMercaderiaVendidaMes.toFixed(2) }}</span>
+      </div>
+      <div class="wf-row wf-subtotal">
+        <span class="wf-label">= Utilidad bruta</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-bruta" [style.width.%]="ingresosMes > 0 ? (utilidadBrutaMes / ingresosMes * 100) : 0"></span></span>
+        <span class="wf-valor">S/{{ utilidadBrutaMes.toFixed(2) }} <small>({{ margenBrutoPct.toFixed(0) }}%)</small></span>
+      </div>
+      <div class="wf-row wf-resta">
+        <span class="wf-label">− Gastos operativos</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="ingresosMes > 0 ? (gastosOperativosMes / ingresosMes * 100) : 0"></span></span>
+        <span class="wf-valor wf-valor-resta">−S/{{ gastosOperativosMes.toFixed(2) }}</span>
+      </div>
+      <div class="wf-row wf-total" [class.wf-total-negativo]="utilidadNetaMes < 0">
+        <span class="wf-label">= Utilidad neta real</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-neta" [style.width.%]="ingresosMes > 0 ? (utilidadNetaMes / ingresosMes * 100 > 0 ? (utilidadNetaMes / ingresosMes * 100) : 0) : 0"></span></span>
+        <span class="wf-valor">S/{{ utilidadNetaMes.toFixed(2) }} <small>({{ margenNetoPct.toFixed(0) }}%)</small></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ 3. PRODUCTO ESTRELLA / PRODUCTO A REFORZAR ═══════════════ -->
+  <div class="two-col">
+    <div class="callout callout-positivo" *ngIf="productoMasVendido">
+      <span class="callout-tag">🥇 Producto más vendido</span>
+      <span class="callout-nombre">{{ productoMasVendido.nombre }}</span>
+      <span class="callout-detalle">{{ productoMasVendido.unidades }} unidades · S/{{ productoMasVendido.ingresos.toFixed(2) }} generados · {{ productoMasVendido.participacionPct.toFixed(0) }}% del total vendido</span>
+    </div>
+    <div class="callout callout-alerta" *ngIf="productoMasVendido">
+      <span class="callout-tag">🐢 Menos vendido (con ventas)</span>
+      <ng-container *ngIf="productoMenosVendido as pm">
+        <span class="callout-nombre">{{ pm.nombre }}</span>
+        <span class="callout-detalle">Solo {{ pm.unidades }} unidad(es) vendida(s) en todo el historial</span>
+      </ng-container>
+    </div>
+  </div>
+
+  <p class="nota-inline" *ngIf="productosSinVentas.length > 0">
+    <strong>{{ productosSinVentas.length }} producto(s)</strong> aún no registran ninguna venta:
+    {{ productosSinVentas.slice(0, 4).map(p => p.nombre).join(', ') }}<span *ngIf="productosSinVentas.length > 4">…</span>
+  </p>
+
+  <!-- ═══════════════ 4. RANKING COMPLETO DE PRODUCTOS ═══════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Ranking de productos por ventas</h3>
+      <p class="panel-sub">Qué modelos mueven realmente tu negocio.</p>
+    </div>
+    <table class="tabla" *ngIf="rankingProductos.length > 0">
+      <thead><tr><th>Modelo</th><th>Unidades</th><th>Ingresos generados</th><th>Participación</th></tr></thead>
       <tbody>
-        <tr *ngFor="let m of topModelos">
-          <td>{{ m.nombre }}</td>
-          <td>{{ m.unidades }}</td>
+        <tr *ngFor="let r of rankingProductos">
+          <td>{{ r.nombre }}</td>
+          <td>{{ r.unidades }}</td>
+          <td>S/{{ r.ingresos.toFixed(2) }}</td>
+          <td>
+            <div class="mini-bar-track"><div class="mini-bar" [style.width.%]="r.participacionPct"></div></div>
+            <span class="mini-bar-pct">{{ r.participacionPct.toFixed(0) }}%</span>
+          </td>
         </tr>
-        <tr *ngIf="topModelos.length === 0"><td colspan="2">Aún no hay ventas registradas.</td></tr>
+      </tbody>
+    </table>
+    <p class="tabla-vacia" *ngIf="rankingProductos.length === 0">Aún no hay ventas registradas.</p>
+  </div>
+
+  <!-- ═══════════════ 5. ROTACIÓN Y RIESGO DE MERMA ═══════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Rotación de inventario y riesgo de merma</h3>
+      <p class="panel-sub">
+        Días para agotar stock = stock actual ÷ velocidad de venta diaria (últimos {{ 30 }} días).
+        Cuanto más alto, más capital inmovilizado y mayor riesgo de que el producto pierda valor sin venderse.
+      </p>
+    </div>
+
+    <div class="callout callout-riesgo" *ngIf="productoMayorMerma">
+      <span class="callout-tag">⚠️ Mayor riesgo de merma</span>
+      <span class="callout-nombre">{{ productoMayorMerma.producto.nombre }}</span>
+      <span class="callout-detalle">
+        {{ productoMayorMerma.stockActual }} unidades en stock ·
+        <ng-container *ngIf="productoMayorMerma.diasParaAgotar !== null; else sinMov">
+          se agotarían en ~{{ productoMayorMerma.diasParaAgotar!.toFixed(0) }} días al ritmo actual
+        </ng-container>
+        <ng-template #sinMov>sin ninguna venta en los últimos 30 días</ng-template>
+      </span>
+    </div>
+
+    <table class="tabla" *ngIf="analisisRotacion.length > 0">
+      <thead><tr><th>Producto</th><th>Stock</th><th>Vendido (30d)</th><th>Días para agotar</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let f of analisisRotacion">
+          <td>{{ f.producto.nombre }}</td>
+          <td>{{ f.stockActual }}</td>
+          <td>{{ f.unidadesPeriodo }}</td>
+          <td>{{ f.diasParaAgotar === null ? '—' : f.diasParaAgotar.toFixed(0) }}</td>
+          <td>
+            <span class="badge" [ngClass]="'badge-' + f.estado">
+              {{ f.estado === 'saludable' ? 'Rotación saludable' :
+                 f.estado === 'lenta' ? 'Rotación lenta' :
+                 f.estado === 'riesgo' ? 'Alto riesgo' : 'Sin movimiento' }}
+            </span>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
 
-  <div class="panel" *ngIf="productosBajoStock.length > 0">
-    <h3>Aproximado de merma (bajo stock)</h3>
-    <table class="tabla">
-      <thead><tr><th>Producto</th><th>Talla</th><th>Stock</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let item of productosBajoStock">
-          <td>{{ item.producto.nombre }}</td>
-          <td>{{ item.variante.talla }}</td>
-          <td>{{ item.variante.stock }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ═══════════════ 6. INVENTARIO POR TALLA Y POR MODELO ═══════════════ -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Inventario por talla</h3>
+        <p class="panel-sub">Unidades en stock, todas las tallas y modelos.</p>
+      </div>
+      <div class="bar-list">
+        <div class="bar-list-row" *ngFor="let t of inventarioPorTalla">
+          <span class="bar-list-label">Talla {{ t.talla }}</span>
+          <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(t.stock / maxStockTalla) * 100"></span></span>
+          <span class="bar-list-valor">{{ t.stock }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Inventario por modelo</h3>
+        <p class="panel-sub">Unidades y valor (a costo) inmovilizado por modelo.</p>
+      </div>
+      <table class="tabla">
+        <thead><tr><th>Modelo</th><th>Stock</th><th>Valor a costo</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let m of inventarioPorModelo">
+            <td>{{ m.nombre }}</td>
+            <td>{{ m.stock }}</td>
+            <td>S/{{ m.valorCosto.toFixed(0) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- ═══════════════ 7. COMPARATIVOS TEMPORALES ═══════════════ -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Ingresos semana a semana</h3>
+        <p class="panel-sub">
+          Últimas 6 semanas ·
+          <span [class.trend-up]="crecimientoSemanal >= 0" [class.trend-down]="crecimientoSemanal < 0">
+            {{ crecimientoSemanal >= 0 ? '▲' : '▼' }} {{ crecimientoSemanal.toFixed(0) }}% vs. semana anterior
+          </span>
+        </p>
+      </div>
+      <div class="chart-barras">
+        <div class="chart-col" *ngFor="let p of ingresosPorSemana">
+          <div class="chart-bar" [style.height.%]="alturaBarra(p.ingresos, maxIngresosSemana)" [title]="'S/' + p.ingresos.toFixed(2)"></div>
+          <span class="chart-valor">S/{{ p.ingresos.toFixed(0) }}</span>
+          <span class="chart-label">{{ p.etiqueta }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Ingresos mes a mes</h3>
+        <p class="panel-sub">Últimos 6 meses, para ver la tendencia de fondo del negocio.</p>
+      </div>
+      <div class="chart-barras">
+        <div class="chart-col" *ngFor="let p of ingresosPorMes">
+          <div class="chart-bar chart-bar-mes" [style.height.%]="alturaBarra(p.ingresos, maxIngresosMes)" [title]="'S/' + p.ingresos.toFixed(2)"></div>
+          <span class="chart-valor">S/{{ p.ingresos.toFixed(0) }}</span>
+          <span class="chart-label">{{ p.etiqueta }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ 8. DÍAS DE MAYOR FOCO DE VENTA ═══════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h3>¿Qué días vendes más?</h3>
+      <p class="panel-sub">
+        Patrón acumulado por día de la semana, útil para planear personal y reposición.
+        <span class="trend-up" *ngIf="mejorDiaVenta"> Tu mejor día es <strong>{{ mejorDiaVenta.dia }}</strong>.</span>
+      </p>
+    </div>
+    <div class="chart-barras chart-barras-dias">
+      <div class="chart-col" *ngFor="let d of ventasPorDiaSemana" [class.chart-col-best]="mejorDiaVenta && d.dia === mejorDiaVenta.dia">
+        <div class="chart-bar chart-bar-dia" [style.height.%]="alturaBarra(d.ingresos, maxIngresosDia)" [title]="'S/' + d.ingresos.toFixed(2)"></div>
+        <span class="chart-valor">S/{{ d.ingresos.toFixed(0) }}</span>
+        <span class="chart-label">{{ d.dia.slice(0, 3) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ 9. GASTOS OPERATIVOS DE MAYOR IMPACTO ═══════════════ -->
+  <div class="panel" *ngIf="gastosPorTipo.length > 0">
+    <div class="panel-head">
+      <h3>Gastos operativos de mayor impacto</h3>
+      <p class="panel-sub">Mensualizados, de mayor a menor peso en tu costo fijo.</p>
+    </div>
+    <div class="bar-list">
+      <div class="bar-list-row" *ngFor="let g of gastosPorTipo">
+        <span class="bar-list-label">{{ g.tipo }}</span>
+        <span class="bar-list-track"><span class="bar-list-fill bar-list-fill-gasto" [style.width.%]="g.pct"></span></span>
+        <span class="bar-list-valor">S/{{ g.montoMensual.toFixed(0) }}</span>
+      </div>
+    </div>
+  </div>
+
 </div>

@@ -69,8 +69,8 @@
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">{{ totalAsesores + totalEntrenadores }}</div>
-              <div class="kpi-label">Usuarios totales</div>
+              <div class="kpi-value">{{ usuariosActivos }}</div>
+              <div class="kpi-label">Usuarios activos</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -78,7 +78,7 @@
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">+8 nuevos este mes</div>
+          <div class="kpi-trend neutral">{{ usuariosRetirados }} retirado{{ usuariosRetirados !== 1 ? 's' : '' }}</div>
         </div>
 
         <div class="kpi-card accent">
@@ -93,14 +93,15 @@
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">+12% vs mes anterior</div>
+          <div class="kpi-trend up" *ngIf="empresasAltaEsteMes > 0">+{{ empresasAltaEsteMes }} empresa{{ empresasAltaEsteMes !== 1 ? 's' : '' }} nueva{{ empresasAltaEsteMes !== 1 ? 's' : '' }} este mes</div>
+          <div class="kpi-trend neutral" *ngIf="empresasAltaEsteMes === 0">Sin altas nuevas este mes</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ scoreGlobal }}%</div>
-              <div class="kpi-label">Score global</div>
+              <div class="kpi-label">Score global de desempeño</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,34 +109,34 @@
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">+2% vs mes anterior</div>
+          <div class="kpi-trend neutral">promedio de {{ todasEmpresas.length }} empresas</div>
         </div>
       </div>
     </div>
 
-    <!-- KPIs Rendimiento global -->
+    <!-- KPIs de cobertura y riesgo -->
     <div>
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">4.3 <span class="kpi-unit">/5</span></div>
-              <div class="kpi-label">Satisfacción de clientes</div>
+              <div class="kpi-value">{{ totalAsesores }}</div>
+              <div class="kpi-label">Asesores en la plataforma</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                <path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">+0.2 vs mes anterior</div>
+          <div class="kpi-trend neutral">{{ totalEntrenadores }} entrenadores a cargo</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">5:08 <span class="kpi-unit">min</span></div>
-              <div class="kpi-label">Tiempo promedio en plataforma</div>
+              <div class="kpi-value">{{ ratioAsesorPorEntrenador.toFixed(1) }}</div>
+              <div class="kpi-label">Asesores por entrenador</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -143,37 +144,42 @@
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">-0:24 vs mes anterior</div>
+          <div class="kpi-trend neutral">ratio de cobertura de entrenamiento</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">1:15 <span class="kpi-unit">min</span></div>
-              <div class="kpi-label">Tiempo promedio de soporte</div>
+              <div class="kpi-value">{{ distribucionPorPlan.length }}</div>
+              <div class="kpi-label">Planes contratados</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
               </svg>
             </div>
           </div>
-          <div class="kpi-trend up">-0:10 vs mes anterior</div>
+          <div class="kpi-trend neutral">distintos entre las empresas activas</div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi-card" [class.accent]="empresasEnRiesgo.length > 0">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">3</div>
-              <div class="kpi-label">Usuarios baneados</div>
+              <div class="kpi-value">{{ empresasEnRiesgo.length }}</div>
+              <div class="kpi-label">Empresas en riesgo</div>
             </div>
-            <div class="kpi-icon">
+            <div class="kpi-icon accent" *ngIf="empresasEnRiesgo.length > 0">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="kpi-icon" *ngIf="empresasEnRiesgo.length === 0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
             </div>
           </div>
-          <div class="kpi-trend neutral">1 nuevo este mes</div>
+          <div class="kpi-trend neutral">inactivas o con score menor a 70%</div>
         </div>
       </div>
     </div>
@@ -205,7 +211,6 @@
           </div>
           <div style="text-align:right">
             <div class="ingresos-total">{{ fmtUSD(ingresosTotal) }}</div>
-            <div class="kpi-trend up" style="justify-content:flex-end">+12% vs mes ant.</div>
           </div>
         </div>
 
@@ -224,13 +229,118 @@
       </div>
     </div>
 
-    <!-- Alerta baneados -->
-    <div class="alert-banner">
+    <!-- Alerta de empresas en riesgo -->
+    <div class="alert-banner" *ngIf="empresasEnRiesgo.length > 0">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
         <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
-      <p>Hay <strong>3 usuarios baneados</strong> en la plataforma. Revisa la sección de <span class="link">Gestión de Usuarios</span> para más detalles.</p>
+      <p>
+        Hay <strong>{{ empresasEnRiesgo.length }} empresa{{ empresasEnRiesgo.length !== 1 ? 's' : '' }} en riesgo</strong>
+        (inactiva o con score bajo): {{ empresasEnRiesgo[0].nombre }}<span *ngIf="empresasEnRiesgo.length > 1">, +{{ empresasEnRiesgo.length - 1 }} más</span>.
+        Revisa la sección de <span class="link">Empresas</span> para más detalles.
+      </p>
+    </div>
+
+    <!-- Distribución por sector y por plan -->
+    <div class="charts-row">
+      <div class="table-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Ingresos por sector</div>
+            <div class="card-sub">Qué tipo de empresa aporta más a la plataforma</div>
+          </div>
+        </div>
+        <div class="ingreso-row" *ngFor="let f of distribucionPorTipo">
+          <div class="ingreso-top">
+            <div class="ingreso-left">
+              <span class="tipo-chip" [ngClass]="tipoStyle[f.tipo]">{{ f.tipo }}</span>
+              <span class="ingreso-nombre">{{ f.cantidad }} empresa{{ f.cantidad !== 1 ? 's' : '' }} · score {{ f.scorePromedio }}%</span>
+            </div>
+            <span class="ingreso-monto">{{ fmtUSD(f.ingresos) }}</span>
+          </div>
+          <div class="ingreso-bar-bg">
+            <div class="ingreso-bar-fill" [style.width.%]="(f.ingresos / maxIngresoTipo) * 100"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Distribución por plan</div>
+            <div class="card-sub">Empresas e ingresos por plan contratado</div>
+          </div>
+        </div>
+        <div class="ingreso-row" *ngFor="let p of distribucionPorPlan">
+          <div class="ingreso-top">
+            <div class="ingreso-left">
+              <span class="ingreso-nombre"><strong>{{ p.plan }}</strong> · {{ p.cantidad }} empresa{{ p.cantidad !== 1 ? 's' : '' }}</span>
+            </div>
+            <span class="ingreso-monto">{{ fmtUSD(p.ingresos) }}</span>
+          </div>
+          <div class="ingreso-bar-bg">
+            <div class="ingreso-bar-fill" [style.width.%]="p.pct"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rankings: mejores ingresos / menor score -->
+    <div class="charts-row">
+      <div class="table-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Top 5 empresas por ingreso</div>
+            <div class="card-sub">Tus cuentas más valiosas</div>
+          </div>
+        </div>
+        <div class="ingreso-row" *ngFor="let e of topEmpresasPorIngreso">
+          <div class="ingreso-top">
+            <div class="ingreso-left">
+              <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
+              <span class="ingreso-nombre">{{ e.nombre }}</span>
+            </div>
+            <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtUSD(e.ingresosMes) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Empresas con menor score</div>
+            <div class="card-sub">Candidatas a soporte o capacitación adicional</div>
+          </div>
+        </div>
+        <div class="ingreso-row" *ngFor="let e of empresasMenorScore">
+          <div class="ingreso-top">
+            <div class="ingreso-left">
+              <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
+              <span class="ingreso-nombre">{{ e.nombre }}</span>
+            </div>
+            <span class="ingreso-monto">{{ e.scorePromedio }}%</span>
+          </div>
+        </div>
+        <p class="empty-msg" *ngIf="empresasMenorScore.length === 0">Aún no hay empresas con score registrado.</p>
+      </div>
+    </div>
+
+    <!-- Evolución de altas de empresas -->
+    <div class="table-card full">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Evolución de altas de empresas</div>
+          <div class="card-sub">Nuevas empresas registradas por mes, últimos 6 meses</div>
+        </div>
+      </div>
+      <div class="chart-barras">
+        <div class="chart-col" *ngFor="let p of evolucionAltas">
+          <div class="chart-bar" [style.height.%]="alturaBarra(p.altas, maxAltasMes)" [title]="p.altas + ' empresa(s)'"></div>
+          <span class="chart-valor">{{ p.altas }}</span>
+          <span class="chart-label">{{ p.etiqueta }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- Tabla de empresas -->
@@ -244,7 +354,7 @@
         <div class="empresas-header">
           <span>EMPRESA</span>
           <span>TIPO</span>
-          <span>USUARIOS</span>
+          <span>ASESORES</span>
           <span>SCORE</span>
           <span>INGRESOS/MES</span>
           <span>ESTADO</span>
