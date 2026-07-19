@@ -1,3 +1,4 @@
+<!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
 <div class="page-toolbar">
   <div>
     <p class="page-subtitle">Digitaliza tu inventario físico por producto, talla y sexo.</p>
@@ -5,6 +6,7 @@
   <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo producto</button>
 </div>
 
+<!-- ── Filtros ─────────────────────────────────────────────────────────── -->
 <div class="filters-bar">
   <div class="search-box">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -13,14 +15,16 @@
     <input type="text" placeholder="Buscar producto..." [(ngModel)]="busqueda" />
   </div>
 
-  <select class="filter-select" [(ngModel)]="filtroCategoria">
-    <option value="Todas">Categoría: Todas</option>
-    <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+  <!-- Filtro por categoría (opciones cargadas desde el backend) -->
+  <select class="filter-select" [(ngModel)]="filtroIdCategoria">
+    <option [ngValue]="null">Categoría: Todas</option>
+    <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
   </select>
 
+  <!-- Filtro por sexo (valores del backend) -->
   <select class="filter-select" [(ngModel)]="filtroSexo">
-    <option value="Todos">Sexo: Todos</option>
-    <option *ngFor="let s of sexos" [value]="s">{{ s }}</option>
+    <option [ngValue]="null">Sexo: Todos</option>
+    <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
   </select>
 
   <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">
@@ -31,21 +35,34 @@
   </button>
 </div>
 
-<div class="content">
+<!-- ── Estado de carga / error global ────────────────────────────────── -->
+<div class="estado-carga" *ngIf="cargando()">
+  <span class="spinner"></span> Cargando inventario…
+</div>
+
+<div class="estado-error" *ngIf="error() && !cargando()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  {{ error() }}
+  <button class="btn-link" (click)="ngOnInit()">Reintentar</button>
+</div>
+
+<!-- ── Grid de productos ──────────────────────────────────────────────── -->
+<div class="content" *ngIf="!cargando()">
   <div class="productos-grid">
-    <div class="producto-card" *ngFor="let p of productos">
+    <div class="producto-card" *ngFor="let p of productosFiltrados">
       <div class="producto-foto">
-        <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" alt="{{ p.nombre }}" />
-        <span *ngIf="!p.fotoUrl" class="foto-placeholder">Sin foto</span>
+        <span class="foto-placeholder">Sin foto</span>
       </div>
       <div class="producto-info">
         <div class="producto-nombre">{{ p.nombre }}</div>
         <div class="producto-tags">
-          <span class="tag">{{ p.categoria }}</span>
-          <span class="tag tag-sexo">{{ p.sexo }}</span>
+          <span class="tag" *ngIf="p.nombre_categoria">{{ p.nombre_categoria }}</span>
+          <span class="tag tag-sexo" *ngIf="p.sexo">{{ sexoLabel(p.sexo) }}</span>
         </div>
         <div class="producto-precios">
-          <span class="precio-venta">S/{{ p.precioVenta }}</span>
+          <span class="precio-venta">S/{{ p.precio_venta }}</span>
           <span class="margen">Margen: S/{{ margen(p) }}</span>
         </div>
         <div class="producto-stock" [class.stock-bajo]="stockTotal(p) <= 5">
@@ -58,50 +75,57 @@
       </div>
     </div>
 
-    <div class="sin-resultados" *ngIf="productos.length === 0">
+    <div class="sin-resultados" *ngIf="productosFiltrados.length === 0 && !error()">
       No se encontraron productos con estos filtros.
     </div>
   </div>
 </div>
 
-<!-- Modal crear/editar producto -->
+<!-- ── Modal crear / editar producto ─────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ editandoId ? 'Editar producto' : 'Nuevo producto' }}</h3>
-      <button class="modal-close" (click)="cerrarModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button>
+      <button class="modal-close" (click)="cerrarModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <div class="modal-body">
+      <!-- Foto (opcional) -->
       <label class="foto-upload">
         <img *ngIf="form.fotoUrl" [src]="form.fotoUrl" alt="Vista previa" />
         <span *ngIf="!form.fotoUrl">Tomar / subir foto</span>
         <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" hidden />
       </label>
 
+      <!-- Nombre -->
       <div class="form-row">
         <label>Nombre del producto</label>
         <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Zapatos Ejecutivos Confort" />
       </div>
 
+      <!-- Categoría + Sexo -->
       <div class="form-row form-row-2">
         <div>
           <label>Categoría</label>
-          <select [(ngModel)]="form.categoria">
-            <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+          <select [(ngModel)]="form.id_categoria">
+            <option [ngValue]="null">Sin categoría</option>
+            <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
           </select>
         </div>
         <div>
           <label>Sexo</label>
           <select [(ngModel)]="form.sexo">
-            <option *ngFor="let s of sexos" [value]="s">{{ s }}</option>
+            <option [ngValue]="null">Sin definir</option>
+            <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
           </select>
         </div>
       </div>
 
+      <!-- Precios -->
       <div class="form-row form-row-2">
         <div>
           <label>Costo de compra (S/)</label>
@@ -113,6 +137,7 @@
         </div>
       </div>
 
+      <!-- Variantes (talla + stock + local) -->
       <div class="variantes-header">
         <label>Tallas y stock por almacén</label>
         <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
@@ -127,18 +152,33 @@
 
       <div class="variante-fila" *ngFor="let v of form.variantes; let i = index">
         <input type="text" placeholder="Ej: 39" [(ngModel)]="v.talla" aria-label="Talla" />
-        <input type="number" placeholder="Ej: 5" [(ngModel)]="v.stock" min="0" aria-label="Stock" />
-        <input type="text" placeholder="Ej: Trujillo" [(ngModel)]="v.local" aria-label="Almacén" />
-        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button>
+        <input type="number" [(ngModel)]="v.cantidad" min="0" aria-label="Stock" />
+
+        <!-- Select de local (cargado desde el backend) -->
+        <select [(ngModel)]="v.id_local" aria-label="Almacén">
+          <option value="">Seleccionar almacén</option>
+          <option *ngFor="let l of locales()" [value]="l.id_local">{{ l.nombre }}</option>
+        </select>
+
+        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Error del modal -->
+      <div class="modal-error" *ngIf="errorModal()">
+        {{ errorModal() }}
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" (click)="guardar()">Guardar producto</button>
+      <button class="btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
+      <button class="btn-primary" (click)="guardar()" [disabled]="guardando()">
+        <span *ngIf="guardando()">Guardando…</span>
+        <span *ngIf="!guardando()">Guardar producto</span>
+      </button>
     </div>
   </div>
 </div>

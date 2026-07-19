@@ -1,14 +1,37 @@
-import { Component } from '@angular/core';
+/**
+ * Componente de Ventas — POS (vista empresa).
+ *
+ * Conectado al backend a través de VentasService (HTTP).
+ * El carrito se gestiona localmente (sin endpoint intermedio).
+ *
+ * Flujo:
+ *   1. Init: listarMisLocales() → obtiene idLocal del vendedor.
+ *   2. Con idLocal: listarProductosPOS() → carga catálogo.
+ *   3. Filtros: aplican localmente sobre el catálogo cargado.
+ *   4. Clic en producto: abre modal de talla/cantidad/descuento.
+ *   5. "Agregar al carrito": actualiza signal local.
+ *   6. "Completar venta": abre checkout modal.
+ *   7. Confirmar: buildVentaPayload() + POST /ventas/pos/confirmar.
+ */
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Categoria, Producto, ProductosService, Sexo } from '../../../services/productos';
-import { AuthService } from '../../../core/auth';
-import { ItemCarrito, MetodoPago, requiereComprobante, TipoDescuento, VentasService } from '../../../services/ventas';
+import { SexoProducto } from '../../../services/inventario';
+import {
+  FiltrosPOS,
+  ItemCarrito,
+  LocalPOSRead,
+  MetodoPago,
+  PagoCreate,
+  ProductoPOSRead,
+  TipoDescuento,
+  VariantePOSRead,
+  VentaRead,
+  VentasService,
+  requiereComprobante,
+} from '../../../services/ventas';
 
-const CATEGORIAS: (Categoria | 'Todos')[] = ['Todos', 'Deportivos', 'Casuales', 'Formales', 'Botines', 'Sandalias', 'Escolares', 'Textiles'];
-
-/** Tamaño máximo permitido para fotos adjuntas (comprobantes / fotos de venta), en bytes. */
-const MAX_FOTO_BYTES = 6 * 1024 * 1024; // 6MB
+const MAX_FOTO_BYTES = 6 * 1024 * 1024; // 6 MB
 
 type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 
@@ -19,84 +42,177 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
   templateUrl: './ventas.html',
   styleUrls: ['./ventas.css'],
 })
-export class VentasComponent {
-  productosSignal;
+export class VentasComponent implements OnInit {
+  constructor(public ventasService: VentasService) {}
 
-  constructor(
-    private productosService: ProductosService,
-    public ventasService: VentasService,
-    private authService: AuthService
-  ) {
-    this.productosSignal = this.productosService.getProductos();
-  }
+  // ── Datos del backend ────────────────────────────────────────────────────
+  locales = signal<LocalPOSRead[]>([]);
+  productos = signal<ProductoPOSRead[]>([]);
 
-  categorias = CATEGORIAS;
-  filtroCategoria: Categoria | 'Todos' = 'Todos';
-  filtroSexo: Sexo | 'Todos' = 'Todos';
-  filtroTalla = 'Todas';
+  /** Local activo del vendedor en esta sesión POS. */
+  localActivo = signal<LocalPOSRead | null>(null);
+
+  // ── Estado de UI ─────────────────────────────────────────────────────────
+  cargando = signal(true);
+  cargandoProductos = signal(false);
+  error = signal<string | null>(null);
+
+  // ── Filtros del catálogo POS (locales) ───────────────────────────────────
   busqueda = '';
+  filtroIdCategoria: string | null = null;
+  filtroSexo: SexoProducto | null = null;
+  filtroTalla = 'Todas';
 
-  showVariantePicker: Producto | null = null;
+  readonly sexosDisponibles: { valor: SexoProducto; label: string }[] = [
+    { valor: 'hombre', label: 'Hombre' },
+    { valor: 'mujer', label: 'Mujer' },
+    { valor: 'unisex', label: 'Unisex' },
+    { valor: 'nino', label: 'Niño' },
+  ];
+
+  // ── Modal de selección de variante ──────────────────────────────────────
+  showVariantePicker: ProductoPOSRead | null = null;
   varianteSeleccionadaId = '';
   cantidadSeleccionada = 1;
   descuentoSeleccionado = 0;
   tipoDescuentoSeleccionado: TipoDescuento = 'producto';
 
+  // ── Edición de ítem en carrito ───────────────────────────────────────────
   editandoVarianteId: string | null = null;
   edicionCantidad = 1;
   edicionDescuento = 0;
   edicionTipoDescuento: TipoDescuento = 'producto';
 
-  fotoVentaUrl: string | null = null;
-  errorFoto = '';
-
+  // ── Checkout ─────────────────────────────────────────────────────────────
   pasoCheckout: PasoCheckout = 'formulario';
   showCheckout = false;
   metodoPago: MetodoPago = 'efectivo';
   montoPagado = 0;
+  fotoVentaUrl: string | null = null;
+  errorFoto = '';
   checkoutError = '';
-  ventaConfirmada: { total: number; vuelto: number } | null = null;
+  ventaConfirmada: VentaRead | null = null;
+  confirmando = false;
 
-  get tallasDisponibles(): string[] {
-    const set = new Set<string>();
-    for (const p of this.productosSignal()) {
-      for (const v of p.variantes) set.add(v.talla);
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    this.cargando.set(true);
+    this.ventasService.listarMisLocales().subscribe({
+      next: (locales) => {
+        this.locales.set(locales);
+        if (locales.length > 0) {
+          this.localActivo.set(locales[0]);
+          this.cargarProductosPOS();
+        } else {
+          this.error.set('No tienes locales asignados. Contacta al administrador.');
+          this.cargando.set(false);
+        }
+      },
+      error: () => {
+        this.error.set('No se pudieron cargar los locales. Verifica tu conexión.');
+        this.cargando.set(false);
+      },
+    });
   }
 
-  get productos(): Producto[] {
-    return this.productosSignal().filter((p) => {
-      if (this.busqueda && !p.nombre.toLowerCase().includes(this.busqueda.toLowerCase())) return false;
-      if (this.filtroCategoria !== 'Todos' && p.categoria !== this.filtroCategoria) return false;
-      if (this.filtroSexo !== 'Todos' && p.sexo !== this.filtroSexo) return false;
-      if (this.filtroTalla !== 'Todas' && !p.variantes.some((v) => v.talla === this.filtroTalla)) return false;
+  cambiarLocal(idLocal: string): void {
+    const local = this.locales().find((l) => l.id_local === idLocal);
+    if (local) {
+      this.localActivo.set(local);
+      this.cargarProductosPOS();
+    }
+  }
+
+  private cargarProductosPOS(): void {
+    const local = this.localActivo();
+    if (!local) return;
+
+    this.cargandoProductos.set(true);
+    const filtros: FiltrosPOS = {};
+    if (this.busqueda) filtros.busqueda = this.busqueda;
+    if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
+    if (this.filtroSexo) filtros.sexo = this.filtroSexo;
+
+    this.ventasService.listarProductosPOS(local.id_local, filtros).subscribe({
+      next: (prods) => {
+        this.productos.set(prods);
+        this.cargandoProductos.set(false);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.error.set('No se pudieron cargar los productos.');
+        this.cargandoProductos.set(false);
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  // ── Filtros (locales + búsqueda server-side al aplicar) ──────────────────
+
+  get productosFiltrados(): ProductoPOSRead[] {
+    const busq = this.busqueda.toLowerCase().trim();
+    return this.productos().filter((p) => {
+      if (busq && !p.nombre.toLowerCase().includes(busq)) return false;
+      if (this.filtroSexo && p.sexo !== this.filtroSexo) return false;
+      if (
+        this.filtroTalla !== 'Todas' &&
+        !p.variantes.some((v) => v.talla === this.filtroTalla)
+      )
+        return false;
       return true;
     });
   }
 
-  toggleSexo(valor: Sexo): void {
-    this.filtroSexo = this.filtroSexo === valor ? 'Todos' : valor;
+  get tallasDisponibles(): string[] {
+    const set = new Set<string>();
+    for (const p of this.productos()) {
+      for (const v of p.variantes) {
+        if (v.talla) set.add(v.talla);
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }
+
+  toggleSexo(valor: SexoProducto): void {
+    this.filtroSexo = this.filtroSexo === valor ? null : valor;
   }
 
   get hayFiltrosActivos(): boolean {
-    return !!(this.busqueda || this.filtroCategoria !== 'Todos' || this.filtroSexo !== 'Todos' || this.filtroTalla !== 'Todas');
+    return !!(this.busqueda || this.filtroSexo || this.filtroTalla !== 'Todas');
   }
 
   limpiarFiltros(): void {
     this.busqueda = '';
-    this.filtroCategoria = 'Todos';
-    this.filtroSexo = 'Todos';
+    this.filtroSexo = null;
     this.filtroTalla = 'Todas';
+    this.filtroIdCategoria = null;
   }
 
-  stockTotal(p: Producto): number {
-    return this.productosService.stockTotal(p);
+  // ── Carrito ─────────────────────────────────────────────────────────────
+
+  get itemsCarrito(): ItemCarrito[] {
+    return this.ventasService.carrito();
   }
 
-  abrirSelectorVariante(p: Producto): void {
+  get totalCarrito(): number {
+    return this.ventasService.totalCarrito();
+  }
+
+  totalItem(item: ItemCarrito): number {
+    return this.ventasService.totalItem(item);
+  }
+
+  stockProducto(p: ProductoPOSRead): number {
+    return p.stock_total;
+  }
+
+  // ── Modal selector de variante ───────────────────────────────────────────
+
+  abrirSelectorVariante(p: ProductoPOSRead): void {
     this.showVariantePicker = p;
-    this.varianteSeleccionadaId = p.variantes[0]?.id ?? '';
+    const primeraVariante = p.variantes[0];
+    this.varianteSeleccionadaId = primeraVariante?.id_variante ?? '';
     this.cantidadSeleccionada = 1;
     this.descuentoSeleccionado = 0;
     this.tipoDescuentoSeleccionado = 'producto';
@@ -106,21 +222,40 @@ export class VentasComponent {
     this.showVariantePicker = null;
   }
 
+  get varianteSeleccionada(): VariantePOSRead | undefined {
+    return this.showVariantePicker?.variantes.find(
+      (v) => v.id_variante === this.varianteSeleccionadaId
+    );
+  }
+
+  get textoDescripcionDescuento(): string {
+    if (this.descuentoSeleccionado <= 0) return '';
+    const v = this.varianteSeleccionada;
+    if (!v) return '';
+    if (this.tipoDescuentoSeleccionado === 'producto') {
+      return `Se descuenta S/${this.descuentoSeleccionado} una sola vez del total de esta línea.`;
+    }
+    return `Se descuenta S/${this.descuentoSeleccionado} × ${this.cantidadSeleccionada} = S/${
+      this.descuentoSeleccionado * this.cantidadSeleccionada
+    } del total de esta línea.`;
+  }
+
   confirmarAgregado(): void {
     const p = this.showVariantePicker;
-    if (!p) return;
-    const variante = p.variantes.find((v) => v.id === this.varianteSeleccionadaId);
-    if (!variante || variante.stock < this.cantidadSeleccionada) return;
+    const variante = this.varianteSeleccionada;
+    if (!p || !variante) return;
+    if (this.cantidadSeleccionada < 1) return;
+    if (variante.stock_disponible < this.cantidadSeleccionada) return;
 
     const item: ItemCarrito = {
-      productoId: p.id,
-      varianteId: variante.id,
-      nombre: `${p.nombre} (talla ${variante.talla})`,
+      varianteId: variante.id_variante,
+      productoId: p.id_producto,
+      nombre: `${p.nombre} (talla ${variante.talla ?? variante.sku})`,
       talla: variante.talla,
-      fotoUrl: p.fotoUrl,
-      precioUnitario: p.precioVenta,
+      fotoUrl: null,
+      precioUnitario: p.precio_venta,
       cantidad: this.cantidadSeleccionada,
-      descuento: this.descuentoSeleccionado,
+      descuentoMonto: this.descuentoSeleccionado,
       tipoDescuento: this.tipoDescuentoSeleccionado,
     };
     this.ventasService.agregarAlCarrito(item);
@@ -132,14 +267,12 @@ export class VentasComponent {
     if (this.editandoVarianteId === varianteId) this.editandoVarianteId = null;
   }
 
-  totalItem(item: ItemCarrito): number {
-    return this.ventasService.totalItem(item);
-  }
+  // ── Edición inline de ítem en carrito ────────────────────────────────────
 
   iniciarEdicion(item: ItemCarrito): void {
     this.editandoVarianteId = item.varianteId;
     this.edicionCantidad = item.cantidad;
-    this.edicionDescuento = item.descuento;
+    this.edicionDescuento = item.descuentoMonto;
     this.edicionTipoDescuento = item.tipoDescuento;
   }
 
@@ -151,17 +284,18 @@ export class VentasComponent {
     if (this.edicionCantidad < 1) return;
     this.ventasService.editarItemCarrito(item.varianteId, {
       cantidad: this.edicionCantidad,
-      descuento: this.edicionDescuento,
+      descuentoMonto: this.edicionDescuento,
       tipoDescuento: this.edicionTipoDescuento,
     });
     this.editandoVarianteId = null;
   }
 
+  // ── Foto de comprobante ──────────────────────────────────────────────────
+
   onFotoVentaSeleccionada(event: Event): void {
     const input = event.target as HTMLInputElement;
     const archivo = input.files?.[0];
     if (!archivo) return;
-
     this.errorFoto = '';
     if (!archivo.type.startsWith('image/')) {
       this.errorFoto = 'El archivo debe ser una imagen (foto).';
@@ -173,14 +307,9 @@ export class VentasComponent {
       input.value = '';
       return;
     }
-
     const lector = new FileReader();
-    lector.onload = () => {
-      this.fotoVentaUrl = lector.result as string;
-    };
-    lector.onerror = () => {
-      this.errorFoto = 'No se pudo leer la imagen. Intenta nuevamente.';
-    };
+    lector.onload = () => (this.fotoVentaUrl = lector.result as string);
+    lector.onerror = () => (this.errorFoto = 'No se pudo leer la imagen. Intenta nuevamente.');
     lector.readAsDataURL(archivo);
     input.value = '';
   }
@@ -189,6 +318,8 @@ export class VentasComponent {
     this.fotoVentaUrl = null;
   }
 
+  // ── Checkout ─────────────────────────────────────────────────────────────
+
   get requiereFotoComprobante(): boolean {
     return requiereComprobante(this.metodoPago);
   }
@@ -196,15 +327,6 @@ export class VentasComponent {
   get vueltoEstimado(): number {
     if (this.metodoPago !== 'efectivo') return 0;
     return Math.max(0, this.montoPagado - this.totalCarrito);
-  }
-
-  get totalCarrito(): number {
-    return this.ventasService.totalCarrito();
-  }
-
-  /** Ítems del carrito, usados para mostrar las fotos de los productos en el checkout. */
-  get itemsCarrito(): ItemCarrito[] {
-    return this.ventasService.carrito();
   }
 
   abrirCheckout(): void {
@@ -216,26 +338,25 @@ export class VentasComponent {
     this.checkoutError = '';
     this.errorFoto = '';
     this.fotoVentaUrl = null;
+    this.ventaConfirmada = null;
   }
 
   cerrarCheckout(): void {
     this.showCheckout = false;
     this.ventaConfirmada = null;
+    this.confirmando = false;
   }
 
-  /** Valida los datos del método de pago y pasa a la pantalla de confirmación final. */
   irAConfirmar(): void {
     this.checkoutError = '';
-
     if (this.metodoPago === 'efectivo' && this.montoPagado < this.totalCarrito) {
       this.checkoutError = 'El monto pagado es menor al total. Verifica el importe recibido.';
       return;
     }
     if (this.requiereFotoComprobante && !this.fotoVentaUrl) {
-      this.checkoutError = 'Adjunta la foto de la transacción/transferencia para continuar.';
+      this.checkoutError = 'Adjunta la foto del comprobante para continuar.';
       return;
     }
-
     this.pasoCheckout = 'confirmar';
   }
 
@@ -244,19 +365,43 @@ export class VentasComponent {
     this.checkoutError = '';
   }
 
-  /** Confirmación final: aquí sí se descuenta stock y se registra la venta. */
+  /** Envía el carrito al backend y registra la venta. */
   confirmarVenta(): void {
+    const local = this.localActivo();
+    if (!local) return;
+
     this.checkoutError = '';
-    const vendedor = this.authService.usuarioActual()?.nombre ?? 'vendedor';
-    try {
-      const venta = this.ventasService.confirmarVenta(this.metodoPago, this.montoPagado, vendedor, this.fotoVentaUrl);
-      this.ventaConfirmada = { total: venta.total, vuelto: venta.vuelto };
-      this.pasoCheckout = 'exito';
-      this.fotoVentaUrl = null;
-    } catch (e) {
-      this.checkoutError = e instanceof Error ? e.message : 'No se pudo registrar la venta.';
-      this.pasoCheckout = 'formulario';
-    }
+    this.confirmando = true;
+
+    // Construir payload de pago
+    const pago: PagoCreate = {
+      metodo: this.metodoPago,
+      monto: this.totalCarrito,
+      ...(this.metodoPago === 'efectivo'
+        ? { monto_recibido: this.montoPagado }
+        : {}),
+    };
+
+    const payload = this.ventasService.buildVentaPayload(local.id_local, [pago]);
+
+    this.ventasService.confirmarVenta(payload).subscribe({
+      next: (venta) => {
+        this.ventaConfirmada = venta;
+        this.pasoCheckout = 'exito';
+        this.confirmando = false;
+        this.fotoVentaUrl = null;
+        // Vaciar carrito tras venta exitosa
+        this.ventasService.vaciarCarrito();
+        // Refrescar catálogo para actualizar stock visible
+        this.cargarProductosPOS();
+      },
+      error: (err) => {
+        this.checkoutError =
+          err?.error?.detail ?? 'No se pudo registrar la venta. Intenta nuevamente.';
+        this.pasoCheckout = 'formulario';
+        this.confirmando = false;
+      },
+    });
   }
 
   cerrarTodo(): void {
@@ -265,5 +410,6 @@ export class VentasComponent {
     this.ventaConfirmada = null;
     this.fotoVentaUrl = null;
     this.errorFoto = '';
+    this.confirmando = false;
   }
 }

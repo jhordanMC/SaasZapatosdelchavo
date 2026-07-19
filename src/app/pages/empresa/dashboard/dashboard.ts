@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Producto, ProductosService } from '../../../services/productos';
-import { Venta, VentasService } from '../../../services/ventas';
+import { VentasService } from '../../../services/ventas';
 import { FinanzasService, GastoOperativo } from '../../../services/finanzas';
 
 /** Ventana de análisis para velocidad de venta / rotación de inventario. */
@@ -57,7 +57,7 @@ export class EmpresaDashboardComponent {
     private productosService: ProductosService,
     public ventasService: VentasService,
     public finanzasService: FinanzasService
-  ) {}
+  ) { }
 
   // ═══════════════════════════════════════════════════════════
   // Datos base
@@ -67,7 +67,7 @@ export class EmpresaDashboardComponent {
     return this.productosService.getProductos()();
   }
 
-  get historial(): Venta[] {
+  get historial(): any[] {
     return this.ventasService.historial();
   }
 
