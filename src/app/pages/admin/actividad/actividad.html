@@ -4,28 +4,28 @@
 </div>
 
 <div class="filters-bar">
-  <select class="filter-select" [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="cargarRegistros()">
+  <select class="filter-select" [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="aplicarCambio()">
     <option *ngFor="let empresa of empresas()" [value]="empresa.id_empresa">{{ empresa.nombre }}</option>
   </select>
 
   <div class="search-box">
-    <input type="text" placeholder="Acción (ej. login, categoria_creada)..." [(ngModel)]="accion" (keydown.enter)="cargarRegistros()" />
+    <input type="text" placeholder="Acción (ej. login, categoria_creada)..." [(ngModel)]="accion" (keydown.enter)="aplicarCambio()" />
   </div>
 
   <div class="search-box">
-    <input type="text" placeholder="Tabla afectada (ej. productos)..." [(ngModel)]="tablaAfectada" (keydown.enter)="cargarRegistros()" />
+    <input type="text" placeholder="Tabla afectada (ej. productos)..." [(ngModel)]="tablaAfectada" (keydown.enter)="aplicarCambio()" />
   </div>
 
   <div class="date-field">
     <span>Desde</span>
-    <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="cargarRegistros()" />
+    <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="aplicarCambio()" />
   </div>
   <div class="date-field">
     <span>Hasta</span>
-    <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="cargarRegistros()" />
+    <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="aplicarCambio()" />
   </div>
 
-  <button class="btn-primary" (click)="cargarRegistros()">Filtrar</button>
+  <button class="btn-primary" (click)="aplicarCambio()">Filtrar</button>
   <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
 </div>
 
@@ -34,8 +34,13 @@
 
   <div class="table-card">
     <div class="table-header">
-      <h2>Actividad</h2>
-      <p>{{ registros().length }} registros encontrados</p>
+      <div>
+        <h2>Actividad</h2>
+        <p>Página {{ pagina + 1 }} · {{ registros().length }} registros en esta página</p>
+      </div>
+      <select class="filter-select filter-select-sm" [(ngModel)]="tamanoPagina" (ngModelChange)="aplicarCambio()">
+        <option *ngFor="let tamano of tamanosPagina" [ngValue]="tamano">{{ tamano }} por página</option>
+      </select>
     </div>
 
     <div class="table-wrap" *ngIf="registros().length > 0">
@@ -65,6 +70,12 @@
 
     <p class="empty-state" *ngIf="cargando()">Cargando actividad…</p>
     <p class="empty-state" *ngIf="!cargando() && registros().length === 0">No hay actividad registrada con estos filtros.</p>
+
+    <div class="paginacion" *ngIf="!cargando() && registros().length > 0">
+      <button class="btn-clear" [disabled]="pagina === 0" (click)="paginaAnterior()">← Anterior</button>
+      <span class="paginacion-actual">Página {{ pagina + 1 }}</span>
+      <button class="btn-clear" [disabled]="!hayPaginaSiguiente()" (click)="paginaSiguiente()">Siguiente →</button>
+    </div>
   </div>
 </div>
 

@@ -26,6 +26,18 @@ export class ActividadComponent implements OnInit {
   fechaDesde = '';
   fechaHasta = '';
 
+  // ── Paginación Anterior/Siguiente ────────────────────────
+  // Sin conteo total: un log de auditoría crece sin parar, así que
+  // calcular COUNT(*) en cada carga sería caro y poco útil (el mismo
+  // patrón que usan Stripe/AWS CloudTrail para sus logs de eventos).
+  // El truco para saber si hay página siguiente sin ese COUNT: pedir
+  // un registro de más (limit + 1) y, si llega, hay más — se recorta
+  // antes de mostrarlo.
+  readonly tamanosPagina = [25, 50, 100];
+  tamanoPagina = 25;
+  pagina = 0;
+  hayPaginaSiguiente = signal(false);
+
   ngOnInit(): void {
     this.empresasService.listarEmpresas().subscribe({
       next: (empresas) => {
@@ -44,13 +56,20 @@ export class ActividadComponent implements OnInit {
     });
   }
 
+  /** Cualquier cambio de contexto (empresa, filtros, tamaño de página) reinicia a la página 0. */
+  aplicarCambio(): void {
+    this.pagina = 0;
+    this.cargarRegistros();
+  }
+
   cargarRegistros(): void {
     if (!this.empresaSeleccionadaId) return;
     this.cargando.set(true);
     this.error.set(null);
     this.auditoriaService
       .listar(this.empresaSeleccionadaId, {
-        limit: 100,
+        limit: this.tamanoPagina + 1,
+        offset: this.pagina * this.tamanoPagina,
         accion: this.accion.trim() || undefined,
         tabla_afectada: this.tablaAfectada.trim() || undefined,
         desde: this.fechaDesde ? `${this.fechaDesde}T00:00:00` : undefined,
@@ -58,7 +77,8 @@ export class ActividadComponent implements OnInit {
       })
       .subscribe({
         next: (registros) => {
-          this.registros.set(registros);
+          this.hayPaginaSiguiente.set(registros.length > this.tamanoPagina);
+          this.registros.set(registros.slice(0, this.tamanoPagina));
           this.cargando.set(false);
         },
         error: () => {
@@ -66,6 +86,18 @@ export class ActividadComponent implements OnInit {
           this.cargando.set(false);
         },
       });
+  }
+
+  paginaAnterior(): void {
+    if (this.pagina === 0) return;
+    this.pagina -= 1;
+    this.cargarRegistros();
+  }
+
+  paginaSiguiente(): void {
+    if (!this.hayPaginaSiguiente()) return;
+    this.pagina += 1;
+    this.cargarRegistros();
   }
 
   get hayFiltros(): boolean {
@@ -77,7 +109,7 @@ export class ActividadComponent implements OnInit {
     this.tablaAfectada = '';
     this.fechaDesde = '';
     this.fechaHasta = '';
-    this.cargarRegistros();
+    this.aplicarCambio();
   }
 
   iniciales(nombre: string | null): string {
