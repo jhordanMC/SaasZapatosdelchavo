@@ -96,8 +96,9 @@ export class EmpresaDashboardComponent {
     const desde = Date.now() - 30 * 24 * 60 * 60 * 1000;
     let costo = 0;
     for (const venta of this.historial) {
-      if (new Date(venta.fecha).getTime() < desde) continue;
-      for (const item of venta.items) {
+      const tiempoVenta = new Date(venta?.fecha).getTime();
+      if (Number.isNaN(tiempoVenta) || tiempoVenta < desde) continue;
+      for (const item of venta?.items ?? []) {
         const producto = this.productosService.getProductoById(item.productoId);
         if (producto) costo += producto.costoCompra * item.cantidad;
       }
@@ -140,7 +141,7 @@ export class EmpresaDashboardComponent {
     let totalUnidades = 0;
 
     for (const venta of this.historial) {
-      for (const item of venta.items) {
+      for (const item of venta?.items ?? []) {
         const producto = this.productosService.getProductoById(item.productoId);
         const nombre = producto?.nombre ?? item.nombre;
         const actual = mapa.get(item.productoId) ?? {
@@ -188,8 +189,9 @@ export class EmpresaDashboardComponent {
     const unidadesPorProducto = new Map<string, number>();
     const desde = Date.now() - DIAS_ANALISIS_ROTACION * 24 * 60 * 60 * 1000;
     for (const venta of this.historial) {
-      if (new Date(venta.fecha).getTime() < desde) continue;
-      for (const item of venta.items) {
+      const tiempoVenta = new Date(venta?.fecha).getTime();
+      if (Number.isNaN(tiempoVenta) || tiempoVenta < desde) continue;
+      for (const item of venta?.items ?? []) {
         unidadesPorProducto.set(item.productoId, (unidadesPorProducto.get(item.productoId) ?? 0) + item.cantidad);
       }
     }
@@ -290,9 +292,9 @@ export class EmpresaDashboardComponent {
     }
 
     for (const venta of this.historial) {
-      const f = new Date(venta.fecha);
+      const f = new Date(venta?.fecha);
       const key = `${f.getFullYear()}-${f.getMonth()}`;
-      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + venta.total);
+      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + (Number(venta?.total) || 0));
     }
 
     return orden.map((key) => {
@@ -345,8 +347,12 @@ export class EmpresaDashboardComponent {
   get ventasPorDiaSemana(): FilaDiaSemana[] {
     const acumulado = DIAS_SEMANA.map((dia) => ({ dia, ingresos: 0, ventas: 0 }));
     for (const venta of this.historial) {
-      const idx = new Date(venta.fecha).getDay();
-      acumulado[idx].ingresos += venta.total;
+      const fecha = new Date(venta?.fecha);
+      const idx = fecha.getDay();
+      // venta.fecha ausente/mal formada (NaN) o venta sin total: se descarta la fila
+      // en lugar de tumbar el render completo del dashboard.
+      if (Number.isNaN(idx)) continue;
+      acumulado[idx].ingresos += Number(venta?.total) || 0;
       acumulado[idx].ventas += 1;
     }
     // Reordenar para que la semana empiece en lunes, más natural de leer
