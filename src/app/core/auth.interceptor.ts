@@ -3,7 +3,13 @@ import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { TokenStore } from './token-store';
 
-const RUTAS_SIN_TOKEN = ['/iam/auth/login', '/iam/auth/refresh', '/iam/auth/recuperar-password', '/iam/auth/resetear-password'];
+const RUTAS_SIN_TOKEN = [
+  '/iam/auth/login',
+  '/iam/auth/verificar-2fa',
+  '/iam/auth/refresh',
+  '/iam/auth/recuperar-password',
+  '/iam/auth/resetear-password',
+];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenStore = inject(TokenStore);

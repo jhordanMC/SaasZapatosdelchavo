@@ -16,6 +16,11 @@ export interface SesionUsuario {
   empresaId: string | null;
 }
 
+export interface LoginTokenResponse {
+  login_token: string;
+  expira_en_segundos: number;
+}
+
 interface MiPerfilResponse {
   id_usuario: string;
   id_empresa: string;
@@ -43,6 +48,11 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
 
   private sesion = signal<SesionUsuario | null>(null);
+
+  // Login en dos pasos (2FA obligatorio): login() ya no entrega tokens,
+  // deja acá el login_token pendiente hasta que verificar2fa() lo
+  // confirme con el código que llega por email.
+  private loginPendiente: LoginTokenResponse | null = null;
 
   // Se emite una vez que el intento de restaurar sesión (al recargar la
   // página) terminó, haya encontrado sesión válida o no. Los guards de
@@ -96,15 +106,44 @@ export class AuthService {
     );
   }
 
-  login(correo: string, password: string): Observable<SesionUsuario> {
+  /**
+   * Primer paso del login: valida email+password. Ya NO entrega tokens
+   * (2FA obligatorio) — guarda el login_token pendiente y lo devuelve
+   * junto con cuánto dura vigente, para que la pantalla de verificación
+   * arme su cuenta regresiva.
+   */
+  login(correo: string, password: string): Observable<LoginTokenResponse> {
     const body = new HttpParams().set('username', correo).set('password', password);
 
     return this.http
-      .post<TokenResponse>(`${this.apiUrl}/iam/auth/login`, body, {
+      .post<LoginTokenResponse>(`${this.apiUrl}/iam/auth/login`, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
+      .pipe(tap((respuesta) => (this.loginPendiente = respuesta)));
+  }
+
+  obtenerLoginPendiente(): LoginTokenResponse | null {
+    return this.loginPendiente;
+  }
+
+  limpiarLoginPendiente(): void {
+    this.loginPendiente = null;
+  }
+
+  /** Segundo paso: el código de 6 dígitos que llegó por email. Acá sí se emiten los tokens. */
+  verificar2fa(codigo: string): Observable<SesionUsuario> {
+    const loginToken = this.loginPendiente?.login_token;
+    if (!loginToken) {
+      return throwError(() => new Error('No hay un login en curso'));
+    }
+
+    return this.http
+      .post<TokenResponse>(`${this.apiUrl}/iam/auth/verificar-2fa`, { login_token: loginToken, codigo })
       .pipe(
-        tap((tokens) => this.tokenStore.guardar(tokens)),
+        tap((tokens) => {
+          this.tokenStore.guardar(tokens);
+          this.loginPendiente = null;
+        }),
         switchMap(() => this.cargarPerfilYPermisos()),
         catchError((error) => {
           this.tokenStore.limpiar();

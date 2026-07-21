@@ -187,18 +187,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
 
     this.loading = true;
     this.authService.login(this.email, this.password).subscribe({
-      next: (usuario) => {
+      next: () => {
         this.loading = false;
         this.success = true;
 
-        const destino =
-          usuario.rol === 'admin'
-            ? '/admin/dashboard'
-            : usuario.rol === 'dueño'
-            ? '/empresa/dashboard'
-            : '/empresa/ventas';
-
-        setTimeout(() => this.router.navigate([destino]), 1200);
+        // Password correcto: falta el código de 6 dígitos que ya se
+        // mandó por email (2FA obligatorio, ver AuthService.login).
+        setTimeout(() => this.router.navigate(['/verificar-2fa']), 1200);
       },
       error: (error: HttpErrorResponse) => {
         this.loading = false;

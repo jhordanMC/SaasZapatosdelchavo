@@ -1,0 +1,66 @@
+<!-- Fondo (mismo que login) -->
+<div class="bg"></div>
+
+<div class="page">
+  <div class="card-wrap in">
+    <div class="card">
+      <div class="logo-area">
+        <img src="vilcas.png" alt="Vilcas" class="logo-img" (error)="onLogoError($event)"/>
+        <svg *ngIf="showLogoFallback" class="logo-fallback" style="display:block" viewBox="0 0 68 56" fill="none">
+          <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+          <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+        </svg>
+        <div class="brand-name">VILC<span class="gd">A</span>S</div>
+      </div>
+
+      <ng-container *ngIf="!success">
+        <div class="heading">Verifica tu identidad</div>
+        <div class="subheading">Ingresa el código de 6 dígitos que enviamos a tu correo</div>
+
+        <div class="err-msg" [class.on]="showError">{{ errorMessage }}</div>
+
+        <div class="otp-row" [class.shake]="shakeRow">
+          <div class="otp-box" *ngFor="let d of digitos; let i = index" [class.filled]="digitos[i] !== ''">
+            <div class="otp-fill"></div>
+            <input
+              #casilla
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="1"
+              [disabled]="loading || bloqueado"
+              [value]="digitos[i]"
+              (input)="onInputDigito(i, $event)"
+              (keydown)="onKeydown(i, $event)"
+              (paste)="onPaste($event)"
+            />
+          </div>
+        </div>
+
+        <div class="otp-underline">
+          <div class="otp-underline-fill" [style.width.%]="(digitosLlenos / 6) * 100"></div>
+        </div>
+
+        <div class="temporizador" *ngIf="!bloqueado && !loading">Expira en {{ tiempoFormateado }}</div>
+
+        <div class="verificando" *ngIf="loading">
+          Verificando<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+        </div>
+
+        <button *ngIf="bloqueado" class="btn-login" type="button" (click)="volverAIniciarSesion()">
+          <span>Volver a iniciar sesión</span>
+        </button>
+      </ng-container>
+
+      <div class="success-area" *ngIf="success">
+        <div class="suc-ring">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#3db87a" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div class="suc-title">¡Verificado!</div>
+        <div class="suc-sub">Acceso concedido.<br>Ingresando a Vilcas…</div>
+      </div>
+    </div>
+  </div>
+</div>

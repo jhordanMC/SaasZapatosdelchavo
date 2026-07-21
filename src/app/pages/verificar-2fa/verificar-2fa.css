@@ -1,0 +1,221 @@
+:host {
+  --green:  #024B40;
+  --green2: #3db87a;
+  --mint:   #64D59C;
+  --gold:   #DA9E0B;
+  --ink:    #022b2b;
+  --pill:   50px;
+  --muted:  #7a948b;
+
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: 'Inter', sans-serif;
+  color: #0f2d25;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Fondo y layout de página (igual que login) ── */
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: url('/FondoSaas.jpg') center center / cover no-repeat;
+}
+.page {
+  position: relative; z-index: 10;
+  width: 100%; height: 100vh; height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Card con borde degradado animado (igual que login) ── */
+@property --a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
+.card-wrap {
+  position: relative;
+  width: clamp(330px, 38vmin, 430px);
+  padding: 4.5px;
+  border-radius: 30px;
+  background: conic-gradient(from var(--a), var(--mint), var(--green2), var(--gold), var(--mint));
+  animation: rotBorder 4s linear infinite;
+  box-shadow: 0 28px 70px rgba(2,24,18,0.45);
+  opacity: 1;
+  will-change: transform;
+}
+@keyframes rotBorder { to { --a: 360deg; } }
+
+.card {
+  position: relative; z-index: 3;
+  width: 100%;
+  border-radius: 28px;
+  background: #ffffff;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  padding: 38px 40px 34px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* Logo */
+.logo-area { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
+.logo-img  { width: 60px; height: auto; margin-bottom: 8px; }
+.logo-fallback { width: 60px; margin-bottom: 8px; }
+.brand-name { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .22em; color: var(--green); }
+.brand-name .gd { color: var(--gold); }
+
+.heading    { font-size: 18px; font-weight: 700; color: #0f2d25; margin-bottom: 3px; }
+.subheading { font-size: 12.5px; font-weight: 400; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+
+/* Error (igual que login) */
+.err-msg {
+  width: 100%; font-size: 11px; color: #b03020; display: none;
+  background: rgba(180,50,30,.08); border-left: 2px solid #c0392b;
+  padding: 8px 12px; border-radius: 4px; margin-bottom: 14px; line-height: 1.5;
+  text-align: left;
+}
+.err-msg.on { display: block; }
+
+/* ════════════════════════════════════════════
+   CASILLAS OTP — efecto "líquido" al llenarse
+   ════════════════════════════════════════════ */
+.otp-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 10px);
+  margin-bottom: 10px;
+}
+
+.otp-box {
+  position: relative;
+  width: clamp(36px, 9vw, 44px);
+  height: clamp(46px, 11vw, 54px);
+  border: 1.5px solid #e2ece8;
+  border-radius: 14px;
+  background: #f8fdfb;
+  overflow: hidden;
+  transition: border-color .25s, box-shadow .25s, transform .15s;
+}
+.otp-box:focus-within {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px rgba(100,213,156,0.16);
+}
+.otp-box.filled {
+  border-color: var(--green2);
+  animation: otpPop .32s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* El "líquido" que sube desde abajo y se derrama un poco al llegar arriba */
+.otp-fill {
+  position: absolute;
+  left: -15%; right: -15%; bottom: 0;
+  height: 0%;
+  background: linear-gradient(180deg, var(--mint) 0%, var(--green2) 100%);
+  border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+  transition: height .42s cubic-bezier(.34,1.15,.4,1), border-radius .3s ease .1s;
+}
+.otp-box.filled .otp-fill {
+  height: 120%;
+  border-radius: 0;
+}
+
+.otp-box input {
+  position: relative;
+  z-index: 1;
+  width: 100%; height: 100%;
+  border: none; outline: none; background: transparent;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(18px, 4.5vw, 22px); font-weight: 700;
+  color: var(--green);
+  caret-color: var(--green2);
+  transition: color .3s;
+}
+.otp-box.filled input { color: #fff; }
+.otp-box input:disabled { opacity: .6; }
+
+@keyframes otpPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+/* Línea que conecta las casillas: se llena a medida que se completan */
+.otp-underline {
+  width: 100%;
+  height: 3px;
+  background: #e2ece8;
+  border-radius: 3px;
+  margin: 2px 0 18px;
+  overflow: hidden;
+}
+.otp-underline-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--mint), var(--green2));
+  border-radius: 3px;
+  transition: width .38s cubic-bezier(.34,1.15,.4,1);
+}
+
+.temporizador {
+  font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 4px;
+}
+
+.verificando {
+  font-size: 12.5px; color: var(--green2); font-weight: 700; margin-bottom: 4px;
+}
+.verificando .dot { display: inline-block; animation: dotPulse 1.2s infinite; opacity: 0; }
+.verificando .dot:nth-child(2) { animation-delay: .2s; }
+.verificando .dot:nth-child(3) { animation-delay: .4s; }
+.verificando .dot:nth-child(4) { animation-delay: .6s; }
+@keyframes dotPulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* Botón (mismo estilo que login) */
+.btn-login {
+  width: 100%; padding: 12px 20px; margin-top: 6px;
+  border: none; border-radius: var(--pill);
+  background: linear-gradient(135deg, #64D59C 0%, #3db87a 100%);
+  color: #fff; font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 22px rgba(61,184,122,.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-login:hover  { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(61,184,122,.46); }
+.btn-login:active { transform: translateY(0); }
+
+/* Éxito (igual que login) */
+.success-area { display:flex; flex-direction:column; align-items:center; gap:13px; text-align:center; padding:14px 0 6px; }
+.suc-ring { width:52px; height:52px; border:1.5px solid var(--mint); border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.suc-title { font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:var(--green); letter-spacing:.08em; }
+.suc-sub { font-size:12px; color:var(--muted); line-height:1.6; }
+
+/* Shake (igual que login) */
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px)}
+  40%{transform:translateX(4px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}
+}
+.otp-row.shake { animation:shake .32s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card-wrap { animation: none; }
+  .otp-box.filled { animation: none; }
+}
+
+/* ── RESPONSIVE (mismos breakpoints que login) ── */
+@media (max-width: 680px) {
+  :host { min-height: auto; }
+  .bg { background-position: center 38%; }
+  .page {
+    height: auto; min-height: 100vh; min-height: 100dvh;
+    align-items: center; justify-content: center;
+    padding: max(26px, env(safe-area-inset-top)) 16px max(26px, env(safe-area-inset-bottom));
+  }
+  .card-wrap { width: 100%; max-width: 400px; border-radius: 26px; padding: 2.5px; }
+  .card { width: 100%; border-radius: 24px; padding: 32px 24px 28px; }
+  .logo-img, .logo-fallback { width: 52px; margin-bottom: 6px; }
+  .brand-name { font-size: 19px; letter-spacing: .18em; }
+}
+
+@media (max-width: 360px) {
+  .card { padding: 26px 16px 24px; }
+  .logo-img, .logo-fallback { width: 46px; }
+  .brand-name { font-size: 17px; }
+}

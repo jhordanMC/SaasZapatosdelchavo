@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login';
+import { Verificar2faComponent } from './pages/verificar-2fa/verificar-2fa';
 import { OlvidecontraComponent } from './pages/olvidecontra/olvidecontra';
 import { AdminLayoutComponent } from './shared/admin-layout/admin-layout';
 import { DashboardAdminComponent } from './pages/admin/dashboard/dashboard';
@@ -18,6 +19,7 @@ import { roleGuard } from './core/auth.guard';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
+  { path: 'verificar-2fa', component: Verificar2faComponent },
   { path: 'olvide-contrasena', component: OlvidecontraComponent },
 
   // ── Vista admin: un solo layout (sidebar + topbar) para todas las hijas ──
