@@ -79,14 +79,18 @@
 .otp-row {
   display: flex;
   justify-content: center;
-  gap: clamp(6px, 2vw, 10px);
+  align-items: stretch;
+  gap: clamp(4px, 1.8vw, 10px);
   margin-bottom: 10px;
+  width: 100%;
 }
 
 .otp-box {
   position: relative;
-  width: clamp(36px, 9vw, 44px);
-  height: clamp(46px, 11vw, 54px);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 44px;
+  aspect-ratio: 4 / 5;
   border: 1.5px solid #e2ece8;
   border-radius: 14px;
   background: #f8fdfb;
@@ -123,7 +127,7 @@
   border: none; outline: none; background: transparent;
   text-align: center;
   font-family: 'Inter', sans-serif;
-  font-size: clamp(18px, 4.5vw, 22px); font-weight: 700;
+  font-size: clamp(14px, 5.5vw, 22px); font-weight: 700;
   color: var(--green);
   caret-color: var(--green2);
   transition: color .3s;

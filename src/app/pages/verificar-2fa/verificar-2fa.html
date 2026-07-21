@@ -29,7 +29,6 @@
               autocomplete="one-time-code"
               maxlength="1"
               [disabled]="loading || bloqueado"
-              [value]="digitos[i]"
               (input)="onInputDigito(i, $event)"
               (keydown)="onKeydown(i, $event)"
               (paste)="onPaste($event)"
