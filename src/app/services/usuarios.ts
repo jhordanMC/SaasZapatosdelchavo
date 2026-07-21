@@ -15,9 +15,34 @@ export interface Usuario {
   dni: string | null;
   id_foto_perfil: string | null;
   estado: EstadoUsuario;
+  // Solo aplica a usuarios con rol "Vendedor": el local en el que atiende
+  // ahora mismo. Un dueño de empresa o un admin ALBA siempre tienen null.
+  id_local: string | null;
   ultimo_login_en: string | null;
   creado_en: string;
 }
+
+// Vistas del sistema sobre las que se puede otorgar/quitar permiso
+// individual a un usuario (independiente de lo que ya le da su rol).
+export type ClaveVista =
+  | 'dashboard'
+  | 'inventario'
+  | 'ventas'
+  | 'finanzas'
+  | 'analitica';
+
+export interface PermisoVista {
+  clave: ClaveVista;
+  etiqueta: string;
+}
+
+export const VISTAS_DISPONIBLES: PermisoVista[] = [
+  { clave: 'dashboard', etiqueta: 'Dashboard' },
+  { clave: 'inventario', etiqueta: 'Inventario' },
+  { clave: 'ventas', etiqueta: 'Ventas' },
+  { clave: 'finanzas', etiqueta: 'Finanzas' },
+  { clave: 'analitica', etiqueta: 'Analítica' },
+];
 
 export interface Rol {
   id_rol: string;
@@ -92,5 +117,32 @@ export class UsuariosService {
 
   quitarRol(idEmpresa: string, idUsuario: string, idRol: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/roles/${idRol}`);
+  }
+
+  // ── Asignación de local (solo vendedores) ────────────────
+  asignarLocal(idEmpresa: string, idUsuario: string, idLocal: string): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/local`, {
+      id_local: idLocal,
+    });
+  }
+
+  quitarLocal(idEmpresa: string, idUsuario: string): Observable<Usuario> {
+    return this.http.delete<Usuario>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/local`);
+  }
+
+  // ── Permisos de vista individuales ────────────────────────
+  // Devuelve solo las claves de vista actualmente DESHABILITADAS
+  // para este usuario en concreto (todo lo que no está en la lista
+  // se entiende habilitado según su rol).
+  listarPermisosVista(idEmpresa: string, idUsuario: string): Observable<ClaveVista[]> {
+    return this.http.get<ClaveVista[]>(
+      `${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/permisos-vista`
+    );
+  }
+
+  actualizarPermisosVista(idEmpresa: string, idUsuario: string, vistasDeshabilitadas: ClaveVista[]): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios/${idUsuario}/permisos-vista`, {
+      vistas_deshabilitadas: vistasDeshabilitadas,
+    });
   }
 }

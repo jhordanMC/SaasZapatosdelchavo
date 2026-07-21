@@ -420,7 +420,7 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 0.8fr 0.7fr 0.8fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1.2fr 0.9fr 0.9fr 1fr;
   gap: 14px;
   align-items: center;
   padding: 14px 0;
@@ -537,9 +537,10 @@
   position: relative;
   width: 100%;
   max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: white;
   border-radius: 24px;
-  overflow: hidden;
   box-shadow: 0 30px 60px rgba(1, 20, 16, 0.35);
   animation: modalIn 0.25s ease both;
 }

@@ -1,0 +1,330 @@
+<!-- Sidebar y topbar viven en AdminLayoutComponent. -->
+<div class="page-toolbar">
+  <div>
+    <p class="page-subtitle">Catálogo de planes, suscripciones y pagos de las empresas-cliente.</p>
+  </div>
+  <button class="btn-primary" *ngIf="tabActiva === 'planes'" (click)="abrirModalNuevoPlan()">+ Nuevo plan</button>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn" [class.activo]="tabActiva === 'planes'" (click)="cambiarTab('planes')">Planes</button>
+  <button class="tab-btn" [class.activo]="tabActiva === 'suscripciones'" (click)="cambiarTab('suscripciones')">Suscripciones</button>
+</div>
+
+<div class="content">
+  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+  <!-- ══════════════ TAB: PLANES (catálogo global) ══════════════ -->
+  <div class="table-card" *ngIf="tabActiva === 'planes'">
+    <div class="table-header">
+      <div>
+        <h2>Catálogo de planes</h2>
+        <p>{{ planes().length }} {{ planes().length === 1 ? 'plan registrado' : 'planes registrados' }}</p>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="planes().length > 0">
+      <div class="table-row table-head">
+        <span>Plan</span>
+        <span>Precio</span>
+        <span>Periodo</span>
+        <span>Límites</span>
+        <span>Estado</span>
+        <span>Acciones</span>
+      </div>
+
+      <div class="table-row" *ngFor="let plan of planes()">
+        <span class="empresa-name">{{ plan.nombre }}</span>
+        <span>{{ plan.moneda }} {{ plan.precio }}</span>
+        <span>{{ plan.periodo }}</span>
+        <span>
+          {{ plan.max_usuarios ?? '∞' }} usuarios · {{ plan.max_locales ?? '∞' }} locales · {{ plan.max_ventas_mes ?? '∞' }} ventas/mes
+        </span>
+        <span><span class="status-pill" [class.active]="plan.esta_activo">{{ plan.esta_activo ? 'activo' : 'inactivo' }}</span></span>
+        <span class="acciones-cell">
+          <button class="btn-accion" (click)="abrirModalEditarPlan(plan)">Editar</button>
+          <button class="btn-accion" (click)="toggleActivoPlan(plan)">{{ plan.esta_activo ? 'Desactivar' : 'Activar' }}</button>
+        </span>
+      </div>
+    </div>
+
+    <p class="empty-state" *ngIf="cargandoPlanes()">Cargando planes…</p>
+    <p class="empty-state" *ngIf="!cargandoPlanes() && planes().length === 0">Todavía no hay planes en el catálogo.</p>
+  </div>
+
+  <!-- ══════════════ TAB: SUSCRIPCIONES (por empresa) ══════════════ -->
+  <ng-container *ngIf="tabActiva === 'suscripciones'">
+    <div class="filters-bar">
+      <div class="search-box">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Buscar por empresa..." [(ngModel)]="busqueda" />
+      </div>
+
+      <select class="filter-select" [(ngModel)]="filtroEstado">
+        <option value="Todos">Estado: Todos</option>
+        <option value="trial">Periodo de prueba</option>
+        <option value="activa">Activa</option>
+        <option value="vencida">Vencida</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+
+      <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="summary-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total suscripciones</div>
+        <div class="kpi-value">{{ totalSuscripciones }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Activas</div>
+        <div class="kpi-value">{{ totalActivas }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Vencidas / Canceladas</div>
+        <div class="kpi-value">{{ totalVencidasOCanceladas }}</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <h2>Suscripciones</h2>
+          <p>{{ suscripcionesFiltradas.length }} resultados encontrados</p>
+        </div>
+      </div>
+
+      <div class="table-wrap" *ngIf="suscripcionesFiltradas.length > 0">
+        <div class="table-row table-head">
+          <span>Empresa</span>
+          <span>Plan</span>
+          <span>Estado</span>
+          <span>Monto</span>
+          <span>Vencimiento</span>
+          <span>Acciones</span>
+        </div>
+
+        <div class="table-row" *ngFor="let s of suscripcionesFiltradas">
+          <span class="empresa-name">{{ s.empresa }}</span>
+          <span>{{ s.plan }}</span>
+          <span><span class="status-pill" [class.active]="s.estado === 'activa'">{{ s.estado }}</span></span>
+          <span>S/ {{ s.monto_mensual }}</span>
+          <span>{{ vencimiento(s) }}</span>
+          <span class="acciones-cell">
+            <button class="btn-accion" (click)="abrirModalEditar(s)">Editar</button>
+            <button class="btn-accion" (click)="abrirModalPagos(s)">Pagos</button>
+          </span>
+        </div>
+      </div>
+
+      <p class="empty-state" *ngIf="cargando()">Cargando suscripciones…</p>
+      <p class="empty-state" *ngIf="!cargando() && suscripcionesFiltradas.length === 0">No se encontraron suscripciones con estos filtros.</p>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ══ MODAL: Nuevo / editar plan ══ -->
+<div class="modal-overlay" *ngIf="modalPlanAbierto" (click)="cerrarModalPlan()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalPlan()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>{{ planEditando ? 'Editar plan' : 'Nuevo plan' }}</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inputNombrePlan">Nombre</label>
+        <input id="inputNombrePlan" type="text" class="form-input" placeholder="Ej. Starter" [(ngModel)]="formPlan.nombre" />
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputPrecioPlan">Precio de lista</label>
+          <input id="inputPrecioPlan" type="number" min="0" class="form-input" [(ngModel)]="formPlan.precio" />
+        </div>
+        <div class="form-group">
+          <label for="selectPeriodoPlan">Periodo</label>
+          <select id="selectPeriodoPlan" class="form-input form-select" [(ngModel)]="formPlan.periodo">
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputMoneda">Moneda</label>
+          <input id="inputMoneda" type="text" maxlength="3" class="form-input" placeholder="PEN" [(ngModel)]="formPlan.moneda" />
+        </div>
+        <div class="form-group">
+          <label for="inputMaxUsuarios">Máx. usuarios (vacío = ilimitado)</label>
+          <input id="inputMaxUsuarios" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxUsuarios" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputMaxLocales">Máx. locales (vacío = ilimitado)</label>
+          <input id="inputMaxLocales" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxLocales" />
+        </div>
+        <div class="form-group">
+          <label for="inputMaxVentas">Máx. ventas/mes (vacío = ilimitado)</label>
+          <input id="inputMaxVentas" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxVentasMes" />
+        </div>
+      </div>
+
+      <label class="checkbox-inline">
+        <input type="checkbox" [(ngModel)]="formPlan.estaActivo" />
+        Plan activo (disponible para asignar a empresas)
+      </label>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalPlan()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!planFormValido || guardandoPlan" (click)="guardarPlan()">
+          {{ guardandoPlan ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Editar suscripción ══ -->
+<div class="modal-overlay" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEditar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Editar suscripción</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="selectPlanEditar">Plan</label>
+        <select id="selectPlanEditar" class="form-input form-select" [(ngModel)]="editarSuscripcion.idPlan">
+          <option value="" disabled>Selecciona un plan</option>
+          <option *ngFor="let plan of planesActivos" [value]="plan.id_plan">
+            {{ plan.nombre }} — S/ {{ plan.precio }} / {{ plan.periodo }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="selectEstadoEditar">Estado</label>
+          <select id="selectEstadoEditar" class="form-input form-select" [(ngModel)]="editarSuscripcion.estado">
+            <option value="trial">Periodo de prueba</option>
+            <option value="activa">Activa</option>
+            <option value="vencida">Vencida</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputMontoEditar">Monto mensual (S/)</label>
+          <input id="inputMontoEditar" type="number" min="0" class="form-input" [(ngModel)]="editarSuscripcion.montoMensual" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputDescuentoEditar">Descuento (S/)</label>
+          <input id="inputDescuentoEditar" type="number" min="0" class="form-input" [(ngModel)]="editarSuscripcion.descuentoMonto" />
+        </div>
+        <div class="form-group">
+          <label for="inputVencimientoEditar">Fecha de vencimiento</label>
+          <input id="inputVencimientoEditar" type="date" class="form-input" [(ngModel)]="editarSuscripcion.fechaVencimiento" />
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!edicionValida || guardandoEdicion" (click)="guardarEdicion()">
+          {{ guardandoEdicion ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Pagos (historial + registrar) ══ -->
+<div class="modal-overlay" *ngIf="modalPagosAbierto" (click)="cerrarModalPagos()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalPagos()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h2>Pagos</h2>
+      <p class="modal-subtitulo" *ngIf="suscripcionPagos as s">{{ s.empresa }}</p>
+    </div>
+
+    <div class="modal-body">
+      <p class="empty-state-mini" *ngIf="cargandoPagos()">Cargando pagos…</p>
+
+      <div class="table-wrap" *ngIf="!cargandoPagos() && pagos().length > 0">
+        <div class="table-row table-head">
+          <span>Fecha</span>
+          <span>Monto</span>
+          <span>Estado</span>
+          <span>Comprobante</span>
+        </div>
+        <div class="table-row" *ngFor="let pago of pagos()">
+          <span>{{ pago.fecha_pago ? pago.fecha_pago.slice(0, 10) : '—' }}</span>
+          <span>S/ {{ pago.monto }}</span>
+          <span><span class="status-pill" [class.active]="pago.estado === 'pagado'">{{ pago.estado }}</span></span>
+          <span>{{ pago.numero_comprobante || '—' }}</span>
+        </div>
+      </div>
+
+      <p class="empty-state-mini" *ngIf="!cargandoPagos() && pagos().length === 0">Todavía no hay pagos registrados.</p>
+
+      <div class="pagos-form-divider"><span>Registrar nuevo pago</span></div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputMontoPagoNuevo">Monto (S/)</label>
+          <input id="inputMontoPagoNuevo" type="number" min="0" class="form-input" [(ngModel)]="nuevoPago.monto" />
+        </div>
+        <div class="form-group">
+          <label for="selectEstadoPagoNuevo">Estado</label>
+          <select id="selectEstadoPagoNuevo" class="form-input form-select" [(ngModel)]="nuevoPago.estado">
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="fallido">Fallido</option>
+            <option value="reembolsado">Reembolsado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputFechaPagoNuevo">Fecha de pago</label>
+          <input id="inputFechaPagoNuevo" type="date" class="form-input" [(ngModel)]="nuevoPago.fechaPago" />
+        </div>
+        <div class="form-group">
+          <label for="inputComprobanteNuevo">N° de comprobante (opcional)</label>
+          <input id="inputComprobanteNuevo" type="text" class="form-input" [(ngModel)]="nuevoPago.numeroComprobante" />
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalPagos()">Cerrar</button>
+        <button class="btn-primary" [disabled]="!pagoValido || guardandoPago" (click)="registrarPago()">
+          {{ guardandoPago ? 'Guardando…' : 'Registrar pago' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -39,7 +39,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   navItems: SidebarItem[] = [
     { label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard', exact: true },
     { label: 'Empresas', route: '/admin/empresas', icon: 'empresas' },
-    { label: 'Usuarios', route: '/admin/usuarios', icon: 'usuarios' },
+    { label: 'Suscripciones', route: '/admin/suscripciones', icon: 'suscripciones' },
     { label: 'Actividad', route: '/admin/actividad', icon: 'actividad' },
     { label: 'Reportes', href: '#', icon: 'reportes' },
     { label: 'Configuración', href: '#', icon: 'config' },

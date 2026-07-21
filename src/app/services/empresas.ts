@@ -29,6 +29,11 @@ export interface LocalInput {
   descripcion: string;
 }
 
+export interface EmpresaUpdateInput {
+  nombre?: string;
+  estado?: EstadoEmpresa;
+}
+
 /**
  * Cross-tenant a propósito: solo lo puede usar el staff de ALBA (el
  * backend lo exige vía require_alba_staff, GET /empresas y afines).
@@ -51,8 +56,8 @@ export class EmpresasService {
     return this.http.post<Empresa>(`${this.apiUrl}/empresas`, { nombre });
   }
 
-  actualizarEstado(idEmpresa: string, estado: EstadoEmpresa): Observable<Empresa> {
-    return this.http.put<Empresa>(`${this.apiUrl}/empresas/${idEmpresa}`, { estado });
+  actualizarEmpresa(idEmpresa: string, datos: EmpresaUpdateInput): Observable<Empresa> {
+    return this.http.put<Empresa>(`${this.apiUrl}/empresas/${idEmpresa}`, datos);
   }
 
   listarLocales(idEmpresa: string): Observable<Local[]> {

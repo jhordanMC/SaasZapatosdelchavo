@@ -1,21 +1,23 @@
-<!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout).
-     El título (nombre de la empresa) se setea dinámicamente vía PageTitleService,
-     ver empresa-detalle.ts -->
+<!-- Sidebar y topbar viven en AdminLayoutComponent. El título (nombre de
+     la empresa) se setea dinámicamente vía PageTitleService. -->
 <ng-container *ngIf="empresa() as empresaActual; else estadoAlterno">
-    <div class="page-toolbar">
-      <div>
-        <button class="btn-volver" (click)="volver()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Empresas
-        </button>
-        <p class="page-subtitle">Locales registrados de {{ empresaActual.nombre }}.</p>
-      </div>
+  <div class="page-toolbar">
+    <div>
+      <button class="btn-volver" (click)="volver()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Empresas
+      </button>
+      <p class="page-subtitle">Locales, usuarios y suscripción de {{ empresaActual.nombre }}.</p>
     </div>
+    <button class="btn-primary" *ngIf="tabActiva === 'usuarios'" (click)="abrirModalNuevo()">+ Nuevo usuario</button>
+    <button class="btn-primary" *ngIf="tabActiva === 'suscripcion' && !suscripcion()" (click)="abrirModalCrearSuscripcion()">+ Asignar plan</button>
+  </div>
 
-    <div class="content">
-      <div class="empresa-summary-card">
+  <div class="content">
+    <div class="empresa-summary-card">
+      <div class="empresa-summary-left">
         <div class="empresa-summary-id">
           <div class="empresa-avatar empresa-avatar-lg">{{ iniciales(empresaActual.nombre) }}</div>
           <div>
@@ -26,45 +28,182 @@
             </div>
           </div>
         </div>
+        <button class="btn-accion" (click)="abrirModalEditarEmpresa()">Editar empresa</button>
+      </div>
 
-        <div class="empresa-summary-metrics">
-          <div class="summary-metric">
-            <span class="summary-metric-label">Locales</span>
-            <span class="summary-metric-value">{{ locales().length }}</span>
+      <div class="empresa-summary-metrics">
+        <div class="summary-metric">
+          <span class="summary-metric-label">Locales</span>
+          <span class="summary-metric-value">{{ locales().length }}</span>
+        </div>
+        <div class="summary-metric">
+          <span class="summary-metric-label">Usuarios</span>
+          <span class="summary-metric-value">{{ usuarios().length }}</span>
+        </div>
+        <div class="summary-metric">
+          <span class="summary-metric-label">Alta</span>
+          <span class="summary-metric-value">{{ empresaActual.creado_en.slice(0, 10) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Tabs ══ -->
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.activo]="tabActiva === 'locales'" (click)="cambiarTab('locales')">Locales</button>
+      <button class="tab-btn" [class.activo]="tabActiva === 'usuarios'" (click)="cambiarTab('usuarios')">Usuarios</button>
+      <button class="tab-btn" [class.activo]="tabActiva === 'suscripcion'" (click)="cambiarTab('suscripcion')">Suscripción</button>
+    </div>
+
+    <!-- ══════════════ TAB: LOCALES ══════════════ -->
+    <div class="table-card" *ngIf="tabActiva === 'locales'">
+      <div class="table-header">
+        <div>
+          <h2>Locales</h2>
+          <p>{{ locales().length }} {{ locales().length === 1 ? 'local registrado' : 'locales registrados' }}</p>
+        </div>
+      </div>
+
+      <div class="locales-grid" *ngIf="locales().length > 0">
+        <div class="local-card" *ngFor="let local of locales()">
+          <div class="local-card-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span class="local-card-nombre">{{ local.nombre }}</span>
           </div>
-          <div class="summary-metric">
-            <span class="summary-metric-label">Alta</span>
-            <span class="summary-metric-value">{{ empresaActual.creado_en.slice(0, 10) }}</span>
+          <p class="local-card-direccion" *ngIf="local.direccion">{{ local.direccion }}</p>
+          <p class="local-card-descripcion" *ngIf="local.descripcion">{{ local.descripcion }}</p>
+
+          <div class="local-card-vendedores">
+            <span class="local-vendedores-label">
+              Vendedores asignados ({{ vendedoresDeLocal(local.id_local).length }})
+            </span>
+            <div class="local-vendedores-chips" *ngIf="vendedoresDeLocal(local.id_local).length > 0">
+              <span class="vendedor-chip" *ngFor="let v of vendedoresDeLocal(local.id_local)">
+                {{ v.nombres }} {{ v.apellidos }}
+              </span>
+            </div>
+            <p class="empty-state-mini" *ngIf="vendedoresDeLocal(local.id_local).length === 0">
+              Sin vendedores asignados todavía.
+            </p>
           </div>
         </div>
+      </div>
+
+      <p class="empty-state" *ngIf="cargando()">Cargando locales…</p>
+      <p class="empty-state" *ngIf="!cargando() && locales().length === 0">Esta empresa aún no tiene locales registrados.</p>
+    </div>
+
+    <!-- ══════════════ TAB: USUARIOS ══════════════ -->
+    <ng-container *ngIf="tabActiva === 'usuarios'">
+      <div class="filters-bar">
+        <div class="search-box">
+          <input type="text" placeholder="Buscar por nombre, DNI o correo..." [(ngModel)]="busqueda" />
+        </div>
+
+        <select class="filter-select" [(ngModel)]="filtroEstado">
+          <option value="Todos">Estado: Todos</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="suspendido">Suspendido</option>
+        </select>
+
+        <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
       </div>
 
       <div class="table-card">
         <div class="table-header">
-          <div>
-            <h2>Locales</h2>
-            <p>{{ locales().length }} {{ locales().length === 1 ? 'local registrado' : 'locales registrados' }}</p>
-          </div>
+          <h2>Usuarios</h2>
+          <p>{{ usuariosFiltrados.length }} resultados encontrados</p>
         </div>
 
-        <div class="locales-grid" *ngIf="locales().length > 0">
-          <div class="local-card" *ngFor="let local of locales()">
-            <div class="local-card-header">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-              <span class="local-card-nombre">{{ local.nombre }}</span>
+        <div class="table-wrap" *ngIf="usuariosFiltrados.length > 0">
+          <div class="table-row table-head">
+            <span>Usuario</span>
+            <span>DNI</span>
+            <span>Estado</span>
+            <span>Local asignado</span>
+            <span>Alta</span>
+            <span>Acciones</span>
+          </div>
+
+          <div class="table-row" *ngFor="let usuario of usuariosFiltrados">
+            <div class="usuario-cell">
+              <div class="usuario-avatar">
+                <span>{{ inicialesUsuario(usuario.nombres, usuario.apellidos) }}</span>
+              </div>
+              <div>
+                <div class="usuario-nombre">{{ usuario.nombres }} {{ usuario.apellidos }}</div>
+                <div class="usuario-correo">{{ usuario.email }}</div>
+              </div>
             </div>
-            <p class="local-card-direccion" *ngIf="local.direccion">{{ local.direccion }}</p>
-            <p class="local-card-descripcion" *ngIf="local.descripcion">{{ local.descripcion }}</p>
+            <span>{{ usuario.dni || '—' }}</span>
+            <span><span class="status-pill" [class.active]="usuario.estado === 'activo'">{{ usuario.estado }}</span></span>
+            <span class="local-asignado-cell">
+              {{ nombreLocal(usuario.id_local) }}
+              <button class="btn-link-mini" (click)="abrirModalLocal(usuario)">{{ usuario.id_local ? 'Cambiar' : 'Asignar' }}</button>
+              <button class="btn-link-mini" *ngIf="usuario.id_local" (click)="quitarLocalAsignado(usuario)">Quitar</button>
+            </span>
+            <span>{{ usuario.creado_en.slice(0, 10) }}</span>
+            <span class="acciones-cell">
+              <button class="btn-accion" (click)="abrirModalVer(usuario)" title="Ver usuario">Ver</button>
+              <button class="btn-accion" (click)="abrirModalEditar(usuario)" title="Editar usuario">Editar</button>
+              <button class="btn-accion" (click)="abrirModalPermisos(usuario)" title="Permisos de vista">Permisos</button>
+              <button class="btn-toggle-estado" [class.reactivar]="usuario.estado !== 'activo'" (click)="cambiarEstado(usuario)">
+                {{ usuario.estado === 'activo' ? 'Retirar' : 'Reactivar' }}
+              </button>
+              <button class="btn-eliminar" (click)="abrirModalEliminar(usuario)" title="Eliminar usuario">Eliminar</button>
+            </span>
           </div>
         </div>
 
-        <p class="empty-state" *ngIf="cargando()">Cargando locales…</p>
-        <p class="empty-state" *ngIf="!cargando() && locales().length === 0">Esta empresa aún no tiene locales registrados.</p>
+        <p class="empty-state" *ngIf="cargandoUsuarios()">Cargando usuarios…</p>
+        <p class="empty-state" *ngIf="!cargandoUsuarios() && usuariosFiltrados.length === 0">No se encontraron usuarios con estos filtros.</p>
       </div>
-    </div>
+    </ng-container>
+
+    <!-- ══════════════ TAB: SUSCRIPCIÓN ══════════════ -->
+    <ng-container *ngIf="tabActiva === 'suscripcion'">
+      <p class="empty-state" *ngIf="cargandoSuscripcion()">Cargando suscripción…</p>
+
+      <ng-container *ngIf="!cargandoSuscripcion()">
+        <div class="table-card" *ngIf="suscripcion() as s; else sinSuscripcion">
+          <div class="table-header">
+            <div>
+              <h2>Plan actual</h2>
+              <p>Estado y vigencia de la suscripción</p>
+            </div>
+            <a class="btn-accion" routerLink="/admin/suscripciones">Gestionar en Suscripciones</a>
+          </div>
+
+          <div class="plan-grid">
+            <div class="plan-item">
+              <span class="summary-metric-label">Plan</span>
+              <span class="summary-metric-value">{{ s.plan }}</span>
+            </div>
+            <div class="plan-item">
+              <span class="summary-metric-label">Estado</span>
+              <span class="status-pill" [class.active]="s.estado === 'activa'">{{ s.estado }}</span>
+            </div>
+            <div class="plan-item">
+              <span class="summary-metric-label">Monto mensual</span>
+              <span class="summary-metric-value">S/ {{ s.monto_mensual }}</span>
+            </div>
+            <div class="plan-item">
+              <span class="summary-metric-label">Vencimiento</span>
+              <span class="summary-metric-value">{{ s.fecha_vencimiento ? s.fecha_vencimiento.slice(0, 10) : 'Sin definir' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #sinSuscripcion>
+          <p class="empty-state">Esta empresa aún no tiene una suscripción configurada.</p>
+          <button class="btn-primary" (click)="abrirModalCrearSuscripcion()" [disabled]="cargandoPlanes()">+ Asignar plan</button>
+        </ng-template>
+      </ng-container>
+    </ng-container>
+  </div>
 </ng-container>
 
 <ng-template #estadoAlterno>
@@ -76,3 +215,382 @@
     </ng-container>
   </div>
 </ng-template>
+
+<!-- ══ MODAL: Editar empresa ══ -->
+<div class="modal-overlay" *ngIf="modalEditarEmpresaAbierto" (click)="cerrarModalEditarEmpresa()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEditarEmpresa()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Editar empresa</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inputNombreEmpresaEditar">Nombre</label>
+        <input id="inputNombreEmpresaEditar" type="text" class="form-input" [(ngModel)]="formEmpresa.nombre" />
+      </div>
+
+      <div class="form-group">
+        <label for="selectEstadoEmpresaEditar">Estado</label>
+        <select id="selectEstadoEmpresaEditar" class="form-input form-select" [(ngModel)]="formEmpresa.estado">
+          <option value="activa">Activa</option>
+          <option value="suspendida">Suspendida</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalEditarEmpresa()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formEmpresaValido || guardandoEmpresa" (click)="guardarEmpresa()">
+          {{ guardandoEmpresa ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Nuevo usuario ══ -->
+<div class="modal-overlay" *ngIf="modalNuevoAbierto" (click)="cerrarModalNuevo()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalNuevo()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+      <div class="modal-brand-sub">SaaS Platform</div>
+    </div>
+
+    <div class="modal-header"><h2>Nuevo usuario</h2></div>
+
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputNombreUsuario">Nombres</label>
+          <input id="inputNombreUsuario" type="text" class="form-input" placeholder="Ingresar nombres" [(ngModel)]="nuevoUsuario.nombres" />
+        </div>
+        <div class="form-group">
+          <label for="inputApellidoUsuario">Apellidos</label>
+          <input id="inputApellidoUsuario" type="text" class="form-input" placeholder="Ingresar apellidos" [(ngModel)]="nuevoUsuario.apellidos" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputDniUsuario">DNI (opcional)</label>
+          <input id="inputDniUsuario" type="text" class="form-input" placeholder="Ingresar DNI" maxlength="8" inputmode="numeric" [(ngModel)]="nuevoUsuario.dni" />
+        </div>
+        <div class="form-group">
+          <label for="inputCorreoUsuario">Correo</label>
+          <input id="inputCorreoUsuario" type="email" class="form-input" placeholder="Ingresar correo" [(ngModel)]="nuevoUsuario.email" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputRolUsuario">Rol</label>
+          <select id="inputRolUsuario" class="form-input form-select" [(ngModel)]="nuevoUsuario.idRol">
+            <option value="" disabled>Selecciona el rol</option>
+            <option *ngFor="let rol of roles()" [value]="rol.id_rol">{{ rol.nombre }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputPasswordUsuario">Contraseña</label>
+          <input id="inputPasswordUsuario" type="password" class="form-input" placeholder="Mínimo 8 caracteres" [(ngModel)]="nuevoUsuario.password" />
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalNuevo()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioValido || guardando" (click)="crearUsuario()">
+          {{ guardando ? 'Creando…' : 'Crear usuario' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Confirmación de creación de usuario ══ -->
+<div class="modal-overlay" *ngIf="modalConfirmacionAbierto" (click)="cerrarModalConfirmacion()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalConfirmacion()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="confirmacion-icono">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h2 class="confirmacion-titulo">Usuario creado con éxito</h2>
+    <p class="confirmacion-desc" *ngIf="usuarioRecienCreado">
+      <strong>{{ usuarioRecienCreado.nombres }} {{ usuarioRecienCreado.apellidos }}</strong> quedó registrado.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-primary btn-full" (click)="cerrarModalConfirmacion()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Ver usuario ══ -->
+<div class="modal-overlay" *ngIf="modalVerAbierto" (click)="cerrarModalVer()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalVer()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Datos del usuario</h2></div>
+
+    <div class="modal-body" *ngIf="usuarioViendo as u">
+      <div class="ver-usuario-header">
+        <div class="usuario-avatar usuario-avatar-lg"><span>{{ inicialesUsuario(u.nombres, u.apellidos) }}</span></div>
+        <div>
+          <div class="usuario-nombre">{{ u.nombres }} {{ u.apellidos }}</div>
+          <div class="usuario-correo">{{ u.email }}</div>
+        </div>
+      </div>
+
+      <div class="ver-usuario-grid">
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">DNI</span>
+          <span class="ver-usuario-valor">{{ u.dni || '—' }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Teléfono</span>
+          <span class="ver-usuario-valor">{{ u.telefono || '—' }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Estado</span>
+          <span class="status-pill" [class.active]="u.estado === 'activo'">{{ u.estado }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Rol</span>
+          <span class="ver-usuario-valor">
+            {{ rolesDeUsuarioViendo.length > 0 ? rolesDeUsuarioViendo[0].nombre : 'Sin rol asignado' }}
+          </span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Local asignado</span>
+          <span class="ver-usuario-valor">{{ nombreLocal(u.id_local) }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Fecha de alta</span>
+          <span class="ver-usuario-valor">{{ u.creado_en.slice(0, 10) }}</span>
+        </div>
+        <div class="ver-usuario-item">
+          <span class="ver-usuario-label">Último ingreso</span>
+          <span class="ver-usuario-valor">{{ u.ultimo_login_en ? u.ultimo_login_en.slice(0, 10) : 'Nunca' }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary btn-full" (click)="cerrarModalVer()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Editar usuario ══ -->
+<div class="modal-overlay" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEditar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Editar usuario</h2></div>
+
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarNombre">Nombres</label>
+          <input id="inputEditarNombre" type="text" class="form-input" [(ngModel)]="editarUsuario.nombres" />
+        </div>
+        <div class="form-group">
+          <label for="inputEditarApellido">Apellidos</label>
+          <input id="inputEditarApellido" type="text" class="form-input" [(ngModel)]="editarUsuario.apellidos" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarDni">DNI (opcional)</label>
+          <input id="inputEditarDni" type="text" class="form-input" maxlength="8" inputmode="numeric" [(ngModel)]="editarUsuario.dni" />
+        </div>
+        <div class="form-group">
+          <label for="inputEditarTelefono">Teléfono (opcional)</label>
+          <input id="inputEditarTelefono" type="text" class="form-input" [(ngModel)]="editarUsuario.telefono" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputEditarEstado">Estado</label>
+          <select id="inputEditarEstado" class="form-input form-select" [(ngModel)]="editarUsuario.estado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="suspendido">Suspendido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputEditarRol">Rol</label>
+          <select id="inputEditarRol" class="form-input form-select" [(ngModel)]="editarUsuario.idRol" [disabled]="cargandoRolActual">
+            <option value="" disabled>{{ cargandoRolActual ? 'Cargando…' : 'Selecciona el rol' }}</option>
+            <option *ngFor="let rol of roles()" [value]="rol.id_rol">{{ rol.nombre }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioEdicionValido || guardandoEdicion" (click)="guardarEdicion()">
+          {{ guardandoEdicion ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Eliminar usuario ══ -->
+<div class="modal-overlay" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEliminar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="confirmacion-icono confirmacion-icono-peligro">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirmacion-titulo">¿Eliminar usuario?</h2>
+    <p class="confirmacion-desc" *ngIf="usuarioEliminando">
+      Esta acción elimina a <strong>{{ usuarioEliminando.nombres }} {{ usuarioEliminando.apellidos }}</strong> y no se puede deshacer.
+    </p>
+    <div class="modal-actions modal-actions-split">
+      <button class="btn-clear" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn-eliminar btn-eliminar-full" [disabled]="eliminando" (click)="confirmarEliminar()">
+        {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Asignar / cambiar local (vendedor) ══ -->
+<div class="modal-overlay" *ngIf="modalLocalAbierto" (click)="cerrarModalLocal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalLocal()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h2>Asignar local</h2>
+      <p class="modal-subtitulo" *ngIf="usuarioAsignandoLocal as u">
+        Para {{ u.nombres }} {{ u.apellidos }} (rol vendedor)
+      </p>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="selectLocalAsignar">Local</label>
+        <select id="selectLocalAsignar" class="form-input form-select" [(ngModel)]="localSeleccionadoId">
+          <option value="" disabled>Selecciona un local</option>
+          <option *ngFor="let local of locales()" [value]="local.id_local">{{ local.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalLocal()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!localSeleccionadoId || guardandoLocal" (click)="guardarAsignacionLocal()">
+          {{ guardandoLocal ? 'Guardando…' : 'Asignar local' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Permisos de vista (checkboxes, por usuario) ══ -->
+<div class="modal-overlay" *ngIf="modalPermisosAbierto" (click)="cerrarModalPermisos()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalPermisos()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h2>Permisos de vista</h2>
+      <p class="modal-subtitulo" *ngIf="usuarioPermisos as u">
+        Para {{ u.nombres }} {{ u.apellidos }} — destilda una vista para quitarle el acceso a este usuario
+      </p>
+    </div>
+
+    <div class="modal-body">
+      <p class="empty-state-mini" *ngIf="cargandoPermisos">Cargando permisos…</p>
+
+      <div class="permisos-lista" *ngIf="!cargandoPermisos">
+        <label class="permiso-item" *ngFor="let vista of vistas">
+          <input type="checkbox" [(ngModel)]="permisosSeleccion[vista.clave]" />
+          <span>{{ vista.etiqueta }}</span>
+        </label>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalPermisos()">Cancelar</button>
+        <button class="btn-primary" [disabled]="cargandoPermisos || guardandoPermisos" (click)="guardarPermisos()">
+          {{ guardandoPermisos ? 'Guardando…' : 'Guardar permisos' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Asignar plan (primera suscripción de la empresa) ══ -->
+<div class="modal-overlay" *ngIf="modalAsignarPlanAbierto" (click)="cerrarModalAsignarPlan()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalAsignarPlan()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Asignar plan</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="selectPlan">Plan</label>
+        <select id="selectPlan" class="form-input form-select" [(ngModel)]="idPlanAsignar">
+          <option value="" disabled>Selecciona un plan</option>
+          <option *ngFor="let plan of planes()" [value]="plan.id_plan">
+            {{ plan.nombre }} — S/ {{ plan.precio }} / {{ plan.periodo }}
+          </option>
+        </select>
+        <p class="input-help" *ngIf="!planes().length && cargandoPlanes()">Cargando planes...</p>
+        <p class="input-help">La empresa queda en periodo de prueba con el precio de lista del plan. El precio, descuento y estado se ajustan luego desde Suscripciones.</p>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalAsignarPlan()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!idPlanAsignar || guardandoAsignacion" (click)="crearSuscripcion()">
+          {{ guardandoAsignacion ? 'Asignando…' : 'Asignar plan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

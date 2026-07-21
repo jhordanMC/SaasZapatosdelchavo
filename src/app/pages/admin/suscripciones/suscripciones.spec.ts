@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Usuarios } from './usuarios';
+import { Suscripciones } from './suscripciones';
 
-describe('Usuarios', () => {
-  let component: Usuarios;
-  let fixture: ComponentFixture<Usuarios>;
+describe('Suscripciones', () => {
+  let component: Suscripciones;
+  let fixture: ComponentFixture<Suscripciones>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Usuarios],
+      imports: [Suscripciones],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Usuarios);
+    fixture = TestBed.createComponent(Suscripciones);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
