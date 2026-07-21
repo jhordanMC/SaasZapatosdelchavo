@@ -15,7 +15,7 @@
 <div class="main">
   <app-topbar
     [title]="pageTitleService.title()"
-    company="Mi Empresa"
+    [company]="usuario()?.nombreEmpresa || 'Mi Empresa'"
     [avatarLabel]="iniciales()"
     [userName]="usuario()?.nombre ?? 'Usuario'"
     [userRole]="rolEtiqueta()"

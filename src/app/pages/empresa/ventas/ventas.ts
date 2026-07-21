@@ -16,6 +16,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { SexoProducto } from '../../../services/inventario';
 import {
   FiltrosPOS,
@@ -38,7 +39,7 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalBrandHeaderComponent],
   templateUrl: './ventas.html',
   styleUrls: ['./ventas.css'],
 })
@@ -93,6 +94,14 @@ export class VentasComponent implements OnInit {
   checkoutError = '';
   ventaConfirmada: VentaRead | null = null;
   confirmando = false;
+
+  // ── Micro-interacciones ──────────────────────────────────────────────────
+  justAddedProductoId: string | null = null;
+  badgeBump = false;
+  removingVarianteId: string | null = null;
+  qtyPulseModal = false;
+  qtyPulseEdicion = false;
+  totalPulse = false;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -260,11 +269,17 @@ export class VentasComponent implements OnInit {
     };
     this.ventasService.agregarAlCarrito(item);
     this.showVariantePicker = null;
+    this.dispararFeedbackAgregado(p.id_producto);
   }
 
   quitarDelCarrito(varianteId: string): void {
-    this.ventasService.quitarDelCarrito(varianteId);
-    if (this.editandoVarianteId === varianteId) this.editandoVarianteId = null;
+    this.removingVarianteId = varianteId;
+    setTimeout(() => {
+      this.ventasService.quitarDelCarrito(varianteId);
+      if (this.editandoVarianteId === varianteId) this.editandoVarianteId = null;
+      this.removingVarianteId = null;
+      this.pulseTotal();
+    }, 220);
   }
 
   // ── Edición inline de ítem en carrito ────────────────────────────────────
@@ -288,6 +303,64 @@ export class VentasComponent implements OnInit {
       tipoDescuento: this.edicionTipoDescuento,
     });
     this.editandoVarianteId = null;
+    this.pulseTotal();
+  }
+
+  // ── Cantidad: steppers +/- (modal y edición inline) ─────────────────────
+
+  incrementarCantidadModal(): void {
+    const max = this.varianteSeleccionada?.stock_disponible ?? 1;
+    if (this.cantidadSeleccionada >= max) return;
+    this.cantidadSeleccionada++;
+    this.pulseQty('modal');
+  }
+
+  decrementarCantidadModal(): void {
+    if (this.cantidadSeleccionada <= 1) return;
+    this.cantidadSeleccionada--;
+    this.pulseQty('modal');
+  }
+
+  incrementarEdicion(): void {
+    this.edicionCantidad++;
+    this.pulseQty('edicion');
+  }
+
+  decrementarEdicion(): void {
+    if (this.edicionCantidad <= 1) return;
+    this.edicionCantidad--;
+    this.pulseQty('edicion');
+  }
+
+  private pulseQty(cual: 'modal' | 'edicion'): void {
+    if (cual === 'modal') {
+      this.qtyPulseModal = false;
+      setTimeout(() => (this.qtyPulseModal = true), 0);
+      setTimeout(() => (this.qtyPulseModal = false), 220);
+    } else {
+      this.qtyPulseEdicion = false;
+      setTimeout(() => (this.qtyPulseEdicion = true), 0);
+      setTimeout(() => (this.qtyPulseEdicion = false), 220);
+    }
+  }
+
+  // ── Feedback visual: agregar al carrito / total ──────────────────────────
+
+  private dispararFeedbackAgregado(idProducto: string): void {
+    this.justAddedProductoId = idProducto;
+    this.badgeBump = false;
+    setTimeout(() => (this.badgeBump = true), 0);
+    this.pulseTotal();
+    setTimeout(() => {
+      this.justAddedProductoId = null;
+      this.badgeBump = false;
+    }, 900);
+  }
+
+  private pulseTotal(): void {
+    this.totalPulse = false;
+    setTimeout(() => (this.totalPulse = true), 0);
+    setTimeout(() => (this.totalPulse = false), 300);
   }
 
   // ── Foto de comprobante ──────────────────────────────────────────────────

@@ -1,0 +1,65 @@
+:host {
+  display: contents;
+}
+
+.modal-brand-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #0c3a2e;
+  border-radius: 50%;
+  background: transparent;
+  color: #0c3a2e;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.12s;
+  z-index: 2;
+}
+.modal-brand-close:hover { background: #f4fbf6; }
+.modal-brand-close:active { transform: scale(0.92); }
+
+.modal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 6px;
+  text-align: center;
+}
+
+.modal-brand-logo {
+  width: 60px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.modal-brand-name {
+  display: inline-flex;
+  gap: 2px;
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.modal-brand-name .dk { color: #024B40; }
+.modal-brand-name .gd { color: #DA9E0B; }
+
+.modal-brand-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0c3a2e;
+  margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .modal-brand { padding: 26px 20px 4px; }
+  .modal-brand-logo { width: 52px; }
+  .modal-brand-name { font-size: 18px; }
+}

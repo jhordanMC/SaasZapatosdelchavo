@@ -64,9 +64,14 @@
     </div>
 
     <div class="ventas-grid">
-      <div class="venta-card" *ngFor="let p of productosFiltrados" (click)="abrirSelectorVariante(p)">
+      <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productosFiltrados" (click)="abrirSelectorVariante(p)">
         <div class="venta-foto">
           <span class="foto-placeholder">Sin foto</span>
+        </div>
+        <div class="added-badge" *ngIf="p.id_producto === justAddedProductoId">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
         </div>
         <div class="venta-nombre">{{ p.nombre }}</div>
         <div class="venta-footer">
@@ -87,7 +92,7 @@
   <div class="carrito-panel">
     <div class="carrito-panel-header">
       <h3>Tu carrito</h3>
-      <span class="carrito-contador" *ngIf="ventasService.carrito().length > 0">{{ ventasService.carrito().length }}</span>
+      <span class="carrito-contador" [class.bump]="badgeBump" *ngIf="ventasService.carrito().length > 0">{{ ventasService.carrito().length }}</span>
     </div>
 
     <div class="carrito-vacio" *ngIf="ventasService.carrito().length === 0">
@@ -99,7 +104,7 @@
     </div>
 
     <div class="carrito-lista" *ngIf="ventasService.carrito().length > 0">
-      <div class="carrito-item" *ngFor="let item of ventasService.carrito()">
+      <div class="carrito-item" [class.removing]="removingVarianteId === item.varianteId" *ngFor="let item of ventasService.carrito()">
         <ng-container *ngIf="editandoVarianteId !== item.varianteId; else edicionTpl">
           <div class="carrito-item-foto">
             <svg class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -140,7 +145,11 @@
             <div class="form-row-2">
               <div>
                 <label>Cantidad</label>
-                <input type="number" [(ngModel)]="edicionCantidad" min="1" />
+                <div class="qty-stepper qty-stepper-sm">
+                  <button type="button" class="qty-btn" (click)="decrementarEdicion()" [disabled]="edicionCantidad <= 1">−</button>
+                  <span class="qty-value" [class.pop]="qtyPulseEdicion">{{ edicionCantidad }}</span>
+                  <button type="button" class="qty-btn" (click)="incrementarEdicion()">+</button>
+                </div>
               </div>
               <div>
                 <label>Descuento (S/)</label>
@@ -160,7 +169,7 @@
       </div>
     </div>
 
-    <div class="carrito-total" *ngIf="ventasService.carrito().length > 0">
+    <div class="carrito-total" [class.pulse]="totalPulse" *ngIf="ventasService.carrito().length > 0">
       <span>Total</span>
       <span>S/{{ totalCarrito.toFixed(2) }}</span>
     </div>
@@ -178,14 +187,7 @@
 <!-- ── Modal selector de talla/cantidad ──────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showVariantePicker" (click)="cerrarSelectorVariante()">
   <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ showVariantePicker.nombre }}</h3>
-      <button class="modal-close" (click)="cerrarSelectorVariante()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
+    <app-modal-brand-header [subtitle]="showVariantePicker.nombre" (cerrar)="cerrarSelectorVariante()"></app-modal-brand-header>
     <div class="modal-body">
       <!-- Foto del producto (placeholder por ahora) -->
       <div class="producto-modal-foto">
@@ -209,8 +211,11 @@
       <div class="form-row form-row-2">
         <div>
           <label>Cantidad</label>
-          <input type="number" [(ngModel)]="cantidadSeleccionada" min="1"
-            [max]="varianteSeleccionada?.stock_disponible ?? 1" />
+          <div class="qty-stepper">
+            <button type="button" class="qty-btn" (click)="decrementarCantidadModal()" [disabled]="cantidadSeleccionada <= 1">−</button>
+            <span class="qty-value" [class.pop]="qtyPulseModal">{{ cantidadSeleccionada }}</span>
+            <button type="button" class="qty-btn" (click)="incrementarCantidadModal()" [disabled]="!varianteSeleccionada || cantidadSeleccionada >= varianteSeleccionada.stock_disponible">+</button>
+          </div>
         </div>
         <div>
           <label>Descuento (S/)</label>
@@ -242,14 +247,7 @@
 
     <!-- Paso 1: método de pago -->
     <ng-container *ngIf="pasoCheckout === 'formulario'">
-      <div class="modal-header">
-        <h3>Completar venta</h3>
-        <button class="modal-close" (click)="cerrarCheckout()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+      <app-modal-brand-header subtitle="Completar venta" (cerrar)="cerrarCheckout()"></app-modal-brand-header>
 
       <div class="modal-body">
         <div class="resumen-total resumen-top">
@@ -347,14 +345,7 @@
 
     <!-- Paso 2: confirmación final -->
     <ng-container *ngIf="pasoCheckout === 'confirmar'">
-      <div class="modal-header">
-        <h3>Confirma tu venta</h3>
-        <button class="modal-close" (click)="cerrarCheckout()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+      <app-modal-brand-header subtitle="Confirma tu venta" (cerrar)="cerrarCheckout()"></app-modal-brand-header>
 
       <div class="modal-body">
         <p class="confirmar-subtitulo">Estos son los productos que estás por vender:</p>
@@ -418,14 +409,7 @@
 
     <!-- Paso 3: éxito -->
     <ng-container *ngIf="pasoCheckout === 'exito'">
-      <div class="modal-header">
-        <h3>Venta registrada</h3>
-        <button class="modal-close" (click)="cerrarTodo()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+      <app-modal-brand-header subtitle="Venta registrada" (cerrar)="cerrarTodo()"></app-modal-brand-header>
       <div class="modal-body confirmacion">
         <div class="exito-icono">
           <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

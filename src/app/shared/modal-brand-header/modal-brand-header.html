@@ -1,0 +1,17 @@
+<button class="modal-brand-close" (click)="cerrar.emit()" aria-label="Cerrar">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</button>
+
+<div class="modal-brand">
+  <img [src]="logoSrc" alt="VILCAS" class="modal-brand-logo" />
+  <div class="modal-brand-name">
+    <span
+      *ngFor="let char of brandName.split(''); let i = index"
+      [ngClass]="{ dk: i !== brandAccentIndex, gd: i === brandAccentIndex }"
+    >{{ char }}</span>
+  </div>
+  <div class="modal-brand-subtitle" *ngIf="subtitle">{{ subtitle }}</div>
+</div>

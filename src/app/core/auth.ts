@@ -14,6 +14,7 @@ export interface SesionUsuario {
   dni: string | null;
   rol: Rol;
   empresaId: string | null;
+  nombreEmpresa: string;
 }
 
 export interface LoginTokenResponse {
@@ -24,6 +25,7 @@ export interface LoginTokenResponse {
 interface MiPerfilResponse {
   id_usuario: string;
   id_empresa: string;
+  nombre_empresa: string;
   nombres: string;
   apellidos: string;
   email: string;
@@ -99,6 +101,7 @@ export class AuthService {
           dni: perfil.dni,
           rol: mapearRol(perfil.roles),
           empresaId: perfil.id_empresa,
+          nombreEmpresa: perfil.nombre_empresa,
         };
         this.sesion.set(usuario);
         return usuario;
