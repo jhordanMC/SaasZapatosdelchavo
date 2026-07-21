@@ -20,7 +20,7 @@
         <div class="err-msg" [class.on]="showError">{{ errorMessage }}</div>
 
         <div class="otp-row" [class.shake]="shakeRow">
-          <div class="otp-box" *ngFor="let d of digitos; let i = index" [class.filled]="digitos[i] !== ''">
+          <div class="otp-box" *ngFor="let d of digitos; let i = index; trackBy: trackByIndice" [class.filled]="digitos[i] !== ''">
             <div class="otp-fill"></div>
             <input
               #casilla

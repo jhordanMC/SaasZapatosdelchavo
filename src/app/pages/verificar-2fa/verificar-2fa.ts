@@ -75,6 +75,17 @@ export class Verificar2faComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.digitos.filter((d) => d !== '').length;
   }
 
+  /**
+   * Sin esto, *ngFor usa el VALOR del string como identidad de cada
+   * casilla: al pasar de '' a un dígito, Angular no actualiza el nodo,
+   * lo destruye y crea uno nuevo (perdiendo el valor que le acabamos de
+   * escribir a mano y el foco). Con trackBy por índice, siempre son los
+   * mismos 6 <input> del DOM, solo cambia lo que muestran.
+   */
+  trackByIndice(indice: number): number {
+    return indice;
+  }
+
   onLogoError(event: Event): void {
     this.showLogoFallback = true;
     (event.target as HTMLImageElement).style.display = 'none';
