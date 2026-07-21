@@ -1,0 +1,6 @@
+{
+    "files.autoSave": "off",
+    "files.autoSaveDelay": 5000,
+    "files.autoSaveWhenNoErrors": false,
+    "editor.formatOnSave": false
+}

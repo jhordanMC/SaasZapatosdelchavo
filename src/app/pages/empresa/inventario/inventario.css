@@ -168,20 +168,24 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 30, 25, 0.45);
+  background: rgba(2, 20, 16, 0.55);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 1000;
+  padding: 20px;
 }
 
 .modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
   background: white;
-  border-radius: 22px;
-  width: 520px;
-  max-width: 92vw;
+  border-radius: 24px;
   max-height: 88vh;
   overflow-y: auto;
+  box-shadow: 0 30px 60px rgba(1, 20, 16, 0.35);
 }
 
 .modal-header {
@@ -193,19 +197,20 @@
 }
 .modal-header h3 { margin: 0; font-size: 16px; color: #024b40; }
 .modal-close {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #d8e6dd;
+  border: 1.5px solid #0c3a2e;
   border-radius: 50%;
   background: transparent;
+  color: #0c3a2e;
   cursor: pointer;
-  color: #5a8a78;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
-.modal-close:hover { background: #f4fbf6; border-color: #024b40; color: #024b40; }
+.modal-close:hover { background: #f4fbf6; }
 
 .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
 
@@ -227,6 +232,7 @@
 .form-row { display: flex; flex-direction: column; gap: 6px; }
 .form-row label { font-size: 12px; font-weight: 600; color: #1f4034; }
 .form-row input, .form-row select {
+  width: 100%;
   padding: 10px 12px;
   font-size: 13px;
   border: 1px solid #d8e6dd;
@@ -234,6 +240,7 @@
   background: #f8faf7;
   color: #1f4034;
   outline: none;
+  min-width: 0;
 }
 .form-row-2 { flex-direction: row; gap: 12px; }
 .form-row-2 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
@@ -244,7 +251,7 @@
 
 .variante-columnas {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr auto;
+  grid-template-columns: 1fr 1fr 1.4fr 32px;
   gap: 8px;
   padding: 0 2px;
 }
@@ -258,29 +265,36 @@
 
 .variante-fila {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr auto;
+  grid-template-columns: 1fr 1fr 1.4fr 32px;
   gap: 8px;
   align-items: center;
 }
-.variante-fila input {
+.variante-fila input, .variante-fila select {
+  width: 100%;
   padding: 8px 10px;
   font-size: 12px;
   border: 1px solid #d8e6dd;
   border-radius: 10px;
   background: #f8faf7;
   color: #1f4034;
+  outline: none;
+  min-width: 0;
 }
 .btn-icon-danger {
   border: none;
   background: #fdecec;
   color: #b23a3a;
   border-radius: 8px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-icon-danger:hover {
+  background: #f8d7d7;
 }
 
 .modal-footer {
