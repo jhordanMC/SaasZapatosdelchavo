@@ -494,6 +494,63 @@
 }
 .producto-modal-foto img { width: 100%; height: 100%; object-fit: cover; }
 
+.tallas-disponibles-row {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.tallas-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.talla-chip {
+  padding: 8px 16px;
+  border: 1.5px solid #d8e6dd;
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f4034;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.talla-chip:hover {
+  background: #f2f7f4;
+}
+
+.talla-chip.active {
+  background: #1f4034;
+  color: white;
+  border-color: #1f4034;
+}
+
+.subtotal-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 12px;
+  background: #e5f6ec;
+  border-radius: 12px;
+}
+
+.subtotal-row label {
+  font-size: 14px;
+  color: #1d7a4c;
+}
+
+.subtotal-precio {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d7a4c;
+  margin: 0;
+}
+
 /* Checkout ampliado */
 .modal-checkout { width: 460px; max-height: 90vh; overflow-y: auto; }
 

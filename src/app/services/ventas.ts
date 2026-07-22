@@ -28,10 +28,10 @@ export function requiereComprobante(metodo: MetodoPago): boolean {
 
 // ── Schemas del POS (catálogo) ──────────────────────────────────────────────
 
-export interface LocalPOSRead {
-  id_local: string;
+export interface SedePOSRead {
+  id_sede: string;
   nombre: string;
-  direccion: string | null;
+  tipo: string;
 }
 
 export interface VariantePOSRead {
@@ -39,8 +39,8 @@ export interface VariantePOSRead {
   talla: string | null;
   sku: string;
   stock_disponible: number;
-  id_local: string | null;
-  nombre_local: string | null;
+  id_ubicacion_origen: string | null;
+  nombre_ubicacion: string | null;
 }
 
 export interface ProductoPOSRead {
@@ -65,7 +65,7 @@ export interface FiltrosPOS {
 
 export interface DetalleVentaCreate {
   id_variante: string;
-  id_local: string;
+  id_ubicacion_origen: string;
   cantidad: number;
   /** Descuento en S/ absolutos (por línea). */
   descuento_monto: number;
@@ -141,8 +141,8 @@ export interface ItemCarrito {
   /** Nombre para mostrar: "{nombre} (talla {talla})". */
   nombre: string;
   talla: string | null;
-  idLocal: string;
-  nombreLocal: string | null;
+  idUbicacionOrigen: string;
+  nombreUbicacion: string | null;
   fotoUrl: string | null;
   precioUnitario: number;
   cantidad: number;
@@ -167,15 +167,15 @@ export class VentasService {
 
   // ── Catálogo POS (HTTP) ──────────────────────────────────────────────────
 
-  /** Locales asignados al vendedor autenticado. */
-  listarMisLocales(): Observable<LocalPOSRead[]> {
-    return this.http.get<LocalPOSRead[]>(`${this.base}/pos/mis-locales`);
+  /** Sedes asignadas al vendedor autenticado (locales + almacenes). */
+  listarSedes(): Observable<SedePOSRead[]> {
+    return this.http.get<SedePOSRead[]>(`${this.base}/pos/mis-sedes`);
   }
 
-  /** Productos para la pantalla POS, filtrados por local activo (si existe). */
-  listarProductosPOS(idLocal?: string | null, filtros: FiltrosPOS = {}): Observable<ProductoPOSRead[]> {
+  /** Productos para la pantalla POS, filtrados por sede activa (si existe). */
+  listarProductosPOS(idUbicacionFiltro?: string | null, filtros: FiltrosPOS = {}): Observable<ProductoPOSRead[]> {
     let params = new HttpParams();
-    if (idLocal) params = params.set('id_local', idLocal);
+    if (idUbicacionFiltro) params = params.set('id_ubicacion_filtro', idUbicacionFiltro);
     if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
     if (filtros.id_categoria) params = params.set('id_categoria', filtros.id_categoria);
     if (filtros.sexo) params = params.set('sexo', filtros.sexo);
@@ -252,7 +252,7 @@ export class VentasService {
       id_cliente: idCliente ?? null,
       detalles: this.carrito().map((c) => ({
         id_variante: c.varianteId,
-        id_local: c.idLocal,
+        id_ubicacion_origen: c.idUbicacionOrigen,
         cantidad: c.cantidad,
         descuento_monto:
           c.tipoDescuento === 'unidad'

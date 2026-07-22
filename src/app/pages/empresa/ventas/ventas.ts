@@ -21,13 +21,14 @@ import { SexoProducto } from '../../../services/inventario';
 import {
   FiltrosPOS,
   ItemCarrito,
-  LocalPOSRead,
+  SedePOSRead,
+  VentaCreate,
+  VentaRead,
   MetodoPago,
   PagoCreate,
   ProductoPOSRead,
   TipoDescuento,
   VariantePOSRead,
-  VentaRead,
   VentasService,
   requiereComprobante,
 } from '../../../services/ventas';
@@ -49,11 +50,11 @@ export class VentasComponent implements OnInit {
   @ViewChild('carritoVueloDestino') carritoVueloDestinoRef?: ElementRef<HTMLElement>;
 
   // ── Datos del backend ────────────────────────────────────────────────────
-  locales = signal<LocalPOSRead[]>([]);
+  sedes = signal<SedePOSRead[]>([]);
   productos = signal<ProductoPOSRead[]>([]);
 
-  /** Local activo del vendedor en esta sesión POS. */
-  localActivo = signal<LocalPOSRead | null>(null);
+  /** Sede seleccionada en el filtro (puede ser Local o Almacén) */
+  sedeFiltro = signal<SedePOSRead | null>(null);
 
   // ── Estado de UI ─────────────────────────────────────────────────────────
   cargando = signal(true);
@@ -75,10 +76,11 @@ export class VentasComponent implements OnInit {
 
   // ── Modal de selección de variante ──────────────────────────────────────
   showVariantePicker: ProductoPOSRead | null = null;
-  varianteSeleccionadaId = '';
+  tallaModalActiva: string | null = null;
+  ubicacionModalActiva: string | null = null;
   cantidadSeleccionada = 1;
   descuentoSeleccionado = 0;
-  tipoDescuentoSeleccionado: TipoDescuento = 'producto';
+  tipoDescuentoSeleccionado: 'producto' | 'unidad' = 'producto';
   private origenVueloEl: HTMLElement | null = null;
 
   // ── Edición de ítem en carrito ───────────────────────────────────────────
@@ -90,6 +92,16 @@ export class VentasComponent implements OnInit {
   // ── Checkout ─────────────────────────────────────────────────────────────
   pasoCheckout: PasoCheckout = 'formulario';
   showCheckout = false;
+  cajaSeleccionadaId: string | null = null;
+  get localesSoloCaja(): SedePOSRead[] {
+    return this.sedes().filter(s => s.tipo === 'local');
+  }
+  
+  get nombreCajaSeleccionada(): string {
+    if (!this.cajaSeleccionadaId) return '';
+    const caja = this.localesSoloCaja.find(c => c.id_sede === this.cajaSeleccionadaId);
+    return caja ? caja.nombre : '';
+  }
   metodoPago: MetodoPago = 'efectivo';
   montoPagado = 0;
   fotoVentaUrl: string | null = null;
@@ -110,35 +122,49 @@ export class VentasComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargando.set(true);
-    this.ventasService.listarMisLocales().subscribe({
-      next: (locales) => {
-        this.locales.set(locales);
-        if (locales.length > 0) {
-          this.localActivo.set(locales[0]);
+    this.ventasService.listarSedes().subscribe({
+      next: (sedes) => {
+        this.sedes.set(sedes);
+        if (sedes.length > 0) {
+          // Por defecto, selecciona la primera sede para mostrar en el catálogo
+          this.sedeFiltro.set(sedes[0]);
+          
+          // Preselecciona la caja si solo hay un local disponible
+          const locales = sedes.filter(s => s.tipo === 'local');
+          if (locales.length === 1) {
+            this.cajaSeleccionadaId = locales[0].id_sede;
+          } else if (locales.length > 1) {
+            this.cajaSeleccionadaId = locales[0].id_sede; // Valor por defecto
+          }
+          
           this.cargarProductosPOS();
         } else {
-          this.error.set('No tienes locales asignados. Contacta al administrador.');
+          this.error.set('No tienes sedes asignadas. Contacta al administrador.');
           this.cargando.set(false);
         }
       },
       error: () => {
-        this.error.set('No se pudieron cargar los locales. Verifica tu conexión.');
+        this.error.set('No se pudieron cargar las sedes. Verifica tu conexión.');
         this.cargando.set(false);
       },
     });
   }
 
-  cambiarLocal(idLocal: string): void {
-    const local = this.locales().find((l) => l.id_local === idLocal);
-    if (local) {
-      this.localActivo.set(local);
+  cambiarSede(idSede: string): void {
+    if (idSede === 'todos') {
+      this.sedeFiltro.set(null);
+      this.cargarProductosPOS();
+      return;
+    }
+    const sede = this.sedes().find((s) => s.id_sede === idSede);
+    if (sede) {
+      this.sedeFiltro.set(sede);
       this.cargarProductosPOS();
     }
   }
 
   private cargarProductosPOS(): void {
-    const local = this.localActivo();
-    if (!local) return;
+    const sede = this.sedeFiltro();
 
     this.cargandoProductos.set(true);
     const filtros: FiltrosPOS = {};
@@ -146,7 +172,7 @@ export class VentasComponent implements OnInit {
     if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
     if (this.filtroSexo) filtros.sexo = this.filtroSexo;
 
-    this.ventasService.listarProductosPOS(local.id_local, filtros).subscribe({
+    this.ventasService.listarProductosPOS(sede ? sede.id_sede : null, filtros).subscribe({
       next: (prods) => {
         this.productos.set(prods);
         this.cargandoProductos.set(false);
@@ -224,11 +250,36 @@ export class VentasComponent implements OnInit {
   abrirSelectorVariante(p: ProductoPOSRead, event?: MouseEvent): void {
     this.origenVueloEl = (event?.currentTarget as HTMLElement) ?? null;
     this.showVariantePicker = p;
-    const primeraVariante = p.variantes[0];
-    this.varianteSeleccionadaId = primeraVariante?.id_variante ?? '';
+    
+    const globalTalla = this.filtroTalla !== 'Todas' ? this.filtroTalla : null;
+    const globalSede = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
+
+    let preTalla = globalTalla;
+    let preUbi = globalSede;
+
+    // Validar si los filtros globales tienen stock
+    if (preTalla && !p.variantes.some(v => v.talla === preTalla && v.stock_disponible > 0)) {
+        preTalla = null;
+    }
+    if (preUbi && !p.variantes.some(v => v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
+        preUbi = null;
+    }
+    
+    if (preTalla && preUbi) {
+       if (!p.variantes.some(v => v.talla === preTalla && v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
+           preTalla = null; 
+       }
+    }
+
+    this.tallaModalActiva = preTalla;
+    this.ubicacionModalActiva = preUbi;
+
     this.cantidadSeleccionada = 1;
     this.descuentoSeleccionado = 0;
     this.tipoDescuentoSeleccionado = 'producto';
+    this.errorModal = null;
+    
+    this.actualizarOpcionesModal();
   }
 
   cerrarSelectorVariante(): void {
@@ -236,9 +287,77 @@ export class VentasComponent implements OnInit {
   }
 
   get varianteSeleccionada(): VariantePOSRead | undefined {
+    if (!this.tallaModalActiva || !this.ubicacionModalActiva) return undefined;
     return this.showVariantePicker?.variantes.find(
-      (v) => v.id_variante === this.varianteSeleccionadaId
+      (v) => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === this.ubicacionModalActiva
     );
+  }
+
+  _opcionesTallaModal: { talla: string, label: string }[] = [];
+  _opcionesUbicacionModal: { id: string, label: string }[] = [];
+
+  actualizarOpcionesModal() {
+    if (!this.showVariantePicker) {
+      this._opcionesTallaModal = [];
+      this._opcionesUbicacionModal = [];
+      return;
+    }
+    
+    let varsTalla = this.showVariantePicker.variantes;
+    if (this.ubicacionModalActiva) {
+        varsTalla = varsTalla.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
+    } else {
+        varsTalla = varsTalla.filter(v => v.stock_disponible > 0);
+    }
+    const set = new Set<string>();
+    for (const v of varsTalla) {
+       if (v.talla) set.add(v.talla);
+    }
+    this._opcionesTallaModal = Array.from(set).map(talla => ({
+       talla,
+       label: talla
+    })).sort((a, b) => a.talla.localeCompare(b.talla, undefined, { numeric: true }));
+
+    let varsUbi = this.showVariantePicker.variantes;
+    if (this.tallaModalActiva) {
+        varsUbi = varsUbi.filter(v => v.talla === this.tallaModalActiva && v.stock_disponible > 0);
+    } else {
+        varsUbi = varsUbi.filter(v => v.stock_disponible > 0);
+    }
+    const map = new Map<string, string>();
+    for (const v of varsUbi) {
+       if (v.id_ubicacion_origen) map.set(v.id_ubicacion_origen, v.nombre_ubicacion || 'Sede');
+    }
+    this._opcionesUbicacionModal = Array.from(map.entries()).map(([id, nombre]) => ({
+       id,
+       label: nombre
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  alCambiarTallaModal(talla: string | null) {
+    if (talla === 'null') talla = null;
+    this.tallaModalActiva = talla;
+    this.errorModal = null;
+    if (talla && this.ubicacionModalActiva) {
+       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
+       if (!isValid) {
+           this.ubicacionModalActiva = null;
+       }
+    }
+    this.actualizarOpcionesModal();
+  }
+
+  alCambiarUbicacionModal(idUbi: string | null) {
+    if (idUbi === 'null') idUbi = null;
+    this.ubicacionModalActiva = idUbi;
+    this.errorModal = null;
+    if (idUbi && this.tallaModalActiva) {
+       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && v.stock_disponible > 0);
+       if (!isValid) {
+           this.tallaModalActiva = null;
+       }
+    }
+    this.actualizarOpcionesModal();
   }
 
   get textoDescripcionDescuento(): string {
@@ -253,15 +372,50 @@ export class VentasComponent implements OnInit {
     } del total de esta línea.`;
   }
 
+  get subtotalModal(): number {
+    if (!this.showVariantePicker) return 0;
+    const precio = Number(this.showVariantePicker.precio_venta) || 0;
+    const descuento = Number(this.descuentoSeleccionado) || 0;
+    
+    let totalDescuento = descuento;
+    if (this.tipoDescuentoSeleccionado === 'unidad') {
+       totalDescuento = descuento * this.cantidadSeleccionada;
+    }
+
+    const sub = (precio * this.cantidadSeleccionada) - totalDescuento;
+    return sub > 0 ? sub : 0;
+  }
+
+  errorModal: string | null = null;
+
   confirmarAgregado(): void {
+    if (!this.tallaModalActiva) {
+      this.errorModal = 'Debes seleccionar una talla antes de agregar al carrito.';
+      return;
+    }
+    if (!this.ubicacionModalActiva) {
+      this.errorModal = 'Debes seleccionar una sede antes de agregar al carrito.';
+      return;
+    }
+
     const p = this.showVariantePicker;
     const variante = this.varianteSeleccionada;
-    const local = this.localActivo();
     if (!p || !variante) return;
-    if (this.cantidadSeleccionada < 1) return;
-    if (variante.stock_disponible < this.cantidadSeleccionada) return;
-    if (!local) {
-      this.error.set('No hay un local activo seleccionado. Recarga la página e intenta de nuevo.');
+
+    if (this.cantidadSeleccionada > variante.stock_disponible) {
+      this.errorModal = `Solo hay ${variante.stock_disponible} unidades disponibles en esta combinación.`;
+      return;
+    }
+
+    this.errorModal = null;
+
+    let totalDescuento = this.descuentoSeleccionado;
+    if (this.tipoDescuentoSeleccionado === 'unidad') {
+      totalDescuento = this.descuentoSeleccionado * this.cantidadSeleccionada;
+    }
+
+    if (!variante.id_ubicacion_origen) {
+      this.error.set('La variante seleccionada no tiene origen de stock.');
       return;
     }
 
@@ -275,8 +429,8 @@ export class VentasComponent implements OnInit {
       cantidad: this.cantidadSeleccionada,
       descuentoMonto: this.descuentoSeleccionado,
       tipoDescuento: this.tipoDescuentoSeleccionado,
-      idLocal: variante.id_local ?? local.id_local,
-      nombreLocal: variante.nombre_local ?? local.nombre,
+      idUbicacionOrigen: variante.id_ubicacion_origen,
+      nombreUbicacion: variante.nombre_ubicacion ?? 'Sede',
     };
     this.ventasService.agregarAlCarrito(item);
     this.showVariantePicker = null;
@@ -475,6 +629,11 @@ export class VentasComponent implements OnInit {
 
   abrirCheckout(): void {
     if (this.ventasService.carrito().length === 0) return;
+    if (this.localesSoloCaja.length === 0) {
+      this.error.set('No tienes cajas (locales) asignadas para registrar la venta.');
+      setTimeout(() => this.error.set(null), 4000);
+      return;
+    }
     this.pasoCheckout = 'formulario';
     this.showCheckout = true;
     this.metodoPago = 'efectivo';
@@ -511,8 +670,10 @@ export class VentasComponent implements OnInit {
 
   /** Envía el carrito al backend y registra la venta. */
   confirmarVenta(): void {
-    const local = this.localActivo();
-    if (!local) return;
+    if (!this.cajaSeleccionadaId) {
+      this.checkoutError = 'Por favor, selecciona la caja de cobro (Local) antes de confirmar la venta.';
+      return;
+    }
 
     this.checkoutError = '';
     this.confirmando = true;
@@ -526,7 +687,7 @@ export class VentasComponent implements OnInit {
         : {}),
     };
 
-    const payload = this.ventasService.buildVentaPayload(local.id_local, [pago]);
+    const payload = this.ventasService.buildVentaPayload(this.cajaSeleccionadaId, [pago]);
 
     this.ventasService.confirmarVenta(payload).subscribe({
       next: (venta) => {

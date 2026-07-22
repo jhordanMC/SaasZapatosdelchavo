@@ -12,20 +12,17 @@
     <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
   </select>
 
-  <!-- Selector de local (visible si hay más de uno) -->
+  <!-- Selector de local (siempre visible para poder elegir 'todos') -->
   <select
     class="filter-select local-select"
-    *ngIf="locales().length > 1"
-    (change)="cambiarLocal($any($event.target).value)"
-    title="Local activo"
+    (change)="cambiarSede($any($event.target).value)"
+    title="Sede activa"
   >
-    <option *ngFor="let l of locales()" [value]="l.id_local">
-      📍 {{ l.nombre }}
+    <option value="todos" [selected]="!sedeFiltro()"> Todas las sedes</option>
+    <option *ngFor="let s of sedes()" [value]="s.id_sede" [selected]="sedeFiltro()?.id_sede === s.id_sede">
+       {{ s.nombre }}
     </option>
   </select>
-  <span class="local-badge" *ngIf="locales().length === 1 && localActivo()">
-    📍 {{ localActivo()!.nombre }}
-  </span>
 
   <div class="sexo-toggle">
     <button *ngFor="let s of sexosDisponibles"
@@ -115,6 +112,13 @@
           </div>
           <div class="carrito-item-info">
             <div class="carrito-item-nombre">{{ item.nombre }}</div>
+            <div class="carrito-item-detalle" style="color: var(--primary-main); font-size: 0.8rem; margin-bottom: 2px;" *ngIf="item.nombreUbicacion">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {{ item.nombreUbicacion }}
+            </div>
             <div class="carrito-item-detalle">{{ item.cantidad }} x S/{{ item.precioUnitario }}</div>
             <div class="carrito-item-descuento" *ngIf="item.descuentoMonto > 0">
               <span class="badge-descuento">{{ item.tipoDescuento === 'unidad' ? 'Dscto x unidad' : 'Dscto x producto' }}</span>
@@ -189,23 +193,36 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <app-modal-brand-header [subtitle]="showVariantePicker.nombre" (cerrar)="cerrarSelectorVariante()"></app-modal-brand-header>
     <div class="modal-body">
-      <!-- Foto del producto (placeholder por ahora) -->
+      <!-- Foto del producto -->
       <div class="producto-modal-foto">
         <span class="foto-placeholder">Sin foto</span>
       </div>
 
-      <div class="form-row">
-        <label>Talla</label>
-        <select [(ngModel)]="varianteSeleccionadaId">
-          <option
-            *ngFor="let v of showVariantePicker.variantes"
-            [value]="v.id_variante"
-            [disabled]="v.stock_disponible === 0"
-          >
-            {{ v.talla ?? v.sku }} — {{ v.stock_disponible }} disponibles
-            <ng-container *ngIf="v.nombre_local"> ({{ v.nombre_local }})</ng-container>
-          </option>
-        </select>
+      <!-- Tallas disponibles (Chips) -->
+      <div class="form-row tallas-disponibles-row">
+        <label>Tallas disponibles:</label>
+        <div class="tallas-chips">
+          <button 
+            type="button" 
+            class="talla-chip" 
+            *ngFor="let t of _opcionesTallaModal"
+            [class.active]="t.talla === tallaModalActiva"
+            (click)="alCambiarTallaModal(t.talla === tallaModalActiva ? null : t.talla)">
+            {{ t.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row form-row-2">
+        <div>
+          <label>Origen (Sede)</label>
+          <select [ngModel]="ubicacionModalActiva" (ngModelChange)="alCambiarUbicacionModal($event)">
+            <option [ngValue]="null">Seleccionar sede</option>
+            <option *ngFor="let u of _opcionesUbicacionModal" [value]="u.id">
+              {{ u.label }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <div class="form-row form-row-2">
@@ -231,12 +248,19 @@
         </div>
         <p class="hint-text">{{ textoDescripcionDescuento }}</p>
       </div>
+
+      <div class="form-row subtotal-row">
+        <label>Total a pagar</label>
+        <p class="subtotal-precio">S/{{ subtotalModal.toFixed(2) }}</p>
+      </div>
+      
+      <p class="error-text" *ngIf="errorModal" style="text-align: right; margin-top: 4px; font-weight: 600;">
+        {{ errorModal }}
+      </p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarSelectorVariante()">Cancelar</button>
-      <button class="btn-primary" (click)="confirmarAgregado()"
-        [disabled]="!varianteSeleccionada || varianteSeleccionada.stock_disponible < cantidadSeleccionada"
-      >Agregar al carrito</button>
+      <button class="btn-primary" (click)="confirmarAgregado()">Agregar al carrito</button>
     </div>
   </div>
 </div>
@@ -253,6 +277,17 @@
         <div class="resumen-total resumen-top">
           <span>Total a cobrar</span>
           <span>S/{{ totalCarrito.toFixed(2) }}</span>
+        </div>
+
+        <div class="form-row" *ngIf="localesSoloCaja.length > 1">
+          <label>Caja de Cobro (Local)</label>
+          <select [(ngModel)]="cajaSeleccionadaId" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <option *ngFor="let c of localesSoloCaja" [value]="c.id_sede">{{ c.nombre }}</option>
+          </select>
+        </div>
+        <div class="form-row" *ngIf="localesSoloCaja.length === 1">
+          <label>Caja de Cobro (Local)</label>
+          <p style="margin: 0; padding: 0.5rem; background: var(--bg-surface); border-radius: 8px; color: var(--text-secondary);">{{ localesSoloCaja[0].nombre }}</p>
         </div>
 
         <div class="form-row">
@@ -383,9 +418,9 @@
             <span>Comprobante</span>
             <img class="confirmar-comprobante-mini" [src]="fotoVentaUrl" alt="Comprobante de pago" />
           </div>
-          <div class="confirmar-pago-fila" *ngIf="localActivo()">
-            <span>Local</span>
-            <strong>{{ localActivo()!.nombre }}</strong>
+          <div class="confirmar-pago-fila" *ngIf="cajaSeleccionadaId">
+            <span>Local (Caja)</span>
+            <strong>{{ nombreCajaSeleccionada }}</strong>
           </div>
         </div>
 
