@@ -37,10 +37,28 @@ export interface LocalRead {
   creado_en: string;
 }
 
+/**
+ * Almacén: entidad separada de Local (depósito/bodega de stock, no vende
+ * directamente ni emite comprobantes). Se gestiona desde el panel
+ * "Almacenes" del módulo Inventario — no se usa en el resto del frontend
+ * (POS/ventas sigue trabajando solo con Locales).
+ */
+export interface AlmacenRead {
+  id_almacen: string;
+  id_empresa: string;
+  nombre: string;
+  direccion: string | null;
+  descripcion: string | null;
+  esta_activo: boolean;
+  creado_en: string;
+}
+
 export interface StockVarianteRead {
   id_stock: string;
-  id_local: string;
+  id_local: string | null;
   nombre_local: string | null;
+  id_almacen: string | null;
+  nombre_almacen: string | null;
   cantidad: number;
   cantidad_minima: number;
 }
@@ -118,6 +136,12 @@ export interface LocalCreateInput {
   descripcion?: string | null;
 }
 
+export interface AlmacenCreateInput {
+  nombre: string;
+  direccion?: string | null;
+  descripcion?: string | null;
+}
+
 export interface MensajeResponse {
   mensaje: string;
 }
@@ -176,6 +200,24 @@ export class InventarioService {
 
   eliminarLocal(idLocal: string): Observable<MensajeResponse> {
     return this.http.delete<MensajeResponse>(`${this.base}/locales/${idLocal}`);
+  }
+
+  // ── Almacenes (entidad separada de Locales) ────────────────────────────
+
+  listarAlmacenes(): Observable<AlmacenRead[]> {
+    return this.http.get<AlmacenRead[]>(`${this.base}/almacenes`);
+  }
+
+  crearAlmacen(datos: AlmacenCreateInput): Observable<AlmacenRead> {
+    return this.http.post<AlmacenRead>(`${this.base}/almacenes`, datos);
+  }
+
+  actualizarAlmacen(idAlmacen: string, datos: Partial<AlmacenCreateInput>): Observable<AlmacenRead> {
+    return this.http.patch<AlmacenRead>(`${this.base}/almacenes/${idAlmacen}`, datos);
+  }
+
+  eliminarAlmacen(idAlmacen: string): Observable<MensajeResponse> {
+    return this.http.delete<MensajeResponse>(`${this.base}/almacenes/${idAlmacen}`);
   }
 
   // ── Productos ────────────────────────────────────────────────────────────

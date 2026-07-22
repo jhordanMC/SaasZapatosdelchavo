@@ -18,6 +18,8 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
+  AlmacenCreateInput,
+  AlmacenRead,
   CategoriaCreateInput,
   CategoriaRead,
   FiltrosProducto,
@@ -86,6 +88,7 @@ export class InventarioComponent implements OnInit {
   productos = signal<ProductoListItem[]>([]);
   categorias = signal<CategoriaRead[]>([]);
   locales = signal<LocalRead[]>([]);
+  almacenesReales = signal<AlmacenRead[]>([]);
 
   // ── Estado de UI ────────────────────────────────────────────────────────
   cargando = signal(true);
@@ -112,12 +115,28 @@ export class InventarioComponent implements OnInit {
   errorCategoria = signal<string | null>(null);
 
   // ── Gestión de almacenes (agregar / editar / eliminar) ───────────────────
+  // NOTA: este bloque, por nombre histórico, en realidad administra
+  // 'Locales' (ver LocalRead más arriba) — así se dejó a propósito, es el
+  // panel que ya usan los locales del negocio dentro del modal de producto.
+  // El bloque nuevo "Almacenes reales" de más abajo administra la entidad
+  // Almacén de verdad (tabla 'almacenes', separada de 'locales').
   mostrarGestionAlmacenes = false;
   busquedaAlmacen = '';
   editandoAlmacenId: string | null = null;
   almacenForm: { nombre: string; direccion: string; descripcion: string } = this.almacenFormVacio();
   guardandoAlmacen = signal(false);
   errorAlmacen = signal<string | null>(null);
+
+  // ── Gestión de Almacenes (entidad real, separada de Locales) ─────────────
+  // Panel dentro del mismo modal de crear/editar producto, junto al panel
+  // de arriba (que sigue administrando Locales, sin cambios). No se usa en
+  // ventas/POS (eso sigue solo con Locales).
+  mostrarPanelAlmacenesReales = false;
+  busquedaAlmacenReal = '';
+  editandoAlmacenRealId: string | null = null;
+  almacenRealForm: { nombre: string; direccion: string; descripcion: string } = this.almacenRealFormVacio();
+  guardandoAlmacenReal = signal(false);
+  errorAlmacenReal = signal<string | null>(null);
 
   // ── Helpers de template ─────────────────────────────────────────────────
 
@@ -160,6 +179,11 @@ export class InventarioComponent implements OnInit {
     this.inventarioService.listarLocales().subscribe({
       next: (locs) => this.locales.set(locs),
       error: () => { /* no-fatal */ },
+    });
+
+    this.inventarioService.listarAlmacenes().subscribe({
+      next: (almacenes) => this.almacenesReales.set(almacenes),
+      error: () => { /* no-fatal, el panel de almacenes quedará vacío */ },
     });
 
     this.inventarioService.listarProductos().subscribe({
@@ -244,6 +268,7 @@ export class InventarioComponent implements OnInit {
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelAlmacenes();
+    this.cerrarPanelAlmacenesReales();
     this.showModal = true;
   }
 
@@ -259,12 +284,17 @@ export class InventarioComponent implements OnInit {
           costoCompra: detalle.costo_compra,
           precioVenta: detalle.precio_venta,
           fotoUrl: null,
+          // Este formulario solo administra stock por Local (el stock que
+          // pudiera vivir en un Almacén no se edita desde aquí — ver el
+          // panel "Almacenes" del toolbar para esa entidad separada).
           variantes: detalle.variantes.flatMap((v) =>
-            v.stock.map((s) => ({
-              talla: v.talla ?? '',
-              cantidad: s.cantidad,
-              id_local: s.id_local,
-            }))
+            v.stock
+              .filter((s): s is typeof s & { id_local: string } => s.id_local !== null)
+              .map((s) => ({
+                talla: v.talla ?? '',
+                cantidad: s.cantidad,
+                id_local: s.id_local,
+              }))
           ),
         };
         this.errorModal.set(null);
@@ -281,6 +311,7 @@ export class InventarioComponent implements OnInit {
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelAlmacenes();
+    this.cerrarPanelAlmacenesReales();
   }
 
   agregarFilaVariante(): void {
@@ -571,6 +602,109 @@ export class InventarioComponent implements OnInit {
       },
       error: (err) => {
         this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
+      },
+    });
+  }
+
+  // ── Gestión de Almacenes (entidad real, panel independiente) ─────────────
+
+  private almacenRealFormVacio(): { nombre: string; direccion: string; descripcion: string } {
+    return { nombre: '', direccion: '', descripcion: '' };
+  }
+
+  /** Lista de almacenes reales filtrada por el buscador del modal. */
+  get almacenesRealesFiltrados(): AlmacenRead[] {
+    const busq = this.busquedaAlmacenReal.toLowerCase().trim();
+    const lista = this.almacenesReales();
+    if (!busq) return lista;
+    return lista.filter((a) => a.nombre.toLowerCase().includes(busq));
+  }
+
+  abrirPanelAlmacenesReales(): void {
+    this.mostrarPanelAlmacenesReales = true;
+    this.busquedaAlmacenReal = '';
+    this.cancelarEdicionAlmacenReal();
+  }
+
+  cerrarPanelAlmacenesReales(): void {
+    this.mostrarPanelAlmacenesReales = false;
+    this.busquedaAlmacenReal = '';
+    this.cancelarEdicionAlmacenReal();
+  }
+
+  /** Prepara el formulario para crear uno nuevo (limpio) o editar uno existente. */
+  editarAlmacenReal(almacen: AlmacenRead): void {
+    this.editandoAlmacenRealId = almacen.id_almacen;
+    this.almacenRealForm = {
+      nombre: almacen.nombre,
+      direccion: almacen.direccion ?? '',
+      descripcion: almacen.descripcion ?? '',
+    };
+    this.errorAlmacenReal.set(null);
+  }
+
+  cancelarEdicionAlmacenReal(): void {
+    this.editandoAlmacenRealId = null;
+    this.almacenRealForm = this.almacenRealFormVacio();
+    this.errorAlmacenReal.set(null);
+  }
+
+  guardarAlmacenReal(): void {
+    const nombre = this.almacenRealForm.nombre.trim();
+    if (!nombre) {
+      this.errorAlmacenReal.set('El nombre del almacén es obligatorio.');
+      return;
+    }
+
+    const datos: AlmacenCreateInput = {
+      nombre,
+      direccion: this.almacenRealForm.direccion.trim() || null,
+      descripcion: this.almacenRealForm.descripcion.trim() || null,
+    };
+
+    this.guardandoAlmacenReal.set(true);
+    this.errorAlmacenReal.set(null);
+
+    if (this.editandoAlmacenRealId) {
+      this.inventarioService.actualizarAlmacen(this.editandoAlmacenRealId, datos).subscribe({
+        next: (actualizado) => {
+          this.almacenesReales.update((lista) =>
+            lista.map((a) => (a.id_almacen === actualizado.id_almacen ? actualizado : a))
+          );
+          this.guardandoAlmacenReal.set(false);
+          this.cancelarEdicionAlmacenReal();
+        },
+        error: (err) => {
+          this.guardandoAlmacenReal.set(false);
+          this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo actualizar el almacén.');
+        },
+      });
+    } else {
+      this.inventarioService.crearAlmacen(datos).subscribe({
+        next: (nuevo) => {
+          this.almacenesReales.update((lista) => [...lista, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+          this.guardandoAlmacenReal.set(false);
+          this.cancelarEdicionAlmacenReal();
+        },
+        error: (err) => {
+          this.guardandoAlmacenReal.set(false);
+          this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo crear el almacén.');
+        },
+      });
+    }
+  }
+
+  eliminarAlmacenReal(almacen: AlmacenRead): void {
+    if (!confirm(`¿Eliminar el almacén "${almacen.nombre}"?`)) return;
+
+    this.errorAlmacenReal.set(null);
+    this.inventarioService.eliminarAlmacen(almacen.id_almacen).subscribe({
+      next: () => {
+        this.almacenesReales.update((lista) => lista.filter((a) => a.id_almacen !== almacen.id_almacen));
+        if (this.editandoAlmacenRealId === almacen.id_almacen) this.cancelarEdicionAlmacenReal();
+      },
+      error: (err) => {
+        this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
       },
     });
   }
