@@ -56,7 +56,7 @@
 
 <!-- Indicador de clicks -->
 <div class="click-counter" [class.on]="showHint">
-  <span>Click para descubrir</span>
+  <span>{{ 'LOGIN.CLICK_DESCUBRIR' | t }}</span>
   <div class="cc-dots">
     <div class="cc-dot" *ngFor="let r of revealed" [class.active]="r"></div>
   </div>
@@ -86,7 +86,7 @@
               <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
             </svg>
           </span>
-          <input type="email" name="email" placeholder="Correo electrónico" autocomplete="email"
+          <input type="email" name="email" placeholder="{{ 'LOGIN.CORREO_PLACEHOLDER' | t }}" autocomplete="email"
                  [(ngModel)]="email" [class.shake]="shakeEmail"/>
         </div>
 
@@ -96,7 +96,7 @@
               <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
           </span>
-          <input [type]="showPassword ? 'text' : 'password'" name="password" placeholder="Contraseña"
+          <input [type]="showPassword ? 'text' : 'password'" name="password" placeholder="{{ 'LOGIN.PASSWORD_PLACEHOLDER' | t }}"
                  autocomplete="current-password" [(ngModel)]="password" [class.shake]="shakePassword"/>
           <button class="ico-r" type="button" aria-label="Mostrar contraseña" (click)="togglePwd()">
             <svg *ngIf="!showPassword" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -112,24 +112,24 @@
 
         <div class="extras">
           <label class="remember">
-            <input type="checkbox" name="remember" [(ngModel)]="remember"/> Recordarme
+            <input type="checkbox" name="remember" [(ngModel)]="remember"/> {{ 'LOGIN.RECORDARME' | t }}
           </label>
-          <a routerLink="/olvide-contrasena" class="forgot">¿Olvidaste tu contraseña?</a>
+          <a routerLink="/olvide-contrasena" class="forgot">{{ 'LOGIN.OLVIDE_PASSWORD' | t }}</a>
         </div>
 
         <button class="btn-login" type="button" [class.loading]="loading" [disabled]="loading" (click)="tryLogin()">
-          <span>Iniciar Sesión</span>
+          <span>{{ 'LOGIN.INICIAR_SESION' | t }}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
 
-        <div class="reg">¿Sin cuenta?
-          <a href="https://wa.me/51957306279" target="_blank" rel="noopener">Contactar al área de ventas</a>
+        <div class="reg">{{ 'LOGIN.SIN_CUENTA' | t }}
+          <a href="https://wa.me/51957306279" target="_blank" rel="noopener">{{ 'LOGIN.CONTACTAR_VENTAS' | t }}</a>
         </div>
 
         <div class="sec-line">
-          Powered by ALBA
+          {{ 'LOGIN.POWERED_BY' | t }}
           <img src="LogoAlba.png" alt="Alba" class="alba-logo"/>
         </div>
       </div>
@@ -140,8 +140,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
-        <div class="suc-title">¡Contraseña correcta!</div>
-        <div class="suc-sub">Te enviamos un código a tu correo.<br>Redirigiendo a verificación…</div>
+        <div class="suc-title">{{ 'LOGIN.PASSWORD_CORRECTA' | t }}</div>
+        <div class="suc-sub">{{ 'LOGIN.CODIGO_ENVIADO' | t }}<br>{{ 'LOGIN.REDIRIGIENDO_2FA' | t }}</div>
       </div>
     </div>
   </div>

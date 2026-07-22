@@ -196,19 +196,19 @@
 
     <div class="profile-info-list">
       <div class="profile-info-row">
-        <span class="profile-info-label">ID de usuario</span>
+        <span class="profile-info-label">{{ 'NAV.VER_PERFIL_ID' | t }}</span>
         <span class="profile-info-value">{{ userId }}</span>
       </div>
       <div class="profile-info-row">
-        <span class="profile-info-label">DNI</span>
+        <span class="profile-info-label">{{ 'NAV.VER_PERFIL_DNI' | t }}</span>
         <span class="profile-info-value">{{ userDni }}</span>
       </div>
       <div class="profile-info-row">
-        <span class="profile-info-label">Correo</span>
+        <span class="profile-info-label">{{ 'NAV.VER_PERFIL_CORREO' | t }}</span>
         <span class="profile-info-value">{{ userEmail }}</span>
       </div>
       <div class="profile-info-row">
-        <span class="profile-info-label">Teléfono</span>
+        <span class="profile-info-label">{{ 'NAV.VER_PERFIL_TELEFONO' | t }}</span>
         <span class="profile-info-value">{{ userPhone }}</span>
       </div>
     </div>
@@ -220,9 +220,9 @@
           <polyline points="16 17 21 12 16 7"/>
           <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        Cerrar sesión
+        {{ 'NAV.CERRAR_SESION' | t }}
       </button>
-      <button class="profile-btn-secondary" (click)="closeProfile()">Cerrar</button>
+      <button class="profile-btn-secondary" (click)="closeProfile()">{{ 'NAV.CERRAR' | t }}</button>
     </div>
   </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
@@ -6,6 +6,7 @@ import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
 import { PageTitleService } from '../admin-layout/page-title';
 import { AuthService } from '../../core/auth';
+import { I18nService } from '../../core/i18n.service';
 
 @Component({
   selector: 'app-empresa-layout',
@@ -16,13 +17,15 @@ import { AuthService } from '../../core/auth';
 })
 export class EmpresaLayoutComponent implements OnInit, OnDestroy {
   usuario;
-  navItems: SidebarItem[];
+  /** Reactivo: se recalcula solo al cambiar el idioma (i18n.lang()), sin recargar la página. */
+  navItems;
 
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private authService: AuthService,
-    public pageTitleService: PageTitleService
+    public pageTitleService: PageTitleService,
+    private i18n: I18nService
   ) {
     this.usuario = this.authService.usuarioActual;
 
@@ -31,29 +34,33 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     // mostraba "Dashboard" sin importar el rol, y el Vendedor terminaba
     // clickeando un link que el guard le rebotaba a /login.
     const esDueño = this.authService.tieneRol('dueño');
-    const base: SidebarItem[] = [];
-    if (esDueño) {
-      base.push({ label: 'Dashboard', route: '/empresa/dashboard', icon: 'dashboard', exact: true });
-    }
-    base.push(
-      { label: 'Inventario', route: '/empresa/inventario', icon: 'inventario' },
-      { label: 'Ventas', route: '/empresa/ventas', icon: 'ventas' },
-    );
-    if (esDueño) {
+
+    this.navItems = computed<SidebarItem[]>(() => {
+      this.i18n.lang(); // dependencia reactiva: fuerza recálculo al cambiar idioma
+      const base: SidebarItem[] = [];
+      if (esDueño) {
+        base.push({ label: this.i18n.t('NAV.DASHBOARD'), route: '/empresa/dashboard', icon: 'dashboard', exact: true });
+      }
       base.push(
-        { label: 'Finanzas', route: '/empresa/finanzas', icon: 'finanzas' },
-        { label: 'Analítica', route: '/empresa/analitica', icon: 'analitica' }
+        { label: this.i18n.t('NAV.INVENTARIO'), route: '/empresa/inventario', icon: 'inventario' },
+        { label: this.i18n.t('NAV.VENTAS'), route: '/empresa/ventas', icon: 'ventas' },
       );
-    }
-    base.push({ label: 'Configuración', href: '#', icon: 'config' });
-    this.navItems = base;
+      if (esDueño) {
+        base.push(
+          { label: this.i18n.t('NAV.FINANZAS'), route: '/empresa/finanzas', icon: 'finanzas' },
+          { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
+        );
+      }
+      base.push({ label: this.i18n.t('NAV.CONFIGURACION'), href: '#', icon: 'config' });
+      return base;
+    });
   }
 
   rolEtiqueta(): string {
     const rol = this.usuario()?.rol;
-    if (rol === 'dueño') return 'Dueño';
-    if (rol === 'vendedor') return 'Vendedor';
-    return 'Usuario';
+    if (rol === 'dueño') return this.i18n.t('NAV.ROL_DUENO');
+    if (rol === 'vendedor') return this.i18n.t('NAV.ROL_VENDEDOR');
+    return this.i18n.t('NAV.ROL_USUARIO');
   }
 
   iniciales(): string {

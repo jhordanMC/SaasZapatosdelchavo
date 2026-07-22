@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth';
+import { TPipe } from '../../core/t.pipe';
 
 export interface SidebarItem {
   label: string;
@@ -25,7 +26,7 @@ export interface SidebarItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TPipe],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css'],
 })

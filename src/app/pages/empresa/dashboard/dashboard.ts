@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Producto, ProductosService } from '../../../services/productos';
 import { VentasService } from '../../../services/ventas';
 import { FinanzasService, GastoOperativo } from '../../../services/finanzas';
+import { TPipe } from '../../../core/t.pipe';
 
 /** Ventana de análisis para velocidad de venta / rotación de inventario. */
 const DIAS_ANALISIS_ROTACION = 30;
@@ -48,7 +49,7 @@ const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vier
 @Component({
   selector: 'app-empresa-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })

@@ -292,7 +292,13 @@
     }
   };
 
-  let currentLang = 'es';
+  let currentLang = (function(){
+    try{
+      const shared=localStorage.getItem('vilcas_app_lang');
+      if(shared==='es'||shared==='en'||shared==='qu') return shared;
+    }catch(e){}
+    return 'es';
+  })();
   const T = () => LANGS[currentLang];
 
   const css=`
@@ -308,7 +314,7 @@
   }
 
   /* FAB */
-#accFab{position:fixed;bottom:22px;left:22px;width:90px;height:90px;border-radius:0;background:transparent;border:none;box-shadow:none;z-index:10050;cursor:grab;display:flex;align-items:center;justify-content:center;transition:transform .25s;touch-action:none;user-select:none;overflow:visible;padding:0;}  #accFab.dragging{cursor:grabbing;transform:scale(1.12);box-shadow:0 18px 48px rgba(2,75,64,.45);} @media(max-width:680px){#accFab{display:none!important;}#accPanel{display:none!important;}#accPanelOverlay{display:none!important;}}  #accFab.hidden{display:none}
+#accFab{position:fixed;bottom:22px;left:22px;width:90px;height:90px;border-radius:0;background:transparent;border:none;box-shadow:none;z-index:10050;cursor:grab;display:flex;align-items:center;justify-content:center;transition:transform .25s;touch-action:none;user-select:none;overflow:visible;padding:0;}  #accFab.dragging{cursor:grabbing;transform:scale(1.12);box-shadow:0 18px 48px rgba(2,75,64,.45);}  #accFab.hidden{display:none}
   #accFab.narrator-on::after{content:'';position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-radius:999px;background:var(--s-cyan);border:2.5px solid #fff;animation:narratorPulse 1.8s ease-in-out infinite;}
   @keyframes narratorPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.7}}
 #accFabLogo{width:90px;height:90px;border-radius:0;object-fit:contain;background:transparent;padding:0;pointer-events:none;mix-blend-mode:multiply;}
@@ -940,10 +946,23 @@ function render2020(){
 
     document.body.appendChild(overlay);document.body.appendChild(panel);
 
+    /* Cualquier clic dentro del panel/FAB/overlay se queda contenido aquí:
+       nunca debe seguir de largo hacia listeners globales de la página que lo aloja
+       (login, dashboard, etc.), o terminaría activando botones de fondo sin querer. */
+    panel.addEventListener('click',e=>e.stopPropagation());
+    fab.addEventListener('click',e=>e.stopPropagation());
+    panel.addEventListener('mousedown',e=>e.stopPropagation());
+    panel.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+    fab.addEventListener('mousedown',e=>e.stopPropagation());
+
     /* ── LANGUAGE SWITCHER ── */
     function applyLang(lang){
       currentLang=lang;
       const tr=T();
+      /* Avisa al resto de la web (Angular) que el idioma cambió, para que
+         TODO el sitio (sidebar, dashboard, login, etc.) se traduzca también,
+         no solo este panel. Angular escucha este evento en I18nService. */
+      window.dispatchEvent(new CustomEvent('vilcas-lang-change',{detail:{lang}}));
       /* Header */
       const h=$('#ap-title-text');if(h) h.textContent=tr.title;
       const sub=$('#ap-subtitle-text');if(sub) sub.textContent=tr.subtitle;

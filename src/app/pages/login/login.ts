@@ -11,11 +11,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
+import { I18nService } from '../../core/i18n.service';
+import { TPipe } from '../../core/t.pipe';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -52,7 +54,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   private shakeEmailTimeout: ReturnType<typeof setTimeout> | null = null;
   private shakePwTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService, private i18n: I18nService) {}
 
   ngAfterViewInit(): void {
     this.hintTimeout = setTimeout(() => (this.showHint = true), 3000);
@@ -167,19 +169,19 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.showError = false;
 
     if (!this.email) {
-      this.errorMessage = 'Ingresa tu correo.';
+      this.errorMessage = this.i18n.t('LOGIN.ERR_CORREO_VACIO');
       this.showError = true;
       this.shake('email');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
-      this.errorMessage = 'El correo no es válido.';
+      this.errorMessage = this.i18n.t('LOGIN.ERR_CORREO_INVALIDO');
       this.showError = true;
       this.shake('email');
       return;
     }
     if (!this.password || this.password.length < 6) {
-      this.errorMessage = 'Contraseña mínimo 6 caracteres.';
+      this.errorMessage = this.i18n.t('LOGIN.ERR_PASSWORD_CORTA');
       this.showError = true;
       this.shake('password');
       return;
@@ -205,10 +207,10 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   }
 
   private mensajeError(error: HttpErrorResponse): string {
-    if (error.status === 401) return 'Email o contraseña incorrectos.';
-    if (error.status === 429) return 'Demasiados intentos. Espera un momento antes de volver a intentar.';
-    if (error.status === 0) return 'No se pudo conectar con el servidor. Intenta de nuevo.';
-    return 'Ocurrió un error inesperado. Intenta de nuevo.';
+    if (error.status === 401) return this.i18n.t('LOGIN.ERR_401');
+    if (error.status === 429) return this.i18n.t('LOGIN.ERR_429');
+    if (error.status === 0) return this.i18n.t('LOGIN.ERR_SIN_CONEXION');
+    return this.i18n.t('LOGIN.ERR_INESPERADO');
   }
 
   onSubmit(): void {
