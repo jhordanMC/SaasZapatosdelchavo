@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable, ReplaySubject, catchError, forkJoin, map, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ClaveVista } from '../services/usuarios';
 import { TokenResponse, TokenStore } from './token-store';
 
 export type Rol = 'admin' | 'dueño' | 'vendedor';
@@ -15,6 +16,10 @@ export interface SesionUsuario {
   rol: Rol;
   empresaId: string | null;
   nombreEmpresa: string;
+  // Vistas deshabilitadas puntualmente para este usuario, independiente
+  // de lo que ya le da su rol (ver modal "Permisos de vista" en el panel
+  // admin). Todo lo que NO está en esta lista se entiende habilitado.
+  vistasDeshabilitadas: ClaveVista[];
 }
 
 export interface LoginTokenResponse {
@@ -91,8 +96,9 @@ export class AuthService {
     return forkJoin({
       perfil: this.http.get<MiPerfilResponse>(`${this.apiUrl}/iam/mi-perfil`),
       permisos: this.http.get<string[]>(`${this.apiUrl}/iam/mis-permisos`),
+      vistasDeshabilitadas: this.http.get<ClaveVista[]>(`${this.apiUrl}/iam/mis-vistas-deshabilitadas`),
     }).pipe(
-      map(({ perfil }) => {
+      map(({ perfil, vistasDeshabilitadas }) => {
         const usuario: SesionUsuario = {
           idUsuario: perfil.id_usuario,
           nombre: `${perfil.nombres} ${perfil.apellidos}`.trim(),
@@ -102,6 +108,7 @@ export class AuthService {
           rol: mapearRol(perfil.roles),
           empresaId: perfil.id_empresa,
           nombreEmpresa: perfil.nombre_empresa,
+          vistasDeshabilitadas,
         };
         this.sesion.set(usuario);
         return usuario;
@@ -172,6 +179,11 @@ export class AuthService {
   tieneRol(...roles: Rol[]): boolean {
     const actual = this.sesion();
     return !!actual && roles.includes(actual.rol);
+  }
+
+  puedeVerVista(clave: ClaveVista): boolean {
+    const actual = this.sesion();
+    return !!actual && !actual.vistasDeshabilitadas.includes(clave);
   }
 
   /** Única fuente de verdad rol -> ruta base, usada por los guards para saber a dónde mandar a alguien ya autenticado. */

@@ -15,7 +15,8 @@ import { VentasComponent } from './pages/empresa/ventas/ventas';
 import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
 import { NotFoundComponent } from './pages/not-found/not-found';
-import { roleGuard, redirigirSiAutenticado } from './core/auth.guard';
+import { AccesoRestringidoComponent } from './pages/acceso-restringido/acceso-restringido';
+import { roleGuard, redirigirSiAutenticado, vistaGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   // canActivate no se ejecuta en una ruta que solo hace redirectTo (Angular
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [redirigirSiAutenticado] },
   { path: 'verificar-2fa', component: Verificar2faComponent },
   { path: 'olvide-contrasena', component: OlvidecontraComponent },
+  { path: 'acceso-restringido', component: AccesoRestringidoComponent },
 
   // ── Vista admin: un solo layout (sidebar + topbar) para todas las hijas ──
   {
@@ -51,31 +53,31 @@ export const routes: Routes = [
         path: 'dashboard',
         component: EmpresaDashboardComponent,
         data: { title: 'Dashboard' },
-        canActivate: [roleGuard('dueño')],
+        canActivate: [roleGuard('dueño'), vistaGuard('dashboard')],
       },
       {
         path: 'inventario',
         component: InventarioComponent,
         data: { title: 'Inventario' },
-        canActivate: [roleGuard('dueño', 'vendedor')],
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('inventario')],
       },
       {
         path: 'ventas',
         component: VentasComponent,
         data: { title: 'Ventas' },
-        canActivate: [roleGuard('dueño', 'vendedor')],
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
       },
       {
         path: 'finanzas',
         component: FinanzasComponent,
         data: { title: 'Finanzas' },
-        canActivate: [roleGuard('dueño')],
+        canActivate: [roleGuard('dueño'), vistaGuard('finanzas')],
       },
       {
         path: 'analitica',
         component: AnaliticaComponent,
         data: { title: 'Analítica' },
-        canActivate: [roleGuard('dueño')],
+        canActivate: [roleGuard('dueño'), vistaGuard('analitica')],
       },
     ],
   },

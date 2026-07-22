@@ -7,6 +7,7 @@ import { TopbarComponent } from '../topbar/topbar';
 import { PageTitleService } from '../admin-layout/page-title';
 import { AuthService } from '../../core/auth';
 import { I18nService } from '../../core/i18n.service';
+import { ClaveVista } from '../../services/usuarios';
 
 @Component({
   selector: 'app-empresa-layout',
@@ -37,20 +38,26 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
 
     this.navItems = computed<SidebarItem[]>(() => {
       this.i18n.lang(); // dependencia reactiva: fuerza recálculo al cambiar idioma
+      // Además del rol, cada vista puede estar deshabilitada puntualmente
+      // para este usuario (modal "Permisos de vista" del panel admin) —
+      // no tiene sentido listarla en el sidebar si el guard igual la va
+      // a bloquear.
+      const puedeVer = (clave: ClaveVista) => this.authService.puedeVerVista(clave);
+
       const base: SidebarItem[] = [];
-      if (esDueño) {
+      if (esDueño && puedeVer('dashboard')) {
         base.push({ label: this.i18n.t('NAV.DASHBOARD'), route: '/empresa/dashboard', icon: 'dashboard', exact: true });
       }
-      base.push(
-        { label: this.i18n.t('NAV.INVENTARIO'), route: '/empresa/inventario', icon: 'inventario' },
-        { label: this.i18n.t('NAV.VENTAS'), route: '/empresa/ventas', icon: 'ventas' },
-      );
-      if (esDueño) {
-        base.push(
-          { label: this.i18n.t('NAV.FINANZAS'), route: '/empresa/finanzas', icon: 'finanzas' },
-          // Analítica: oculta a pedido, se reactivará más adelante.
-          // { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
-        );
+      if (puedeVer('inventario')) {
+        base.push({ label: this.i18n.t('NAV.INVENTARIO'), route: '/empresa/inventario', icon: 'inventario' });
+      }
+      if (puedeVer('ventas')) {
+        base.push({ label: this.i18n.t('NAV.VENTAS'), route: '/empresa/ventas', icon: 'ventas' });
+      }
+      if (esDueño && puedeVer('finanzas')) {
+        base.push({ label: this.i18n.t('NAV.FINANZAS'), route: '/empresa/finanzas', icon: 'finanzas' });
+        // Analítica: oculta a pedido, se reactivará más adelante.
+        // { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
       }
       // Configuración: oculta a pedido, se reactivará más adelante.
       // base.push({ label: this.i18n.t('NAV.CONFIGURACION'), href: '#', icon: 'config' });

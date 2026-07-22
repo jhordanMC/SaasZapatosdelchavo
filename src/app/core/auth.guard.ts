@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
+import { ClaveVista } from '../services/usuarios';
 import { AuthService, Rol } from './auth';
 
 export function roleGuard(...rolesPermitidos: Rol[]): CanActivateFn {
@@ -19,6 +20,34 @@ export function roleGuard(...rolesPermitidos: Rol[]): CanActivateFn {
         }
         if (!authService.tieneRol(...rolesPermitidos)) {
           router.navigate(['/login']);
+          return false;
+        }
+        return true;
+      }),
+    );
+  };
+}
+
+/**
+ * Bloquea una vista puntual deshabilitada para el usuario (independiente
+ * de su rol — ver modal "Permisos de vista" en el panel admin). A
+ * diferencia de roleGuard, si el usuario SÍ está autenticado pero no
+ * tiene acceso a esta vista, no tiene sentido mandarlo a /login: va a
+ * /acceso-restringido.
+ */
+export function vistaGuard(clave: ClaveVista): CanActivateFn {
+  return () => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    return authService.esperarInicializacion().pipe(
+      map(() => {
+        if (!authService.estaAutenticado()) {
+          router.navigate(['/login']);
+          return false;
+        }
+        if (!authService.puedeVerVista(clave)) {
+          router.navigate(['/acceso-restringido']);
           return false;
         }
         return true;
