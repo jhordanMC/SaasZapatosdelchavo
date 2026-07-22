@@ -107,35 +107,26 @@
         <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Zapatos Ejecutivos Confort" />
       </div>
 
-      <!-- Categoría + Sexo -->
-      <div class="form-row form-row-2">
-        <div>
-          <label>Categoría</label>
-          <div class="categoria-field">
-            <select [(ngModel)]="form.id_categoria">
-              <option [ngValue]="null">Sin categoría</option>
-              <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
-            </select>
-            <button
-              type="button"
-              class="btn-add-categoria"
-              [class.active]="mostrarNuevaCategoria"
-              (click)="mostrarNuevaCategoria ? cerrarPanelNuevaCategoria() : abrirPanelNuevaCategoria()"
-              title="Crear nueva categoría"
-              aria-label="Crear nueva categoría"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div>
-          <label>Sexo</label>
-          <select [(ngModel)]="form.sexo">
-            <option [ngValue]="null">Sin definir</option>
-            <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
+      <!-- Categoría -->
+      <div class="form-row">
+        <label>Categoría</label>
+        <div class="categoria-field">
+          <select [(ngModel)]="form.id_categoria">
+            <option [ngValue]="null">Sin categoría</option>
+            <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
           </select>
+          <button
+            type="button"
+            class="btn-add-categoria"
+            [class.active]="mostrarNuevaCategoria"
+            (click)="mostrarNuevaCategoria ? cerrarPanelNuevaCategoria() : abrirPanelNuevaCategoria()"
+            title="Crear nueva categoría"
+            aria-label="Crear nueva categoría"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -169,6 +160,15 @@
         </div>
 
         <div class="categoria-error" *ngIf="errorCategoria()">{{ errorCategoria() }}</div>
+      </div>
+
+      <!-- Sexo -->
+      <div class="form-row">
+        <label>Sexo</label>
+        <select [(ngModel)]="form.sexo">
+          <option [ngValue]="null">Sin definir</option>
+          <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
+        </select>
       </div>
 
       <!-- Precios -->
