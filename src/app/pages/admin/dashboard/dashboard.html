@@ -18,9 +18,9 @@
       <input type="text" placeholder="Buscar empresa..." [(ngModel)]="busqueda" />
     </div>
 
-    <select class="filter-select" [(ngModel)]="filtroTipo">
-      <option value="Todos">Tipo: Todos</option>
-      <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+    <select class="filter-select" [(ngModel)]="filtroSector">
+      <option value="Todos">Sector: Todos</option>
+      <option *ngFor="let s of sectoresPresentes" [value]="s">{{ s }}</option>
     </select>
 
     <div class="date-field">
@@ -37,7 +37,7 @@
       Limpiar
     </button>
 
-    <span class="filter-chip" [ngClass]="tipoStyle[filtroTipo]" *ngIf="filtroTipo !== 'Todos'">{{ filtroTipo }}</span>
+    <span class="tipo-chip filter-chip" [ngClass]="sectorStyle(filtroSector)" *ngIf="filtroSector !== 'Todos'">{{ filtroSector }}</span>
 
     <span class="filter-count" *ngIf="hayFiltros">
       {{ empresasFiltradas.length }} de {{ todasEmpresas.length }} empresa{{ todasEmpresas.length !== 1 ? 's' : '' }}
@@ -187,7 +187,7 @@
         <div class="ingreso-row" *ngFor="let e of ingresosOrdenados">
           <div class="ingreso-top">
             <div class="ingreso-left">
-              <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
+              <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ sectorAbrev(e.sector) }}</span>
               <span class="ingreso-nombre">{{ e.nombre }}</span>
             </div>
             <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
@@ -218,19 +218,19 @@
         <div class="card-head">
           <div>
             <div class="card-title">Ingresos por sector</div>
-            <div class="card-sub">Qué tipo de empresa aporta más a la plataforma</div>
+            <div class="card-sub">Qué sector aporta más a la plataforma</div>
           </div>
         </div>
-        <div class="ingreso-row" *ngFor="let f of distribucionPorTipo">
+        <div class="ingreso-row" *ngFor="let f of distribucionPorSector">
           <div class="ingreso-top">
             <div class="ingreso-left">
-              <span class="tipo-chip" [ngClass]="tipoStyle[f.tipo]">{{ f.tipo }}</span>
+              <span class="tipo-chip" [ngClass]="sectorStyle(f.sector)">{{ f.sector }}</span>
               <span class="ingreso-nombre">{{ f.cantidad }} empresa{{ f.cantidad !== 1 ? 's' : '' }} · score {{ f.scorePromedio }}%</span>
             </div>
             <span class="ingreso-monto">{{ fmtPEN(f.ingresos) }}</span>
           </div>
           <div class="ingreso-bar-bg">
-            <div class="ingreso-bar-fill" [style.width.%]="(f.ingresos / maxIngresoTipo) * 100"></div>
+            <div class="ingreso-bar-fill" [style.width.%]="(f.ingresos / maxIngresoSector) * 100"></div>
           </div>
         </div>
       </div>
@@ -268,7 +268,7 @@
         <div class="ingreso-row" *ngFor="let e of topEmpresasPorIngreso">
           <div class="ingreso-top">
             <div class="ingreso-left">
-              <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
+              <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ sectorAbrev(e.sector) }}</span>
               <span class="ingreso-nombre">{{ e.nombre }}</span>
             </div>
             <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
@@ -286,7 +286,7 @@
         <div class="ingreso-row" *ngFor="let e of empresasMenorScore">
           <div class="ingreso-top">
             <div class="ingreso-left">
-              <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
+              <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ sectorAbrev(e.sector) }}</span>
               <span class="ingreso-nombre">{{ e.nombre }}</span>
             </div>
             <span class="ingreso-monto">{{ e.scorePromedio }}%</span>
@@ -323,7 +323,7 @@
       <div class="empresas-table">
         <div class="empresas-header">
           <span>EMPRESA</span>
-          <span>TIPO</span>
+          <span>SECTOR</span>
           <span>USUARIOS</span>
           <span>SCORE</span>
           <span>INGRESOS/MES</span>
@@ -341,8 +341,8 @@
             </span>
             {{ e.nombre }}
           </div>
-          <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ e.tipo }}</span>
-          <span class="cell-num">{{ e.asesores }}</span>
+          <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ e.sector }}</span>
+          <span class="cell-num">{{ e.usuariosActivos }}</span>
           <div class="score-cell" [ngClass]="scoreColorClass(e.scorePromedio)">
             <div class="score-stars">
               <ng-container *ngFor="let star of starArray(scoreStars(e.scorePromedio)); let i = index">

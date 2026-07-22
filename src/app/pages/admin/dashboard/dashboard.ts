@@ -8,12 +8,13 @@ import { SuscripcionesService, SuscripcionListItem } from '../../../services/sus
 import { UsuariosService } from '../../../services/usuarios';
 
 /**
- * Tipo/score/asesores NO existen en el backend real (la tabla `empresas`
- * solo tiene nombre/slug/estado/creado_en — ver services/empresas.ts) —
- * son datos de negocio que llegarán con los módulos de sectores/
- * satisfacción, todavía no construidos. Mientras tanto se generan de
- * forma ESTÁTICA (determinística por índice, no aleatoria en cada
- * render) a partir de la empresa real.
+ * `scorePromedio` NO existe en el backend real (no hay ningún concepto de
+ * "satisfacción" en este SaaS todavía) — se genera de forma ESTÁTICA
+ * (determinística por índice, no aleatoria en cada render) a partir de la
+ * empresa real, a la espera del módulo que lo construya. `sector` en
+ * cambio SÍ es real: viene de `empresa.nombre_sector` (GET /empresas,
+ * JOIN con la tabla `sectores` — ver services/empresas.ts y el catálogo
+ * gestionable en /admin/empresas).
  *
  * `plan` e `ingresosMes` SÍ son reales desde acá: vienen del módulo de
  * billing (GET /empresas/suscripciones — misma fuente que usa
@@ -22,6 +23,8 @@ import { UsuariosService } from '../../../services/usuarios';
  *
  * "Usuarios activos"/"retirados" también son reales: GET
  * /empresas/usuarios/resumen (conteo cross-tenant por estado).
+ * `usuariosActivos` (columna de la tabla de abajo) también es real, por
+ * empresa: GET /empresas/usuarios/activos-por-empresa.
  *
  * "Actividad en tiempo real" también es real: GET /empresas/usuarios/
  * en-linea, basado en presencia trackeada en Redis (ver
@@ -29,17 +32,14 @@ import { UsuariosService } from '../../../services/usuarios';
  * viejo. Este SaaS no tiene el concepto de "entrenadores" — se sacó
  * del todo (campo, getter y texto de KPI).
  *
- * La KPI "Usuarios en la plataforma" (antes "Asesores", sumaba el
- * `asesores` fake de abajo) se sacó del todo — quedaba redundante con
- * "Usuarios activos" y "Actividad en tiempo real", que ya son reales.
- * `asesores` sigue existiendo solo como columna de la tabla de abajo.
+ * La KPI "Usuarios en la plataforma" (antes "Asesores") se sacó del todo
+ * — quedaba redundante con "Usuarios activos" y "Actividad en tiempo
+ * real", que ya son reales.
  */
-type TipoEmpresa = 'Banca' | 'Seguros' | 'Telecomunicaciones' | 'Retail' | 'Financiero';
-
 interface Empresa {
   nombre: string;
-  tipo: TipoEmpresa;
-  asesores: number;
+  sector: string;
+  usuariosActivos: number;
   scorePromedio: number;
   plan: string;
   estado: 'activo' | 'inactivo';
@@ -47,8 +47,8 @@ interface Empresa {
   ingresosMes: number;
 }
 
-interface FilaTipo {
-  tipo: TipoEmpresa;
+interface FilaSector {
+  sector: string;
   cantidad: number;
   ingresos: number;
   scorePromedio: number;
@@ -69,7 +69,16 @@ interface PuntoMes {
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 /** No es un plan real — el valor que le ponemos a una empresa sin suscripción vigente. */
 const SIN_PLAN = 'Sin plan';
-const TIPOS_ESTATICOS: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
+/** No es un sector real del catálogo — el valor que le ponemos a una empresa sin sector asignado. */
+const SIN_SECTOR = 'Sin sector';
+/**
+ * Paleta de colores anónima (no atada a ningún sector en particular —
+ * los sectores ahora los define el admin dinámicamente en /admin/empresas,
+ * así que no hay una lista fija de 5 a la que asignarles nombre). Se
+ * elige una de estas 5 clases por hash del nombre del sector — ver
+ * sectorStyle().
+ */
+const PALETA_SECTOR = ['tipo-banca', 'tipo-seguros', 'tipo-telco', 'tipo-retail', 'tipo-financiero'];
 
 @Component({
   selector: 'app-dashboard',
@@ -89,19 +98,9 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
    *  estáticos de negocio que el backend aún no tiene — ver nota arriba. */
   todasEmpresas: Empresa[] = [];
 
-  tipos: TipoEmpresa[] = TIPOS_ESTATICOS;
-
-  tipoStyle: Record<TipoEmpresa, string> = {
-    Banca: 'tipo-banca',
-    Seguros: 'tipo-seguros',
-    Telecomunicaciones: 'tipo-telco',
-    Retail: 'tipo-retail',
-    Financiero: 'tipo-financiero',
-  };
-
   /* ── Estado de filtros ── */
   busqueda = '';
-  filtroTipo: TipoEmpresa | 'Todos' = 'Todos';
+  filtroSector: string | 'Todos' = 'Todos';
   fechaDesde = '';
   fechaHasta = '';
 
@@ -127,11 +126,18 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     forkJoin({
       empresas: this.empresasService.listarEmpresas(),
       suscripciones: this.suscripcionesService.listarTodas(),
+      usuariosActivos: this.usuariosService.obtenerUsuariosActivosPorEmpresa(),
     }).subscribe({
-      next: ({ empresas, suscripciones }) => {
+      next: ({ empresas, suscripciones, usuariosActivos }) => {
         const suscripcionPorEmpresa = new Map(suscripciones.map((s) => [s.id_empresa, s]));
+        const usuariosActivosPorEmpresa = new Map(usuariosActivos.map((u) => [u.id_empresa, u.usuarios_activos]));
         this.todasEmpresas = empresas.map((e, i) =>
-          this.enriquecerEmpresa(e, i, suscripcionPorEmpresa.get(e.id_empresa))
+          this.enriquecerEmpresa(
+            e,
+            i,
+            suscripcionPorEmpresa.get(e.id_empresa),
+            usuariosActivosPorEmpresa.get(e.id_empresa) ?? 0
+          )
         );
       },
       error: () => {
@@ -151,13 +157,18 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  private enriquecerEmpresa(empresa: EmpresaReal, index: number, suscripcion?: SuscripcionListItem): Empresa {
+  private enriquecerEmpresa(
+    empresa: EmpresaReal,
+    index: number,
+    suscripcion?: SuscripcionListItem,
+    usuariosActivos = 0
+  ): Empresa {
     const activa = empresa.estado === 'activa';
     const facturando = activa && suscripcion?.estado === 'activa';
     return {
       nombre: empresa.nombre,
-      tipo: TIPOS_ESTATICOS[index % TIPOS_ESTATICOS.length],
-      asesores: 5 + ((index * 3) % 18),
+      sector: empresa.nombre_sector ?? SIN_SECTOR,
+      usuariosActivos,
       scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
       plan: suscripcion?.plan ?? SIN_PLAN,
       estado: activa ? 'activo' : 'inactivo',
@@ -217,23 +228,35 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     return this.todasEmpresas.filter((e) => e.estado === 'inactivo' || (e.scorePromedio > 0 && e.scorePromedio < 70));
   }
 
-  /* ── Distribución por sector (tipo de empresa) ── */
-  get distribucionPorTipo(): FilaTipo[] {
-    return this.tipos
-      .map((tipo) => {
-        const grupo = this.todasEmpresas.filter((e) => e.tipo === tipo);
+  /* ── Distribución por sector (real, empresa.nombre_sector) ── */
+  get distribucionPorSector(): FilaSector[] {
+    const sectores = Array.from(new Set(this.todasEmpresas.map((e) => e.sector)));
+    return sectores
+      .map((sector) => {
+        const grupo = this.todasEmpresas.filter((e) => e.sector === sector);
         const ingresos = grupo.reduce((a, e) => a + e.ingresosMes, 0);
         const conScore = grupo.filter((e) => e.scorePromedio > 0);
         const scorePromedio = conScore.length > 0
           ? Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length)
           : 0;
-        return { tipo, cantidad: grupo.length, ingresos, scorePromedio };
+        return { sector, cantidad: grupo.length, ingresos, scorePromedio };
       })
-      .filter((f) => f.cantidad > 0)
       .sort((a, b) => b.ingresos - a.ingresos);
   }
-  get maxIngresoTipo(): number {
-    return Math.max(1, ...this.distribucionPorTipo.map((f) => f.ingresos));
+  get maxIngresoSector(): number {
+    return Math.max(1, ...this.distribucionPorSector.map((f) => f.ingresos));
+  }
+
+  /** Sectores realmente presentes entre las empresas cargadas (no el
+   *  catálogo completo) — para poblar el <select> del filtro. 'Sin sector'
+   *  siempre al final si aparece. */
+  get sectoresPresentes(): string[] {
+    const nombres = Array.from(new Set(this.todasEmpresas.map((e) => e.sector)));
+    return nombres.sort((a, b) => {
+      if (a === SIN_SECTOR) return 1;
+      if (b === SIN_SECTOR) return -1;
+      return a.localeCompare(b);
+    });
   }
 
   /**
@@ -316,7 +339,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   get empresasFiltradas(): Empresa[] {
     return this.todasEmpresas.filter(e => {
       if (this.busqueda && !e.nombre.toLowerCase().includes(this.busqueda.toLowerCase())) return false;
-      if (this.filtroTipo !== 'Todos' && e.tipo !== this.filtroTipo) return false;
+      if (this.filtroSector !== 'Todos' && e.sector !== this.filtroSector) return false;
       if (this.fechaDesde && e.fechaAlta < this.fechaDesde) return false;
       if (this.fechaHasta && e.fechaAlta > this.fechaHasta) return false;
       return true;
@@ -324,12 +347,12 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   get hayFiltros(): boolean {
-    return !!(this.busqueda || this.filtroTipo !== 'Todos' || this.fechaDesde || this.fechaHasta);
+    return !!(this.busqueda || this.filtroSector !== 'Todos' || this.fechaDesde || this.fechaHasta);
   }
 
   limpiarFiltros(): void {
     this.busqueda = '';
-    this.filtroTipo = 'Todos';
+    this.filtroSector = 'Todos';
     this.fechaDesde = '';
     this.fechaHasta = '';
   }
@@ -358,8 +381,20 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   starArray(count: number): number[] {
     return Array(count).fill(0);
   }
-  tipoAbrev(t: TipoEmpresa): string {
-    return t.slice(0, 3).toUpperCase();
+  sectorAbrev(sector: string): string {
+    return sector.slice(0, 3).toUpperCase();
+  }
+
+  /** Color determinístico por nombre de sector (mismo string → mismo
+   *  color siempre) — no hay una lista fija de sectores a la que
+   *  mapear colores 1 a 1, así que se elige por hash módulo paleta. */
+  sectorStyle(sector: string): string {
+    if (sector === SIN_SECTOR) return 'tipo-sin-sector';
+    let hash = 0;
+    for (let i = 0; i < sector.length; i++) {
+      hash = (hash * 31 + sector.charCodeAt(i)) >>> 0;
+    }
+    return PALETA_SECTOR[hash % PALETA_SECTOR.length];
   }
 
   /**

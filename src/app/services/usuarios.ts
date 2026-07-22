@@ -49,6 +49,11 @@ export interface UsuariosEnLinea {
   en_linea: number;
 }
 
+export interface UsuariosActivosPorEmpresa {
+  id_empresa: string;
+  usuarios_activos: number;
+}
+
 // Vistas del sistema sobre las que se puede otorgar/quitar permiso
 // individual a un usuario (independiente de lo que ya le da su rol).
 // Incluye tanto las de /admin/* (staff de ALBA) como las de /empresa/*
@@ -146,6 +151,11 @@ export class UsuariosService {
   /** Cross-tenant: usuarios con actividad reciente (KPI "Actividad en tiempo real"). */
   obtenerUsuariosEnLinea(): Observable<UsuariosEnLinea> {
     return this.http.get<UsuariosEnLinea>(`${this.apiUrl}/empresas/usuarios/en-linea`);
+  }
+
+  /** Cross-tenant: cuántos usuarios activos tiene cada empresa (tabla "Empresas registradas"). */
+  obtenerUsuariosActivosPorEmpresa(): Observable<UsuariosActivosPorEmpresa[]> {
+    return this.http.get<UsuariosActivosPorEmpresa[]>(`${this.apiUrl}/empresas/usuarios/activos-por-empresa`);
   }
 
   crearUsuario(idEmpresa: string, datos: UsuarioCreateInput): Observable<Usuario> {
