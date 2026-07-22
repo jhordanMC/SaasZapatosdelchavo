@@ -31,6 +31,41 @@
   color: #5a8a78;
 }
 
+.tabs-bar {
+  display: flex;
+  gap: 6px;
+  background: white;
+  border: 1px solid #e8f1ec;
+  border-radius: 16px;
+  padding: 6px;
+  width: fit-content;
+  max-width: calc(100% - 56px);
+  overflow-x: auto;
+  margin: 18px 28px 0;
+}
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5a8a78;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #f4fbf6;
+}
+
+.tab-btn.activo {
+  background: rgba(5, 244, 49, 0.22);
+  color: #024b40;
+}
+
 .filters-bar {
   background: white;
   border-bottom: 1px solid #e8f1ea;
@@ -272,6 +307,12 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
+  flex: 1;
+}
+
+.empresa-id-info {
+  min-width: 0;
+  flex: 1;
 }
 
 .empresa-avatar {
@@ -289,6 +330,13 @@
   flex-shrink: 0;
 }
 
+.empresa-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .empresa-name {
   font-weight: 700;
   color: #0c3a2e;
@@ -297,6 +345,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+}
+
+.sector-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #f5f3ff;
 }
 
 .empresa-plan {
@@ -479,6 +541,47 @@
   margin: 24px 0 0;
   color: #6b8a7d;
   text-align: center;
+}
+
+.table-row-sectores {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.acciones-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-accion {
+  background: transparent;
+  border: 1px solid #d8e6dd;
+  color: #1f4034;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-accion:hover {
+  background: #f4fbf6;
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f4034;
+  cursor: pointer;
+}
+
+.checkbox-inline input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .tipo-banca { background: #eff6ff; color: #2563eb; }

@@ -3,9 +3,16 @@
     <div>
       <p class="page-subtitle">Gestiona los clientes corporativos y su evolución.</p>
     </div>
-    <button class="btn-primary" (click)="abrirModalNueva()">+ Nueva empresa</button>
+    <button class="btn-primary" *ngIf="tabActiva === 'empresas'" (click)="abrirModalNueva()">+ Nueva empresa</button>
+    <button class="btn-primary" *ngIf="tabActiva === 'sectores'" (click)="abrirModalNuevoSector()">+ Nuevo sector</button>
   </div>
 
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.activo]="tabActiva === 'empresas'" (click)="cambiarTab('empresas')">Empresas</button>
+    <button class="tab-btn" [class.activo]="tabActiva === 'sectores'" (click)="cambiarTab('sectores')">Sectores</button>
+  </div>
+
+  <ng-container *ngIf="tabActiva === 'empresas'">
   <div class="filters-bar">
     <div class="search-box">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,8 +98,11 @@
           <div class="empresa-card-header">
             <div class="empresa-id">
               <div class="empresa-avatar">{{ iniciales(empresa.nombre) }}</div>
-              <div>
-                <div class="empresa-name">{{ empresa.nombre }}</div>
+              <div class="empresa-id-info">
+                <div class="empresa-name-row">
+                  <span class="empresa-name">{{ empresa.nombre }}</span>
+                  <span class="sector-pill" *ngIf="empresa.nombre_sector">{{ empresa.nombre_sector }}</span>
+                </div>
 
                 <button class="empresa-locales-link" (click)="verLocales(empresa)" title="Ver locales de la empresa">
                   Ver locales
@@ -129,6 +139,7 @@
           <div class="empresa-cell">
             <div class="empresa-avatar empresa-avatar-sm">{{ iniciales(empresa.nombre) }}</div>
             <div class="empresa-name">{{ empresa.nombre }}</div>
+            <span class="sector-pill" *ngIf="empresa.nombre_sector">{{ empresa.nombre_sector }}</span>
           </div>
           <span>{{ empresa.slug }}</span>
           <span><span class="status-pill" [class.active]="empresa.estado === 'activa'">{{ empresa.estado }}</span></span>
@@ -143,6 +154,41 @@
 
       <p class="empty-state" *ngIf="cargando()">Cargando empresas…</p>
       <p class="empty-state" *ngIf="!cargando() && empresasFiltradas.length === 0">No se encontraron empresas con estos filtros.</p>
+    </div>
+  </div>
+  </ng-container>
+
+  <!-- ══════════════ TAB: SECTORES (catálogo global) ══════════════ -->
+  <div class="content" *ngIf="tabActiva === 'sectores'">
+    <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <h2>Catálogo de sectores</h2>
+          <p>{{ sectores().length }} {{ sectores().length === 1 ? 'sector registrado' : 'sectores registrados' }}</p>
+        </div>
+      </div>
+
+      <div class="table-wrap" *ngIf="sectores().length > 0">
+        <div class="table-row table-row-sectores table-head">
+          <span>Sector</span>
+          <span>Estado</span>
+          <span>Acciones</span>
+        </div>
+
+        <div class="table-row table-row-sectores" *ngFor="let sector of sectores()">
+          <span class="empresa-name">{{ sector.nombre }}</span>
+          <span><span class="status-pill" [class.active]="sector.esta_activo">{{ sector.esta_activo ? 'activo' : 'inactivo' }}</span></span>
+          <span class="acciones-cell">
+            <button class="btn-accion" (click)="abrirModalEditarSector(sector)">Editar</button>
+            <button class="btn-accion" (click)="toggleActivoSector(sector)">{{ sector.esta_activo ? 'Desactivar' : 'Activar' }}</button>
+          </span>
+        </div>
+      </div>
+
+      <p class="empty-state" *ngIf="cargandoSectores()">Cargando sectores…</p>
+      <p class="empty-state" *ngIf="!cargandoSectores() && sectores().length === 0">Todavía no hay sectores en el catálogo.</p>
     </div>
   </div>
 
@@ -192,6 +238,14 @@
           placeholder="Ej. Banco Continental"
           [(ngModel)]="nuevaEmpresa.nombre"
         />
+      </div>
+
+      <div class="form-group">
+        <label for="selectSectorEmpresa">Sector (opcional)</label>
+        <select id="selectSectorEmpresa" class="form-input form-select" [(ngModel)]="nuevaEmpresa.idSector">
+          <option [ngValue]="null">Sin sector</option>
+          <option *ngFor="let sector of sectoresActivos" [ngValue]="sector.id_sector">{{ sector.nombre }}</option>
+        </select>
       </div>
 
       <div class="modal-actions">
@@ -319,6 +373,50 @@
     <div class="modal-actions modal-actions-split">
       <button class="btn-clear" (click)="cerrarModalConfirmacion()">Cerrar</button>
       <button class="btn-primary" (click)="irADetalleDesdeConfirmacion()">Ver locales</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Nuevo / editar sector ══ -->
+<div class="modal-overlay" *ngIf="modalSectorAbierto" (click)="cerrarModalSector()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalSector()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+    </div>
+
+    <div class="modal-header"><h2>{{ sectorEditando ? 'Editar sector' : 'Nuevo sector' }}</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inputNombreSector">Nombre</label>
+        <input id="inputNombreSector" type="text" class="form-input" placeholder="Ej. Retail" [(ngModel)]="formSector.nombre" />
+      </div>
+
+      <label class="checkbox-inline">
+        <input type="checkbox" [(ngModel)]="formSector.estaActivo" />
+        Sector activo (disponible para asignar a empresas)
+      </label>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalSector()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!sectorFormValido || guardandoSector" (click)="guardarSector()">
+          {{ guardandoSector ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

@@ -21,14 +21,18 @@ import { UsuariosService } from '../../../services/usuarios';
  * como su suscripción están en estado 'activa'.
  *
  * "Usuarios activos"/"retirados" también son reales: GET
- * /empresas/usuarios/resumen (conteo cross-tenant por estado). Distinto
- * de "Usuarios en la plataforma" (antes "Asesores"), que sigue fake.
+ * /empresas/usuarios/resumen (conteo cross-tenant por estado).
  *
  * "Actividad en tiempo real" también es real: GET /empresas/usuarios/
  * en-linea, basado en presencia trackeada en Redis (ver
  * app/core/presencia.py en el backend) — reemplaza el random-walk
  * viejo. Este SaaS no tiene el concepto de "entrenadores" — se sacó
  * del todo (campo, getter y texto de KPI).
+ *
+ * La KPI "Usuarios en la plataforma" (antes "Asesores", sumaba el
+ * `asesores` fake de abajo) se sacó del todo — quedaba redundante con
+ * "Usuarios activos" y "Actividad en tiempo real", que ya son reales.
+ * `asesores` sigue existiendo solo como columna de la tabla de abajo.
  */
 type TipoEmpresa = 'Banca' | 'Seguros' | 'Telecomunicaciones' | 'Retail' | 'Financiero';
 
@@ -63,6 +67,8 @@ interface PuntoMes {
 }
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+/** No es un plan real — el valor que le ponemos a una empresa sin suscripción vigente. */
+const SIN_PLAN = 'Sin plan';
 const TIPOS_ESTATICOS: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
 
 @Component({
@@ -153,7 +159,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
       tipo: TIPOS_ESTATICOS[index % TIPOS_ESTATICOS.length],
       asesores: 5 + ((index * 3) % 18),
       scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
-      plan: suscripcion?.plan ?? 'Sin plan',
+      plan: suscripcion?.plan ?? SIN_PLAN,
       estado: activa ? 'activo' : 'inactivo',
       fechaAlta: empresa.creado_en.slice(0, 10),
       ingresosMes: facturando ? Math.max(0, suscripcion!.monto_mensual - suscripcion!.descuento_monto) : 0,
@@ -182,9 +188,6 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /* ── KPIs calculados ── */
-  get totalAsesores(): number {
-    return this.todasEmpresas.reduce((a, e) => a + e.asesores, 0);
-  }
   get scoreGlobal(): number {
     const conScore = this.todasEmpresas.filter((e) => e.scorePromedio > 0);
     if (conScore.length === 0) return 0;
@@ -233,7 +236,21 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     return Math.max(1, ...this.distribucionPorTipo.map((f) => f.ingresos));
   }
 
-  /* ── Distribución por plan contratado ── */
+  /**
+   * KPI "Planes contratados": cuántos planes REALES distintos tienen
+   * contratados las empresas activas — a propósito NO usa
+   * distribucionPorPlan.length de abajo, porque ese incluye "Sin plan"
+   * (no es un plan, es la ausencia de uno) y no filtra por activas pese
+   * a que el texto de la card decía "entre las empresas activas".
+   */
+  get planesDistintosActivos(): number {
+    const planes = this.todasEmpresas
+      .filter((e) => e.estado === 'activo' && e.plan !== SIN_PLAN)
+      .map((e) => e.plan);
+    return new Set(planes).size;
+  }
+
+  /* ── Distribución por plan contratado (incluye "Sin plan" a propósito, para ver cobertura) ── */
   get distribucionPorPlan(): FilaPlan[] {
     const mapa = new Map<string, { cantidad: number; ingresos: number }>();
     for (const e of this.todasEmpresas) {

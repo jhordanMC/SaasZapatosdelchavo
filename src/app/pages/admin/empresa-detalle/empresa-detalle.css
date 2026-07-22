@@ -270,6 +270,18 @@
   color: #0f502f;
 }
 
+.sector-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #f5f3ff;
+}
+
 .tipo-pill {
   color: #16603e;
   background: #ecf9ef;

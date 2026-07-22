@@ -292,6 +292,7 @@
 }
 
 .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-grid-2 { grid-template-columns: repeat(2, 1fr); }
 
 .kpi-card {
   background: white;

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { Empresa, EmpresasService, EstadoEmpresa, Local, LocalInput, LocalUpdateInput } from '../../../services/empresas';
+import { Empresa, EmpresasService, EstadoEmpresa, Local, LocalInput, LocalUpdateInput, Sector } from '../../../services/empresas';
 import { PageTitleService } from '../../../shared/admin-layout/page-title';
 import {
   ClaveVista,
@@ -41,6 +41,7 @@ interface EditarUsuarioForm {
 interface EditarEmpresaForm {
   nombre: string;
   estado: EstadoEmpresa;
+  idSector: string | null;
 }
 
 interface EditarLocalForm {
@@ -102,6 +103,13 @@ export class EmpresaDetalleComponent implements OnInit {
         this.cargando.set(false);
       },
     });
+
+    this.empresasService.listarSectores().subscribe({
+      next: (sectores) => this.sectores.set(sectores),
+      error: () => {
+        /* si falla, el select de sector simplemente queda vacío */
+      },
+    });
   }
 
   cambiarTab(tab: TabDetalle): void {
@@ -126,15 +134,23 @@ export class EmpresaDetalleComponent implements OnInit {
     return (palabras[0][0] + palabras[1][0]).toUpperCase();
   }
 
-  // ── Modal "Editar empresa" (nombre / estado) ────────────
+  // ── Modal "Editar empresa" (nombre / estado / sector) ───
   modalEditarEmpresaAbierto = false;
-  formEmpresa: EditarEmpresaForm = { nombre: '', estado: 'activa' };
+  formEmpresa: EditarEmpresaForm = { nombre: '', estado: 'activa', idSector: null };
   guardandoEmpresa = false;
+  sectores = signal<Sector[]>([]);
+
+  /** Solo los activos, más el sector actual de la empresa aunque esté desactivado
+   * (si no, desaparecería del select y parecería que se le quitó sin querer). */
+  get sectoresParaEditar(): Sector[] {
+    const idActual = this.empresa()?.id_sector;
+    return this.sectores().filter((s) => s.esta_activo || s.id_sector === idActual);
+  }
 
   abrirModalEditarEmpresa(): void {
     const actual = this.empresa();
     if (!actual) return;
-    this.formEmpresa = { nombre: actual.nombre, estado: actual.estado };
+    this.formEmpresa = { nombre: actual.nombre, estado: actual.estado, idSector: actual.id_sector };
     this.modalEditarEmpresaAbierto = true;
   }
 
@@ -150,7 +166,11 @@ export class EmpresaDetalleComponent implements OnInit {
     if (!this.formEmpresaValido || this.guardandoEmpresa) return;
     this.guardandoEmpresa = true;
     this.empresasService
-      .actualizarEmpresa(this.idEmpresa, { nombre: this.formEmpresa.nombre.trim(), estado: this.formEmpresa.estado })
+      .actualizarEmpresa(this.idEmpresa, {
+        nombre: this.formEmpresa.nombre.trim(),
+        estado: this.formEmpresa.estado,
+        id_sector: this.formEmpresa.idSector,
+      })
       .subscribe({
         next: (actualizada) => {
           this.guardandoEmpresa = false;
