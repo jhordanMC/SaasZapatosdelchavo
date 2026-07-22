@@ -275,8 +275,8 @@ export class VentasComponent implements OnInit {
       cantidad: this.cantidadSeleccionada,
       descuentoMonto: this.descuentoSeleccionado,
       tipoDescuento: this.tipoDescuentoSeleccionado,
-      idLocal: local.id_local,
-      nombreLocal: local.nombre,
+      idLocal: variante.id_local ?? local.id_local,
+      nombreLocal: variante.nombre_local ?? local.nombre,
     };
     this.ventasService.agregarAlCarrito(item);
     this.showVariantePicker = null;
