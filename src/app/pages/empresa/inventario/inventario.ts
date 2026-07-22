@@ -39,7 +39,7 @@ import {
 interface VarianteFormItem {
   talla: string;
   cantidad: number;
-  id_local: string;
+  ubicacion: string;
 }
 
 interface ProductoForm {
@@ -114,24 +114,8 @@ export class InventarioComponent implements OnInit {
   creandoCategoria = signal(false);
   errorCategoria = signal<string | null>(null);
 
-  // ── Gestión de almacenes (agregar / editar / eliminar) ───────────────────
-  // NOTA: este bloque, por nombre histórico, en realidad administra
-  // 'Locales' (ver LocalRead más arriba) — así se dejó a propósito, es el
-  // panel que ya usan los locales del negocio dentro del modal de producto.
-  // El bloque nuevo "Almacenes reales" de más abajo administra la entidad
-  // Almacén de verdad (tabla 'almacenes', separada de 'locales').
+  // ── Gestión de Almacenes ─────────────────────────────────────────────────
   mostrarGestionAlmacenes = false;
-  busquedaAlmacen = '';
-  editandoAlmacenId: string | null = null;
-  almacenForm: { nombre: string; direccion: string; descripcion: string } = this.almacenFormVacio();
-  guardandoAlmacen = signal(false);
-  errorAlmacen = signal<string | null>(null);
-
-  // ── Gestión de Almacenes (entidad real, separada de Locales) ─────────────
-  // Panel dentro del mismo modal de crear/editar producto, junto al panel
-  // de arriba (que sigue administrando Locales, sin cambios). No se usa en
-  // ventas/POS (eso sigue solo con Locales).
-  mostrarPanelAlmacenesReales = false;
   busquedaAlmacenReal = '';
   editandoAlmacenRealId: string | null = null;
   almacenRealForm: { nombre: string; direccion: string; descripcion: string } = this.almacenRealFormVacio();
@@ -212,7 +196,9 @@ export class InventarioComponent implements OnInit {
 
   private recargarProductos(): void {
     this.inventarioService.listarProductos().subscribe({
-      next: (prods) => this.productos.set(prods),
+      next: (prods) => {
+        this.productos.set(prods);
+      },
     });
   }
 
@@ -258,7 +244,7 @@ export class InventarioComponent implements OnInit {
       costoCompra: 0,
       precioVenta: 0,
       fotoUrl: null,
-      variantes: [{ talla: '', cantidad: 0, id_local: '' }],
+      variantes: [{ talla: '', cantidad: 0, ubicacion: '' }],
     };
   }
 
@@ -267,8 +253,7 @@ export class InventarioComponent implements OnInit {
     this.form = this.formVacio();
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
-    this.cerrarPanelAlmacenes();
-    this.cerrarPanelAlmacenesReales();
+    this.cerrarPanelGestionAlmacenes();
     this.showModal = true;
   }
 
@@ -284,22 +269,17 @@ export class InventarioComponent implements OnInit {
           costoCompra: detalle.costo_compra,
           precioVenta: detalle.precio_venta,
           fotoUrl: null,
-          // Este formulario solo administra stock por Local (el stock que
-          // pudiera vivir en un Almacén no se edita desde aquí — ver el
-          // panel "Almacenes" del toolbar para esa entidad separada).
           variantes: detalle.variantes.flatMap((v) =>
-            v.stock
-              .filter((s): s is typeof s & { id_local: string } => s.id_local !== null)
-              .map((s) => ({
+            v.stock.map((s) => ({
                 talla: v.talla ?? '',
                 cantidad: s.cantidad,
-                id_local: s.id_local,
+                ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
               }))
           ),
         };
         this.errorModal.set(null);
         this.cerrarPanelNuevaCategoria();
-        this.cerrarPanelAlmacenes();
+        this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
       },
       error: () => this.error.set('No se pudo cargar el detalle del producto.'),
@@ -310,13 +290,14 @@ export class InventarioComponent implements OnInit {
     this.showModal = false;
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
-    this.cerrarPanelAlmacenes();
-    this.cerrarPanelAlmacenesReales();
+    this.cerrarPanelGestionAlmacenes();
   }
 
   agregarFilaVariante(): void {
-    const primerLocal = this.locales()[0]?.id_local ?? '';
-    this.form.variantes.push({ talla: '', cantidad: 0, id_local: primerLocal });
+    const primerUbicacion = this.locales().length > 0 
+      ? `local:${this.locales()[0].id_local}` 
+      : (this.almacenesReales().length > 0 ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
+    this.form.variantes.push({ talla: '', cantidad: 0, ubicacion: primerUbicacion });
   }
 
   quitarFilaVariante(index: number): void {
@@ -427,12 +408,16 @@ export class InventarioComponent implements OnInit {
 
     // Construye las variantes filtrando filas incompletas
     const variantes: VarianteStockInput[] = this.form.variantes
-      .filter((v) => v.talla.trim() && v.id_local)
-      .map((v) => ({
-        talla: v.talla.trim(),
-        cantidad: v.cantidad,
-        id_local: v.id_local,
-      }));
+      .filter((v) => v.talla.trim() && v.ubicacion)
+      .map((v) => {
+        const [tipo, id] = v.ubicacion.split(':');
+        return {
+          talla: v.talla.trim(),
+          cantidad: v.cantidad,
+          id_local: tipo === 'local' ? id : null,
+          id_almacen: tipo === 'almacen' ? id : null,
+        };
+      });
 
     this.guardando.set(true);
     this.errorModal.set(null);
@@ -498,115 +483,7 @@ export class InventarioComponent implements OnInit {
     });
   }
 
-  // ── Helper para el select de locales ────────────────────────────────────
-  nombreLocal(idLocal: string): string {
-    return this.locales().find((l) => l.id_local === idLocal)?.nombre ?? idLocal;
-  }
 
-  // ── Gestión de almacenes (agregar / editar / eliminar) ───────────────────
-
-  private almacenFormVacio(): { nombre: string; direccion: string; descripcion: string } {
-    return { nombre: '', direccion: '', descripcion: '' };
-  }
-
-  /** Lista de almacenes filtrada por el buscador del panel. */
-  get almacenesFiltrados(): LocalRead[] {
-    const busq = this.busquedaAlmacen.toLowerCase().trim();
-    const lista = this.locales();
-    if (!busq) return lista;
-    return lista.filter((l) => l.nombre.toLowerCase().includes(busq));
-  }
-
-  abrirPanelAlmacenes(): void {
-    this.mostrarGestionAlmacenes = true;
-    this.busquedaAlmacen = '';
-    this.cancelarEdicionAlmacen();
-  }
-
-  cerrarPanelAlmacenes(): void {
-    this.mostrarGestionAlmacenes = false;
-    this.busquedaAlmacen = '';
-    this.cancelarEdicionAlmacen();
-  }
-
-  /** Prepara el formulario para crear uno nuevo (limpio) o editar uno existente. */
-  editarAlmacen(local: LocalRead): void {
-    this.editandoAlmacenId = local.id_local;
-    this.almacenForm = {
-      nombre: local.nombre,
-      direccion: local.direccion ?? '',
-      descripcion: local.descripcion ?? '',
-    };
-    this.errorAlmacen.set(null);
-  }
-
-  cancelarEdicionAlmacen(): void {
-    this.editandoAlmacenId = null;
-    this.almacenForm = this.almacenFormVacio();
-    this.errorAlmacen.set(null);
-  }
-
-  guardarAlmacen(): void {
-    const nombre = this.almacenForm.nombre.trim();
-    if (!nombre) {
-      this.errorAlmacen.set('El nombre del almacén es obligatorio.');
-      return;
-    }
-
-    const datos: LocalCreateInput = {
-      nombre,
-      direccion: this.almacenForm.direccion.trim() || null,
-      descripcion: this.almacenForm.descripcion.trim() || null,
-    };
-
-    this.guardandoAlmacen.set(true);
-    this.errorAlmacen.set(null);
-
-    if (this.editandoAlmacenId) {
-      this.inventarioService.actualizarLocal(this.editandoAlmacenId, datos).subscribe({
-        next: (actualizado) => {
-          this.locales.update((lista) =>
-            lista.map((l) => (l.id_local === actualizado.id_local ? actualizado : l))
-          );
-          this.guardandoAlmacen.set(false);
-          this.cancelarEdicionAlmacen();
-        },
-        error: (err) => {
-          this.guardandoAlmacen.set(false);
-          this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo actualizar el almacén.');
-        },
-      });
-    } else {
-      this.inventarioService.crearLocal(datos).subscribe({
-        next: (nuevo) => {
-          this.locales.update((lista) => [...lista, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
-          this.guardandoAlmacen.set(false);
-          this.cancelarEdicionAlmacen();
-        },
-        error: (err) => {
-          this.guardandoAlmacen.set(false);
-          this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo crear el almacén.');
-        },
-      });
-    }
-  }
-
-  eliminarAlmacenGestion(local: LocalRead): void {
-    if (!confirm(`¿Eliminar el almacén "${local.nombre}"? Las variantes con stock ahí podrían quedar sin almacén asignado.`)) return;
-
-    this.errorAlmacen.set(null);
-    this.inventarioService.eliminarLocal(local.id_local).subscribe({
-      next: () => {
-        this.locales.update((lista) => lista.filter((l) => l.id_local !== local.id_local));
-        if (this.editandoAlmacenId === local.id_local) this.cancelarEdicionAlmacen();
-      },
-      error: (err) => {
-        this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
-      },
-    });
-  }
-
-  // ── Gestión de Almacenes (entidad real, panel independiente) ─────────────
 
   private almacenRealFormVacio(): { nombre: string; direccion: string; descripcion: string } {
     return { nombre: '', direccion: '', descripcion: '' };
@@ -620,14 +497,14 @@ export class InventarioComponent implements OnInit {
     return lista.filter((a) => a.nombre.toLowerCase().includes(busq));
   }
 
-  abrirPanelAlmacenesReales(): void {
-    this.mostrarPanelAlmacenesReales = true;
+  abrirPanelGestionAlmacenes(): void {
+    this.mostrarGestionAlmacenes = true;
     this.busquedaAlmacenReal = '';
     this.cancelarEdicionAlmacenReal();
   }
 
-  cerrarPanelAlmacenesReales(): void {
-    this.mostrarPanelAlmacenesReales = false;
+  cerrarPanelGestionAlmacenes(): void {
+    this.mostrarGestionAlmacenes = false;
     this.busquedaAlmacenReal = '';
     this.cancelarEdicionAlmacenReal();
   }

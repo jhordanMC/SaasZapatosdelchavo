@@ -103,7 +103,8 @@ export interface ProductoRead extends ProductoListItem {
 export interface VarianteStockInput {
   talla: string;
   cantidad: number;
-  id_local: string;
+  id_local?: string | null;
+  id_almacen?: string | null;
 }
 
 export interface ProductoCreateInput {
