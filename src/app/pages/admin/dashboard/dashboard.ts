@@ -6,15 +6,21 @@ import { LivelineHandle, mountLiveline, unmountLiveline } from '../../../livelin
 import { Empresa as EmpresaReal, EmpresasService } from '../../../services/empresas';
 import { SuscripcionesService, SuscripcionListItem } from '../../../services/suscripciones';
 import { UsuariosService } from '../../../services/usuarios';
+import { AnunciosService } from '../../../services/anuncios';
 
 /**
- * `scorePromedio` NO existe en el backend real (no hay ningún concepto de
- * "satisfacción" en este SaaS todavía) — se genera de forma ESTÁTICA
- * (determinística por índice, no aleatoria en cada render) a partir de la
- * empresa real, a la espera del módulo que lo construya. `sector` en
- * cambio SÍ es real: viene de `empresa.nombre_sector` (GET /empresas,
- * JOIN con la tabla `sectores` — ver services/empresas.ts y el catálogo
- * gestionable en /admin/empresas).
+ * `scorePromedio` es real-condicional: viene de GET /anuncios/satisfaccion/
+ * por-empresa (promedio de los votos de esa empresa en la encuesta de
+ * satisfacción vigente marcada `es_satisfaccion` en /admin/anuncios — ver
+ * AnunciosService en el backend). `null` = sin dato — empresa inactiva, no
+ * hay ninguna encuesta de satisfacción vigente, o sus usuarios todavía no
+ * votaron esa encuesta en particular. Importante: NO se usa 0 como
+ * sentinel de "sin dato", porque 0% es un resultado real y válido (todos
+ * los usuarios de esa empresa calificaron con la peor opción de la
+ * escala) — confundirlo con "sin dato" excluiría injustamente ese
+ * feedback negativo del promedio global. `sector` también es real: viene
+ * de `empresa.nombre_sector` (GET /empresas, JOIN con la tabla `sectores` —
+ * ver services/empresas.ts y el catálogo gestionable en /admin/empresas).
  *
  * `plan` e `ingresosMes` SÍ son reales desde acá: vienen del módulo de
  * billing (GET /empresas/suscripciones — misma fuente que usa
@@ -40,7 +46,8 @@ interface Empresa {
   nombre: string;
   sector: string;
   usuariosActivos: number;
-  scorePromedio: number;
+  // null = sin dato de satisfacción (ver comentario de cabecera arriba).
+  scorePromedio: number | null;
   plan: string;
   estado: 'activo' | 'inactivo';
   fechaAlta: string;
@@ -51,7 +58,7 @@ interface FilaSector {
   sector: string;
   cantidad: number;
   ingresos: number;
-  scorePromedio: number;
+  scorePromedio: number | null;
 }
 
 interface FilaPlan {
@@ -114,7 +121,8 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   constructor(
     private empresasService: EmpresasService,
     private suscripcionesService: SuscripcionesService,
-    private usuariosService: UsuariosService
+    private usuariosService: UsuariosService,
+    private anunciosService: AnunciosService
   ) {
     const today = new Date().toLocaleDateString('es-ES', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -122,21 +130,29 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     this.capitalizedDate = today.charAt(0).toUpperCase() + today.slice(1);
   }
 
+  /** Real — GET /anuncios/satisfaccion/por-empresa. false = no hay ninguna
+   *  encuesta de satisfacción vigente creada todavía (distinto de "hay
+   *  encuesta pero nadie votó", que si trae datos pero vacíos). */
+  existeEncuestaSatisfaccion = false;
+
   ngOnInit(): void {
     forkJoin({
       empresas: this.empresasService.listarEmpresas(),
       suscripciones: this.suscripcionesService.listarTodas(),
       usuariosActivos: this.usuariosService.obtenerUsuariosActivosPorEmpresa(),
+      scoreSatisfaccion: this.anunciosService.obtenerScoreSatisfaccionPorEmpresa(),
     }).subscribe({
-      next: ({ empresas, suscripciones, usuariosActivos }) => {
+      next: ({ empresas, suscripciones, usuariosActivos, scoreSatisfaccion }) => {
         const suscripcionPorEmpresa = new Map(suscripciones.map((s) => [s.id_empresa, s]));
         const usuariosActivosPorEmpresa = new Map(usuariosActivos.map((u) => [u.id_empresa, u.usuarios_activos]));
-        this.todasEmpresas = empresas.map((e, i) =>
+        const scorePorEmpresa = new Map(scoreSatisfaccion.scores.map((s) => [s.id_empresa, s.score_promedio]));
+        this.existeEncuestaSatisfaccion = scoreSatisfaccion.existe_encuesta_vigente;
+        this.todasEmpresas = empresas.map((e) =>
           this.enriquecerEmpresa(
             e,
-            i,
             suscripcionPorEmpresa.get(e.id_empresa),
-            usuariosActivosPorEmpresa.get(e.id_empresa) ?? 0
+            usuariosActivosPorEmpresa.get(e.id_empresa) ?? 0,
+            scorePorEmpresa.get(e.id_empresa) ?? null
           )
         );
       },
@@ -159,9 +175,9 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
 
   private enriquecerEmpresa(
     empresa: EmpresaReal,
-    index: number,
     suscripcion?: SuscripcionListItem,
-    usuariosActivos = 0
+    usuariosActivos = 0,
+    scoreSatisfaccion: number | null = null
   ): Empresa {
     const activa = empresa.estado === 'activa';
     const facturando = activa && suscripcion?.estado === 'activa';
@@ -169,7 +185,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
       nombre: empresa.nombre,
       sector: empresa.nombre_sector ?? SIN_SECTOR,
       usuariosActivos,
-      scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
+      scorePromedio: activa ? scoreSatisfaccion : null,
       plan: suscripcion?.plan ?? SIN_PLAN,
       estado: activa ? 'activo' : 'inactivo',
       fechaAlta: empresa.creado_en.slice(0, 10),
@@ -199,10 +215,22 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /* ── KPIs calculados ── */
-  get scoreGlobal(): number {
-    const conScore = this.todasEmpresas.filter((e) => e.scorePromedio > 0);
-    if (conScore.length === 0) return 0;
+  /** null = ninguna empresa tiene dato de satisfacción todavía. */
+  get scoreGlobal(): number | null {
+    const conScore = this.todasEmpresas.filter((e): e is Empresa & { scorePromedio: number } => e.scorePromedio !== null);
+    if (conScore.length === 0) return null;
     return Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length);
+  }
+  /** Texto de la KPI "Score global de satisfacción" — distingue "no hay
+   *  encuesta creada" de "hay encuesta pero nadie votó todavía". */
+  get scoreGlobalTexto(): string {
+    if (!this.existeEncuestaSatisfaccion) return 'Sin encuestas creadas';
+    const score = this.scoreGlobal;
+    return score === null ? 'Sin votos aún' : `${score}%`;
+  }
+  /** Cuántas empresas entran en el promedio de scoreGlobal (para el texto de tendencia). */
+  get empresasConScore(): number {
+    return this.todasEmpresas.filter((e) => e.scorePromedio !== null).length;
   }
   get empresasActivas(): number {
     return this.todasEmpresas.filter(e => e.estado === 'activo').length;
@@ -225,7 +253,9 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
   /** Empresas en riesgo de baja: inactivas o con score de desempeño bajo. */
   get empresasEnRiesgo(): Empresa[] {
-    return this.todasEmpresas.filter((e) => e.estado === 'inactivo' || (e.scorePromedio > 0 && e.scorePromedio < 70));
+    return this.todasEmpresas.filter(
+      (e) => e.estado === 'inactivo' || (e.scorePromedio !== null && e.scorePromedio < 70)
+    );
   }
 
   /* ── Distribución por sector (real, empresa.nombre_sector) ── */
@@ -235,10 +265,10 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
       .map((sector) => {
         const grupo = this.todasEmpresas.filter((e) => e.sector === sector);
         const ingresos = grupo.reduce((a, e) => a + e.ingresosMes, 0);
-        const conScore = grupo.filter((e) => e.scorePromedio > 0);
+        const conScore = grupo.filter((e): e is Empresa & { scorePromedio: number } => e.scorePromedio !== null);
         const scorePromedio = conScore.length > 0
           ? Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length)
-          : 0;
+          : null;
         return { sector, cantidad: grupo.length, ingresos, scorePromedio };
       })
       .sort((a, b) => b.ingresos - a.ingresos);
@@ -299,7 +329,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
   get empresasMenorScore(): Empresa[] {
     return [...this.todasEmpresas]
-      .filter((e) => e.scorePromedio > 0)
+      .filter((e): e is Empresa & { scorePromedio: number } => e.scorePromedio !== null)
       .sort((a, b) => a.scorePromedio - b.scorePromedio)
       .slice(0, 5);
   }

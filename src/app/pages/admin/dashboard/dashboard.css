@@ -314,6 +314,7 @@
 
 .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .kpi-value { font-size: 22px; font-weight: 700; color: var(--green-dark); line-height: 1.05; }
+.kpi-value-texto { font-size: 15px; }
 .kpi-unit { font-size: 11px; font-weight: 500; color: var(--slate-400); }
 .kpi-label { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
 
@@ -462,6 +463,13 @@
   color: #475569;
   min-width: 40px;
   text-align: right;
+}
+
+.score-sin-dato {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate-300);
+  cursor: default;
 }
 .score-text.score-high { color: var(--green-dark); }
 .score-text.score-mid  { color: var(--slate-600); }

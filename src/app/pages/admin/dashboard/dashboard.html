@@ -100,7 +100,7 @@
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">{{ scoreGlobal }}%</div>
+              <div class="kpi-value" [class.kpi-value-texto]="scoreGlobal === null">{{ scoreGlobalTexto }}</div>
               <div class="kpi-label">Score global de satisfacción</div>
             </div>
             <div class="kpi-icon">
@@ -109,7 +109,9 @@
               </svg>
             </div>
           </div>
-          <div class="kpi-trend neutral">promedio de {{ todasEmpresas.length }} empresas</div>
+          <div class="kpi-trend neutral" *ngIf="scoreGlobal !== null">promedio de {{ empresasConScore }} empresa{{ empresasConScore !== 1 ? 's' : '' }}</div>
+          <div class="kpi-trend neutral" *ngIf="scoreGlobal === null && existeEncuestaSatisfaccion">todavía nadie votó</div>
+          <div class="kpi-trend neutral" *ngIf="!existeEncuestaSatisfaccion">creá una encuesta de satisfacción en Anuncios</div>
         </div>
       </div>
     </div>
@@ -225,7 +227,7 @@
           <div class="ingreso-top">
             <div class="ingreso-left">
               <span class="tipo-chip" [ngClass]="sectorStyle(f.sector)">{{ f.sector }}</span>
-              <span class="ingreso-nombre">{{ f.cantidad }} empresa{{ f.cantidad !== 1 ? 's' : '' }} · score {{ f.scorePromedio }}%</span>
+              <span class="ingreso-nombre">{{ f.cantidad }} empresa{{ f.cantidad !== 1 ? 's' : '' }} · score {{ f.scorePromedio === null ? 'sin datos' : f.scorePromedio + '%' }}</span>
             </div>
             <span class="ingreso-monto">{{ fmtPEN(f.ingresos) }}</span>
           </div>
@@ -343,7 +345,7 @@
           </div>
           <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ e.sector }}</span>
           <span class="cell-num">{{ e.usuariosActivos }}</span>
-          <div class="score-cell" [ngClass]="scoreColorClass(e.scorePromedio)">
+          <div class="score-cell" *ngIf="e.scorePromedio !== null; else sinScore" [ngClass]="scoreColorClass(e.scorePromedio)">
             <div class="score-stars">
               <ng-container *ngFor="let star of starArray(scoreStars(e.scorePromedio)); let i = index">
                 <span class="star filled">★</span>
@@ -354,6 +356,9 @@
             </div>
             <span class="score-text">{{ scoreStars(e.scorePromedio) }} / 5</span>
           </div>
+          <ng-template #sinScore>
+            <span class="score-sin-dato" [title]="existeEncuestaSatisfaccion ? 'Sin votos de esta empresa todavía' : 'Sin encuestas creadas'">-</span>
+          </ng-template>
           <span class="cell-num" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
           <div class="estado-cell">
             <span class="estado-chip" [ngClass]="e.estado">{{ e.estado }}</span>

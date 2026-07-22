@@ -60,6 +60,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       if (puedeVer('actividad')) {
         base.push({ label: 'Actividad', route: '/admin/actividad', icon: 'actividad' });
       }
+      if (puedeVer('anuncios')) {
+        base.push({ label: 'Anuncios', route: '/admin/anuncios', icon: 'anuncios' });
+      }
       base.push({ label: 'Reportes', href: '#', icon: 'reportes' });
       base.push({ label: 'Configuración', href: '#', icon: 'config' });
       return base;

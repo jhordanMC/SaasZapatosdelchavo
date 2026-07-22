@@ -19,7 +19,8 @@ export interface SidebarItem {
     | 'finanzas'
     | 'analitica'
     | 'actividad'
-    | 'suscripciones';
+    | 'suscripciones'
+    | 'anuncios';
   exact?: boolean;
 }
 

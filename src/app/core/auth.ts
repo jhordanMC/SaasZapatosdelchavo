@@ -204,6 +204,7 @@ export class AuthService {
       if (this.puedeVerVista('empresas')) return '/admin/empresas';
       if (this.puedeVerVista('suscripciones')) return '/admin/suscripciones';
       if (this.puedeVerVista('actividad')) return '/admin/actividad';
+      if (this.puedeVerVista('anuncios')) return '/admin/anuncios';
       return null;
     }
 

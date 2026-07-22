@@ -67,7 +67,8 @@ export type ClaveVista =
   | 'analitica'
   | 'empresas'
   | 'suscripciones'
-  | 'actividad';
+  | 'actividad'
+  | 'anuncios';
 
 export interface PermisoVista {
   clave: ClaveVista;
@@ -85,6 +86,7 @@ export const VISTAS_POR_ROL: Record<RolUsuario, PermisoVista[]> = {
     { clave: 'empresas', etiqueta: 'Empresas' },
     { clave: 'suscripciones', etiqueta: 'Suscripciones' },
     { clave: 'actividad', etiqueta: 'Actividad' },
+    { clave: 'anuncios', etiqueta: 'Anuncios' },
   ],
   dueño: [
     { clave: 'dashboard', etiqueta: 'Dashboard' },

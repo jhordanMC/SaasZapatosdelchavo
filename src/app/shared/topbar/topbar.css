@@ -71,6 +71,107 @@
   border: 2px solid rgba(5, 244, 49, 0.25);
 }
 
+/* ══════════════════════════════
+   Desplegable de la campana
+══════════════════════════════ */
+.notif-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.notif-dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: transparent;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 1000;
+  width: 300px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e8f1ec;
+  box-shadow: 0 20px 40px rgba(1, 20, 16, 0.18);
+  padding: 6px;
+  animation: notifDropdownIn 0.15s ease both;
+}
+
+@keyframes notifDropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-dropdown-header {
+  padding: 10px 12px 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b8a7d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.notif-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.notif-dropdown-item:hover {
+  background: #f4fbf6;
+}
+
+.notif-dropdown-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.notif-dropdown-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notif-dropdown-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0c3a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notif-dropdown-fecha {
+  font-size: 11.5px;
+  color: #7aaa95;
+}
+
+.notif-dropdown-vacio {
+  margin: 0;
+  padding: 14px 10px;
+  font-size: 12.5px;
+  color: #7aaa95;
+  text-align: center;
+}
+
 .topbar-company {
   font-size: 13px;
   font-weight: 700;
@@ -352,6 +453,241 @@
 .profile-logout-confirm .profile-modal-actions {
   padding-top: 6px;
   padding-bottom: 6px;
+}
+
+/* ══════════════════════════════
+   MODAL: Ver anuncios (campana)
+══════════════════════════════ */
+.anuncios-modal-card {
+  max-width: 420px;
+}
+
+.anuncios-modal-titulo {
+  padding: 4px 24px 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0c3a2e;
+  text-align: center;
+}
+
+.anuncios-modal-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 24px 4px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.anuncios-modal-vacio {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: #7aaa95;
+  text-align: center;
+}
+
+.anuncio-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f2f6f3;
+}
+
+.anuncio-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.anuncio-item-imagen {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.anuncio-item-fecha {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7aaa95;
+}
+
+.anuncio-item-mensaje {
+  margin: 0;
+  font-size: 13px;
+  color: #4b5a63;
+  line-height: 1.5;
+}
+
+.anuncio-opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anuncio-opcion-btn {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #024b40;
+  background: #f4fbf6;
+  border: 1px solid #d8e6dd;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.anuncio-opcion-btn:hover:not(:disabled) {
+  background: #e8f8f0;
+  border-color: #64d59c;
+}
+
+.anuncio-opcion-btn:disabled {
+  cursor: default;
+}
+
+.anuncio-opcion-btn.votada {
+  border-color: #024b40;
+  background: #e8f8f0;
+}
+
+.anuncio-opcion-btn.seleccionada {
+  border-color: #64d59c;
+  background: #e8f8f0;
+  box-shadow: inset 0 0 0 1px #64d59c;
+}
+
+.estrellas-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.estrella-btn {
+  border: none;
+  background: transparent;
+  color: #d8e0da;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.estrella-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.estrella-btn:disabled {
+  cursor: default;
+}
+
+.estrella-btn.activa {
+  color: #f5b800;
+}
+
+.anuncio-ya-votaste {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 10px 12px;
+  background: #ecfdf5;
+  border: 1px solid #d1f1d5;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #0f513d;
+}
+
+.anuncio-ya-votaste svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.anuncio-ya-votaste strong {
+  font-weight: 800;
+}
+
+.anuncio-resultados {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anuncio-promedio-estrellas {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0c3a2e;
+  background: #fdf6e3;
+  border: 1px solid #f3e6bd;
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.anuncio-opcion-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anuncio-opcion-resultado-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1f4034;
+}
+
+.btn-confirmar-voto {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  background: #024b40;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-confirmar-voto:hover:not(:disabled) {
+  background: #036b58;
+}
+
+.btn-confirmar-voto:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.anuncio-opcion-bar-bg {
+  position: relative;
+  height: 20px;
+  border-radius: 999px;
+  background: #eef3ee;
+  overflow: hidden;
+}
+
+.anuncio-opcion-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #024b40, #64d59c);
+}
+
+.anuncio-opcion-pct {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0c3a2e;
 }
 
 /* ══════════════════════════════

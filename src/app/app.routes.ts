@@ -8,6 +8,7 @@ import { EmpresasComponent } from './pages/admin/empresas/empresas';
 import { EmpresaDetalleComponent } from './pages/admin/empresa-detalle/empresa-detalle';
 import { Suscripciones } from './pages/admin/suscripciones/suscripciones';
 import { ActividadComponent } from './pages/admin/actividad/actividad';
+import { Anuncios } from './pages/admin/anuncios/anuncios';
 import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
@@ -64,6 +65,12 @@ export const routes: Routes = [
         component: ActividadComponent,
         data: { title: 'Actividad' },
         canActivate: [vistaGuard('actividad')],
+      },
+      {
+        path: 'anuncios',
+        component: Anuncios,
+        data: { title: 'Anuncios' },
+        canActivate: [vistaGuard('anuncios')],
       },
     ],
   },

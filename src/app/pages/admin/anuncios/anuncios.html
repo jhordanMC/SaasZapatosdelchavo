@@ -1,1 +1,171 @@
-<p>anuncios works!</p>
+<!-- Sidebar y topbar viven en AdminLayoutComponent. -->
+<div class="page-toolbar">
+  <div>
+    <p class="page-subtitle">Anuncios y encuestas globales, visibles para todos los usuarios vía la campana del topbar.</p>
+  </div>
+  <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo anuncio</button>
+</div>
+
+<div class="content">
+  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h2>Anuncios y encuestas</h2>
+        <p>{{ anuncios().length }} {{ anuncios().length === 1 ? 'anuncio publicado' : 'anuncios publicados' }}</p>
+      </div>
+    </div>
+
+    <div class="anuncios-grid" *ngIf="anuncios().length > 0">
+      <div class="anuncio-card" *ngFor="let anuncio of anuncios()">
+        <img *ngIf="imagenSrc(anuncio) as src" [src]="src" alt="" class="anuncio-imagen" />
+
+        <div class="anuncio-body">
+          <div class="anuncio-top">
+            <span class="tipo-pill" [class.encuesta]="anuncio.tipo === 'encuesta'">{{ anuncio.tipo === 'encuesta' ? 'Encuesta' : 'Anuncio' }}</span>
+            <span class="status-pill" [class.active]="anuncio.esta_activo">{{ anuncio.esta_activo ? 'activo' : 'inactivo' }}</span>
+          </div>
+
+          <h3 class="anuncio-titulo">{{ anuncio.titulo }}</h3>
+          <p class="anuncio-mensaje">{{ anuncio.mensaje }}</p>
+
+          <div class="anuncio-opciones" *ngIf="anuncio.tipo === 'encuesta'">
+            <span class="satisfaccion-badge" *ngIf="anuncio.es_satisfaccion">★ Encuesta de satisfacción del dashboard</span>
+            <div class="opcion-resultado" *ngFor="let opcion of anuncio.opciones">
+              <div class="opcion-resultado-top">
+                <span *ngIf="!anuncio.es_satisfaccion">{{ opcion.texto }}</span>
+                <span *ngIf="anuncio.es_satisfaccion" class="estrellas-texto">{{ estrellasDe(opcion) }}</span>
+                <span>{{ opcion.votos ?? 0 }} voto{{ (opcion.votos ?? 0) !== 1 ? 's' : '' }}</span>
+              </div>
+              <div class="opcion-bar-bg">
+                <div class="opcion-bar-fill" [style.width.%]="pctVotos(opcion.votos, totalVotos(anuncio))"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anuncio-footer">
+            <span class="anuncio-fecha" *ngIf="anuncio.expira_en">Vence: {{ anuncio.expira_en.slice(0, 10) }}</span>
+            <span class="anuncio-fecha" *ngIf="!anuncio.expira_en">Sin vencimiento</span>
+            <span class="acciones-cell">
+              <button class="btn-accion" (click)="abrirModalEditar(anuncio)">Editar</button>
+              <button class="btn-accion" (click)="toggleActivo(anuncio)">{{ anuncio.esta_activo ? 'Desactivar' : 'Activar' }}</button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="empty-state" *ngIf="cargando()">Cargando anuncios…</p>
+    <p class="empty-state" *ngIf="!cargando() && anuncios().length === 0">Todavía no hay anuncios publicados.</p>
+  </div>
+</div>
+
+<!-- ══ MODAL: Nuevo / editar anuncio ══ -->
+<div class="modal-overlay" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModal()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+    </div>
+
+    <div class="modal-header"><h2>{{ anuncioEditando ? 'Editar anuncio' : 'Nuevo anuncio' }}</h2></div>
+
+    <div class="modal-body">
+      <div class="tipo-toggle" *ngIf="!anuncioEditando">
+        <button type="button" class="tipo-toggle-btn" [class.activo]="form.tipo === 'anuncio'" (click)="seleccionarTipo('anuncio')">Anuncio</button>
+        <button type="button" class="tipo-toggle-btn" [class.activo]="form.tipo === 'encuesta'" (click)="seleccionarTipo('encuesta')">Encuesta</button>
+      </div>
+
+      <div class="form-group">
+        <label for="inputTituloAnuncio">Título</label>
+        <input id="inputTituloAnuncio" type="text" class="form-input" placeholder="Ej. Nueva funcionalidad disponible" [(ngModel)]="form.titulo" />
+      </div>
+
+      <div class="form-group">
+        <label for="inputMensajeAnuncio">Mensaje</label>
+        <textarea id="inputMensajeAnuncio" class="form-input form-textarea" rows="3" placeholder="Contenido del anuncio" [(ngModel)]="form.mensaje"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Imagen (opcional)</label>
+        <div class="imagen-picker" *ngIf="!imagenPreviewSrc">
+          <label class="btn-agregar-imagen">
+            {{ subiendoImagen ? 'Subiendo…' : '+ Elegir imagen' }}
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onSeleccionarImagen($event)" [disabled]="subiendoImagen" hidden />
+          </label>
+        </div>
+        <div class="imagen-preview" *ngIf="imagenPreviewSrc as src">
+          <img [src]="src" alt="Vista previa" />
+          <button type="button" class="btn-clear" (click)="quitarImagen()">Quitar imagen</button>
+        </div>
+      </div>
+
+      <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando">
+        <label class="checkbox-inline">
+          <input type="checkbox" [(ngModel)]="form.esSatisfaccion" />
+          Encuesta de satisfacción (alimenta el "Score global" del dashboard)
+        </label>
+      </div>
+
+      <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando && form.esSatisfaccion">
+        <label>Cantidad de estrellas</label>
+        <div class="estrellas-stepper">
+          <button type="button" class="stepper-btn" (click)="ajustarEstrellas(-1)" [disabled]="form.cantidadEstrellas <= 3" aria-label="Restar estrella">−</button>
+          <span class="stepper-value">
+            {{ form.cantidadEstrellas }}
+            <span class="estrella-icono">★</span>
+          </span>
+          <button type="button" class="stepper-btn" (click)="ajustarEstrellas(1)" [disabled]="form.cantidadEstrellas >= 10" aria-label="Agregar estrella">+</button>
+        </div>
+        <p class="paso-ayuda">Los usuarios votarán eligiendo de 1 a {{ form.cantidadEstrellas }} estrellas.</p>
+      </div>
+
+      <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando && !form.esSatisfaccion">
+        <label>Opciones (mínimo 2)</label>
+        <div class="opcion-input-row" *ngFor="let opcion of form.opciones; let i = index">
+          <input type="text" class="form-input" [placeholder]="'Opción ' + (i + 1)" [(ngModel)]="form.opciones[i]" name="opcion{{ i }}" />
+          <button type="button" class="local-tag-remove" *ngIf="form.opciones.length > 2" (click)="quitarOpcion(i)" title="Quitar opción">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <button type="button" class="btn-agregar-local" (click)="agregarOpcion()">+ Agregar opción</button>
+      </div>
+      <p class="opciones-inmutables-msg" *ngIf="form.tipo === 'encuesta' && anuncioEditando">
+        Las opciones de una encuesta no se pueden editar después de publicada.
+      </p>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputExpiraEnAnuncio">Vence el (opcional)</label>
+          <input id="inputExpiraEnAnuncio" type="date" class="form-input" [(ngModel)]="form.expiraEn" />
+        </div>
+        <label class="checkbox-inline checkbox-inline-inline" *ngIf="anuncioEditando">
+          <input type="checkbox" [(ngModel)]="form.estaActivo" />
+          Anuncio activo
+        </label>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formValido || guardando" (click)="guardarAnuncio()">
+          {{ guardando ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
