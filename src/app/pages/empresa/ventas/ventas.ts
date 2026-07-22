@@ -370,14 +370,11 @@ export class VentasComponent implements OnInit {
   }
 
   /**
-   * Animación de "vuelo al carrito": clona un pequeño ícono con los colores
-   * de VILCAS en la posición de la tarjeta tocada y lo anima con la Web
-   * Animations API en un arco (sube y luego cae hacia el carrito, achicándose
-   * y desvaneciéndose), en vez de una línea recta — se ve mucho más natural.
-   *
-   * No usamos la foto del producto porque el catálogo de Ventas todavía no
-   * carga imágenes reales (ProductoPOSRead no trae fotoUrl); en su lugar
-   * volamos un ícono de zapato representativo.
+   * Animación de "vuelo al carrito": clona la miniatura del producto que
+   * realmente tocaste (no un ícono genérico) y la anima con la Web
+   * Animations API en un arco suave hasta el carrito, a un ritmo pausado
+   * (no un salto rápido), encogiéndose y desvaneciéndose al llegar. Cuando
+   * aterriza, el panel del carrito reacciona con un rebote.
    */
   private dispararVueloAlCarrito(): void {
     const origen = this.origenVueloEl;
@@ -386,34 +383,49 @@ export class VentasComponent implements OnInit {
 
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 
-    const rectOrigen = origen.getBoundingClientRect();
+    // Clona la miniatura real de la tarjeta tocada (hoy es el placeholder
+    // "Sin foto"; cuando el catálogo tenga fotos reales, esto mismo clonará
+    // la imagen del producto sin cambios adicionales).
+    const miniaturaOrigen = origen.querySelector<HTMLElement>('.venta-foto') ?? origen;
+    const rectOrigen = miniaturaOrigen.getBoundingClientRect();
     const rectDestino = destinoEl.getBoundingClientRect();
 
-    const volador = document.createElement('div');
-    volador.className = 'vuelo-carrito-icono';
-    volador.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>
-      </svg>`;
-    volador.style.left = `${rectOrigen.left + rectOrigen.width / 2 - 16}px`;
-    volador.style.top = `${rectOrigen.top + rectOrigen.height / 2 - 16}px`;
-    document.body.appendChild(volador);
+    const clon = miniaturaOrigen.cloneNode(true) as HTMLElement;
+    clon.classList.add('vuelo-carrito-clon');
+    clon.style.width = `${rectOrigen.width}px`;
+    clon.style.height = `${rectOrigen.height}px`;
+    clon.style.left = `${rectOrigen.left}px`;
+    clon.style.top = `${rectOrigen.top}px`;
+    document.body.appendChild(clon);
 
     const dx = rectDestino.left + rectDestino.width / 2 - (rectOrigen.left + rectOrigen.width / 2);
     const dy = rectDestino.top + rectDestino.height / 2 - (rectOrigen.top + rectOrigen.height / 2);
 
-    const animacion = volador.animate(
+    // Duración pausada (no un salto brusco): ~1.1s con un arco amplio.
+    const animacion = clon.animate(
       [
         { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-        // Punto medio del arco: sube un poco antes de caer hacia el carrito.
-        { transform: `translate(${dx * 0.5}px, ${dy - 60}px) scale(0.7)`, opacity: 0.9, offset: 0.55 },
-        { transform: `translate(${dx}px, ${dy}px) scale(0.15)`, opacity: 0 },
+        { transform: `translate(${dx * 0.5}px, ${dy - 90}px) scale(0.75)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.12)`, opacity: 0.3 },
       ],
-      { duration: 650, easing: 'cubic-bezier(0.3, 0.1, 0.3, 1)', fill: 'forwards' }
+      { duration: 1100, easing: 'cubic-bezier(0.33, 0.1, 0.35, 1)', fill: 'forwards' }
     );
 
-    animacion.onfinish = () => volador.remove();
-    setTimeout(() => volador.remove(), 800); // red de seguridad si onfinish no dispara
+    animacion.onfinish = () => {
+      clon.remove();
+      this.rebotarCarrito();
+    };
+    setTimeout(() => clon.remove(), 1300); // red de seguridad si onfinish no dispara
+  }
+
+  /** El panel del carrito "rebota" al recibir un producto (además del bump del contador). */
+  private rebotarCarrito(): void {
+    const panel = this.carritoVueloDestinoRef?.nativeElement.closest('.carrito-panel') as HTMLElement | null;
+    if (!panel) return;
+    panel.classList.remove('carrito-rebote');
+    // Reflow para forzar que la animación se pueda re-disparar en agregados seguidos.
+    void panel.offsetWidth;
+    panel.classList.add('carrito-rebote');
   }
 
   private pulseTotal(): void {
