@@ -15,11 +15,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   CategoriaCreateInput,
   CategoriaRead,
   FiltrosProducto,
   InventarioService,
+  LocalCreateInput,
   LocalRead,
   ProductoListItem,
   ProductoRead,
@@ -103,9 +106,18 @@ export class InventarioComponent implements OnInit {
   // ── Creador rápido de categoría (dentro del modal de producto) ──────────
   readonly categoriasSugeridas = CATEGORIAS_SUGERIDAS;
   mostrarNuevaCategoria = false;
+  busquedaCategoria = '';
   nuevaCategoriaNombre = '';
   creandoCategoria = signal(false);
   errorCategoria = signal<string | null>(null);
+
+  // ── Gestión de almacenes (agregar / editar / eliminar) ───────────────────
+  mostrarGestionAlmacenes = false;
+  busquedaAlmacen = '';
+  editandoAlmacenId: string | null = null;
+  almacenForm: { nombre: string; direccion: string; descripcion: string } = this.almacenFormVacio();
+  guardandoAlmacen = signal(false);
+  errorAlmacen = signal<string | null>(null);
 
   // ── Helpers de template ─────────────────────────────────────────────────
 
@@ -132,7 +144,16 @@ export class InventarioComponent implements OnInit {
 
     // Carga categorías y locales en paralelo con los productos
     this.inventarioService.listarCategorias().subscribe({
-      next: (cats) => this.categorias.set(cats),
+      next: (cats) => {
+        if (cats.length === 0) {
+          // Empresa nueva sin categorías todavía: precarga las más comunes
+          // del mercado peruano de calzado, para que el inventario se pueda
+          // llenar de una vez sin tener que crear cada categoría a mano.
+          this.sembrarCategoriasPredeterminadas();
+        } else {
+          this.categorias.set(cats);
+        }
+      },
       error: () => { /* no-fatal, los selects quedarán vacíos */ },
     });
 
@@ -150,6 +171,18 @@ export class InventarioComponent implements OnInit {
         this.error.set('No se pudieron cargar los productos. Verifica tu conexión.');
         this.cargando.set(false);
       },
+    });
+  }
+
+  /** Crea en el backend las categorías sugeridas (deportivo, tacos, ballerinas...)
+   *  la primera vez que la empresa entra a Inventario sin tener ninguna todavía. */
+  private sembrarCategoriasPredeterminadas(): void {
+    const creaciones = this.categoriasSugeridas.map((nombre) =>
+      this.inventarioService.crearCategoria({ nombre }).pipe(catchError(() => of(null)))
+    );
+    forkJoin(creaciones).subscribe((resultados) => {
+      const creadas = resultados.filter((r): r is CategoriaRead => r !== null);
+      this.categorias.set(creadas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
     });
   }
 
@@ -210,6 +243,7 @@ export class InventarioComponent implements OnInit {
     this.form = this.formVacio();
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
+    this.cerrarPanelAlmacenes();
     this.showModal = true;
   }
 
@@ -235,6 +269,7 @@ export class InventarioComponent implements OnInit {
         };
         this.errorModal.set(null);
         this.cerrarPanelNuevaCategoria();
+        this.cerrarPanelAlmacenes();
         this.showModal = true;
       },
       error: () => this.error.set('No se pudo cargar el detalle del producto.'),
@@ -245,6 +280,7 @@ export class InventarioComponent implements OnInit {
     this.showModal = false;
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
+    this.cerrarPanelAlmacenes();
   }
 
   agregarFilaVariante(): void {
@@ -256,7 +292,7 @@ export class InventarioComponent implements OnInit {
     this.form.variantes.splice(index, 1);
   }
 
-  // ── Creador rápido de categoría ──────────────────────────────────────────
+  // ── Creador / gestor rápido de categoría ──────────────────────────────────
 
   /** Nombres (en minúscula) de categorías que ya existen, para no duplicar sugerencias. */
   private get nombresCategoriaExistentes(): Set<string> {
@@ -269,14 +305,24 @@ export class InventarioComponent implements OnInit {
     return this.categoriasSugeridas.filter((s) => !existentes.has(s.toLowerCase()));
   }
 
+  /** Lista de categorías ya creadas, filtrada por el buscador del panel. */
+  get categoriasFiltradas(): CategoriaRead[] {
+    const busq = this.busquedaCategoria.toLowerCase().trim();
+    const lista = this.categorias();
+    if (!busq) return lista;
+    return lista.filter((c) => c.nombre.toLowerCase().includes(busq));
+  }
+
   abrirPanelNuevaCategoria(): void {
     this.mostrarNuevaCategoria = true;
+    this.busquedaCategoria = '';
     this.nuevaCategoriaNombre = '';
     this.errorCategoria.set(null);
   }
 
   cerrarPanelNuevaCategoria(): void {
     this.mostrarNuevaCategoria = false;
+    this.busquedaCategoria = '';
     this.nuevaCategoriaNombre = '';
     this.errorCategoria.set(null);
   }
@@ -306,12 +352,29 @@ export class InventarioComponent implements OnInit {
         // y la deja seleccionada de una vez en el producto que se está creando.
         this.categorias.update((lista) => [...lista, nueva].sort((a, b) => a.nombre.localeCompare(b.nombre)));
         this.form.id_categoria = nueva.id_categoria;
+        this.nuevaCategoriaNombre = '';
         this.creandoCategoria.set(false);
-        this.cerrarPanelNuevaCategoria();
       },
       error: (err) => {
         this.creandoCategoria.set(false);
         this.errorCategoria.set(err?.error?.detail ?? 'No se pudo crear la categoría.');
+      },
+    });
+  }
+
+  /** Por si se agregó una categoría de más o por error — la borra del catálogo. */
+  eliminarCategoriaGestion(cat: CategoriaRead): void {
+    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos que la usan quedarán sin categoría.`)) return;
+
+    this.errorCategoria.set(null);
+    this.inventarioService.eliminarCategoria(cat.id_categoria).subscribe({
+      next: () => {
+        this.categorias.update((lista) => lista.filter((c) => c.id_categoria !== cat.id_categoria));
+        if (this.form.id_categoria === cat.id_categoria) this.form.id_categoria = null;
+        if (this.filtroIdCategoria === cat.id_categoria) this.filtroIdCategoria = null;
+      },
+      error: (err) => {
+        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo eliminar la categoría.');
       },
     });
   }
@@ -407,5 +470,108 @@ export class InventarioComponent implements OnInit {
   // ── Helper para el select de locales ────────────────────────────────────
   nombreLocal(idLocal: string): string {
     return this.locales().find((l) => l.id_local === idLocal)?.nombre ?? idLocal;
+  }
+
+  // ── Gestión de almacenes (agregar / editar / eliminar) ───────────────────
+
+  private almacenFormVacio(): { nombre: string; direccion: string; descripcion: string } {
+    return { nombre: '', direccion: '', descripcion: '' };
+  }
+
+  /** Lista de almacenes filtrada por el buscador del panel. */
+  get almacenesFiltrados(): LocalRead[] {
+    const busq = this.busquedaAlmacen.toLowerCase().trim();
+    const lista = this.locales();
+    if (!busq) return lista;
+    return lista.filter((l) => l.nombre.toLowerCase().includes(busq));
+  }
+
+  abrirPanelAlmacenes(): void {
+    this.mostrarGestionAlmacenes = true;
+    this.busquedaAlmacen = '';
+    this.cancelarEdicionAlmacen();
+  }
+
+  cerrarPanelAlmacenes(): void {
+    this.mostrarGestionAlmacenes = false;
+    this.busquedaAlmacen = '';
+    this.cancelarEdicionAlmacen();
+  }
+
+  /** Prepara el formulario para crear uno nuevo (limpio) o editar uno existente. */
+  editarAlmacen(local: LocalRead): void {
+    this.editandoAlmacenId = local.id_local;
+    this.almacenForm = {
+      nombre: local.nombre,
+      direccion: local.direccion ?? '',
+      descripcion: local.descripcion ?? '',
+    };
+    this.errorAlmacen.set(null);
+  }
+
+  cancelarEdicionAlmacen(): void {
+    this.editandoAlmacenId = null;
+    this.almacenForm = this.almacenFormVacio();
+    this.errorAlmacen.set(null);
+  }
+
+  guardarAlmacen(): void {
+    const nombre = this.almacenForm.nombre.trim();
+    if (!nombre) {
+      this.errorAlmacen.set('El nombre del almacén es obligatorio.');
+      return;
+    }
+
+    const datos: LocalCreateInput = {
+      nombre,
+      direccion: this.almacenForm.direccion.trim() || null,
+      descripcion: this.almacenForm.descripcion.trim() || null,
+    };
+
+    this.guardandoAlmacen.set(true);
+    this.errorAlmacen.set(null);
+
+    if (this.editandoAlmacenId) {
+      this.inventarioService.actualizarLocal(this.editandoAlmacenId, datos).subscribe({
+        next: (actualizado) => {
+          this.locales.update((lista) =>
+            lista.map((l) => (l.id_local === actualizado.id_local ? actualizado : l))
+          );
+          this.guardandoAlmacen.set(false);
+          this.cancelarEdicionAlmacen();
+        },
+        error: (err) => {
+          this.guardandoAlmacen.set(false);
+          this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo actualizar el almacén.');
+        },
+      });
+    } else {
+      this.inventarioService.crearLocal(datos).subscribe({
+        next: (nuevo) => {
+          this.locales.update((lista) => [...lista, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+          this.guardandoAlmacen.set(false);
+          this.cancelarEdicionAlmacen();
+        },
+        error: (err) => {
+          this.guardandoAlmacen.set(false);
+          this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo crear el almacén.');
+        },
+      });
+    }
+  }
+
+  eliminarAlmacenGestion(local: LocalRead): void {
+    if (!confirm(`¿Eliminar el almacén "${local.nombre}"? Las variantes con stock ahí podrían quedar sin almacén asignado.`)) return;
+
+    this.errorAlmacen.set(null);
+    this.inventarioService.eliminarLocal(local.id_local).subscribe({
+      next: () => {
+        this.locales.update((lista) => lista.filter((l) => l.id_local !== local.id_local));
+        if (this.editandoAlmacenId === local.id_local) this.cancelarEdicionAlmacen();
+      },
+      error: (err) => {
+        this.errorAlmacen.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
+      },
+    });
   }
 }

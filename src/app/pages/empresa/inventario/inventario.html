@@ -130,7 +130,7 @@
         </div>
       </div>
 
-      <!-- Panel: crear categoría nueva (deportivo, tacos, ballerinas, sandalias, plataformas...) -->
+      <!-- Panel: gestionar categorías (crear, buscar, eliminar) -->
       <div class="nueva-categoria-panel" *ngIf="mostrarNuevaCategoria">
         <label>Nueva categoría</label>
 
@@ -160,6 +160,32 @@
         </div>
 
         <div class="categoria-error" *ngIf="errorCategoria()">{{ errorCategoria() }}</div>
+
+        <!-- Buscador + lista con scroll de las categorías ya creadas -->
+        <div class="gestion-divider">
+          <span>Categorías existentes ({{ categorias().length }})</span>
+        </div>
+
+        <div class="gestion-search" *ngIf="categorias().length > 5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Buscar categoría…" [(ngModel)]="busquedaCategoria" />
+        </div>
+
+        <div class="gestion-lista">
+          <div class="gestion-item" *ngFor="let c of categoriasFiltradas">
+            <span class="gestion-item-nombre">{{ c.nombre }}</span>
+            <button type="button" class="btn-icon-danger" (click)="eliminarCategoriaGestion(c)" title="Eliminar categoría">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="gestion-vacio" *ngIf="categoriasFiltradas.length === 0">
+            No hay categorías que coincidan con la búsqueda.
+          </div>
+        </div>
       </div>
 
       <!-- Sexo -->
@@ -186,7 +212,69 @@
       <!-- Variantes (talla + stock + local) -->
       <div class="variantes-header">
         <label>Tallas y stock por almacén</label>
-        <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
+        <div class="variantes-header-acciones">
+          <button type="button" class="btn-link" (click)="mostrarGestionAlmacenes ? cerrarPanelAlmacenes() : abrirPanelAlmacenes()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;">
+              <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/>
+            </svg>
+            Gestionar almacenes
+          </button>
+          <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
+        </div>
+      </div>
+
+      <!-- Panel: gestionar almacenes (agregar / editar / eliminar) -->
+      <div class="nueva-categoria-panel" *ngIf="mostrarGestionAlmacenes">
+        <label>{{ editandoAlmacenId ? 'Editar almacén' : 'Nuevo almacén' }}</label>
+
+        <div class="almacen-form">
+          <input type="text" placeholder="Nombre del almacén (Ej: Tienda Centro)" [(ngModel)]="almacenForm.nombre" />
+          <input type="text" placeholder="Dirección (opcional)" [(ngModel)]="almacenForm.direccion" />
+          <input type="text" placeholder="Descripción (opcional)" [(ngModel)]="almacenForm.descripcion" />
+        </div>
+
+        <div class="categoria-input-row">
+          <button type="button" class="btn-secondary" *ngIf="editandoAlmacenId" (click)="cancelarEdicionAlmacen()">Cancelar edición</button>
+          <button type="button" class="btn-primary btn-crear-categoria" (click)="guardarAlmacen()" [disabled]="guardandoAlmacen()">
+            <span *ngIf="guardandoAlmacen()">Guardando…</span>
+            <span *ngIf="!guardandoAlmacen() && editandoAlmacenId">Guardar cambios</span>
+            <span *ngIf="!guardandoAlmacen() && !editandoAlmacenId">Crear almacén</span>
+          </button>
+        </div>
+
+        <div class="categoria-error" *ngIf="errorAlmacen()">{{ errorAlmacen() }}</div>
+
+        <div class="gestion-divider">
+          <span>Almacenes existentes ({{ locales().length }})</span>
+        </div>
+
+        <div class="gestion-search" *ngIf="locales().length > 5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Buscar almacén…" [(ngModel)]="busquedaAlmacen" />
+        </div>
+
+        <div class="gestion-lista">
+          <div class="gestion-item" *ngFor="let l of almacenesFiltrados">
+            <span class="gestion-item-nombre">{{ l.nombre }}</span>
+            <div class="gestion-item-acciones">
+              <button type="button" class="btn-icon-secundario" (click)="editarAlmacen(l)" title="Editar almacén">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button type="button" class="btn-icon-danger" (click)="eliminarAlmacenGestion(l)" title="Eliminar almacén">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="gestion-vacio" *ngIf="almacenesFiltrados.length === 0">
+            No hay almacenes que coincidan con la búsqueda.
+          </div>
+        </div>
       </div>
 
       <div class="variante-columnas" *ngIf="form.variantes.length > 0">

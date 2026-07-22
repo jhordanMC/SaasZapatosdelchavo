@@ -152,6 +152,14 @@ export class InventarioService {
     return this.http.post<CategoriaRead>(`${this.base}/categorias`, datos);
   }
 
+  actualizarCategoria(idCategoria: string, datos: Partial<CategoriaCreateInput>): Observable<CategoriaRead> {
+    return this.http.patch<CategoriaRead>(`${this.base}/categorias/${idCategoria}`, datos);
+  }
+
+  eliminarCategoria(idCategoria: string): Observable<MensajeResponse> {
+    return this.http.delete<MensajeResponse>(`${this.base}/categorias/${idCategoria}`);
+  }
+
   // ── Locales ─────────────────────────────────────────────────────────────
 
   listarLocales(): Observable<LocalRead[]> {
@@ -160,6 +168,14 @@ export class InventarioService {
 
   crearLocal(datos: LocalCreateInput): Observable<LocalRead> {
     return this.http.post<LocalRead>(`${this.base}/locales`, datos);
+  }
+
+  actualizarLocal(idLocal: string, datos: Partial<LocalCreateInput>): Observable<LocalRead> {
+    return this.http.patch<LocalRead>(`${this.base}/locales/${idLocal}`, datos);
+  }
+
+  eliminarLocal(idLocal: string): Observable<MensajeResponse> {
+    return this.http.delete<MensajeResponse>(`${this.base}/locales/${idLocal}`);
   }
 
   // ── Productos ────────────────────────────────────────────────────────────

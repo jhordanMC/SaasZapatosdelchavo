@@ -320,6 +320,107 @@
   font-size: 12px;
 }
 
+/* Divisor + buscador + lista con scroll (reutilizado por categorías y almacenes) */
+.gestion-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.gestion-divider span {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5a8a78;
+  white-space: nowrap;
+}
+.gestion-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e0ecE4;
+}
+
+.gestion-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gestion-search svg { position: absolute; left: 10px; color: #94a798; }
+.gestion-search input {
+  width: 100%;
+  padding: 8px 10px 8px 30px;
+  font-size: 12.5px;
+  border: 1px solid #d8e6dd;
+  border-radius: 10px;
+  background: white;
+  color: #1f4034;
+  outline: none;
+}
+
+.gestion-lista {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+.gestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: white;
+  border: 1px solid #e8f1ea;
+  border-radius: 10px;
+}
+.gestion-item-nombre { font-size: 12.5px; font-weight: 600; color: #1f4034; }
+.gestion-item-acciones { display: flex; gap: 6px; flex-shrink: 0; }
+.gestion-vacio {
+  text-align: center;
+  padding: 16px;
+  font-size: 12px;
+  color: #94a798;
+}
+
+.gestion-item .btn-icon-danger, .gestion-item-acciones .btn-icon-danger {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.btn-icon-secundario {
+  border: none;
+  background: #eaf3ea;
+  color: #024b40;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.btn-icon-secundario:hover { background: #d7ebda; }
+
+.variantes-header-acciones { display: flex; align-items: center; gap: 14px; }
+
+.almacen-form { display: flex; flex-direction: column; gap: 8px; }
+.almacen-form input {
+  padding: 9px 12px;
+  font-size: 12.5px;
+  border: 1px solid #d8e6dd;
+  border-radius: 10px;
+  background: white;
+  color: #1f4034;
+  outline: none;
+}
+
 .variantes-header { display: flex; justify-content: space-between; align-items: center; }
 .variantes-header label { font-size: 12px; font-weight: 600; color: #1f4034; }
 .btn-link { background: none; border: none; color: #024b40; font-size: 12px; font-weight: 600; cursor: pointer; }
