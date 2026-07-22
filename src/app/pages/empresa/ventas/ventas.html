@@ -200,7 +200,7 @@
 
       <!-- Tallas disponibles (Chips) -->
       <div class="form-row tallas-disponibles-row">
-        <label>Tallas disponibles:</label>
+        <label>Tallas disponibles <span class="error-inline" *ngIf="errorTalla">- {{ errorTalla }}</span></label>
         <div class="tallas-chips">
           <button 
             type="button" 
@@ -215,7 +215,7 @@
 
       <div class="form-row form-row-2">
         <div>
-          <label>Origen (Sede)</label>
+          <label>Origen (Sede) <span class="error-inline" *ngIf="errorUbicacion">- {{ errorUbicacion }}</span></label>
           <select [ngModel]="ubicacionModalActiva" (ngModelChange)="alCambiarUbicacionModal($event)">
             <option [ngValue]="null">Seleccionar sede</option>
             <option *ngFor="let u of _opcionesUbicacionModal" [value]="u.id">
@@ -227,7 +227,7 @@
 
       <div class="form-row form-row-2">
         <div>
-          <label>Cantidad</label>
+          <label>Cantidad <span class="error-inline" *ngIf="errorCantidad">- {{ errorCantidad }}</span></label>
           <div class="qty-stepper">
             <button type="button" class="qty-btn" (click)="decrementarCantidadModal()" [disabled]="cantidadSeleccionada <= 1">−</button>
             <span class="qty-value" [class.pop]="qtyPulseModal">{{ cantidadSeleccionada }}</span>
@@ -253,10 +253,6 @@
         <label>Total a pagar</label>
         <p class="subtotal-precio">S/{{ subtotalModal.toFixed(2) }}</p>
       </div>
-      
-      <p class="error-text" *ngIf="errorModal" style="text-align: right; margin-top: 4px; font-weight: 600;">
-        {{ errorModal }}
-      </p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarSelectorVariante()">Cancelar</button>
@@ -452,9 +448,9 @@
             <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
         </div>
-        <p>Venta por <strong>S/{{ ventaConfirmada?.total?.toFixed(2) }}</strong> registrada correctamente.</p>
-        <p *ngIf="ventaConfirmada?.pagos?.[0]?.vuelto && ventaConfirmada!.pagos[0].vuelto > 0">
-          Vuelto entregado: <strong>S/{{ ventaConfirmada!.pagos[0].vuelto.toFixed(2) }}</strong>
+        <p>Venta por <strong>S/{{ (ventaConfirmada?.total ? +ventaConfirmada!.total : 0).toFixed(2) }}</strong> registrada correctamente.</p>
+        <p *ngIf="ventaConfirmada?.pagos?.[0]?.vuelto && +ventaConfirmada!.pagos[0].vuelto > 0">
+          Vuelto entregado: <strong>S/{{ (+ventaConfirmada!.pagos[0].vuelto).toFixed(2) }}</strong>
         </p>
         <p class="venta-id">ID: {{ ventaConfirmada?.id_venta }}</p>
       </div>

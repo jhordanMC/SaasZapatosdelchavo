@@ -457,6 +457,7 @@
 .form-row-2 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .resumen-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: #024b40; }
 .error-text { color: #b23a3a; font-size: 12px; margin: 0; }
+.error-inline { color: #b23a3a; font-weight: 600; font-size: 11.5px; margin-left: 6px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid #e8f1ea; }
 .btn-secondary {
   padding: 10px 16px;

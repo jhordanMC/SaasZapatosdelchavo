@@ -153,13 +153,11 @@ export class VentasComponent implements OnInit {
   cambiarSede(idSede: string): void {
     if (idSede === 'todos') {
       this.sedeFiltro.set(null);
-      this.cargarProductosPOS();
       return;
     }
     const sede = this.sedes().find((s) => s.id_sede === idSede);
     if (sede) {
       this.sedeFiltro.set(sede);
-      this.cargarProductosPOS();
     }
   }
 
@@ -190,15 +188,31 @@ export class VentasComponent implements OnInit {
 
   get productosFiltrados(): ProductoPOSRead[] {
     const busq = this.busqueda.toLowerCase().trim();
+    const idSedeGlobal = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
+
     return this.productos().filter((p) => {
       if (busq && !p.nombre.toLowerCase().includes(busq)) return false;
       if (this.filtroSexo && p.sexo !== this.filtroSexo) return false;
-      if (
-        this.filtroTalla !== 'Todas' &&
-        !p.variantes.some((v) => v.talla === this.filtroTalla)
-      )
-        return false;
-      return true;
+      
+      // Si no hay filtro de sede ni talla, mostramos el producto tal cual
+      if (!idSedeGlobal && this.filtroTalla === 'Todas') {
+          return true;
+      }
+
+      // Si hay filtro de sede o talla, validamos que exista al menos una variante
+      // que cumpla con ambos filtros y tenga stock mayor a 0
+      let hasValidVariant = false;
+      for (const v of p.variantes) {
+         const matchSede = idSedeGlobal ? v.id_ubicacion_origen === idSedeGlobal : true;
+         const matchTalla = this.filtroTalla !== 'Todas' ? v.talla === this.filtroTalla : true;
+         
+         if (matchSede && matchTalla && v.stock_disponible > 0) {
+             hasValidVariant = true;
+             break;
+         }
+      }
+
+      return hasValidVariant;
     });
   }
 
@@ -242,7 +256,18 @@ export class VentasComponent implements OnInit {
   }
 
   stockProducto(p: ProductoPOSRead): number {
-    return p.stock_total;
+    const idSede = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
+    let total = 0;
+    for (const v of p.variantes) {
+      if (idSede) {
+        if (v.id_ubicacion_origen === idSede) {
+           total += v.stock_disponible;
+        }
+      } else {
+        total += v.stock_disponible;
+      }
+    }
+    return total;
   }
 
   // ── Modal selector de variante ───────────────────────────────────────────
@@ -277,7 +302,9 @@ export class VentasComponent implements OnInit {
     this.cantidadSeleccionada = 1;
     this.descuentoSeleccionado = 0;
     this.tipoDescuentoSeleccionado = 'producto';
-    this.errorModal = null;
+    this.errorTalla = null;
+    this.errorUbicacion = null;
+    this.errorCantidad = null;
     
     this.actualizarOpcionesModal();
   }
@@ -337,7 +364,7 @@ export class VentasComponent implements OnInit {
   alCambiarTallaModal(talla: string | null) {
     if (talla === 'null') talla = null;
     this.tallaModalActiva = talla;
-    this.errorModal = null;
+    this.errorTalla = null;
     if (talla && this.ubicacionModalActiva) {
        const isValid = this.showVariantePicker?.variantes.some(v => v.talla === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
        if (!isValid) {
@@ -350,7 +377,7 @@ export class VentasComponent implements OnInit {
   alCambiarUbicacionModal(idUbi: string | null) {
     if (idUbi === 'null') idUbi = null;
     this.ubicacionModalActiva = idUbi;
-    this.errorModal = null;
+    this.errorUbicacion = null;
     if (idUbi && this.tallaModalActiva) {
        const isValid = this.showVariantePicker?.variantes.some(v => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && v.stock_disponible > 0);
        if (!isValid) {
@@ -386,28 +413,36 @@ export class VentasComponent implements OnInit {
     return sub > 0 ? sub : 0;
   }
 
-  errorModal: string | null = null;
+  errorTalla: string | null = null;
+  errorUbicacion: string | null = null;
+  errorCantidad: string | null = null;
 
   confirmarAgregado(): void {
+    this.errorTalla = null;
+    this.errorUbicacion = null;
+    this.errorCantidad = null;
+
+    let hasError = false;
+
     if (!this.tallaModalActiva) {
-      this.errorModal = 'Debes seleccionar una talla antes de agregar al carrito.';
-      return;
+      this.errorTalla = 'Falta seleccionar talla';
+      hasError = true;
     }
     if (!this.ubicacionModalActiva) {
-      this.errorModal = 'Debes seleccionar una sede antes de agregar al carrito.';
-      return;
+      this.errorUbicacion = 'Falta seleccionar sede';
+      hasError = true;
     }
+
+    if (hasError) return;
 
     const p = this.showVariantePicker;
     const variante = this.varianteSeleccionada;
     if (!p || !variante) return;
 
     if (this.cantidadSeleccionada > variante.stock_disponible) {
-      this.errorModal = `Solo hay ${variante.stock_disponible} unidades disponibles en esta combinación.`;
+      this.errorCantidad = `Solo hay ${variante.stock_disponible} unid. disp.`;
       return;
     }
-
-    this.errorModal = null;
 
     let totalDescuento = this.descuentoSeleccionado;
     if (this.tipoDescuentoSeleccionado === 'unidad') {
@@ -478,12 +513,14 @@ export class VentasComponent implements OnInit {
     const max = this.varianteSeleccionada?.stock_disponible ?? 1;
     if (this.cantidadSeleccionada >= max) return;
     this.cantidadSeleccionada++;
+    this.errorCantidad = null;
     this.pulseQty('modal');
   }
 
   decrementarCantidadModal(): void {
     if (this.cantidadSeleccionada <= 1) return;
     this.cantidadSeleccionada--;
+    this.errorCantidad = null;
     this.pulseQty('modal');
   }
 
