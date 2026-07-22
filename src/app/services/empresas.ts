@@ -29,6 +29,13 @@ export interface LocalInput {
   descripcion: string;
 }
 
+export interface LocalUpdateInput {
+  nombre?: string;
+  direccion?: string | null;
+  descripcion?: string | null;
+  esta_activo?: boolean;
+}
+
 export interface EmpresaUpdateInput {
   nombre?: string;
   estado?: EstadoEmpresa;
@@ -70,5 +77,13 @@ export class EmpresasService {
       direccion: data.direccion || null,
       descripcion: data.descripcion || null,
     });
+  }
+
+  actualizarLocal(idEmpresa: string, idLocal: string, data: LocalUpdateInput): Observable<Local> {
+    return this.http.put<Local>(`${this.apiUrl}/empresas/${idEmpresa}/locales/${idLocal}`, data);
+  }
+
+  eliminarLocal(idEmpresa: string, idLocal: string): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/empresas/${idEmpresa}/locales/${idLocal}`);
   }
 }

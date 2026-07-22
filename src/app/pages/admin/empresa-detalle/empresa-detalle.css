@@ -214,6 +214,16 @@
   color: #024b40;
 }
 
+.local-card-header .status-pill {
+  margin-left: auto;
+}
+
+.local-card-acciones {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .local-card-nombre {
   font-weight: 700;
   font-size: 14px;

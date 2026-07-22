@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Empresa, EmpresasService, EstadoEmpresa, Local } from '../../../services/empresas';
+import { Empresa, EmpresasService, EstadoEmpresa, Local, LocalInput, LocalUpdateInput } from '../../../services/empresas';
 import { PageTitleService } from '../../../shared/admin-layout/page-title';
 import {
   ClaveVista,
@@ -38,6 +38,13 @@ interface EditarUsuarioForm {
 interface EditarEmpresaForm {
   nombre: string;
   estado: EstadoEmpresa;
+}
+
+interface EditarLocalForm {
+  nombre: string;
+  direccion: string;
+  descripcion: string;
+  esta_activo: boolean;
 }
 
 @Component({
@@ -171,6 +178,133 @@ export class EmpresaDetalleComponent implements OnInit {
 
   vendedoresDeLocal(idLocal: string): Usuario[] {
     return this.usuarios().filter((u) => u.id_local === idLocal);
+  }
+
+  // ── Modal "Nuevo local" ──────────────────────────────────
+  modalNuevoLocalAbierto = false;
+  nuevoLocal: LocalInput = this.formularioLocalVacio();
+  guardandoLocalNuevo = false;
+
+  private formularioLocalVacio(): LocalInput {
+    return { nombre: '', direccion: '', descripcion: '' };
+  }
+
+  abrirModalNuevoLocal(): void {
+    this.nuevoLocal = this.formularioLocalVacio();
+    this.modalNuevoLocalAbierto = true;
+  }
+
+  cerrarModalNuevoLocal(): void {
+    this.modalNuevoLocalAbierto = false;
+  }
+
+  get formularioLocalValido(): boolean {
+    return this.nuevoLocal.nombre.trim().length > 0;
+  }
+
+  crearLocalNuevo(): void {
+    if (!this.formularioLocalValido || this.guardandoLocalNuevo) return;
+    this.guardandoLocalNuevo = true;
+    this.empresasService.crearLocal(this.idEmpresa, this.nuevoLocal).subscribe({
+      next: (local) => {
+        this.guardandoLocalNuevo = false;
+        this.locales.set([...this.locales(), local]);
+        this.cerrarModalNuevoLocal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.guardandoLocalNuevo = false;
+        this.error.set(err.status === 400 ? 'Ya existe un local con ese nombre.' : 'No se pudo crear el local.');
+      },
+    });
+  }
+
+  // ── Modal "Editar local" ─────────────────────────────────
+  modalEditarLocalAbierto = false;
+  editarLocal: EditarLocalForm = this.formularioEdicionLocalVacio();
+  guardandoLocalEdicion = false;
+  private localEditandoId: string | null = null;
+
+  private formularioEdicionLocalVacio(): EditarLocalForm {
+    return { nombre: '', direccion: '', descripcion: '', esta_activo: true };
+  }
+
+  abrirModalEditarLocal(local: Local): void {
+    this.localEditandoId = local.id_local;
+    this.editarLocal = {
+      nombre: local.nombre,
+      direccion: local.direccion ?? '',
+      descripcion: local.descripcion ?? '',
+      esta_activo: local.esta_activo,
+    };
+    this.modalEditarLocalAbierto = true;
+  }
+
+  cerrarModalEditarLocal(): void {
+    this.modalEditarLocalAbierto = false;
+    this.localEditandoId = null;
+  }
+
+  get formularioEdicionLocalValido(): boolean {
+    return this.editarLocal.nombre.trim().length > 0;
+  }
+
+  guardarEdicionLocal(): void {
+    if (!this.formularioEdicionLocalValido || !this.localEditandoId || this.guardandoLocalEdicion) return;
+    const idLocal = this.localEditandoId;
+
+    const payload: LocalUpdateInput = {
+      nombre: this.editarLocal.nombre.trim(),
+      direccion: this.editarLocal.direccion.trim() || null,
+      descripcion: this.editarLocal.descripcion.trim() || null,
+      esta_activo: this.editarLocal.esta_activo,
+    };
+
+    this.guardandoLocalEdicion = true;
+    this.empresasService.actualizarLocal(this.idEmpresa, idLocal, payload).subscribe({
+      next: (actualizado) => {
+        this.guardandoLocalEdicion = false;
+        this.locales.set(this.locales().map((l) => (l.id_local === actualizado.id_local ? actualizado : l)));
+        this.cerrarModalEditarLocal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.guardandoLocalEdicion = false;
+        this.error.set(err.status === 400 ? 'Ya existe un local con ese nombre.' : 'No se pudo actualizar el local.');
+      },
+    });
+  }
+
+  // ── Modal "Eliminar local" ───────────────────────────────
+  modalEliminarLocalAbierto = false;
+  localEliminando: Local | null = null;
+  eliminandoLocal = false;
+
+  abrirModalEliminarLocal(local: Local): void {
+    this.localEliminando = local;
+    this.modalEliminarLocalAbierto = true;
+  }
+
+  cerrarModalEliminarLocal(): void {
+    this.modalEliminarLocalAbierto = false;
+    this.localEliminando = null;
+  }
+
+  confirmarEliminarLocal(): void {
+    if (!this.localEliminando || this.eliminandoLocal) return;
+    const idLocal = this.localEliminando.id_local;
+
+    this.eliminandoLocal = true;
+    this.empresasService.eliminarLocal(this.idEmpresa, idLocal).subscribe({
+      next: () => {
+        this.eliminandoLocal = false;
+        this.locales.set(this.locales().filter((l) => l.id_local !== idLocal));
+        this.cerrarModalEliminarLocal();
+      },
+      error: () => {
+        this.eliminandoLocal = false;
+        this.error.set('No se pudo eliminar el local.');
+        this.cerrarModalEliminarLocal();
+      },
+    });
   }
 
   // ════════════════════════════════════════════════════════

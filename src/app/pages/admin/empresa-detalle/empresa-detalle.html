@@ -11,6 +11,7 @@
       </button>
       <p class="page-subtitle">Locales, usuarios y suscripción de {{ empresaActual.nombre }}.</p>
     </div>
+    <button class="btn-primary" *ngIf="tabActiva === 'locales'" (click)="abrirModalNuevoLocal()">+ Nuevo local</button>
     <button class="btn-primary" *ngIf="tabActiva === 'usuarios'" (click)="abrirModalNuevo()">+ Nuevo usuario</button>
     <button class="btn-primary" *ngIf="tabActiva === 'suscripcion' && !suscripcion()" (click)="abrirModalCrearSuscripcion()">+ Asignar plan</button>
   </div>
@@ -71,9 +72,15 @@
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
             <span class="local-card-nombre">{{ local.nombre }}</span>
+            <span class="status-pill" [class.active]="local.esta_activo">{{ local.esta_activo ? 'activo' : 'inactivo' }}</span>
           </div>
           <p class="local-card-direccion" *ngIf="local.direccion">{{ local.direccion }}</p>
           <p class="local-card-descripcion" *ngIf="local.descripcion">{{ local.descripcion }}</p>
+
+          <div class="local-card-acciones">
+            <button class="btn-accion" (click)="abrirModalEditarLocal(local)">Editar</button>
+            <button class="btn-eliminar" (click)="abrirModalEliminarLocal(local)">Eliminar</button>
+          </div>
 
           <div class="local-card-vendedores">
             <span class="local-vendedores-label">
@@ -247,6 +254,110 @@
           {{ guardandoEmpresa ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Nuevo local ══ -->
+<div class="modal-overlay" *ngIf="modalNuevoLocalAbierto" (click)="cerrarModalNuevoLocal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalNuevoLocal()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Nuevo local</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inputNombreLocalNuevo">Nombre</label>
+        <input id="inputNombreLocalNuevo" type="text" class="form-input" placeholder="Ingresar nombre" [(ngModel)]="nuevoLocal.nombre" />
+      </div>
+      <div class="form-group">
+        <label for="inputDireccionLocalNuevo">Dirección (opcional)</label>
+        <input id="inputDireccionLocalNuevo" type="text" class="form-input" placeholder="Ingresar dirección" [(ngModel)]="nuevoLocal.direccion" />
+      </div>
+      <div class="form-group">
+        <label for="inputDescripcionLocalNuevo">Descripción (opcional)</label>
+        <input id="inputDescripcionLocalNuevo" type="text" class="form-input" placeholder="Ingresar descripción" [(ngModel)]="nuevoLocal.descripcion" />
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalNuevoLocal()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioLocalValido || guardandoLocalNuevo" (click)="crearLocalNuevo()">
+          {{ guardandoLocalNuevo ? 'Creando…' : 'Crear local' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Editar local ══ -->
+<div class="modal-overlay" *ngIf="modalEditarLocalAbierto" (click)="cerrarModalEditarLocal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEditarLocal()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header"><h2>Editar local</h2></div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inputNombreLocalEditar">Nombre</label>
+        <input id="inputNombreLocalEditar" type="text" class="form-input" [(ngModel)]="editarLocal.nombre" />
+      </div>
+      <div class="form-group">
+        <label for="inputDireccionLocalEditar">Dirección (opcional)</label>
+        <input id="inputDireccionLocalEditar" type="text" class="form-input" [(ngModel)]="editarLocal.direccion" />
+      </div>
+      <div class="form-group">
+        <label for="inputDescripcionLocalEditar">Descripción (opcional)</label>
+        <input id="inputDescripcionLocalEditar" type="text" class="form-input" [(ngModel)]="editarLocal.descripcion" />
+      </div>
+      <div class="form-group">
+        <label for="selectEstadoLocalEditar">Estado</label>
+        <select id="selectEstadoLocalEditar" class="form-input form-select" [(ngModel)]="editarLocal.esta_activo">
+          <option [ngValue]="true">Activo</option>
+          <option [ngValue]="false">Inactivo</option>
+        </select>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalEditarLocal()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!formularioEdicionLocalValido || guardandoLocalEdicion" (click)="guardarEdicionLocal()">
+          {{ guardandoLocalEdicion ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Eliminar local ══ -->
+<div class="modal-overlay" *ngIf="modalEliminarLocalAbierto" (click)="cerrarModalEliminarLocal()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEliminarLocal()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="confirmacion-icono confirmacion-icono-peligro">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirmacion-titulo">¿Eliminar local?</h2>
+    <p class="confirmacion-desc" *ngIf="localEliminando">
+      Esta acción elimina el local <strong>{{ localEliminando.nombre }}</strong> y no se puede deshacer.
+    </p>
+    <div class="modal-actions modal-actions-split">
+      <button class="btn-clear" (click)="cerrarModalEliminarLocal()">Cancelar</button>
+      <button class="btn-eliminar btn-eliminar-full" [disabled]="eliminandoLocal" (click)="confirmarEliminarLocal()">
+        {{ eliminandoLocal ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
     </div>
   </div>
 </div>
