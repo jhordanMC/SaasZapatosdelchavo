@@ -173,4 +173,9 @@ export class AuthService {
     const actual = this.sesion();
     return !!actual && roles.includes(actual.rol);
   }
+
+  /** Única fuente de verdad rol -> ruta base, usada por los guards para saber a dónde mandar a alguien ya autenticado. */
+  rutaHomeParaRol(rol: Rol): string {
+    return rol === 'admin' ? '/admin' : '/empresa';
+  }
 }

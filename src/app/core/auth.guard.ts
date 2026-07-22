@@ -26,3 +26,24 @@ export function roleGuard(...rolesPermitidos: Rol[]): CanActivateFn {
     );
   };
 }
+
+/**
+ * Inverso de roleGuard: si ya hay una sesión activa, manda directo al home
+ * del rol en vez de dejar ver /login de nuevo (ej. F5 sobre /login con
+ * token todavía válido).
+ */
+export const redirigirSiAutenticado: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return authService.esperarInicializacion().pipe(
+    map(() => {
+      const sesion = authService.usuarioActual();
+      if (sesion) {
+        router.navigate([authService.rutaHomeParaRol(sesion.rol)]);
+        return false;
+      }
+      return true;
+    }),
+  );
+};

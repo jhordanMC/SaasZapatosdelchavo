@@ -14,11 +14,15 @@ import { InventarioComponent } from './pages/empresa/inventario/inventario';
 import { VentasComponent } from './pages/empresa/ventas/ventas';
 import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
-import { roleGuard } from './core/auth.guard';
+import { NotFoundComponent } from './pages/not-found/not-found';
+import { roleGuard, redirigirSiAutenticado } from './core/auth.guard';
 
 export const routes: Routes = [
+  // canActivate no se ejecuta en una ruta que solo hace redirectTo (Angular
+  // resuelve el redirect antes de correr guards), así que el chequeo de
+  // "ya autenticado" vive únicamente en la ruta 'login' de abajo.
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
+  { path: 'login', component: LoginComponent, canActivate: [redirigirSiAutenticado] },
   { path: 'verificar-2fa', component: Verificar2faComponent },
   { path: 'olvide-contrasena', component: OlvidecontraComponent },
 
@@ -75,4 +79,7 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // ⚠️ debe ir siempre al final: un wildcard antes se comería el resto de rutas
+  { path: '**', component: NotFoundComponent },
 ];

@@ -1,0 +1,76 @@
+.session-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 20, 16, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.session-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #F5F8F0;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(1, 20, 16, 0.35);
+}
+
+.session-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 24px 8px;
+  text-align: center;
+}
+
+.session-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(178, 58, 58, 0.1);
+  color: #b23a3a;
+  margin-bottom: 14px;
+}
+
+.session-modal-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0c3a2e;
+  margin: 0;
+}
+
+.session-modal-desc {
+  font-size: 13.5px;
+  color: #4b5a63;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.session-modal-actions {
+  padding: 20px 24px 26px;
+}
+
+.session-modal-btn {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #024B40;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.session-modal-btn:hover {
+  background: #036a58;
+}
