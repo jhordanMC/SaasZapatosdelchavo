@@ -16,7 +16,7 @@ import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
 import { NotFoundComponent } from './pages/not-found/not-found';
 import { AccesoRestringidoComponent } from './pages/acceso-restringido/acceso-restringido';
-import { roleGuard, redirigirSiAutenticado, vistaGuard } from './core/auth.guard';
+import { roleGuard, redirigirSiAutenticado, vistaGuard, resolverPrimeraVista } from './core/auth.guard';
 
 export const routes: Routes = [
   // canActivate no se ejecuta en una ruta que solo hace redirectTo (Angular
@@ -34,12 +34,37 @@ export const routes: Routes = [
     component: AdminLayoutComponent,
     canActivate: [roleGuard('admin')],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardAdminComponent, data: { title: 'Dashboard' } },
-      { path: 'empresas', component: EmpresasComponent, data: { title: 'Empresas' } },
-      { path: 'empresas/:id', component: EmpresaDetalleComponent, data: { title: 'Detalle de empresa' } },
-      { path: 'suscripciones', component: Suscripciones, data: { title: 'Suscripciones' } },
-      { path: 'actividad', component: ActividadComponent, data: { title: 'Actividad' } },
+      { path: '', pathMatch: 'full', redirectTo: resolverPrimeraVista },
+      {
+        path: 'dashboard',
+        component: DashboardAdminComponent,
+        data: { title: 'Dashboard' },
+        canActivate: [vistaGuard('dashboard')],
+      },
+      {
+        path: 'empresas',
+        component: EmpresasComponent,
+        data: { title: 'Empresas' },
+        canActivate: [vistaGuard('empresas')],
+      },
+      {
+        path: 'empresas/:id',
+        component: EmpresaDetalleComponent,
+        data: { title: 'Detalle de empresa' },
+        canActivate: [vistaGuard('empresas')],
+      },
+      {
+        path: 'suscripciones',
+        component: Suscripciones,
+        data: { title: 'Suscripciones' },
+        canActivate: [vistaGuard('suscripciones')],
+      },
+      {
+        path: 'actividad',
+        component: ActividadComponent,
+        data: { title: 'Actividad' },
+        canActivate: [vistaGuard('actividad')],
+      },
     ],
   },
 
@@ -48,7 +73,7 @@ export const routes: Routes = [
     path: 'empresa',
     component: EmpresaLayoutComponent,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', pathMatch: 'full', redirectTo: resolverPrimeraVista },
       {
         path: 'dashboard',
         component: EmpresaDashboardComponent,

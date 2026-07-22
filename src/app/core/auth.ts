@@ -1,11 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { Observable, ReplaySubject, catchError, forkJoin, map, switchMap, take, tap, throwError } from 'rxjs';
+import { Observable, ReplaySubject, catchError, forkJoin, map, of, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ClaveVista } from '../services/usuarios';
+import { ClaveVista, RolUsuario, mapearRol } from '../services/usuarios';
 import { TokenResponse, TokenStore } from './token-store';
-
-export type Rol = 'admin' | 'dueño' | 'vendedor';
 
 export interface SesionUsuario {
   idUsuario: string;
@@ -13,7 +11,7 @@ export interface SesionUsuario {
   correo: string;
   telefono: string | null;
   dni: string | null;
-  rol: Rol;
+  rol: RolUsuario;
   empresaId: string | null;
   nombreEmpresa: string;
   // Vistas deshabilitadas puntualmente para este usuario, independiente
@@ -38,16 +36,6 @@ interface MiPerfilResponse {
   dni: string | null;
   estado: string;
   roles: string[];
-}
-
-// Nombres exactos de los roles de sistema sembrados en el backend
-// (app/scripts/seed_catalogo_rbac.py). Un usuario puede tener varios
-// roles a la vez; se usa el de mayor privilegio para decidir a dónde
-// navega y qué layout ve.
-function mapearRol(nombresRoles: string[]): Rol {
-  if (nombresRoles.includes('Administrador')) return 'admin';
-  if (nombresRoles.includes('Dueño de empresa')) return 'dueño';
-  return 'vendedor';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -96,7 +84,15 @@ export class AuthService {
     return forkJoin({
       perfil: this.http.get<MiPerfilResponse>(`${this.apiUrl}/iam/mi-perfil`),
       permisos: this.http.get<string[]>(`${this.apiUrl}/iam/mis-permisos`),
-      vistasDeshabilitadas: this.http.get<ClaveVista[]>(`${this.apiUrl}/iam/mis-vistas-deshabilitadas`),
+      // Tolerante a fallos a propósito: si este endpoint falla (ej. la
+      // tabla usuarios_vistas_deshabilitadas todavía no existe en la BD),
+      // no debe tumbar la carga de sesión entera — se asume "sin vistas
+      // deshabilitadas", coherente con la semántica ya documentada de
+      // vistasDeshabilitadas (todo lo que no está en la lista se entiende
+      // habilitado).
+      vistasDeshabilitadas: this.http
+        .get<ClaveVista[]>(`${this.apiUrl}/iam/mis-vistas-deshabilitadas`)
+        .pipe(catchError(() => of([] as ClaveVista[]))),
     }).pipe(
       map(({ perfil, vistasDeshabilitadas }) => {
         const usuario: SesionUsuario = {
@@ -176,7 +172,7 @@ export class AuthService {
     return this.sesion() !== null;
   }
 
-  tieneRol(...roles: Rol[]): boolean {
+  tieneRol(...roles: RolUsuario[]): boolean {
     const actual = this.sesion();
     return !!actual && roles.includes(actual.rol);
   }
@@ -187,7 +183,35 @@ export class AuthService {
   }
 
   /** Única fuente de verdad rol -> ruta base, usada por los guards para saber a dónde mandar a alguien ya autenticado. */
-  rutaHomeParaRol(rol: Rol): string {
+  rutaHomeParaRol(rol: RolUsuario): string {
     return rol === 'admin' ? '/admin' : '/empresa';
+  }
+
+  /**
+   * Ruta completa de la primera vista a la que este usuario tiene acceso
+   * (rol + vistas deshabilitadas), o null si no le queda ninguna
+   * disponible (-> /acceso-restringido). Mismo orden/reglas que los
+   * sidebars (EmpresaLayoutComponent / AdminLayoutComponent). 'analitica'
+   * (dueño) y 'reportes'/'configuración' (admin) quedan afuera a
+   * propósito: están ocultas del sidebar / no tienen página real todavía.
+   */
+  primeraVistaDisponible(): string | null {
+    const actual = this.sesion();
+    if (!actual) return null;
+
+    if (actual.rol === 'admin') {
+      if (this.puedeVerVista('dashboard')) return '/admin/dashboard';
+      if (this.puedeVerVista('empresas')) return '/admin/empresas';
+      if (this.puedeVerVista('suscripciones')) return '/admin/suscripciones';
+      if (this.puedeVerVista('actividad')) return '/admin/actividad';
+      return null;
+    }
+
+    const esDueño = actual.rol === 'dueño';
+    if (esDueño && this.puedeVerVista('dashboard')) return '/empresa/dashboard';
+    if (this.puedeVerVista('inventario')) return '/empresa/inventario';
+    if (this.puedeVerVista('ventas')) return '/empresa/ventas';
+    if (esDueño && this.puedeVerVista('finanzas')) return '/empresa/finanzas';
+    return null;
   }
 }

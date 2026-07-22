@@ -50,6 +50,7 @@ export class SidebarComponent {
   showAvatarFallback = false;
   showProfileModal = false;
   mobileOpen = false;
+  confirmandoCierre = false;
 
   onLogoError(event: Event): void {
     this.showLogoFallback = true;
@@ -62,6 +63,7 @@ export class SidebarComponent {
 
   closeProfile(): void {
     this.showProfileModal = false;
+    this.confirmandoCierre = false;
   }
 
   toggleMobile(): void {
@@ -72,8 +74,17 @@ export class SidebarComponent {
     this.mobileOpen = false;
   }
 
+  pedirConfirmacionCierre(): void {
+    this.confirmandoCierre = true;
+  }
+
+  cancelarCierre(): void {
+    this.confirmandoCierre = false;
+  }
+
   cerrarSesion(): void {
     this.showProfileModal = false;
+    this.confirmandoCierre = false;
     this.mobileOpen = false;
     this.authService.logout();
     this.router.navigate(['/login']);

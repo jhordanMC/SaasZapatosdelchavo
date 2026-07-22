@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, RedirectFunction, Router } from '@angular/router';
 import { map } from 'rxjs';
-import { ClaveVista } from '../services/usuarios';
-import { AuthService, Rol } from './auth';
+import { ClaveVista, RolUsuario } from '../services/usuarios';
+import { AuthService } from './auth';
 
-export function roleGuard(...rolesPermitidos: Rol[]): CanActivateFn {
+export function roleGuard(...rolesPermitidos: RolUsuario[]): CanActivateFn {
   return () => {
     const authService = inject(AuthService);
     const router = inject(Router);
@@ -55,6 +55,29 @@ export function vistaGuard(clave: ClaveVista): CanActivateFn {
     );
   };
 }
+
+/**
+ * Ruta índice de /admin y /empresa (path: '' dentro de sus children): en vez
+ * de un redirectTo fijo a 'dashboard' (que rebotaba a /acceso-restringido si
+ * esa vista puntual estaba deshabilitada — dashboard existe pero el usuario
+ * no puede verla), calcula la primera vista realmente disponible según rol +
+ * vistas deshabilitadas.
+ *
+ * Es un `redirectTo` FUNCIÓN (no un canActivate) a propósito: Angular exige
+ * que toda ruta tenga component/loadComponent/redirectTo/children/
+ * loadChildren — una ruta con SOLO canActivate (sin ninguno de esos) hace
+ * fallar la validación del Router al arrancar la app entera (NG04014), aunque
+ * el guard siempre redirija. `redirectTo` como función corre en contexto de
+ * inyección (puede usar inject()) y soporta devolver un Observable, así que
+ * es la herramienta correcta acá.
+ */
+export const resolverPrimeraVista: RedirectFunction = () => {
+  const authService = inject(AuthService);
+
+  return authService.esperarInicializacion().pipe(
+    map(() => authService.primeraVistaDisponible() ?? '/acceso-restringido'),
+  );
+};
 
 /**
  * Inverso de roleGuard: si ya hay una sesión activa, manda directo al home

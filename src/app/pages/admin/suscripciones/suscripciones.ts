@@ -53,6 +53,7 @@ export class Suscripciones implements OnInit {
   constructor(private suscripcionesService: SuscripcionesService) {}
 
   tabActiva: TabSuscripciones = 'planes';
+  modalLogoError = false;
 
   suscripciones = signal<SuscripcionListItem[]>([]);
   planes = signal<Plan[]>([]);

@@ -356,8 +356,28 @@
   color: #024b40;
 }
 
+.modal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 6px;
+  text-align: center;
+}
+.modal-brand-logo { width: 70px; height: auto; margin-bottom: 10px; }
+.modal-brand-name {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.modal-brand-name .dk { color: #024B40; }
+.modal-brand-name .gd { color: #DA9E0B; }
+
 .modal-header {
-  padding: 22px 24px 4px;
+  padding: 18px 24px 4px;
 }
 
 .modal-header h2 {

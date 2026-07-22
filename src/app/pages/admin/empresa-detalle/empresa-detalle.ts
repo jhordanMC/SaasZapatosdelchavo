@@ -3,15 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Empresa, EmpresasService, EstadoEmpresa, Local, LocalInput, LocalUpdateInput } from '../../../services/empresas';
 import { PageTitleService } from '../../../shared/admin-layout/page-title';
 import {
   ClaveVista,
   EstadoUsuario,
+  PermisoVista,
   Rol,
   Usuario,
   UsuariosService,
-  VISTAS_DISPONIBLES,
+  VISTAS_POR_ROL,
+  mapearRol,
 } from '../../../services/usuarios';
 import { Plan, Suscripcion, SuscripcionCreateInput, SuscripcionesService } from '../../../services/suscripciones';
 
@@ -63,7 +66,10 @@ export class EmpresaDetalleComponent implements OnInit {
 
   private idEmpresa: string;
   tabActiva: TabDetalle = 'locales';
-  vistas = VISTAS_DISPONIBLES;
+  // Se llena en abrirModalPermisos() según el rol REAL del usuario al que
+  // se le abre el modal (VISTAS_POR_ROL) — no es fijo, dueño/vendedor/admin
+  // tienen catálogos distintos.
+  vistas: PermisoVista[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -668,26 +674,31 @@ export class EmpresaDetalleComponent implements OnInit {
   // ── Modal "Permisos de vista" (por usuario) ─────────────
   modalPermisosAbierto = false;
   usuarioPermisos: Usuario | null = null;
-  permisosSeleccion: Record<ClaveVista, boolean> = this.permisosSeleccionVacia();
+  permisosSeleccion: Record<ClaveVista, boolean> = {} as Record<ClaveVista, boolean>;
   cargandoPermisos = false;
   guardandoPermisos = false;
 
-  private permisosSeleccionVacia(): Record<ClaveVista, boolean> {
-    const base = {} as Record<ClaveVista, boolean>;
-    this.vistas.forEach((v) => (base[v.clave] = true));
-    return base;
-  }
-
   abrirModalPermisos(usuario: Usuario): void {
     this.usuarioPermisos = usuario;
-    this.permisosSeleccion = this.permisosSeleccionVacia();
+    this.vistas = [];
+    this.permisosSeleccion = {} as Record<ClaveVista, boolean>;
     this.modalPermisosAbierto = true;
     this.cargandoPermisos = true;
 
-    this.usuariosService.listarPermisosVista(this.idEmpresa, usuario.id_usuario).subscribe({
-      next: (deshabilitadas) => {
-        this.cargandoPermisos = false;
+    // El catálogo de vistas depende del rol REAL del usuario (admin ve
+    // Dashboard/Empresas/Suscripciones/Actividad; dueño ve Dashboard/
+    // Inventario/Ventas/Finanzas; vendedor solo Inventario/Ventas) — hay
+    // que saber su rol antes de poder armar los checkboxes.
+    forkJoin({
+      roles: this.usuariosService.listarRolesDeUsuario(this.idEmpresa, usuario.id_usuario),
+      deshabilitadas: this.usuariosService.listarPermisosVista(this.idEmpresa, usuario.id_usuario),
+    }).subscribe({
+      next: ({ roles, deshabilitadas }) => {
+        const rol = mapearRol(roles.map((r) => r.nombre));
+        this.vistas = VISTAS_POR_ROL[rol];
+        this.vistas.forEach((v) => (this.permisosSeleccion[v.clave] = true));
         deshabilitadas.forEach((clave) => (this.permisosSeleccion[clave] = false));
+        this.cargandoPermisos = false;
       },
       error: () => {
         this.cargandoPermisos = false;

@@ -172,8 +172,11 @@ export class Verificar2faComponent implements OnInit, AfterViewInit, OnDestroy {
         this.success = true;
         if (this.intervaloId) clearInterval(this.intervaloId);
 
-        const destino =
-          usuario.rol === 'admin' ? '/admin/dashboard' : usuario.rol === 'dueño' ? '/empresa/dashboard' : '/empresa/ventas';
+        // Ruta base según el rol (/admin o /empresa); si es /empresa, la
+        // propia ruta índice (irAPrimeraVistaGuard) resuelve a la primera
+        // vista que este usuario realmente puede ver, sin asumir
+        // 'dashboard'/'ventas' fijo como se hacía antes.
+        const destino = this.authService.rutaHomeParaRol(usuario.rol);
 
         setTimeout(() => this.router.navigate([destino]), 1200);
       },

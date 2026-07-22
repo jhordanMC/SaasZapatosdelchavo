@@ -30,7 +30,7 @@
       </svg>
     </button>
 
-    <div class="profile-modal-brand">
+    <div class="profile-modal-brand" *ngIf="!confirmandoCierre">
       <img [src]="logoSrc" alt="VILCAS" class="profile-modal-logo" />
       <div class="profile-modal-brand-name">
         <span
@@ -40,44 +40,74 @@
       </div>
     </div>
 
-    <div class="profile-modal-body">
-      <div class="profile-avatar-lg">
-        <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" />
-        <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
+    <ng-container *ngIf="!confirmandoCierre; else confirmarCierreTpl">
+      <div class="profile-modal-body">
+        <div class="profile-avatar-lg">
+          <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" />
+          <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
+        </div>
+        <div class="profile-name">{{ userName }}</div>
+        <div class="profile-role">{{ userRole }}</div>
       </div>
-      <div class="profile-name">{{ userName }}</div>
-      <div class="profile-role">{{ userRole }}</div>
-    </div>
 
-    <div class="profile-info-list">
-      <div class="profile-info-row">
-        <span class="profile-info-label">ID de usuario</span>
-        <span class="profile-info-value">{{ userId }}</span>
+      <div class="profile-info-list">
+        <div class="profile-info-row">
+          <span class="profile-info-label">ID de usuario</span>
+          <span class="profile-info-value">{{ userId }}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">DNI</span>
+          <span class="profile-info-value">{{ userDni }}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Correo</span>
+          <span class="profile-info-value">{{ userEmail }}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Teléfono</span>
+          <span class="profile-info-value">{{ userPhone }}</span>
+        </div>
       </div>
-      <div class="profile-info-row">
-        <span class="profile-info-label">DNI</span>
-        <span class="profile-info-value">{{ userDni }}</span>
-      </div>
-      <div class="profile-info-row">
-        <span class="profile-info-label">Correo</span>
-        <span class="profile-info-value">{{ userEmail }}</span>
-      </div>
-      <div class="profile-info-row">
-        <span class="profile-info-label">Teléfono</span>
-        <span class="profile-info-value">{{ userPhone }}</span>
-      </div>
-    </div>
 
-    <div class="profile-modal-actions">
-      <button class="profile-btn-logout" (click)="cerrarSesion()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        Cerrar sesión
-      </button>
-      <button class="profile-btn-secondary" (click)="closeProfile()">Cerrar</button>
-    </div>
+      <div class="profile-modal-actions">
+        <button class="profile-btn-logout" (click)="pedirConfirmacionCierre()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Cerrar sesión
+        </button>
+        <button class="profile-btn-secondary" (click)="closeProfile()">Cerrar</button>
+      </div>
+    </ng-container>
+
+    <ng-template #confirmarCierreTpl>
+      <div class="profile-logout-confirm">
+        <div class="profile-logout-confirm-icono">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </div>
+        <h2 class="profile-logout-confirm-titulo">¿Cerrar sesión?</h2>
+        <p class="profile-logout-confirm-desc">Vas a salir de tu cuenta. Vas a necesitar volver a iniciar sesión para continuar.</p>
+        <div class="profile-modal-actions">
+          <button class="profile-btn-logout" (click)="cerrarSesion()">Sí, cerrar sesión</button>
+          <button class="profile-btn-secondary" (click)="cancelarCierre()">Cancelar</button>
+        </div>
+
+        <div class="profile-modal-brand profile-modal-brand-bottom">
+          <img [src]="logoSrc" alt="VILCAS" class="profile-modal-logo" />
+          <div class="profile-modal-brand-name">
+            <span
+              *ngFor="let char of brandName.split(''); let i = index"
+              [ngClass]="{ dk: i !== brandAccentIndex, gd: i === brandAccentIndex }"
+            >{{ char }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   </div>
 </div>

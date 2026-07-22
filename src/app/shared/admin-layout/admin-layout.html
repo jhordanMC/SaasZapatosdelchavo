@@ -1,5 +1,5 @@
 <app-sidebar
-  [items]="navItems"
+  [items]="navItems()"
   [avatarLabel]="iniciales()"
   [userName]="usuario()?.nombre ?? 'Usuario'"
   userRole="Administrador"
@@ -8,7 +8,6 @@
   [userEmail]="usuario()?.correo ?? '—'"
   [userPhone]="usuario()?.telefono ?? '—'"
   brandName="VILCAS"
-  brandSub="SaaS Platform"
   logoSrc="/vilcas.png"
 ></app-sidebar>
 

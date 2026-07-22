@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
@@ -6,6 +6,7 @@ import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
 import { PageTitleService } from './page-title';
 import { AuthService } from '../../core/auth';
+import { ClaveVista } from '../../services/usuarios';
 
 /**
  * Layout único para toda la sección /admin.
@@ -26,6 +27,15 @@ import { AuthService } from '../../core/auth';
 export class AdminLayoutComponent implements OnInit, OnDestroy {
   usuario;
 
+  // ── Fuente única del menú de navegación admin ──────────
+  // Reactivo: cada vista puntual puede estar deshabilitada para este
+  // usuario (modal "Permisos de vista"), independiente de que ya tenga
+  // el rol 'admin' — no tiene sentido listarla si el guard igual la va
+  // a bloquear. Reportes/Configuración quedan siempre visibles: son
+  // links muertos (href:'#', sin página real todavía), no hay nada que
+  // gatear.
+  navItems;
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -33,17 +43,28 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     public pageTitleService: PageTitleService
   ) {
     this.usuario = this.authService.usuarioActual;
-  }
 
-  // ── Fuente única del menú de navegación admin ──────────
-  navItems: SidebarItem[] = [
-    { label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard', exact: true },
-    { label: 'Empresas', route: '/admin/empresas', icon: 'empresas' },
-    { label: 'Suscripciones', route: '/admin/suscripciones', icon: 'suscripciones' },
-    { label: 'Actividad', route: '/admin/actividad', icon: 'actividad' },
-    { label: 'Reportes', href: '#', icon: 'reportes' },
-    { label: 'Configuración', href: '#', icon: 'config' },
-  ];
+    this.navItems = computed<SidebarItem[]>(() => {
+      const puedeVer = (clave: ClaveVista) => this.authService.puedeVerVista(clave);
+
+      const base: SidebarItem[] = [];
+      if (puedeVer('dashboard')) {
+        base.push({ label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard', exact: true });
+      }
+      if (puedeVer('empresas')) {
+        base.push({ label: 'Empresas', route: '/admin/empresas', icon: 'empresas' });
+      }
+      if (puedeVer('suscripciones')) {
+        base.push({ label: 'Suscripciones', route: '/admin/suscripciones', icon: 'suscripciones' });
+      }
+      if (puedeVer('actividad')) {
+        base.push({ label: 'Actividad', route: '/admin/actividad', icon: 'actividad' });
+      }
+      base.push({ label: 'Reportes', href: '#', icon: 'reportes' });
+      base.push({ label: 'Configuración', href: '#', icon: 'config' });
+      return base;
+    });
+  }
 
   iniciales(): string {
     const nombre = this.usuario()?.nombre?.trim();

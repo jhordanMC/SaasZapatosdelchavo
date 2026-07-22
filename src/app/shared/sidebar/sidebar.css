@@ -270,6 +270,14 @@
   text-align: center;
 }
 
+.profile-modal-brand-bottom {
+  padding: 10px 24px 4px;
+  margin-top: 2px;
+  border-top: 1px solid #eef3f0;
+}
+.profile-modal-brand-bottom .profile-modal-logo { width: 40px; margin-bottom: 6px; }
+.profile-modal-brand-bottom .profile-modal-brand-name { font-size: 15px; }
+
 .profile-modal-logo {
   width: 70px;
   height: auto;
@@ -420,6 +428,45 @@
 
 .profile-btn-secondary:hover {
   background: #e8f1ec;
+}
+
+.profile-logout-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 24px 26px;
+}
+
+.profile-logout-confirm-icono {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fbe3e2;
+  color: #b3413a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.profile-logout-confirm-titulo {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0c3a2e;
+}
+
+.profile-logout-confirm-desc {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  color: #4b5a63;
+  line-height: 1.5;
+}
+
+.profile-logout-confirm .profile-modal-actions {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 /* ══════════════════════════════

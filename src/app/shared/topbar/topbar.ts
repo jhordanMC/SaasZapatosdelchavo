@@ -29,6 +29,7 @@ export class TopbarComponent {
 
   showAvatarFallback = false;
   showProfileModal = false;
+  confirmandoCierre = false;
 
   openProfile(): void {
     this.showProfileModal = true;
@@ -36,10 +37,20 @@ export class TopbarComponent {
 
   closeProfile(): void {
     this.showProfileModal = false;
+    this.confirmandoCierre = false;
+  }
+
+  pedirConfirmacionCierre(): void {
+    this.confirmandoCierre = true;
+  }
+
+  cancelarCierre(): void {
+    this.confirmandoCierre = false;
   }
 
   cerrarSesion(): void {
     this.showProfileModal = false;
+    this.confirmandoCierre = false;
     this.authService.logout();
     this.router.navigate(['/login']);
   }

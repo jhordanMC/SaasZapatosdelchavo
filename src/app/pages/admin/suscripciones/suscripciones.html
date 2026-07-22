@@ -140,6 +140,18 @@
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+    </div>
+
     <div class="modal-header"><h2>{{ planEditando ? 'Editar plan' : 'Nuevo plan' }}</h2></div>
 
     <div class="modal-body">
@@ -207,6 +219,18 @@
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+    </div>
+
     <div class="modal-header"><h2>Editar suscripción</h2></div>
 
     <div class="modal-body">
@@ -265,6 +289,18 @@
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
+
+    <div class="modal-brand">
+      <img *ngIf="!modalLogoError" src="/vilcas.png" alt="VILCAS" class="modal-brand-logo" (error)="modalLogoError = true" />
+      <svg *ngIf="modalLogoError" width="52" height="44" viewBox="0 0 68 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+        <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+      </svg>
+      <div class="modal-brand-name">
+        <span *ngFor="let char of 'VILCAS'.split(''); let i = index" [ngClass]="{ dk: i !== 4, gd: i === 4 }">{{ char }}</span>
+      </div>
+    </div>
+
     <div class="modal-header">
       <h2>Pagos</h2>
       <p class="modal-subtitulo" *ngIf="suscripcionPagos as s">{{ s.empresa }}</p>
