@@ -39,6 +39,7 @@ export interface VariantePOSRead {
   talla: string | null;
   sku: string;
   stock_disponible: number;
+  id_local: string | null;
   nombre_local: string | null;
 }
 
@@ -64,6 +65,7 @@ export interface FiltrosPOS {
 
 export interface DetalleVentaCreate {
   id_variante: string;
+  id_local: string;
   cantidad: number;
   /** Descuento en S/ absolutos (por línea). */
   descuento_monto: number;
@@ -79,7 +81,7 @@ export interface PagoCreate {
 }
 
 export interface VentaCreate {
-  id_local: string;
+  id_local: string | null;
   id_cliente?: string | null;
   detalles: DetalleVentaCreate[];
   pagos: PagoCreate[];
@@ -139,6 +141,8 @@ export interface ItemCarrito {
   /** Nombre para mostrar: "{nombre} (talla {talla})". */
   nombre: string;
   talla: string | null;
+  idLocal: string;
+  nombreLocal: string | null;
   fotoUrl: string | null;
   precioUnitario: number;
   cantidad: number;
@@ -168,9 +172,10 @@ export class VentasService {
     return this.http.get<LocalPOSRead[]>(`${this.base}/pos/mis-locales`);
   }
 
-  /** Productos para la pantalla POS, filtrados por local activo. */
-  listarProductosPOS(idLocal: string, filtros: FiltrosPOS = {}): Observable<ProductoPOSRead[]> {
-    let params = new HttpParams().set('id_local', idLocal);
+  /** Productos para la pantalla POS, filtrados por local activo (si existe). */
+  listarProductosPOS(idLocal?: string | null, filtros: FiltrosPOS = {}): Observable<ProductoPOSRead[]> {
+    let params = new HttpParams();
+    if (idLocal) params = params.set('id_local', idLocal);
     if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
     if (filtros.id_categoria) params = params.set('id_categoria', filtros.id_categoria);
     if (filtros.sexo) params = params.set('sexo', filtros.sexo);
@@ -241,17 +246,18 @@ export class VentasService {
    * El descuento que va al backend siempre es absoluto (S/) por línea.
    * Para tipoDescuento 'unidad' se multiplica × cantidad antes de enviar.
    */
-  buildVentaPayload(idLocal: string, pagos: PagoCreate[], idCliente?: string): VentaCreate {
+  buildVentaPayload(idLocal: string | null, pagos: PagoCreate[] = [], idCliente?: string): VentaCreate {
     return {
       id_local: idLocal,
       id_cliente: idCliente ?? null,
-      detalles: this.carrito().map((item) => ({
-        id_variante: item.varianteId,
-        cantidad: item.cantidad,
+      detalles: this.carrito().map((c) => ({
+        id_variante: c.varianteId,
+        id_local: c.idLocal,
+        cantidad: c.cantidad,
         descuento_monto:
-          item.tipoDescuento === 'unidad'
-            ? item.descuentoMonto * item.cantidad
-            : item.descuentoMonto,
+          c.tipoDescuento === 'unidad'
+            ? c.descuentoMonto * c.cantidad
+            : c.descuentoMonto,
       })),
       pagos,
     };

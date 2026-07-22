@@ -73,7 +73,8 @@ export class VentasComponent implements OnInit {
 
   // ── Modal de selección de variante ──────────────────────────────────────
   showVariantePicker: ProductoPOSRead | null = null;
-  varianteSeleccionadaId = '';
+  tallaPicker: string | null = null;
+  localPickerId: string | null = null;
   cantidadSeleccionada = 1;
   descuentoSeleccionado = 0;
   tipoDescuentoSeleccionado: TipoDescuento = 'producto';
@@ -111,7 +112,7 @@ export class VentasComponent implements OnInit {
       next: (locales) => {
         this.locales.set(locales);
         if (locales.length > 0) {
-          this.localActivo.set(locales[0]);
+          this.localActivo.set(null); // Por defecto: "Todos los almacenes"
           this.cargarProductosPOS();
         } else {
           this.error.set('No tienes locales asignados. Contacta al administrador.');
@@ -125,17 +126,20 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  cambiarLocal(idLocal: string): void {
-    const local = this.locales().find((l) => l.id_local === idLocal);
-    if (local) {
-      this.localActivo.set(local);
-      this.cargarProductosPOS();
+  cambiarLocal(idLocal: string | null): void {
+    if (!idLocal) {
+      this.localActivo.set(null);
+    } else {
+      const local = this.locales().find((l) => l.id_local === idLocal);
+      if (local) {
+        this.localActivo.set(local);
+      }
     }
+    this.cargarProductosPOS();
   }
 
   private cargarProductosPOS(): void {
-    const local = this.localActivo();
-    if (!local) return;
+    const localActivoId = this.localActivo()?.id_local ?? null;
 
     this.cargandoProductos.set(true);
     const filtros: FiltrosPOS = {};
@@ -143,7 +147,7 @@ export class VentasComponent implements OnInit {
     if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
     if (this.filtroSexo) filtros.sexo = this.filtroSexo;
 
-    this.ventasService.listarProductosPOS(local.id_local, filtros).subscribe({
+    this.ventasService.listarProductosPOS(localActivoId, filtros).subscribe({
       next: (prods) => {
         this.productos.set(prods);
         this.cargandoProductos.set(false);
@@ -220,8 +224,13 @@ export class VentasComponent implements OnInit {
 
   abrirSelectorVariante(p: ProductoPOSRead): void {
     this.showVariantePicker = p;
-    const primeraVariante = p.variantes[0];
-    this.varianteSeleccionadaId = primeraVariante?.id_variante ?? '';
+    this.tallaPicker = this.filtroTalla !== 'Todas' ? this.filtroTalla : null;
+    this.localPickerId = this.localActivo()?.id_local ?? null;
+    
+    // Ya no forzamos la selección del primer elemento por defecto.
+    // Esto evita que se bloqueen entre sí creando una dependencia circular
+    // donde el usuario no puede ver las otras opciones sin limpiar manualmente.
+
     this.cantidadSeleccionada = 1;
     this.descuentoSeleccionado = 0;
     this.tipoDescuentoSeleccionado = 'producto';
@@ -231,9 +240,39 @@ export class VentasComponent implements OnInit {
     this.showVariantePicker = null;
   }
 
+  get tallasEnModal(): string[] {
+    if (!this.showVariantePicker) return [];
+    let variantes = this.showVariantePicker.variantes;
+    if (this.localPickerId) {
+        variantes = variantes.filter(v => v.id_local === this.localPickerId && v.stock_disponible > 0);
+    }
+    // Unique tallas
+    return Array.from(new Set(variantes.map(v => v.talla ?? v.sku)));
+  }
+
+  get localesEnModal(): { id_local: string, nombre: string, stock: number }[] {
+    if (!this.showVariantePicker) return [];
+    let variantes = this.showVariantePicker.variantes;
+    if (this.tallaPicker) {
+        variantes = variantes.filter(v => (v.talla ?? v.sku) === this.tallaPicker);
+    }
+    // Agrupar por local
+    const localesMap = new Map<string, { id_local: string, nombre: string, stock: number }>();
+    variantes.forEach(v => {
+        if (v.id_local && v.nombre_local) {
+            localesMap.set(v.id_local, {
+                id_local: v.id_local,
+                nombre: v.nombre_local,
+                stock: v.stock_disponible
+            });
+        }
+    });
+    return Array.from(localesMap.values()).filter(l => l.stock > 0);
+  }
+
   get varianteSeleccionada(): VariantePOSRead | undefined {
     return this.showVariantePicker?.variantes.find(
-      (v) => v.id_variante === this.varianteSeleccionadaId
+      (v) => (v.talla ?? v.sku) === this.tallaPicker && v.id_local === this.localPickerId
     );
   }
 
@@ -261,6 +300,8 @@ export class VentasComponent implements OnInit {
       productoId: p.id_producto,
       nombre: `${p.nombre} (talla ${variante.talla ?? variante.sku})`,
       talla: variante.talla,
+      idLocal: variante.id_local!,
+      nombreLocal: variante.nombre_local,
       fotoUrl: null,
       precioUnitario: p.precio_venta,
       cantidad: this.cantidadSeleccionada,
@@ -440,8 +481,7 @@ export class VentasComponent implements OnInit {
 
   /** Envía el carrito al backend y registra la venta. */
   confirmarVenta(): void {
-    const local = this.localActivo();
-    if (!local) return;
+    const localActivoId = this.localActivo()?.id_local ?? null;
 
     this.checkoutError = '';
     this.confirmando = true;
@@ -455,7 +495,7 @@ export class VentasComponent implements OnInit {
         : {}),
     };
 
-    const payload = this.ventasService.buildVentaPayload(local.id_local, [pago]);
+    const payload = this.ventasService.buildVentaPayload(localActivoId, [pago]);
 
     this.ventasService.confirmarVenta(payload).subscribe({
       next: (venta) => {
