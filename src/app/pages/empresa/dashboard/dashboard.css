@@ -19,7 +19,7 @@
 ══════════════════════════════ */
 .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
 .kpi-card {
-  background: #ffffff;
+  background: #F5F8F0;
   border: 1px solid #e8f1ea;
   border-radius: 14px;
   padding: 16px;
@@ -36,7 +36,7 @@
    Paneles base
 ══════════════════════════════ */
 .panel {
-  background: #ffffff;
+  background: #F5F8F0;
   border: 1px solid #e8f1ea;
   border-radius: 14px;
   padding: 20px;

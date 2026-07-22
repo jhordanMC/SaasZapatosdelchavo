@@ -48,10 +48,12 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
       if (esDueño) {
         base.push(
           { label: this.i18n.t('NAV.FINANZAS'), route: '/empresa/finanzas', icon: 'finanzas' },
-          { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
+          // Analítica: oculta a pedido, se reactivará más adelante.
+          // { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
         );
       }
-      base.push({ label: this.i18n.t('NAV.CONFIGURACION'), href: '#', icon: 'config' });
+      // Configuración: oculta a pedido, se reactivará más adelante.
+      // base.push({ label: this.i18n.t('NAV.CONFIGURACION'), href: '#', icon: 'config' });
       return base;
     });
   }

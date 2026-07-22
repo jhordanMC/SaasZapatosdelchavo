@@ -99,7 +99,7 @@
 }
 
 .nav-item.active {
-  background: #ffffff;
+  background: #F5F8F0;
   color: #024B40;
   font-weight: 700;
   box-shadow: 0 14px 28px rgba(2, 75, 64, 0.16);
@@ -235,7 +235,7 @@
   position: relative;
   width: 100%;
   max-width: 380px;
-  background: white;
+  background: #F5F8F0;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 30px 60px rgba(1, 20, 16, 0.35);
@@ -436,7 +436,7 @@
   height: 40px;
   border-radius: 12px;
   border: 1px solid rgba(2, 75, 64, 0.15);
-  background: white;
+  background: #F5F8F0;
   color: #024B40;
   align-items: center;
   justify-content: center;
