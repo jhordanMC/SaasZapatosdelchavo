@@ -111,7 +111,8 @@
 
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, 220px);
+  justify-content: start;
   gap: 18px;
 }
 
@@ -245,6 +246,80 @@
 .form-row-2 { flex-direction: row; gap: 12px; }
 .form-row-2 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
+/* Campo de categoría con botón "+" al costado, mismo alto que el select */
+.categoria-field { display: flex; gap: 8px; align-items: stretch; }
+.categoria-field select { flex: 1; min-width: 0; }
+.btn-add-categoria {
+  flex-shrink: 0;
+  width: 38px;
+  border: 1px solid #d8e6dd;
+  border-radius: 10px;
+  background: #f8faf7;
+  color: #024b40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+}
+.btn-add-categoria:hover { background: #eaf3ea; }
+.btn-add-categoria.active {
+  background: #024b40;
+  border-color: #024b40;
+  color: white;
+  transform: rotate(45deg);
+}
+
+/* Panel de creación rápida de categoría */
+.nueva-categoria-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #f8faf7;
+  border: 1.5px dashed #d8e6dd;
+  border-radius: 14px;
+}
+.nueva-categoria-panel label { font-size: 12px; font-weight: 600; color: #1f4034; }
+
+.categoria-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #d8e6dd;
+  border-radius: 999px;
+  background: white;
+  color: #1f4034;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.chip:hover { background: #eaf3ea; }
+.chip-activo { background: #024b40; border-color: #024b40; color: white; }
+
+.categoria-input-row { display: flex; gap: 8px; }
+.categoria-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  border: 1px solid #d8e6dd;
+  border-radius: 10px;
+  background: white;
+  color: #1f4034;
+  outline: none;
+}
+.btn-crear-categoria { flex-shrink: 0; white-space: nowrap; }
+
+.categoria-error {
+  padding: 8px 12px;
+  background: #fff5f5;
+  border: 1px solid #fbb;
+  border-radius: 8px;
+  color: #c0392b;
+  font-size: 12px;
+}
+
 .variantes-header { display: flex; justify-content: space-between; align-items: center; }
 .variantes-header label { font-size: 12px; font-weight: 600; color: #1f4034; }
 .btn-link { background: none; border: none; color: #024b40; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -375,4 +450,3 @@
   color: #c0392b;
   font-size: 13px;
 }
-

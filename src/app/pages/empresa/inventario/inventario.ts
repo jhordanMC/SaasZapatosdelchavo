@@ -16,6 +16,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
+  CategoriaCreateInput,
   CategoriaRead,
   FiltrosProducto,
   InventarioService,
@@ -54,6 +55,20 @@ const SEXO_LABELS: Record<SexoProducto, string> = {
   nino: 'Niño',
 };
 
+// Sugerencias rápidas de categoría — tipos de calzado más comunes en el
+// mercado peruano. Son solo un atajo para no tener que tipear cada vez;
+// el dueño igual puede crear cualquier categoría propia con nombre libre.
+const CATEGORIAS_SUGERIDAS = [
+  'Deportivo',
+  'Tacos',
+  'Ballerinas',
+  'Sandalias',
+  'Plataformas',
+  'Mocasines',
+  'Botines',
+  'Urbano / Casual',
+];
+
 @Component({
   selector: 'app-inventario',
   standalone: true,
@@ -84,6 +99,13 @@ export class InventarioComponent implements OnInit {
   showModal = false;
   editandoId: string | null = null;
   form: ProductoForm = this.formVacio();
+
+  // ── Creador rápido de categoría (dentro del modal de producto) ──────────
+  readonly categoriasSugeridas = CATEGORIAS_SUGERIDAS;
+  mostrarNuevaCategoria = false;
+  nuevaCategoriaNombre = '';
+  creandoCategoria = signal(false);
+  errorCategoria = signal<string | null>(null);
 
   // ── Helpers de template ─────────────────────────────────────────────────
 
@@ -187,6 +209,7 @@ export class InventarioComponent implements OnInit {
     this.editandoId = null;
     this.form = this.formVacio();
     this.errorModal.set(null);
+    this.cerrarPanelNuevaCategoria();
     this.showModal = true;
   }
 
@@ -211,6 +234,7 @@ export class InventarioComponent implements OnInit {
           ),
         };
         this.errorModal.set(null);
+        this.cerrarPanelNuevaCategoria();
         this.showModal = true;
       },
       error: () => this.error.set('No se pudo cargar el detalle del producto.'),
@@ -220,6 +244,7 @@ export class InventarioComponent implements OnInit {
   cerrarModal(): void {
     this.showModal = false;
     this.errorModal.set(null);
+    this.cerrarPanelNuevaCategoria();
   }
 
   agregarFilaVariante(): void {
@@ -229,6 +254,66 @@ export class InventarioComponent implements OnInit {
 
   quitarFilaVariante(index: number): void {
     this.form.variantes.splice(index, 1);
+  }
+
+  // ── Creador rápido de categoría ──────────────────────────────────────────
+
+  /** Nombres (en minúscula) de categorías que ya existen, para no duplicar sugerencias. */
+  private get nombresCategoriaExistentes(): Set<string> {
+    return new Set(this.categorias().map((c) => c.nombre.trim().toLowerCase()));
+  }
+
+  /** Sugerencias típicas que aún no están creadas como categoría en esta empresa. */
+  get categoriasSugeridasDisponibles(): string[] {
+    const existentes = this.nombresCategoriaExistentes;
+    return this.categoriasSugeridas.filter((s) => !existentes.has(s.toLowerCase()));
+  }
+
+  abrirPanelNuevaCategoria(): void {
+    this.mostrarNuevaCategoria = true;
+    this.nuevaCategoriaNombre = '';
+    this.errorCategoria.set(null);
+  }
+
+  cerrarPanelNuevaCategoria(): void {
+    this.mostrarNuevaCategoria = false;
+    this.nuevaCategoriaNombre = '';
+    this.errorCategoria.set(null);
+  }
+
+  elegirCategoriaSugerida(nombre: string): void {
+    this.nuevaCategoriaNombre = nombre;
+  }
+
+  crearCategoriaRapida(): void {
+    const nombre = this.nuevaCategoriaNombre.trim();
+    if (!nombre) {
+      this.errorCategoria.set('Escribe o elige un nombre de categoría.');
+      return;
+    }
+    if (this.nombresCategoriaExistentes.has(nombre.toLowerCase())) {
+      this.errorCategoria.set('Ya existe una categoría con ese nombre.');
+      return;
+    }
+
+    const datos: CategoriaCreateInput = { nombre };
+    this.creandoCategoria.set(true);
+    this.errorCategoria.set(null);
+
+    this.inventarioService.crearCategoria(datos).subscribe({
+      next: (nueva) => {
+        // La agrega a la lista en memoria (sin recargar todo el catálogo)
+        // y la deja seleccionada de una vez en el producto que se está creando.
+        this.categorias.update((lista) => [...lista, nueva].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        this.form.id_categoria = nueva.id_categoria;
+        this.creandoCategoria.set(false);
+        this.cerrarPanelNuevaCategoria();
+      },
+      error: (err) => {
+        this.creandoCategoria.set(false);
+        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo crear la categoría.');
+      },
+    });
   }
 
   onFotoSeleccionada(event: Event): void {
