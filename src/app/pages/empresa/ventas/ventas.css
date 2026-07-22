@@ -707,6 +707,22 @@
   to { transform: rotate(360deg); }
 }
 
+/* Vuelo al carrito: ícono creado por JS (ver ventas.ts) que viaja en arco
+   desde la tarjeta tocada hasta el encabezado del carrito. */
+.vuelo-carrito-icono {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #024b40, #0a7a63);
+  box-shadow: 0 6px 18px rgba(2, 75, 64, 0.5);
+  pointer-events: none;
+  z-index: 3000;
+}
+.vuelo-carrito-icono svg { width: 100%; height: 100%; display: block; }
+
 @media (prefers-reduced-motion: reduce) {
   .venta-card,
   .venta-card.just-added,
@@ -721,8 +737,10 @@
   .metodo-btn.active,
   .sexo-toggle button.active,
   .tipo-descuento-toggle button.active,
-  .exito-icono {
+  .exito-icono,
+  .vuelo-carrito-icono {
     animation: none;
+    transition: none;
+    display: none;
   }
 }
-

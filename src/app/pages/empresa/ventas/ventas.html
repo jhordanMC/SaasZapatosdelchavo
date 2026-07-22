@@ -12,18 +12,20 @@
     <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
   </select>
 
-  <!-- Selector de local -->
+  <!-- Selector de local (visible si hay más de uno) -->
   <select
     class="filter-select local-select"
-    [ngModel]="localActivo()?.id_local || ''"
-    (change)="cambiarLocal($any($event.target).value || null)"
-    title="Almacén / Local"
+    *ngIf="locales().length > 1"
+    (change)="cambiarLocal($any($event.target).value)"
+    title="Local activo"
   >
-    <option value="">🌐 Todos los almacenes</option>
     <option *ngFor="let l of locales()" [value]="l.id_local">
       📍 {{ l.nombre }}
     </option>
   </select>
+  <span class="local-badge" *ngIf="locales().length === 1 && localActivo()">
+    📍 {{ localActivo()!.nombre }}
+  </span>
 
   <div class="sexo-toggle">
     <button *ngFor="let s of sexosDisponibles"
@@ -62,7 +64,7 @@
     </div>
 
     <div class="ventas-grid">
-      <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productosFiltrados" (click)="abrirSelectorVariante(p)">
+      <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productosFiltrados" (click)="abrirSelectorVariante(p, $event)">
         <div class="venta-foto">
           <span class="foto-placeholder">Sin foto</span>
         </div>
@@ -88,7 +90,7 @@
 
   <!-- Panel de carrito -->
   <div class="carrito-panel">
-    <div class="carrito-panel-header">
+    <div class="carrito-panel-header" #carritoVueloDestino>
       <h3>Tu carrito</h3>
       <span class="carrito-contador" [class.bump]="badgeBump" *ngIf="ventasService.carrito().length > 0">{{ ventasService.carrito().length }}</span>
     </div>
@@ -192,25 +194,18 @@
         <span class="foto-placeholder">Sin foto</span>
       </div>
 
-      <div class="form-row form-row-2">
-        <div>
-          <label>Talla</label>
-          <select [(ngModel)]="tallaPicker">
-            <option [ngValue]="null">-- Selecciona o limpia --</option>
-            <option *ngFor="let t of tallasEnModal" [value]="t">
-              Talla {{ t }}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label>Almacén / Local</label>
-          <select [(ngModel)]="localPickerId">
-            <option [ngValue]="null">-- Selecciona o limpia --</option>
-            <option *ngFor="let l of localesEnModal" [value]="l.id_local">
-              📍 {{ l.nombre }} ({{ l.stock }} disp.)
-            </option>
-          </select>
-        </div>
+      <div class="form-row">
+        <label>Talla</label>
+        <select [(ngModel)]="varianteSeleccionadaId">
+          <option
+            *ngFor="let v of showVariantePicker.variantes"
+            [value]="v.id_variante"
+            [disabled]="v.stock_disponible === 0"
+          >
+            {{ v.talla ?? v.sku }} — {{ v.stock_disponible }} disponibles
+            <ng-container *ngIf="v.nombre_local"> ({{ v.nombre_local }})</ng-container>
+          </option>
+        </select>
       </div>
 
       <div class="form-row form-row-2">

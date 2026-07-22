@@ -13,7 +13,7 @@
  *   6. "Completar venta": abre checkout modal.
  *   7. Confirmar: buildVentaPayload() + POST /ventas/pos/confirmar.
  */
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
@@ -46,6 +46,8 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 export class VentasComponent implements OnInit {
   constructor(public ventasService: VentasService) {}
 
+  @ViewChild('carritoVueloDestino') carritoVueloDestinoRef?: ElementRef<HTMLElement>;
+
   // ── Datos del backend ────────────────────────────────────────────────────
   locales = signal<LocalPOSRead[]>([]);
   productos = signal<ProductoPOSRead[]>([]);
@@ -73,11 +75,11 @@ export class VentasComponent implements OnInit {
 
   // ── Modal de selección de variante ──────────────────────────────────────
   showVariantePicker: ProductoPOSRead | null = null;
-  tallaPicker: string | null = null;
-  localPickerId: string | null = null;
+  varianteSeleccionadaId = '';
   cantidadSeleccionada = 1;
   descuentoSeleccionado = 0;
   tipoDescuentoSeleccionado: TipoDescuento = 'producto';
+  private origenVueloEl: HTMLElement | null = null;
 
   // ── Edición de ítem en carrito ───────────────────────────────────────────
   editandoVarianteId: string | null = null;
@@ -112,7 +114,7 @@ export class VentasComponent implements OnInit {
       next: (locales) => {
         this.locales.set(locales);
         if (locales.length > 0) {
-          this.localActivo.set(null); // Por defecto: "Todos los almacenes"
+          this.localActivo.set(locales[0]);
           this.cargarProductosPOS();
         } else {
           this.error.set('No tienes locales asignados. Contacta al administrador.');
@@ -126,20 +128,17 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  cambiarLocal(idLocal: string | null): void {
-    if (!idLocal) {
-      this.localActivo.set(null);
-    } else {
-      const local = this.locales().find((l) => l.id_local === idLocal);
-      if (local) {
-        this.localActivo.set(local);
-      }
+  cambiarLocal(idLocal: string): void {
+    const local = this.locales().find((l) => l.id_local === idLocal);
+    if (local) {
+      this.localActivo.set(local);
+      this.cargarProductosPOS();
     }
-    this.cargarProductosPOS();
   }
 
   private cargarProductosPOS(): void {
-    const localActivoId = this.localActivo()?.id_local ?? null;
+    const local = this.localActivo();
+    if (!local) return;
 
     this.cargandoProductos.set(true);
     const filtros: FiltrosPOS = {};
@@ -147,7 +146,7 @@ export class VentasComponent implements OnInit {
     if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
     if (this.filtroSexo) filtros.sexo = this.filtroSexo;
 
-    this.ventasService.listarProductosPOS(localActivoId, filtros).subscribe({
+    this.ventasService.listarProductosPOS(local.id_local, filtros).subscribe({
       next: (prods) => {
         this.productos.set(prods);
         this.cargandoProductos.set(false);
@@ -222,15 +221,11 @@ export class VentasComponent implements OnInit {
 
   // ── Modal selector de variante ───────────────────────────────────────────
 
-  abrirSelectorVariante(p: ProductoPOSRead): void {
+  abrirSelectorVariante(p: ProductoPOSRead, event?: MouseEvent): void {
+    this.origenVueloEl = (event?.currentTarget as HTMLElement) ?? null;
     this.showVariantePicker = p;
-    this.tallaPicker = this.filtroTalla !== 'Todas' ? this.filtroTalla : null;
-    this.localPickerId = this.localActivo()?.id_local ?? null;
-    
-    // Ya no forzamos la selección del primer elemento por defecto.
-    // Esto evita que se bloqueen entre sí creando una dependencia circular
-    // donde el usuario no puede ver las otras opciones sin limpiar manualmente.
-
+    const primeraVariante = p.variantes[0];
+    this.varianteSeleccionadaId = primeraVariante?.id_variante ?? '';
     this.cantidadSeleccionada = 1;
     this.descuentoSeleccionado = 0;
     this.tipoDescuentoSeleccionado = 'producto';
@@ -240,39 +235,9 @@ export class VentasComponent implements OnInit {
     this.showVariantePicker = null;
   }
 
-  get tallasEnModal(): string[] {
-    if (!this.showVariantePicker) return [];
-    let variantes = this.showVariantePicker.variantes;
-    if (this.localPickerId) {
-        variantes = variantes.filter(v => v.id_local === this.localPickerId && v.stock_disponible > 0);
-    }
-    // Unique tallas
-    return Array.from(new Set(variantes.map(v => v.talla ?? v.sku)));
-  }
-
-  get localesEnModal(): { id_local: string, nombre: string, stock: number }[] {
-    if (!this.showVariantePicker) return [];
-    let variantes = this.showVariantePicker.variantes;
-    if (this.tallaPicker) {
-        variantes = variantes.filter(v => (v.talla ?? v.sku) === this.tallaPicker);
-    }
-    // Agrupar por local
-    const localesMap = new Map<string, { id_local: string, nombre: string, stock: number }>();
-    variantes.forEach(v => {
-        if (v.id_local && v.nombre_local) {
-            localesMap.set(v.id_local, {
-                id_local: v.id_local,
-                nombre: v.nombre_local,
-                stock: v.stock_disponible
-            });
-        }
-    });
-    return Array.from(localesMap.values()).filter(l => l.stock > 0);
-  }
-
   get varianteSeleccionada(): VariantePOSRead | undefined {
     return this.showVariantePicker?.variantes.find(
-      (v) => (v.talla ?? v.sku) === this.tallaPicker && v.id_local === this.localPickerId
+      (v) => v.id_variante === this.varianteSeleccionadaId
     );
   }
 
@@ -291,26 +256,32 @@ export class VentasComponent implements OnInit {
   confirmarAgregado(): void {
     const p = this.showVariantePicker;
     const variante = this.varianteSeleccionada;
+    const local = this.localActivo();
     if (!p || !variante) return;
     if (this.cantidadSeleccionada < 1) return;
     if (variante.stock_disponible < this.cantidadSeleccionada) return;
+    if (!local) {
+      this.error.set('No hay un local activo seleccionado. Recarga la página e intenta de nuevo.');
+      return;
+    }
 
     const item: ItemCarrito = {
       varianteId: variante.id_variante,
       productoId: p.id_producto,
       nombre: `${p.nombre} (talla ${variante.talla ?? variante.sku})`,
       talla: variante.talla,
-      idLocal: variante.id_local!,
-      nombreLocal: variante.nombre_local,
       fotoUrl: null,
       precioUnitario: p.precio_venta,
       cantidad: this.cantidadSeleccionada,
       descuentoMonto: this.descuentoSeleccionado,
       tipoDescuento: this.tipoDescuentoSeleccionado,
+      idLocal: local.id_local,
+      nombreLocal: local.nombre,
     };
     this.ventasService.agregarAlCarrito(item);
     this.showVariantePicker = null;
     this.dispararFeedbackAgregado(p.id_producto);
+    this.dispararVueloAlCarrito();
   }
 
   quitarDelCarrito(varianteId: string): void {
@@ -398,6 +369,53 @@ export class VentasComponent implements OnInit {
     }, 900);
   }
 
+  /**
+   * Animación de "vuelo al carrito": clona un pequeño ícono con los colores
+   * de VILCAS en la posición de la tarjeta tocada y lo anima con la Web
+   * Animations API en un arco (sube y luego cae hacia el carrito, achicándose
+   * y desvaneciéndose), en vez de una línea recta — se ve mucho más natural.
+   *
+   * No usamos la foto del producto porque el catálogo de Ventas todavía no
+   * carga imágenes reales (ProductoPOSRead no trae fotoUrl); en su lugar
+   * volamos un ícono de zapato representativo.
+   */
+  private dispararVueloAlCarrito(): void {
+    const origen = this.origenVueloEl;
+    const destinoEl = this.carritoVueloDestinoRef?.nativeElement;
+    if (!origen || !destinoEl) return;
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    const rectOrigen = origen.getBoundingClientRect();
+    const rectDestino = destinoEl.getBoundingClientRect();
+
+    const volador = document.createElement('div');
+    volador.className = 'vuelo-carrito-icono';
+    volador.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>
+      </svg>`;
+    volador.style.left = `${rectOrigen.left + rectOrigen.width / 2 - 16}px`;
+    volador.style.top = `${rectOrigen.top + rectOrigen.height / 2 - 16}px`;
+    document.body.appendChild(volador);
+
+    const dx = rectDestino.left + rectDestino.width / 2 - (rectOrigen.left + rectOrigen.width / 2);
+    const dy = rectDestino.top + rectDestino.height / 2 - (rectOrigen.top + rectOrigen.height / 2);
+
+    const animacion = volador.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        // Punto medio del arco: sube un poco antes de caer hacia el carrito.
+        { transform: `translate(${dx * 0.5}px, ${dy - 60}px) scale(0.7)`, opacity: 0.9, offset: 0.55 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.15)`, opacity: 0 },
+      ],
+      { duration: 650, easing: 'cubic-bezier(0.3, 0.1, 0.3, 1)', fill: 'forwards' }
+    );
+
+    animacion.onfinish = () => volador.remove();
+    setTimeout(() => volador.remove(), 800); // red de seguridad si onfinish no dispara
+  }
+
   private pulseTotal(): void {
     this.totalPulse = false;
     setTimeout(() => (this.totalPulse = true), 0);
@@ -481,7 +499,8 @@ export class VentasComponent implements OnInit {
 
   /** Envía el carrito al backend y registra la venta. */
   confirmarVenta(): void {
-    const localActivoId = this.localActivo()?.id_local ?? null;
+    const local = this.localActivo();
+    if (!local) return;
 
     this.checkoutError = '';
     this.confirmando = true;
@@ -495,7 +514,7 @@ export class VentasComponent implements OnInit {
         : {}),
     };
 
-    const payload = this.ventasService.buildVentaPayload(localActivoId, [pago]);
+    const payload = this.ventasService.buildVentaPayload(local.id_local, [pago]);
 
     this.ventasService.confirmarVenta(payload).subscribe({
       next: (venta) => {
