@@ -84,7 +84,7 @@
         <div class="kpi-card accent">
           <div class="kpi-top">
             <div>
-              <div class="kpi-value">{{ fmtUSD(ingresosTotal) }}</div>
+              <div class="kpi-value">{{ fmtPEN(ingresosTotal) }}</div>
               <div class="kpi-label">Ingresos este mes</div>
             </div>
             <div class="kpi-icon accent">
@@ -101,7 +101,7 @@
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ scoreGlobal }}%</div>
-              <div class="kpi-label">Score global de desempeño</div>
+              <div class="kpi-label">Score global de satisfacción</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -116,12 +116,12 @@
 
     <!-- KPIs de cobertura y riesgo -->
     <div>
-      <div class="kpi-grid">
+      <div class="kpi-grid kpi-grid-3">
         <div class="kpi-card">
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ totalAsesores }}</div>
-              <div class="kpi-label">Asesores en la plataforma</div>
+              <div class="kpi-label">Usuarios en la plataforma</div>
             </div>
             <div class="kpi-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -130,21 +130,6 @@
             </div>
           </div>
           <div class="kpi-trend neutral">{{ totalEntrenadores }} entrenadores a cargo</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-value">{{ ratioAsesorPorEntrenador.toFixed(1) }}</div>
-              <div class="kpi-label">Asesores por entrenador</div>
-            </div>
-            <div class="kpi-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-          </div>
-          <div class="kpi-trend neutral">ratio de cobertura de entrenamiento</div>
         </div>
 
         <div class="kpi-card">
@@ -207,10 +192,10 @@
         <div class="card-head">
           <div>
             <div class="card-title">Ingresos por empresa</div>
-            <div class="card-sub">Este mes · USD</div>
+            <div class="card-sub">Este mes · Soles</div>
           </div>
           <div style="text-align:right">
-            <div class="ingresos-total">{{ fmtUSD(ingresosTotal) }}</div>
+            <div class="ingresos-total">{{ fmtPEN(ingresosTotal) }}</div>
           </div>
         </div>
 
@@ -220,7 +205,7 @@
               <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
               <span class="ingreso-nombre">{{ e.nombre }}</span>
             </div>
-            <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtUSD(e.ingresosMes) }}</span>
+            <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
           </div>
           <div class="ingreso-bar-bg">
             <div class="ingreso-bar-fill" [class.zero]="e.ingresosMes === 0" [style.width.%]="(e.ingresosMes / ingresosMax) * 100"></div>
@@ -257,7 +242,7 @@
               <span class="tipo-chip" [ngClass]="tipoStyle[f.tipo]">{{ f.tipo }}</span>
               <span class="ingreso-nombre">{{ f.cantidad }} empresa{{ f.cantidad !== 1 ? 's' : '' }} · score {{ f.scorePromedio }}%</span>
             </div>
-            <span class="ingreso-monto">{{ fmtUSD(f.ingresos) }}</span>
+            <span class="ingreso-monto">{{ fmtPEN(f.ingresos) }}</span>
           </div>
           <div class="ingreso-bar-bg">
             <div class="ingreso-bar-fill" [style.width.%]="(f.ingresos / maxIngresoTipo) * 100"></div>
@@ -277,7 +262,7 @@
             <div class="ingreso-left">
               <span class="ingreso-nombre"><strong>{{ p.plan }}</strong> · {{ p.cantidad }} empresa{{ p.cantidad !== 1 ? 's' : '' }}</span>
             </div>
-            <span class="ingreso-monto">{{ fmtUSD(p.ingresos) }}</span>
+            <span class="ingreso-monto">{{ fmtPEN(p.ingresos) }}</span>
           </div>
           <div class="ingreso-bar-bg">
             <div class="ingreso-bar-fill" [style.width.%]="p.pct"></div>
@@ -301,7 +286,7 @@
               <span class="tipo-chip" [ngClass]="tipoStyle[e.tipo]">{{ tipoAbrev(e.tipo) }}</span>
               <span class="ingreso-nombre">{{ e.nombre }}</span>
             </div>
-            <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtUSD(e.ingresosMes) }}</span>
+            <span class="ingreso-monto" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
           </div>
         </div>
       </div>
@@ -354,7 +339,7 @@
         <div class="empresas-header">
           <span>EMPRESA</span>
           <span>TIPO</span>
-          <span>ASESORES</span>
+          <span>USUARIOS</span>
           <span>SCORE</span>
           <span>INGRESOS/MES</span>
           <span>ESTADO</span>
@@ -384,7 +369,7 @@
             </div>
             <span class="score-text">{{ scoreStars(e.scorePromedio) }} / 5</span>
           </div>
-          <span class="cell-num" [class.zero]="e.ingresosMes === 0">{{ fmtUSD(e.ingresosMes) }}</span>
+          <span class="cell-num" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
           <div class="estado-cell">
             <span class="estado-chip" [ngClass]="e.estado">{{ e.estado }}</span>
             <button class="more-btn">

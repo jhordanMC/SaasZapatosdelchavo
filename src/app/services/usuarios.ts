@@ -39,6 +39,12 @@ export interface Usuario {
   creado_en: string;
 }
 
+export interface ResumenUsuarios {
+  activos: number;
+  inactivos: number;
+  suspendidos: number;
+}
+
 // Vistas del sistema sobre las que se puede otorgar/quitar permiso
 // individual a un usuario (independiente de lo que ya le da su rol).
 // Incluye tanto las de /admin/* (staff de ALBA) como las de /empresa/*
@@ -126,6 +132,11 @@ export class UsuariosService {
     return this.http.get<Usuario[]>(`${this.apiUrl}/empresas/${idEmpresa}/usuarios`, {
       params: { limit, offset },
     });
+  }
+
+  /** Cross-tenant: conteo de usuarios por estado en toda la plataforma (panel /admin/dashboard). */
+  obtenerResumenUsuarios(): Observable<ResumenUsuarios> {
+    return this.http.get<ResumenUsuarios>(`${this.apiUrl}/empresas/usuarios/resumen`);
   }
 
   crearUsuario(idEmpresa: string, datos: UsuarioCreateInput): Observable<Usuario> {

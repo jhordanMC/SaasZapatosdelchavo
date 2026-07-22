@@ -1,17 +1,29 @@
 import { Component, AfterViewInit, OnDestroy, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { mountLiveline, unmountLiveline } from '../../../livelinewc/liveline-wrapper';
 import { Empresa as EmpresaReal, EmpresasService } from '../../../services/empresas';
+import { SuscripcionesService, SuscripcionListItem } from '../../../services/suscripciones';
+import { UsuariosService } from '../../../services/usuarios';
 
 /**
- * Tipo/plan/score/ingresos/asesores/entrenadores NO existen en el
- * backend real (la tabla `empresas` solo tiene nombre/slug/estado/
- * creado_en — ver services/empresas.ts) — son datos de negocio que
- * llegarán con el módulo de billing/planes, todavía no construido.
- * Mientras tanto se generan de forma ESTÁTICA (determinística por
- * índice, no aleatoria en cada render) a partir de la empresa real,
- * a pedido explícito: "ponle con datos estáticos por ahora".
+ * Tipo/score/asesores/entrenadores NO existen en el backend real (la
+ * tabla `empresas` solo tiene nombre/slug/estado/creado_en — ver
+ * services/empresas.ts) — son datos de negocio que llegarán con los
+ * módulos de sectores/satisfacción, todavía no construidos. Mientras
+ * tanto se generan de forma ESTÁTICA (determinística por índice, no
+ * aleatoria en cada render) a partir de la empresa real.
+ *
+ * `plan` e `ingresosMes` SÍ son reales desde acá: vienen del módulo de
+ * billing (GET /empresas/suscripciones — misma fuente que usa
+ * /admin/suscripciones). Una empresa solo cuenta ingresos si tanto ella
+ * como su suscripción están en estado 'activa'.
+ *
+ * "Usuarios activos"/"retirados" también son reales: GET
+ * /empresas/usuarios/resumen (conteo cross-tenant por estado). Distinto
+ * de "Usuarios en la plataforma" (antes "Asesores"), que sigue ligado a
+ * asesores/entrenadores — ese sí sigue fake.
  */
 type TipoEmpresa = 'Banca' | 'Seguros' | 'Telecomunicaciones' | 'Retail' | 'Financiero';
 
@@ -48,7 +60,6 @@ interface PuntoMes {
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const TIPOS_ESTATICOS: TipoEmpresa[] = ['Banca', 'Seguros', 'Telecomunicaciones', 'Retail', 'Financiero'];
-const PLANES_ESTATICOS = ['Básico', 'Pro'];
 
 @Component({
   selector: 'app-dashboard',
@@ -91,7 +102,11 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   private liveInterval?: ReturnType<typeof setInterval>;
   liveValueActual = 0;
 
-  constructor(private empresasService: EmpresasService) {
+  constructor(
+    private empresasService: EmpresasService,
+    private suscripcionesService: SuscripcionesService,
+    private usuariosService: UsuariosService
+  ) {
     const today = new Date().toLocaleDateString('es-ES', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
@@ -99,35 +114,52 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngOnInit(): void {
-    this.empresasService.listarEmpresas().subscribe({
-      next: (empresas) => {
-        this.todasEmpresas = empresas.map((e, i) => this.enriquecerEmpresa(e, i));
+    forkJoin({
+      empresas: this.empresasService.listarEmpresas(),
+      suscripciones: this.suscripcionesService.listarTodas(),
+    }).subscribe({
+      next: ({ empresas, suscripciones }) => {
+        const suscripcionPorEmpresa = new Map(suscripciones.map((s) => [s.id_empresa, s]));
+        this.todasEmpresas = empresas.map((e, i) =>
+          this.enriquecerEmpresa(e, i, suscripcionPorEmpresa.get(e.id_empresa))
+        );
       },
       error: () => {
         this.todasEmpresas = [];
       },
     });
+
+    this.usuariosService.obtenerResumenUsuarios().subscribe({
+      next: (resumen) => {
+        this.usuariosActivosReal = resumen.activos;
+        this.usuariosRetiradosReal = resumen.inactivos + resumen.suspendidos;
+      },
+      error: () => {
+        this.usuariosActivosReal = 0;
+        this.usuariosRetiradosReal = 0;
+      },
+    });
   }
 
-  private enriquecerEmpresa(empresa: EmpresaReal, index: number): Empresa {
+  private enriquecerEmpresa(empresa: EmpresaReal, index: number, suscripcion?: SuscripcionListItem): Empresa {
     const activa = empresa.estado === 'activa';
+    const facturando = activa && suscripcion?.estado === 'activa';
     return {
       nombre: empresa.nombre,
       tipo: TIPOS_ESTATICOS[index % TIPOS_ESTATICOS.length],
       asesores: 5 + ((index * 3) % 18),
       entrenadores: 1 + (index % 4),
       scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
-      plan: PLANES_ESTATICOS[index % PLANES_ESTATICOS.length],
+      plan: suscripcion?.plan ?? 'Sin plan',
       estado: activa ? 'activo' : 'inactivo',
       fechaAlta: empresa.creado_en.slice(0, 10),
-      ingresosMes: activa ? 800 + ((index * 437) % 5200) : 0,
+      ingresosMes: facturando ? Math.max(0, suscripcion!.monto_mensual - suscripcion!.descuento_monto) : 0,
     };
   }
 
-  /** Estático — agregar usuarios reales cross-tenant requeriría sumar
-   *  uno por uno de cada empresa; se deja pendiente hasta que haga falta. */
-  usuariosActivosEstatico = 132;
-  usuariosRetiradosEstatico = 9;
+  /** Real — GET /empresas/usuarios/resumen (conteo cross-tenant por estado). */
+  usuariosActivosReal = 0;
+  usuariosRetiradosReal = 0;
 
   ngAfterViewInit(): void {
     mountLiveline(this.liveChartHost.nativeElement);
@@ -151,9 +183,6 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   get totalEntrenadores(): number {
     return this.todasEmpresas.reduce((a, e) => a + e.entrenadores, 0);
   }
-  get ratioAsesorPorEntrenador(): number {
-    return this.totalEntrenadores > 0 ? this.totalAsesores / this.totalEntrenadores : 0;
-  }
   get scoreGlobal(): number {
     const conScore = this.todasEmpresas.filter((e) => e.scorePromedio > 0);
     if (conScore.length === 0) return 0;
@@ -166,10 +195,10 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     return this.todasEmpresas.reduce((a, e) => a + e.ingresosMes, 0);
   }
   get usuariosActivos(): number {
-    return this.usuariosActivosEstatico;
+    return this.usuariosActivosReal;
   }
   get usuariosRetirados(): number {
-    return this.usuariosRetiradosEstatico;
+    return this.usuariosRetiradosReal;
   }
   get empresasAltaEsteMes(): number {
     const hoy = new Date();
@@ -295,8 +324,8 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /* ── Helpers de formato ── */
-  fmtUSD(n: number): string {
-    return n === 0 ? '—' : `$${n.toLocaleString('en-US')}`;
+  fmtPEN(n: number): string {
+    return n === 0 ? '—' : `S/ ${n.toLocaleString('es-PE')}`;
   }
   scoreColorClass(s: number): string {
     return s >= 85 ? 'score-high' : s >= 70 ? 'score-mid' : 'score-low';

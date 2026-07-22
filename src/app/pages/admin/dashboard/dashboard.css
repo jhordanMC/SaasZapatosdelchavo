@@ -291,6 +291,8 @@
   gap: 16px;
 }
 
+.kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
 .kpi-card {
   background: white;
   border-radius: var(--radius);
