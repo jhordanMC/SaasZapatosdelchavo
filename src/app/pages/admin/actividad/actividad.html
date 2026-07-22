@@ -48,8 +48,7 @@
         <span>Fecha</span>
         <span>Usuario</span>
         <span>Acción</span>
-        <span>Tabla afectada</span>
-        <span>IP</span>
+        <span>Detalle</span>
         <span></span>
       </div>
 
@@ -60,8 +59,7 @@
           <span>{{ registro.nombre_usuario || 'Sistema' }}</span>
         </div>
         <span><span class="accion-pill">{{ registro.accion }}</span></span>
-        <span>{{ registro.tabla_afectada || '—' }}</span>
-        <span>{{ registro.ip_origen || '—' }}</span>
+        <span class="detalle-cell" [title]="detalleTexto(registro)">{{ detalleTexto(registro) }}</span>
         <span>
           <button class="btn-accion" (click)="abrirDetalle(registro)">Ver detalle</button>
         </span>
@@ -102,6 +100,8 @@
     </div>
 
     <div class="modal-body" *ngIf="registroViendo as r">
+      <p class="detalle-resumen">{{ detalleTexto(r) }}</p>
+
       <div class="detalle-grid">
         <div class="detalle-item">
           <span class="detalle-label">Fecha</span>

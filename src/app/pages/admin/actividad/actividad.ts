@@ -124,6 +124,10 @@ export class ActividadComponent implements OnInit {
     return fecha.toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
+  detalleTexto(registro: RegistroAuditoria): string {
+    return registro.detalle || 'Sin detalle registrado (evento anterior a esta función).';
+  }
+
   // ── Modal "Ver detalle" (datos_anteriores / datos_nuevos) ──
   modalDetalleAbierto = false;
   registroViendo: RegistroAuditoria | null = null;

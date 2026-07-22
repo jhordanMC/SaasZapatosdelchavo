@@ -9,6 +9,7 @@ export interface RegistroAuditoria {
   id_usuario: string | null;
   nombre_usuario: string | null;
   accion: string;
+  detalle: string | null;
   tabla_afectada: string | null;
   id_registro_afectado: string | null;
   datos_anteriores: Record<string, unknown> | null;
