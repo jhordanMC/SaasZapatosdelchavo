@@ -2,18 +2,18 @@ import { Component, AfterViewInit, OnDestroy, OnInit, ElementRef, ViewChild } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { mountLiveline, unmountLiveline } from '../../../livelinewc/liveline-wrapper';
+import { LivelineHandle, mountLiveline, unmountLiveline } from '../../../livelinewc/liveline-wrapper';
 import { Empresa as EmpresaReal, EmpresasService } from '../../../services/empresas';
 import { SuscripcionesService, SuscripcionListItem } from '../../../services/suscripciones';
 import { UsuariosService } from '../../../services/usuarios';
 
 /**
- * Tipo/score/asesores/entrenadores NO existen en el backend real (la
- * tabla `empresas` solo tiene nombre/slug/estado/creado_en — ver
- * services/empresas.ts) — son datos de negocio que llegarán con los
- * módulos de sectores/satisfacción, todavía no construidos. Mientras
- * tanto se generan de forma ESTÁTICA (determinística por índice, no
- * aleatoria en cada render) a partir de la empresa real.
+ * Tipo/score/asesores NO existen en el backend real (la tabla `empresas`
+ * solo tiene nombre/slug/estado/creado_en — ver services/empresas.ts) —
+ * son datos de negocio que llegarán con los módulos de sectores/
+ * satisfacción, todavía no construidos. Mientras tanto se generan de
+ * forma ESTÁTICA (determinística por índice, no aleatoria en cada
+ * render) a partir de la empresa real.
  *
  * `plan` e `ingresosMes` SÍ son reales desde acá: vienen del módulo de
  * billing (GET /empresas/suscripciones — misma fuente que usa
@@ -22,8 +22,13 @@ import { UsuariosService } from '../../../services/usuarios';
  *
  * "Usuarios activos"/"retirados" también son reales: GET
  * /empresas/usuarios/resumen (conteo cross-tenant por estado). Distinto
- * de "Usuarios en la plataforma" (antes "Asesores"), que sigue ligado a
- * asesores/entrenadores — ese sí sigue fake.
+ * de "Usuarios en la plataforma" (antes "Asesores"), que sigue fake.
+ *
+ * "Actividad en tiempo real" también es real: GET /empresas/usuarios/
+ * en-linea, basado en presencia trackeada en Redis (ver
+ * app/core/presencia.py en el backend) — reemplaza el random-walk
+ * viejo. Este SaaS no tiene el concepto de "entrenadores" — se sacó
+ * del todo (campo, getter y texto de KPI).
  */
 type TipoEmpresa = 'Banca' | 'Seguros' | 'Telecomunicaciones' | 'Retail' | 'Financiero';
 
@@ -31,7 +36,6 @@ interface Empresa {
   nombre: string;
   tipo: TipoEmpresa;
   asesores: number;
-  entrenadores: number;
   scorePromedio: number;
   plan: string;
   estado: 'activo' | 'inactivo';
@@ -148,7 +152,6 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
       nombre: empresa.nombre,
       tipo: TIPOS_ESTATICOS[index % TIPOS_ESTATICOS.length],
       asesores: 5 + ((index * 3) % 18),
-      entrenadores: 1 + (index % 4),
       scorePromedio: activa ? 65 + ((index * 7) % 30) : 0,
       plan: suscripcion?.plan ?? 'Sin plan',
       estado: activa ? 'activo' : 'inactivo',
@@ -161,9 +164,11 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   usuariosActivosReal = 0;
   usuariosRetiradosReal = 0;
 
+  private livelineHandle?: LivelineHandle;
+
   ngAfterViewInit(): void {
-    mountLiveline(this.liveChartHost.nativeElement);
-    this.initRealtimeValue();
+    this.livelineHandle = mountLiveline(this.liveChartHost.nativeElement);
+    this.iniciarPollingEnLinea();
   }
 
   ngOnDestroy(): void {
@@ -179,9 +184,6 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   /* ── KPIs calculados ── */
   get totalAsesores(): number {
     return this.todasEmpresas.reduce((a, e) => a + e.asesores, 0);
-  }
-  get totalEntrenadores(): number {
-    return this.todasEmpresas.reduce((a, e) => a + e.entrenadores, 0);
   }
   get scoreGlobal(): number {
     const conScore = this.todasEmpresas.filter((e) => e.scorePromedio > 0);
@@ -343,16 +345,26 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     return t.slice(0, 3).toUpperCase();
   }
 
-  private initRealtimeValue(): void {
-    const base = Math.max(10, Math.round(this.totalAsesores * 0.6));
-    const techo = Math.max(base + 20, this.totalAsesores + this.totalEntrenadores);
-    let agentes = base;
-    this.liveValueActual = agentes;
-
-    this.liveInterval = setInterval(() => {
-      const f = Math.floor(Math.random() * 8) - 4;
-      agentes = Math.max(5, Math.min(techo, agentes + f));
-      this.liveValueActual = agentes;
-    }, 3000);
+  /**
+   * Polling cada 15s mientras el dashboard está montado (arranca en
+   * ngAfterViewInit, para en ngOnDestroy — sin conexión persistente que
+   * cerrar). La ventana de presencia en el backend es de 90s, así que
+   * 15s da margen de sobra. Ver app/core/presencia.py.
+   */
+  private iniciarPollingEnLinea(): void {
+    const poll = () => {
+      this.usuariosService.obtenerUsuariosEnLinea().subscribe({
+        next: (r) => {
+          this.liveValueActual = r.en_linea;
+          this.livelineHandle?.push(r.en_linea);
+        },
+        error: () => {
+          // Silencioso: si el backend/Redis está caído, se mantiene el
+          // último valor conocido en vez de mostrar un salto a 0.
+        },
+      });
+    };
+    poll();
+    this.liveInterval = setInterval(poll, 15000);
   }
 }
