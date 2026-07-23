@@ -1,8 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../core/auth';
-import { TPipe } from '../../core/t.pipe';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 export interface SidebarItem {
   label: string;
@@ -27,13 +25,11 @@ export interface SidebarItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, TPipe],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css'],
 })
 export class SidebarComponent {
-  constructor(private authService: AuthService, private router: Router) {}
-
   @Input() items: SidebarItem[] = [];
   @Input() avatarLabel = 'A';
   @Input() avatarSrc = '/LogoAlba.png';
@@ -49,22 +45,14 @@ export class SidebarComponent {
 
   showLogoFallback = false;
   showAvatarFallback = false;
-  showProfileModal = false;
   mobileOpen = false;
-  confirmandoCierre = false;
+
+  /** Enlace del bloque "Powered by ALBA" del pie del sidebar. */
+  readonly albaLinkedInUrl = 'https://www.linkedin.com/in/alba-ingenier%C3%ADa-de-desarrollo-42a3493ab/';
 
   onLogoError(event: Event): void {
     this.showLogoFallback = true;
     (event.target as HTMLImageElement).style.display = 'none';
-  }
-
-  openProfile(): void {
-    this.showProfileModal = true;
-  }
-
-  closeProfile(): void {
-    this.showProfileModal = false;
-    this.confirmandoCierre = false;
   }
 
   toggleMobile(): void {
@@ -73,21 +61,5 @@ export class SidebarComponent {
 
   closeMobile(): void {
     this.mobileOpen = false;
-  }
-
-  pedirConfirmacionCierre(): void {
-    this.confirmandoCierre = true;
-  }
-
-  cancelarCierre(): void {
-    this.confirmandoCierre = false;
-  }
-
-  cerrarSesion(): void {
-    this.showProfileModal = false;
-    this.confirmandoCierre = false;
-    this.mobileOpen = false;
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }
