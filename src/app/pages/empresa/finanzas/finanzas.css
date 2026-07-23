@@ -24,6 +24,27 @@
 
 .content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
 
+.vista-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  background: #f0f4f1;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.vista-toggle button {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #5a8a78;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.vista-toggle button.activo { background: white; color: #024b40; box-shadow: 0 1px 3px rgba(2, 75, 64, 0.12); }
+
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .kpi-card { background: white; border: 1px solid #e8f1ea; border-radius: 14px; padding: 16px; }
 .kpi-label { font-size: 12px; color: #5a8a78; }

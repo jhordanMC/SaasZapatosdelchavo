@@ -7,10 +7,15 @@
 </div>
 
 <div class="content" *ngIf="resumen as r">
+  <div class="vista-toggle">
+    <button [class.activo]="vistaIngresos() === 'completos'" (click)="cambiarVista('completos')">Ingresos completos</button>
+    <button [class.activo]="vistaIngresos() === 'margen'" (click)="cambiarVista('margen')">Ingresos con margen</button>
+  </div>
+
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Ingresos del período</div>
-      <div class="kpi-value">S/{{ r.ingresos_periodo.toFixed(2) }}</div>
+      <div class="kpi-label">{{ etiquetaIngresos() }}</div>
+      <div class="kpi-value">S/{{ valorIngresos(r).toFixed(2) }}</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Ventas registradas</div>
@@ -20,9 +25,9 @@
       <div class="kpi-label">Gasto operativo del período</div>
       <div class="kpi-value">S/{{ r.gasto_operativo_periodo.toFixed(2) }}</div>
     </div>
-    <div class="kpi-card" [class.kpi-positivo]="r.esta_generando_ganancia" [class.kpi-negativo]="!r.esta_generando_ganancia">
-      <div class="kpi-label">Ganancia neta del período</div>
-      <div class="kpi-value">S/{{ r.ganancia_neta_periodo.toFixed(2) }}</div>
+    <div class="kpi-card" [class.kpi-positivo]="resultadoEsPositivo(r)" [class.kpi-negativo]="!resultadoEsPositivo(r)">
+      <div class="kpi-label">{{ etiquetaResultado() }}</div>
+      <div class="kpi-value">S/{{ valorResultado(r).toFixed(2) }}</div>
     </div>
   </div>
 

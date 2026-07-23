@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -6,6 +6,7 @@ import {
   Frecuencia,
   GastoOperativoCreate,
   GastoRecurrenteCreate,
+  ResumenFinanciero,
   TIPOS_GASTO_SUGERIDOS,
 } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
@@ -13,6 +14,14 @@ import { InventarioService, ProductoListItem } from '../../../services/inventari
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+/**
+ * "completos": ingresos brutos de las ventas, sin descontar el costo de la
+ * mercadería vendida — útil para ver el flujo de caja del período.
+ * "margen": ingresos ya descontado ese costo — la ganancia real del
+ * negocio, la que se compara contra el punto de equilibrio.
+ */
+type VistaIngresos = 'completos' | 'margen';
 
 @Component({
   selector: 'app-finanzas',
@@ -32,6 +41,36 @@ export class FinanzasComponent implements OnInit {
 
   formRecurrente: GastoRecurrenteCreate = this.formRecurrenteVacio();
   formUnico: GastoOperativoCreate = this.formUnicoVacio();
+
+  readonly vistaIngresos = signal<VistaIngresos>('completos');
+
+  cambiarVista(vista: VistaIngresos): void {
+    this.vistaIngresos.set(vista);
+  }
+
+  /** Tarjeta 1: ingresos brutos o margen bruto, según la vista activa. */
+  etiquetaIngresos(): string {
+    return this.vistaIngresos() === 'completos' ? 'Ingresos totales del período' : 'Margen generado del período';
+  }
+
+  valorIngresos(r: ResumenFinanciero): number {
+    return this.vistaIngresos() === 'completos' ? r.ingresos_periodo : r.margen_bruto_periodo;
+  }
+
+  /** Tarjeta 4: flujo de caja (sin descontar costo) o ganancia neta real. */
+  etiquetaResultado(): string {
+    return this.vistaIngresos() === 'completos' ? 'Flujo de caja del período' : 'Ganancia neta real';
+  }
+
+  valorResultado(r: ResumenFinanciero): number {
+    return this.vistaIngresos() === 'completos'
+      ? r.ingresos_periodo - r.gasto_operativo_periodo
+      : r.ganancia_neta_periodo;
+  }
+
+  resultadoEsPositivo(r: ResumenFinanciero): boolean {
+    return this.valorResultado(r) > 0;
+  }
 
   ngOnInit(): void {
     this.finanzasService.recargarTodo();
