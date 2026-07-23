@@ -72,6 +72,15 @@ export class FinanzasComponent implements OnInit {
     return this.valorResultado(r) > 0;
   }
 
+  /**
+   * true si "Margen generado"/"Ganancia neta real" todavía no cubren todo
+   * el período — porque parte de las ventas no tiene costo_unitario
+   * registrado (ventas de prueba o anteriores a esta funcionalidad).
+   */
+  margenEsParcial(r: ResumenFinanciero): boolean {
+    return this.vistaIngresos() === 'margen' && r.ingresos_con_costo_periodo < r.ingresos_periodo;
+  }
+
   ngOnInit(): void {
     this.finanzasService.recargarTodo();
     this.inventarioService.listarProductos({}, 0, 10, 'margen_desc').subscribe((pagina) => {

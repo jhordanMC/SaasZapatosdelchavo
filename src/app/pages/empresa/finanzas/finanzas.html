@@ -11,6 +11,11 @@
     <button [class.activo]="vistaIngresos() === 'completos'" (click)="cambiarVista('completos')">Ingresos completos</button>
     <button [class.activo]="vistaIngresos() === 'margen'" (click)="cambiarVista('margen')">Ingresos con margen</button>
   </div>
+  <p class="aviso-margen-parcial" *ngIf="margenEsParcial(r)">
+    Basado solo en las ventas con costo registrado: S/{{ r.ingresos_con_costo_periodo.toFixed(2) }} de
+    S/{{ r.ingresos_periodo.toFixed(2) }} en ventas del período. El resto no tiene costo de mercadería
+    registrado todavía y no se estima — no suma a estas cifras.
+  </p>
 
   <div class="kpi-grid">
     <div class="kpi-card">

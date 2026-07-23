@@ -85,6 +85,7 @@ export interface ResumenFinanciero {
   ticket_promedio: number;
   gasto_operativo_periodo: number;
   margen_bruto_periodo: number;
+  ingresos_con_costo_periodo: number;
   ganancia_neta_periodo: number;
   esta_generando_ganancia: boolean;
   margen_promedio_pct: number;
