@@ -1,19 +1,29 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
+import { SatisfaccionService } from '../../services/satisfaccion';
 import { environment } from '../../../environments/environment';
+
+/** Las 4 secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
+export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './topbar.html',
   styleUrls: ['./topbar.css'],
 })
 export class TopbarComponent implements OnInit {
-  constructor(private authService: AuthService, private router: Router, private anunciosService: AnunciosService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private anunciosService: AnunciosService,
+    private satisfaccionService: SatisfaccionService,
+  ) {}
 
   readonly apiUrl = environment.apiUrl;
 
@@ -35,13 +45,51 @@ export class TopbarComponent implements OnInit {
   showProfileModal = false;
   confirmandoCierre = false;
 
+  // ── Menú de perfil: 4 secciones dentro del mismo toolbar ──────────
+  readonly VERSION_APP = 'V1.0';
+  readonly ESLOGAN = 'Lo que vendiste, lo que gastaste, lo que ganaste. Todo en VILCAS.';
+
+  vistaPerfil: VistaPerfil = 'menu';
+
   openProfile(): void {
     this.showProfileModal = true;
   }
 
+  /**
+   * Único punto de salida real del modal — se llama SOLO desde la "X", el
+   * botón "Cerrar" y tras confirmar "Cerrar sesión". El overlay ya NO tiene
+   * (click) para cerrar: a propósito, para que un clic afuera no tire todo
+   * el progreso de una sección (ej. a mitad del cambio de contraseña).
+   */
   closeProfile(): void {
     this.showProfileModal = false;
     this.confirmandoCierre = false;
+    this.vistaPerfil = 'menu';
+    this.resetCalificar();
+    this.resetCambioPassword();
+  }
+
+  abrirVistaPerfil(vista: VistaPerfil): void {
+    this.vistaPerfil = vista;
+  }
+
+  volverAlMenuPerfil(): void {
+    this.vistaPerfil = 'menu';
+  }
+
+  tituloVistaPerfil(): string {
+    switch (this.vistaPerfil) {
+      case 'info':
+        return 'Información personal';
+      case 'calificar':
+        return 'Califícanos';
+      case 'acerca':
+        return 'Acerca de VILCAS';
+      case 'password':
+        return 'Cambio de contraseña';
+      default:
+        return '';
+    }
   }
 
   pedirConfirmacionCierre(): void {
@@ -55,8 +103,112 @@ export class TopbarComponent implements OnInit {
   cerrarSesion(): void {
     this.showProfileModal = false;
     this.confirmandoCierre = false;
+    this.vistaPerfil = 'menu';
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  // ── "Califícanos / ayúdanos con tu opinión" ────────────────────────
+  readonly MAX_COMENTARIO_CALIFICACION = 500;
+
+  calificacionEstrellas = 0;
+  comentarioCalificacion = '';
+  enviandoCalificacion = false;
+  calificacionEnviada = false;
+  errorCalificacion = false;
+
+  get comentarioCalificacionRestante(): number {
+    return this.MAX_COMENTARIO_CALIFICACION - this.comentarioCalificacion.length;
+  }
+
+  seleccionarEstrellaCalificacion(valor: number): void {
+    this.calificacionEstrellas = valor;
+  }
+
+  enviarCalificacion(): void {
+    if (this.calificacionEstrellas === 0 || this.enviandoCalificacion) return;
+    this.enviandoCalificacion = true;
+    this.errorCalificacion = false;
+    this.satisfaccionService
+      .enviarCalificacionTopbar({
+        calificacion: this.calificacionEstrellas,
+        comentario: this.comentarioCalificacion.trim() || null,
+      })
+      .subscribe({
+        next: () => {
+          this.enviandoCalificacion = false;
+          this.calificacionEnviada = true;
+        },
+        error: () => {
+          this.enviandoCalificacion = false;
+          this.errorCalificacion = true;
+        },
+      });
+  }
+
+  private resetCalificar(): void {
+    this.calificacionEstrellas = 0;
+    this.comentarioCalificacion = '';
+    this.enviandoCalificacion = false;
+    this.calificacionEnviada = false;
+    this.errorCalificacion = false;
+  }
+
+  // ── "Cambio de contraseña" (2 pasos: nueva password → código por email) ──
+  pasoCambioPassword: 'form' | 'codigo' | 'exito' = 'form';
+  passwordNueva = '';
+  passwordConfirmar = '';
+  codigoCambioPassword = '';
+  enviandoCambioPassword = false;
+  verificandoCodigoPassword = false;
+  errorCambioPassword = '';
+  errorCodigoPassword = '';
+
+  get passwordNuevaValida(): boolean {
+    return this.passwordNueva.length >= 8 && this.passwordNueva === this.passwordConfirmar;
+  }
+
+  solicitarCambioPassword(): void {
+    if (!this.passwordNuevaValida || this.enviandoCambioPassword) return;
+    this.enviandoCambioPassword = true;
+    this.errorCambioPassword = '';
+    this.authService.solicitarCambioPassword(this.passwordNueva).subscribe({
+      next: () => {
+        this.enviandoCambioPassword = false;
+        this.pasoCambioPassword = 'codigo';
+      },
+      error: () => {
+        this.enviandoCambioPassword = false;
+        this.errorCambioPassword = 'No pudimos enviar el código. Intenta nuevamente en unos minutos.';
+      },
+    });
+  }
+
+  confirmarCambioPassword(): void {
+    if (!this.codigoCambioPassword || this.verificandoCodigoPassword) return;
+    this.verificandoCodigoPassword = true;
+    this.errorCodigoPassword = '';
+    this.authService.confirmarCambioPassword(this.codigoCambioPassword).subscribe({
+      next: () => {
+        this.verificandoCodigoPassword = false;
+        this.pasoCambioPassword = 'exito';
+      },
+      error: () => {
+        this.verificandoCodigoPassword = false;
+        this.errorCodigoPassword = 'Código incorrecto o vencido. Verifica e intenta de nuevo.';
+      },
+    });
+  }
+
+  private resetCambioPassword(): void {
+    this.pasoCambioPassword = 'form';
+    this.passwordNueva = '';
+    this.passwordConfirmar = '';
+    this.codigoCambioPassword = '';
+    this.enviandoCambioPassword = false;
+    this.verificandoCodigoPassword = false;
+    this.errorCambioPassword = '';
+    this.errorCodigoPassword = '';
   }
 
   // ════════════════════════════════════════════════════════

@@ -36,7 +36,9 @@
 </header>
 
 <!-- ══ MODAL: Ver perfil ══ -->
-<div class="profile-modal-overlay" *ngIf="showProfileModal" (click)="closeProfile()">
+<!-- El overlay YA NO cierra al hacer click afuera: solo la "X", "Cerrar
+     sesión" (confirmada) o "Cerrar" pueden cerrar este modal. -->
+<div class="profile-modal-overlay" *ngIf="showProfileModal">
   <div class="profile-modal-card" (click)="$event.stopPropagation()">
     <button class="profile-modal-close" (click)="closeProfile()" aria-label="Cerrar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -45,7 +47,7 @@
       </svg>
     </button>
 
-    <div class="profile-modal-brand" *ngIf="!confirmandoCierre">
+    <div class="profile-modal-brand" *ngIf="!confirmandoCierre && vistaPerfil === 'menu'">
       <img [src]="logoSrc" alt="VILCAS" class="profile-modal-logo" />
       <div class="profile-modal-brand-name">
         <span
@@ -56,33 +58,219 @@
     </div>
 
     <ng-container *ngIf="!confirmandoCierre; else confirmarCierreTpl">
-      <div class="profile-modal-body">
-        <div class="profile-avatar-lg">
-          <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" />
-          <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
-        </div>
-        <div class="profile-name">{{ userName }}</div>
-        <div class="profile-role">{{ userRole }}</div>
+
+      <!-- Encabezado con flecha "volver" — visible en las 4 subvistas -->
+      <div class="profile-subview-header" *ngIf="vistaPerfil !== 'menu'">
+        <button class="profile-back-btn" (click)="volverAlMenuPerfil()" aria-label="Volver al menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="profile-subview-title">{{ tituloVistaPerfil() }}</span>
       </div>
 
-      <div class="profile-info-list">
-        <div class="profile-info-row">
-          <span class="profile-info-label">ID de usuario</span>
-          <span class="profile-info-value">{{ userId }}</span>
+      <!-- ══ VISTA: MENÚ PRINCIPAL ══ -->
+      <ng-container *ngIf="vistaPerfil === 'menu'">
+        <div class="profile-modal-body">
+          <div class="profile-avatar-lg">
+            <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" />
+            <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
+          </div>
+          <div class="profile-name">{{ userName }}</div>
+          <div class="profile-role">{{ userRole }}</div>
         </div>
-        <div class="profile-info-row">
-          <span class="profile-info-label">DNI</span>
-          <span class="profile-info-value">{{ userDni }}</span>
+
+        <div class="profile-menu-list">
+          <button class="profile-menu-item" (click)="abrirVistaPerfil('info')">
+            <span class="profile-menu-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <span class="profile-menu-label">Información personal</span>
+            <span class="profile-menu-chevron">›</span>
+          </button>
+
+          <button class="profile-menu-item" (click)="abrirVistaPerfil('calificar')">
+            <span class="profile-menu-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </span>
+            <span class="profile-menu-label">Califícanos / ayúdanos con tu opinión</span>
+            <span class="profile-menu-chevron">›</span>
+          </button>
+
+          <button class="profile-menu-item" (click)="abrirVistaPerfil('acerca')">
+            <span class="profile-menu-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </span>
+            <span class="profile-menu-label">Acerca de VILCAS</span>
+            <span class="profile-menu-chevron">›</span>
+          </button>
+
+          <button class="profile-menu-item" (click)="abrirVistaPerfil('password')">
+            <span class="profile-menu-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <span class="profile-menu-label">Cambio de contraseña</span>
+            <span class="profile-menu-chevron">›</span>
+          </button>
         </div>
-        <div class="profile-info-row">
-          <span class="profile-info-label">Correo</span>
-          <span class="profile-info-value">{{ userEmail }}</span>
+      </ng-container>
+
+      <!-- ══ VISTA: INFORMACIÓN PERSONAL ══ -->
+      <ng-container *ngIf="vistaPerfil === 'info'">
+        <div class="profile-info-list profile-info-list-sub">
+          <div class="profile-info-row">
+            <span class="profile-info-label">Nombre completo</span>
+            <span class="profile-info-value">{{ userName }}</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">Correo electrónico</span>
+            <span class="profile-info-value">{{ userEmail }}</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">Teléfono</span>
+            <span class="profile-info-value">{{ userPhone }}</span>
+          </div>
         </div>
-        <div class="profile-info-row">
-          <span class="profile-info-label">Teléfono</span>
-          <span class="profile-info-value">{{ userPhone }}</span>
+      </ng-container>
+
+      <!-- ══ VISTA: CALIFÍCANOS ══ -->
+      <ng-container *ngIf="vistaPerfil === 'calificar'">
+        <div class="profile-subview-body" *ngIf="!calificacionEnviada">
+          <p class="profile-subview-desc">Cuéntanos qué tal tu experiencia con VILCAS.</p>
+
+          <div class="estrellas-picker">
+            <button
+              type="button"
+              class="estrella-btn"
+              *ngFor="let n of [1, 2, 3, 4, 5]"
+              [class.activa]="n <= calificacionEstrellas"
+              (click)="seleccionarEstrellaCalificacion(n)"
+              [attr.aria-label]="n + ' estrellas'"
+            >★</button>
+          </div>
+
+          <textarea
+            class="rating-textarea"
+            [maxlength]="MAX_COMENTARIO_CALIFICACION"
+            rows="4"
+            placeholder="Cuéntanos más (opcional)"
+            [(ngModel)]="comentarioCalificacion"
+          ></textarea>
+          <span class="rating-char-counter">{{ comentarioCalificacionRestante }} caracteres restantes</span>
+
+          <p class="profile-error-msg" *ngIf="errorCalificacion">
+            No pudimos enviar tu calificación. Intenta de nuevo más tarde.
+          </p>
+
+          <button
+            class="profile-btn-primary"
+            [disabled]="calificacionEstrellas === 0 || enviandoCalificacion"
+            (click)="enviarCalificacion()"
+          >
+            {{ enviandoCalificacion ? 'Enviando…' : 'Enviar' }}
+          </button>
         </div>
-      </div>
+
+        <div class="profile-subview-exito" *ngIf="calificacionEnviada">
+          <div class="profile-subview-exito-icono">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <p class="profile-subview-exito-texto">¡Gracias por tu opinión, {{ userName }}!</p>
+        </div>
+      </ng-container>
+
+      <!-- ══ VISTA: ACERCA DE VILCAS ══ -->
+      <ng-container *ngIf="vistaPerfil === 'acerca'">
+        <div class="profile-acerca-body">
+          <img [src]="logoSrc" alt="VILCAS" class="profile-acerca-logo" />
+          <div class="profile-modal-brand-name">
+            <span
+              *ngFor="let char of brandName.split(''); let i = index"
+              [ngClass]="{ dk: i !== brandAccentIndex, gd: i === brandAccentIndex }"
+            >{{ char }}</span>
+          </div>
+          <span class="profile-acerca-version">Versión {{ VERSION_APP }}</span>
+          <p class="profile-acerca-eslogan">"{{ ESLOGAN }}"</p>
+
+          <div class="profile-acerca-links">
+            <!-- Pendiente: enlace real cuando ALBA publique los T&C de VILCAS -->
+            <a href="#" class="profile-acerca-link" (click)="$event.preventDefault()">
+              Términos y condiciones y legal de VILCAS
+            </a>
+            <a href="#" class="profile-acerca-link" (click)="$event.preventDefault()">
+              Política de privacidad y protección de datos personales
+            </a>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ══ VISTA: CAMBIO DE CONTRASEÑA ══ -->
+      <ng-container *ngIf="vistaPerfil === 'password'">
+        <div class="profile-subview-body" *ngIf="pasoCambioPassword === 'form'">
+          <p class="profile-subview-desc">Ingresa tu nueva contraseña. Te enviaremos un código a tu correo para confirmar el cambio.</p>
+
+          <div class="profile-field">
+            <label class="profile-field-label">Nueva contraseña</label>
+            <input type="password" class="profile-field-input" placeholder="Mínimo 8 caracteres" [(ngModel)]="passwordNueva" />
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Confirmar contraseña</label>
+            <input type="password" class="profile-field-input" placeholder="Repite la contraseña" [(ngModel)]="passwordConfirmar" />
+          </div>
+
+          <p class="profile-error-msg" *ngIf="errorCambioPassword">{{ errorCambioPassword }}</p>
+
+          <button
+            class="profile-btn-primary"
+            [disabled]="!passwordNuevaValida || enviandoCambioPassword"
+            (click)="solicitarCambioPassword()"
+          >
+            {{ enviandoCambioPassword ? 'Enviando código…' : 'Enviar código de verificación' }}
+          </button>
+        </div>
+
+        <div class="profile-subview-body" *ngIf="pasoCambioPassword === 'codigo'">
+          <p class="profile-subview-desc">Ingresa el código de 6 dígitos que enviamos a {{ userEmail }}.</p>
+
+          <div class="profile-field">
+            <label class="profile-field-label">Código de verificación</label>
+            <input type="text" inputmode="numeric" maxlength="6" class="profile-field-input profile-codigo-input" placeholder="000000" [(ngModel)]="codigoCambioPassword" />
+          </div>
+
+          <p class="profile-error-msg" *ngIf="errorCodigoPassword">{{ errorCodigoPassword }}</p>
+
+          <button
+            class="profile-btn-primary"
+            [disabled]="!codigoCambioPassword || verificandoCodigoPassword"
+            (click)="confirmarCambioPassword()"
+          >
+            {{ verificandoCodigoPassword ? 'Verificando…' : 'Verificar y cambiar' }}
+          </button>
+        </div>
+
+        <div class="profile-subview-exito" *ngIf="pasoCambioPassword === 'exito'">
+          <div class="profile-subview-exito-icono">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <p class="profile-subview-exito-texto">Tu contraseña se actualizó correctamente.</p>
+        </div>
+      </ng-container>
 
       <div class="profile-modal-actions">
         <button class="profile-btn-logout" (click)="pedirConfirmacionCierre()">

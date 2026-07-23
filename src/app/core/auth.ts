@@ -159,6 +159,35 @@ export class AuthService {
       );
   }
 
+  /**
+   * Cambio de contraseña desde el menú de perfil (topbar): mismo patrón de
+   * 2 pasos que el login (código de 6 dígitos por email), pero mientras la
+   * sesión ya está activa.
+   *
+   * TODO(backend): estos dos endpoints todavía NO existen en
+   * backendsaasalba — hay que coordinarlos con el equipo de backend:
+   *   POST {apiUrl}/iam/auth/solicitar-cambio-password  { password_nueva }
+   *     → guarda la password nueva pendiente + envía el código por email,
+   *       análogo a /iam/auth/login guardando loginPendiente.
+   *   POST {apiUrl}/iam/auth/confirmar-cambio-password  { codigo }
+   *     → valida el código y recién ahí aplica el cambio de password.
+   * Mientras no existan, el topbar mostrará el mensaje de error ya
+   * contemplado en la UI (ver TopbarComponent.errorPassword).
+   */
+  solicitarCambioPassword(passwordNueva: string): Observable<{ expira_en_segundos: number }> {
+    return this.http.post<{ expira_en_segundos: number }>(
+      `${this.apiUrl}/iam/auth/solicitar-cambio-password`,
+      { password_nueva: passwordNueva },
+    );
+  }
+
+  confirmarCambioPassword(codigo: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(
+      `${this.apiUrl}/iam/auth/confirmar-cambio-password`,
+      { codigo },
+    );
+  }
+
   logout(): void {
     const refreshToken = this.tokenStore.refreshToken;
     this.tokenStore.limpiar();
