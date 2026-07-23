@@ -208,6 +208,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
 
   private mensajeError(error: HttpErrorResponse): string {
     if (error.status === 401) return this.i18n.t('LOGIN.ERR_401');
+    if (error.status === 403) return this.i18n.t('LOGIN.ERR_403');
     if (error.status === 429) return this.i18n.t('LOGIN.ERR_429');
     if (error.status === 0) return this.i18n.t('LOGIN.ERR_SIN_CONEXION');
     return this.i18n.t('LOGIN.ERR_INESPERADO');
