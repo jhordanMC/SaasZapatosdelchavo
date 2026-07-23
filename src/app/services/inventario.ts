@@ -96,6 +96,17 @@ export interface ProductoRead extends ProductoListItem {
   variantes: VarianteRead[];
 }
 
+/**
+ * Envoltorio de paginación del catálogo (scroll infinito).
+ * hay_mas indica si existe una página más; siguiente_offset ya viene listo
+ * para pedirla sin que el frontend tenga que calcularlo.
+ */
+export interface ProductosPaginados {
+  items: ProductoListItem[];
+  hay_mas: boolean;
+  siguiente_offset: number;
+}
+
 // ---------------------------------------------------------------------------
 // Payloads de escritura — espejean los schemas *Create y *Update del backend
 // ---------------------------------------------------------------------------
@@ -161,6 +172,12 @@ export interface FiltrosProducto {
 // Servicio
 // ---------------------------------------------------------------------------
 
+/**
+ * Tamaño de página del catálogo (scroll infinito). Único lugar donde se
+ * define — cambiarlo acá es todo lo que hace falta para ajustarlo.
+ */
+export const TAMANO_PAGINA_CATALOGO = 30;
+
 @Injectable({ providedIn: 'root' })
 export class InventarioService {
   private readonly base = `${environment.apiUrl}/inventario`;
@@ -223,12 +240,21 @@ export class InventarioService {
 
   // ── Productos ────────────────────────────────────────────────────────────
 
-  listarProductos(filtros: FiltrosProducto = {}): Observable<ProductoListItem[]> {
-    let params = new HttpParams();
+  /**
+   * Página del catálogo, ordenada por el backend (recientes + más
+   * vendidos primero). `offset` avanza de TAMANO_PAGINA_CATALOGO en
+   * TAMANO_PAGINA_CATALOGO para el scroll infinito.
+   */
+  listarProductos(
+    filtros: FiltrosProducto = {},
+    offset = 0,
+    limit = TAMANO_PAGINA_CATALOGO
+  ): Observable<ProductosPaginados> {
+    let params = new HttpParams().set('limit', limit).set('offset', offset);
     if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
     if (filtros.id_categoria) params = params.set('id_categoria', filtros.id_categoria);
     if (filtros.sexo) params = params.set('sexo', filtros.sexo);
-    return this.http.get<ProductoListItem[]>(`${this.base}/productos`, { params });
+    return this.http.get<ProductosPaginados>(`${this.base}/productos`, { params });
   }
 
   obtenerProducto(idProducto: string): Observable<ProductoRead> {

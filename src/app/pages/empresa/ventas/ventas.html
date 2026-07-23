@@ -4,10 +4,10 @@
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
-    <input type="text" placeholder="Ingresa el producto a buscar" [(ngModel)]="busqueda" />
+    <input type="text" placeholder="Ingresa el producto a buscar" [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" />
   </div>
 
-  <select class="filter-select" [(ngModel)]="filtroTalla" title="Filtrar por talla">
+  <select class="filter-select" [ngModel]="filtroTalla" (ngModelChange)="onFiltroTallaChange($event)" title="Filtrar por talla">
     <option value="Todas">Talla: Todas</option>
     <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
   </select>
@@ -56,12 +56,12 @@
 
   <!-- Catálogo -->
   <div class="catalogo">
-    <div class="cargando-mini" *ngIf="cargandoProductos()">
+    <div class="cargando-mini" *ngIf="cargandoProductos() && productos().length === 0">
       <span class="spinner spinner-sm"></span> Actualizando catálogo…
     </div>
 
     <div class="ventas-grid">
-      <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productosFiltrados" (click)="abrirSelectorVariante(p, $event)">
+      <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productos()" (click)="abrirSelectorVariante(p, $event)">
         <div class="venta-foto">
           <span class="foto-placeholder">Sin foto</span>
         </div>
@@ -79,10 +79,18 @@
         </div>
       </div>
 
-      <div class="sin-resultados" *ngIf="productosFiltrados.length === 0 && !cargandoProductos()">
+      <div class="sin-resultados" *ngIf="productos().length === 0 && !cargandoProductos()">
         No hay productos que coincidan con la búsqueda.
       </div>
     </div>
+
+    <!-- Indicador de carga de la siguiente página (no reemplaza lo ya visible) -->
+    <div class="cargando-mini" *ngIf="cargandoProductos() && productos().length > 0">
+      <span class="spinner spinner-sm"></span> Cargando más productos…
+    </div>
+
+    <!-- Sentinel del scroll infinito: al entrar en viewport pide la siguiente página -->
+    <div #sentinelaInfiniteScrollPOS class="scroll-sentinela"></div>
   </div>
 
   <!-- Panel de carrito -->

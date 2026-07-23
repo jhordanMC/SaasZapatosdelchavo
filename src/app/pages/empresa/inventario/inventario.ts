@@ -2,21 +2,27 @@
  * Componente de Inventario (vista empresa).
  *
  * Conectado al backend a través de InventarioService.
- * Estrategia de filtros: carga completa al iniciar + filtro local reactivo
- * (catálogos de zapatos son < 500 items, no requiere server-side filtering).
+ * Estrategia de catálogo: paginado por el servidor (scroll infinito),
+ * ordenado por ranking (recientes de las últimas 2 semanas + más vendidos
+ * primero). Los filtros (búsqueda con debounce, categoría, sexo) reinician
+ * la paginación y se resuelven en el backend — no hay filtro en memoria.
  *
  * Flujos:
- *   - Init: carga categorías, locales y productos en paralelo.
- *   - Filtros: `productos` getter aplica filtros sobre la lista en memoria.
+ *   - Init: carga categorías/locales/almacenes en paralelo + primera página
+ *     de productos.
+ *   - Filtros: cualquier cambio reinicia `offset` a 0 y vuelve a pedir la
+ *     página 1 con esos filtros.
+ *   - Scroll infinito: un IntersectionObserver sobre un sentinel al final
+ *     del grid pide la siguiente página y la anexa a `productos()`.
  *   - Crear: modal "Nuevo producto" → POST /inventario/productos.
  *   - Editar: modal "Editar producto" → PATCH /inventario/productos/{id}.
  *   - Eliminar: confirm() → DELETE /inventario/productos/{id}.
  */
-import { Component, OnInit, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import {
   AlmacenCreateInput,
   AlmacenRead,
@@ -28,6 +34,7 @@ import {
   LocalRead,
   ProductoListItem,
   ProductoRead,
+  ProductosPaginados,
   SexoProducto,
   VarianteStockInput,
 } from '../../../services/inventario';
@@ -81,8 +88,14 @@ const CATEGORIAS_SUGERIDAS = [
   templateUrl: './inventario.html',
   styleUrls: ['./inventario.css'],
 })
-export class InventarioComponent implements OnInit {
-  constructor(private inventarioService: InventarioService) {}
+export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
+  constructor(private inventarioService: InventarioService) {
+    // Debounce de 300ms: espera a que el usuario deje de teclear antes de
+    // pedir la página 1 al backend con el nuevo texto de búsqueda.
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+      this.cargarPrimeraPaginaProductos();
+    });
+  }
 
   // ── Estado de datos ────────────────────────────────────────────────────
   productos = signal<ProductoListItem[]>([]);
@@ -95,6 +108,14 @@ export class InventarioComponent implements OnInit {
   guardando = signal(false);
   error = signal<string | null>(null);
   errorModal = signal<string | null>(null);
+
+  // ── Paginación del catálogo (scroll infinito) ────────────────────────────
+  private offset = 0;
+  hayMasProductos = signal(true);
+  cargandoPagina = signal(false);
+  private readonly busquedaSubject = new Subject<string>();
+  @ViewChild('sentinelaInfiniteScroll') private sentinelaRef?: ElementRef<HTMLElement>;
+  private observerScroll?: IntersectionObserver;
 
   // ── Filtros ─────────────────────────────────────────────────────────────
   busqueda = '';
@@ -170,16 +191,70 @@ export class InventarioComponent implements OnInit {
       error: () => { /* no-fatal, el panel de almacenes quedará vacío */ },
     });
 
-    this.inventarioService.listarProductos().subscribe({
-      next: (prods) => {
-        this.productos.set(prods);
+    this.cargarPrimeraPaginaProductos();
+  }
+
+  // ── Paginación del catálogo (scroll infinito) ────────────────────────────
+
+  /** Reinicia la paginación (offset 0, lista vacía) y pide la página 1 con los filtros actuales. */
+  cargarPrimeraPaginaProductos(): void {
+    this.cargarPaginaProductos(true);
+  }
+
+  /** Pide la siguiente página con los mismos filtros y la anexa al final de la lista. */
+  cargarSiguientePaginaProductos(): void {
+    this.cargarPaginaProductos(false);
+  }
+
+  private cargarPaginaProductos(reiniciar: boolean): void {
+    if (reiniciar) {
+      this.offset = 0;
+      this.productos.set([]);
+      this.hayMasProductos.set(true);
+    }
+    if (!this.hayMasProductos() || this.cargandoPagina()) return;
+
+    this.cargandoPagina.set(true);
+    this.error.set(null);
+
+    const filtros: FiltrosProducto = {};
+    if (this.busqueda) filtros.busqueda = this.busqueda;
+    if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
+    if (this.filtroSexo) filtros.sexo = this.filtroSexo;
+
+    this.inventarioService.listarProductos(filtros, this.offset).subscribe({
+      next: (resp: ProductosPaginados) => {
+        this.productos.update((lista) => [...lista, ...resp.items]);
+        this.hayMasProductos.set(resp.hay_mas);
+        this.offset = resp.siguiente_offset;
+        this.cargandoPagina.set(false);
         this.cargando.set(false);
       },
       error: () => {
         this.error.set('No se pudieron cargar los productos. Verifica tu conexión.');
+        this.cargandoPagina.set(false);
         this.cargando.set(false);
       },
     });
+  }
+
+  // ── Scroll infinito (IntersectionObserver sobre el sentinel del grid) ───
+
+  ngAfterViewInit(): void {
+    if (!this.sentinelaRef) return;
+    this.observerScroll = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          this.cargarSiguientePaginaProductos();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    this.observerScroll.observe(this.sentinelaRef.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.observerScroll?.disconnect();
   }
 
   /** Crea en el backend las categorías sugeridas (deportivo, tacos, ballerinas...)
@@ -195,33 +270,36 @@ export class InventarioComponent implements OnInit {
   }
 
   private recargarProductos(): void {
-    this.inventarioService.listarProductos().subscribe({
-      next: (prods) => {
-        this.productos.set(prods);
-      },
-    });
+    this.cargarPrimeraPaginaProductos();
   }
 
-  // ── Filtros (aplicados localmente sobre la lista en memoria) ─────────────
-
-  get productosFiltrados(): ProductoListItem[] {
-    const busq = this.busqueda.toLowerCase().trim();
-    return this.productos().filter((p) => {
-      if (busq && !p.nombre.toLowerCase().includes(busq)) return false;
-      if (this.filtroIdCategoria && p.id_categoria !== this.filtroIdCategoria) return false;
-      if (this.filtroSexo && p.sexo !== this.filtroSexo) return false;
-      return true;
-    });
-  }
+  // ── Filtros (resueltos en el backend — cualquier cambio reinicia la página) ──
 
   get hayFiltros(): boolean {
     return !!(this.busqueda || this.filtroIdCategoria || this.filtroSexo);
+  }
+
+  /** Ligado al input de búsqueda: actualiza el texto y dispara el debounce. */
+  onBusquedaChange(valor: string): void {
+    this.busqueda = valor;
+    this.busquedaSubject.next(valor);
+  }
+
+  onFiltroCategoriaChange(valor: string | null): void {
+    this.filtroIdCategoria = valor;
+    this.cargarPrimeraPaginaProductos();
+  }
+
+  onFiltroSexoChange(valor: SexoProducto | null): void {
+    this.filtroSexo = valor;
+    this.cargarPrimeraPaginaProductos();
   }
 
   limpiarFiltros(): void {
     this.busqueda = '';
     this.filtroIdCategoria = null;
     this.filtroSexo = null;
+    this.cargarPrimeraPaginaProductos();
   }
 
   // ── Cálculos de display ─────────────────────────────────────────────────

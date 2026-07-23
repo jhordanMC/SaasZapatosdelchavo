@@ -4,18 +4,27 @@
  * Conectado al backend a través de VentasService (HTTP).
  * El carrito se gestiona localmente (sin endpoint intermedio).
  *
+ * Catálogo paginado por el servidor (scroll infinito), ordenado por
+ * ranking (recientes de las últimas 2 semanas + más vendidos primero).
+ * Todos los filtros (búsqueda con debounce, categoría, sexo, talla, sede)
+ * se resuelven en el backend — no hay filtro en memoria.
+ *
  * Flujo:
- *   1. Init: listarMisLocales() → obtiene idLocal del vendedor.
- *   2. Con idLocal: listarProductosPOS() → carga catálogo.
- *   3. Filtros: aplican localmente sobre el catálogo cargado.
- *   4. Clic en producto: abre modal de talla/cantidad/descuento.
- *   5. "Agregar al carrito": actualiza signal local.
- *   6. "Completar venta": abre checkout modal.
- *   7. Confirmar: buildVentaPayload() + POST /ventas/pos/confirmar.
+ *   1. Init: listarSedes() → obtiene la sede del vendedor.
+ *   2. Con sede: cargarPrimeraPaginaProductosPOS() → carga la página 1.
+ *   3. Cualquier filtro reinicia la paginación y pide la página 1 de nuevo.
+ *   4. Scroll infinito: IntersectionObserver sobre un sentinel pide la
+ *      siguiente página y la anexa.
+ *   5. Clic en producto: abre modal de talla/cantidad/descuento.
+ *   6. "Agregar al carrito": actualiza signal local.
+ *   7. "Completar venta": abre checkout modal.
+ *   8. Confirmar: buildVentaPayload() + POST /ventas/pos/confirmar.
  */
-import { Component, ElementRef, OnInit, ViewChild, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { SexoProducto } from '../../../services/inventario';
 import {
@@ -27,6 +36,7 @@ import {
   MetodoPago,
   PagoCreate,
   ProductoPOSRead,
+  ProductosPOSPaginados,
   TipoDescuento,
   VariantePOSRead,
   VentasService,
@@ -44,10 +54,18 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
   templateUrl: './ventas.html',
   styleUrls: ['./ventas.css'],
 })
-export class VentasComponent implements OnInit {
-  constructor(public ventasService: VentasService) {}
+export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
+  constructor(public ventasService: VentasService) {
+    // Debounce de 300ms: espera a que el usuario deje de teclear antes de
+    // pedir la página 1 al backend con el nuevo texto de búsqueda.
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+      this.cargarPrimeraPaginaProductosPOS();
+    });
+  }
 
   @ViewChild('carritoVueloDestino') carritoVueloDestinoRef?: ElementRef<HTMLElement>;
+  @ViewChild('sentinelaInfiniteScrollPOS') private sentinelaRef?: ElementRef<HTMLElement>;
+  private observerScroll?: IntersectionObserver;
 
   // ── Datos del backend ────────────────────────────────────────────────────
   sedes = signal<SedePOSRead[]>([]);
@@ -61,7 +79,12 @@ export class VentasComponent implements OnInit {
   cargandoProductos = signal(false);
   error = signal<string | null>(null);
 
-  // ── Filtros del catálogo POS (locales) ───────────────────────────────────
+  // ── Paginación del catálogo POS (scroll infinito) ────────────────────────
+  private offset = 0;
+  hayMasProductos = signal(true);
+  private readonly busquedaSubject = new Subject<string>();
+
+  // ── Filtros del catálogo POS (resueltos en el backend) ───────────────────
   busqueda = '';
   filtroIdCategoria: string | null = null;
   filtroSexo: SexoProducto | null = null;
@@ -128,7 +151,7 @@ export class VentasComponent implements OnInit {
         if (sedes.length > 0) {
           // Por defecto, selecciona la primera sede para mostrar en el catálogo
           this.sedeFiltro.set(sedes[0]);
-          
+
           // Preselecciona la caja si solo hay un local disponible
           const locales = sedes.filter(s => s.tipo === 'local');
           if (locales.length === 1) {
@@ -136,8 +159,8 @@ export class VentasComponent implements OnInit {
           } else if (locales.length > 1) {
             this.cajaSeleccionadaId = locales[0].id_sede; // Valor por defecto
           }
-          
-          this.cargarProductosPOS();
+
+          this.cargarPrimeraPaginaProductosPOS();
         } else {
           this.error.set('No tienes sedes asignadas. Contacta al administrador.');
           this.cargando.set(false);
@@ -153,26 +176,48 @@ export class VentasComponent implements OnInit {
   cambiarSede(idSede: string): void {
     if (idSede === 'todos') {
       this.sedeFiltro.set(null);
-      return;
+    } else {
+      const sede = this.sedes().find((s) => s.id_sede === idSede);
+      if (sede) this.sedeFiltro.set(sede);
     }
-    const sede = this.sedes().find((s) => s.id_sede === idSede);
-    if (sede) {
-      this.sedeFiltro.set(sede);
-    }
+    this.cargarPrimeraPaginaProductosPOS();
   }
 
-  private cargarProductosPOS(): void {
-    const sede = this.sedeFiltro();
+  // ── Paginación del catálogo POS (scroll infinito) ────────────────────────
 
+  /** Reinicia la paginación (offset 0, lista vacía) y pide la página 1 con los filtros actuales. */
+  cargarPrimeraPaginaProductosPOS(): void {
+    this.cargarPaginaProductosPOS(true);
+  }
+
+  /** Pide la siguiente página con los mismos filtros y la anexa al final de la lista. */
+  cargarSiguientePaginaProductosPOS(): void {
+    this.cargarPaginaProductosPOS(false);
+  }
+
+  private cargarPaginaProductosPOS(reiniciar: boolean): void {
+    if (reiniciar) {
+      this.offset = 0;
+      this.productos.set([]);
+      this.hayMasProductos.set(true);
+    }
+    if (!this.hayMasProductos() || this.cargandoProductos()) return;
+
+    const sede = this.sedeFiltro();
     this.cargandoProductos.set(true);
+    this.error.set(null);
+
     const filtros: FiltrosPOS = {};
     if (this.busqueda) filtros.busqueda = this.busqueda;
     if (this.filtroIdCategoria) filtros.id_categoria = this.filtroIdCategoria;
     if (this.filtroSexo) filtros.sexo = this.filtroSexo;
+    if (this.filtroTalla !== 'Todas') filtros.talla = this.filtroTalla;
 
-    this.ventasService.listarProductosPOS(sede ? sede.id_sede : null, filtros).subscribe({
-      next: (prods) => {
-        this.productos.set(prods);
+    this.ventasService.listarProductosPOS(sede ? sede.id_sede : null, filtros, this.offset).subscribe({
+      next: (resp: ProductosPOSPaginados) => {
+        this.productos.update((lista) => [...lista, ...resp.items]);
+        this.hayMasProductos.set(resp.hay_mas);
+        this.offset = resp.siguiente_offset;
         this.cargandoProductos.set(false);
         this.cargando.set(false);
       },
@@ -184,38 +229,45 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  // ── Filtros (locales + búsqueda server-side al aplicar) ──────────────────
+  // ── Scroll infinito (IntersectionObserver sobre el sentinel del grid) ───
 
-  get productosFiltrados(): ProductoPOSRead[] {
-    const busq = this.busqueda.toLowerCase().trim();
-    const idSedeGlobal = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
-
-    return this.productos().filter((p) => {
-      if (busq && !p.nombre.toLowerCase().includes(busq)) return false;
-      if (this.filtroSexo && p.sexo !== this.filtroSexo) return false;
-      
-      // Si no hay filtro de sede ni talla, mostramos el producto tal cual
-      if (!idSedeGlobal && this.filtroTalla === 'Todas') {
-          return true;
-      }
-
-      // Si hay filtro de sede o talla, validamos que exista al menos una variante
-      // que cumpla con ambos filtros y tenga stock mayor a 0
-      let hasValidVariant = false;
-      for (const v of p.variantes) {
-         const matchSede = idSedeGlobal ? v.id_ubicacion_origen === idSedeGlobal : true;
-         const matchTalla = this.filtroTalla !== 'Todas' ? v.talla === this.filtroTalla : true;
-         
-         if (matchSede && matchTalla && v.stock_disponible > 0) {
-             hasValidVariant = true;
-             break;
-         }
-      }
-
-      return hasValidVariant;
-    });
+  ngAfterViewInit(): void {
+    if (!this.sentinelaRef) return;
+    this.observerScroll = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          this.cargarSiguientePaginaProductosPOS();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    this.observerScroll.observe(this.sentinelaRef.nativeElement);
   }
 
+  ngOnDestroy(): void {
+    this.observerScroll?.disconnect();
+  }
+
+  // ── Filtros (búsqueda con debounce; el resto dispara de inmediato) ──────
+
+  /** Ligado al input de búsqueda: actualiza el texto y dispara el debounce. */
+  onBusquedaChange(valor: string): void {
+    this.busqueda = valor;
+    this.busquedaSubject.next(valor);
+  }
+
+  onFiltroTallaChange(valor: string): void {
+    this.filtroTalla = valor;
+    this.cargarPrimeraPaginaProductosPOS();
+  }
+
+  /**
+   * Tallas conocidas para poblar el select — se derivan de lo ya cargado
+   * en `productos()`, no de todo el catálogo. Con paginación, esto puede
+   * no mostrar tallas que existan más adelante en páginas no cargadas
+   * todavía; es un trade-off aceptado por ahora (se resolvería con un
+   * endpoint aparte de "tallas distintas del catálogo" si llega a molestar).
+   */
   get tallasDisponibles(): string[] {
     const set = new Set<string>();
     for (const p of this.productos()) {
@@ -228,6 +280,7 @@ export class VentasComponent implements OnInit {
 
   toggleSexo(valor: SexoProducto): void {
     this.filtroSexo = this.filtroSexo === valor ? null : valor;
+    this.cargarPrimeraPaginaProductosPOS();
   }
 
   get hayFiltrosActivos(): boolean {
@@ -239,6 +292,7 @@ export class VentasComponent implements OnInit {
     this.filtroSexo = null;
     this.filtroTalla = 'Todas';
     this.filtroIdCategoria = null;
+    this.cargarPrimeraPaginaProductosPOS();
   }
 
   // ── Carrito ─────────────────────────────────────────────────────────────
@@ -735,7 +789,7 @@ export class VentasComponent implements OnInit {
         // Vaciar carrito tras venta exitosa
         this.ventasService.vaciarCarrito();
         // Refrescar catálogo para actualizar stock visible
-        this.cargarProductosPOS();
+        this.cargarPrimeraPaginaProductosPOS();
       },
       error: (err) => {
         this.checkoutError =

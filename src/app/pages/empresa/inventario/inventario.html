@@ -12,17 +12,17 @@
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
-    <input type="text" placeholder="Buscar producto..." [(ngModel)]="busqueda" />
+    <input type="text" placeholder="Buscar producto..." [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" />
   </div>
 
   <!-- Filtro por categoría (opciones cargadas desde el backend) -->
-  <select class="filter-select" [(ngModel)]="filtroIdCategoria">
+  <select class="filter-select" [ngModel]="filtroIdCategoria" (ngModelChange)="onFiltroCategoriaChange($event)">
     <option [ngValue]="null">Categoría: Todas</option>
     <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
   </select>
 
   <!-- Filtro por sexo (valores del backend) -->
-  <select class="filter-select" [(ngModel)]="filtroSexo">
+  <select class="filter-select" [ngModel]="filtroSexo" (ngModelChange)="onFiltroSexoChange($event)">
     <option [ngValue]="null">Sexo: Todos</option>
     <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
   </select>
@@ -37,7 +37,7 @@
 
 <!-- ── Estado de carga / error global ────────────────────────────────── -->
 <div class="estado-carga" *ngIf="cargando()">
-  <span class="spinner"></span> Cargando inventario…
+  <span class="spinner"></span> Cargando catálogo…
 </div>
 
 <div class="estado-error" *ngIf="error() && !cargando()">
@@ -48,10 +48,10 @@
   <button class="btn-link" (click)="ngOnInit()">Reintentar</button>
 </div>
 
-<!-- ── Grid de productos ──────────────────────────────────────────────── -->
+<!-- ── Grid de productos (paginado, scroll infinito) ───────────────────── -->
 <div class="content" *ngIf="!cargando()">
   <div class="productos-grid">
-    <div class="producto-card" *ngFor="let p of productosFiltrados">
+    <div class="producto-card" *ngFor="let p of productos()">
       <div class="producto-foto">
         <span class="foto-placeholder">Sin foto</span>
       </div>
@@ -75,10 +75,18 @@
       </div>
     </div>
 
-    <div class="sin-resultados" *ngIf="productosFiltrados.length === 0 && !error()">
+    <div class="sin-resultados" *ngIf="productos().length === 0 && !cargandoPagina() && !error()">
       No se encontraron productos con estos filtros.
     </div>
   </div>
+
+  <!-- Indicador de carga de la siguiente página (no reemplaza lo ya visible) -->
+  <div class="cargando-mas" *ngIf="cargandoPagina()">
+    <span class="spinner spinner-sm"></span> Cargando más productos…
+  </div>
+
+  <!-- Sentinel del scroll infinito: al entrar en viewport pide la siguiente página -->
+  <div #sentinelaInfiniteScroll class="scroll-sentinela"></div>
 </div>
 
 <!-- ── Modal crear / editar producto ─────────────────────────────────── -->

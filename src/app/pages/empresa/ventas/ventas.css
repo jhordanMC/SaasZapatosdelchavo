@@ -103,6 +103,10 @@
   gap: 16px;
 }
 
+.scroll-sentinela {
+  height: 1px;
+}
+
 .venta-card {
   position: relative;
   background: white;

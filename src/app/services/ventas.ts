@@ -53,12 +53,23 @@ export interface ProductoPOSRead {
   variantes: VariantePOSRead[];
 }
 
+/**
+ * Envoltorio de paginación del catálogo POS (scroll infinito). Mismo
+ * contrato que ProductosPaginados de inventario.
+ */
+export interface ProductosPOSPaginados {
+  items: ProductoPOSRead[];
+  hay_mas: boolean;
+  siguiente_offset: number;
+}
+
 // ── Filtros para el catálogo POS ────────────────────────────────────────────
 
 export interface FiltrosPOS {
   busqueda?: string;
   id_categoria?: string;
   sexo?: SexoProducto;
+  talla?: string;
 }
 
 // ── Schemas de venta ────────────────────────────────────────────────────────
@@ -156,6 +167,12 @@ export interface ItemCarrito {
 // Servicio
 // ---------------------------------------------------------------------------
 
+/**
+ * Tamaño de página del catálogo POS (scroll infinito). Único lugar donde
+ * se define — cambiarlo acá es todo lo que hace falta para ajustarlo.
+ */
+export const TAMANO_PAGINA_CATALOGO_POS = 30;
+
 @Injectable({ providedIn: 'root' })
 export class VentasService {
   private readonly base = `${environment.apiUrl}/ventas`;
@@ -172,14 +189,24 @@ export class VentasService {
     return this.http.get<SedePOSRead[]>(`${this.base}/pos/mis-sedes`);
   }
 
-  /** Productos para la pantalla POS, filtrados por sede activa (si existe). */
-  listarProductosPOS(idUbicacionFiltro?: string | null, filtros: FiltrosPOS = {}): Observable<ProductoPOSRead[]> {
-    let params = new HttpParams();
+  /**
+   * Página del catálogo POS, filtrada por sede/talla/búsqueda/categoría/
+   * sexo (todo resuelto en el backend) y ordenada por ranking (recientes +
+   * más vendidos primero). `offset` avanza para el scroll infinito.
+   */
+  listarProductosPOS(
+    idUbicacionFiltro: string | null | undefined,
+    filtros: FiltrosPOS = {},
+    offset = 0,
+    limit = TAMANO_PAGINA_CATALOGO_POS
+  ): Observable<ProductosPOSPaginados> {
+    let params = new HttpParams().set('limit', limit).set('offset', offset);
     if (idUbicacionFiltro) params = params.set('id_ubicacion_filtro', idUbicacionFiltro);
     if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
     if (filtros.id_categoria) params = params.set('id_categoria', filtros.id_categoria);
     if (filtros.sexo) params = params.set('sexo', filtros.sexo);
-    return this.http.get<ProductoPOSRead[]>(`${this.base}/pos/productos`, { params });
+    if (filtros.talla) params = params.set('talla', filtros.talla);
+    return this.http.get<ProductosPOSPaginados>(`${this.base}/pos/productos`, { params });
   }
 
   /** Confirma la venta: envía el carrito completo al backend. */
