@@ -70,6 +70,7 @@
         </div>
         <div class="producto-acciones">
           <button class="btn-secondary" (click)="abrirModalEditar(p)">Editar</button>
+          <button class="btn-secondary" (click)="duplicarProducto(p)" title="Crear un producto nuevo a partir de este">Duplicar</button>
           <button class="btn-danger" (click)="eliminar(p)">Eliminar</button>
         </div>
       </div>
@@ -335,6 +336,14 @@
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
+      </div>
+
+      <!-- Total de stock sumado (alineado justo debajo de la columna "Stock") -->
+      <div class="variante-fila variantes-total-fila" *ngIf="form.variantes.length > 0">
+        <span></span>
+        <span class="variantes-total">Total: <strong>{{ stockTotalForm }}</strong></span>
+        <span></span>
+        <span></span>
       </div>
 
       <!-- Error del modal -->

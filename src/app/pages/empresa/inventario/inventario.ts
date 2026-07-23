@@ -371,21 +371,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.inventarioService.obtenerProducto(p.id_producto).subscribe({
       next: (detalle: ProductoRead) => {
         this.editandoId = detalle.id_producto;
-        this.form = {
-          nombre: detalle.nombre,
-          id_categoria: detalle.id_categoria,
-          sexo: detalle.sexo,
-          costoCompra: String(detalle.costo_compra ?? ''),
-          precioVenta: String(detalle.precio_venta ?? ''),
-          fotoUrl: null,
-          variantes: detalle.variantes.flatMap((v) =>
-            v.stock.map((s) => ({
-                talla: v.talla ?? '',
-                cantidad: String(s.cantidad ?? ''),
-                ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
-              }))
-          ),
-        };
+        this.form = this.formDesdeDetalle(detalle);
         this.errorModal.set(null);
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
@@ -393,6 +379,43 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => this.error.set('No se pudo cargar el detalle del producto.'),
     });
+  }
+
+  /** Abre el modal como "Nuevo producto" pero con los datos de otro ya cargados,
+   *  para no tener que digitar todo de nuevo cuando es muy parecido (mismo modelo,
+   *  otro color, etc). Al guardar se crea un producto aparte, no se sobreescribe el original. */
+  duplicarProducto(p: ProductoListItem): void {
+    this.inventarioService.obtenerProducto(p.id_producto).subscribe({
+      next: (detalle: ProductoRead) => {
+        this.editandoId = null;
+        this.form = this.formDesdeDetalle(detalle);
+        this.form.nombre = `${detalle.nombre} (copia)`;
+        this.errorModal.set(null);
+        this.cerrarPanelNuevaCategoria();
+        this.cerrarPanelGestionAlmacenes();
+        this.showModal = true;
+      },
+      error: () => this.error.set('No se pudo cargar el detalle del producto para duplicarlo.'),
+    });
+  }
+
+  /** Arma el formulario a partir del detalle del backend (usado por editar y duplicar). */
+  private formDesdeDetalle(detalle: ProductoRead): ProductoForm {
+    return {
+      nombre: detalle.nombre,
+      id_categoria: detalle.id_categoria,
+      sexo: detalle.sexo,
+      costoCompra: String(detalle.costo_compra ?? ''),
+      precioVenta: String(detalle.precio_venta ?? ''),
+      fotoUrl: null,
+      variantes: detalle.variantes.flatMap((v) =>
+        v.stock.map((s) => ({
+            talla: v.talla ?? '',
+            cantidad: String(s.cantidad ?? ''),
+            ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
+          }))
+      ),
+    };
   }
 
   cerrarModal(): void {
@@ -429,6 +452,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   /** "No, quiero seguir": vuelve al formulario sin perder nada. */
   cancelarSalirModal(): void {
     this.mostrarConfirmarSalir = false;
+  }
+
+  /** Suma el stock de todas las filas de tallas del formulario (texto plano → número). */
+  get stockTotalForm(): number {
+    return this.form.variantes.reduce((total, v) => total + (parseInt(v.cantidad, 10) || 0), 0);
   }
 
   agregarFilaVariante(): void {
