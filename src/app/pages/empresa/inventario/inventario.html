@@ -206,8 +206,8 @@
         </select>
       </div>
 
-      <!-- Precios -->
-      <div class="form-row form-row-2">
+      <!-- Precios + margen de ganancia (calculado, solo informativo) -->
+      <div class="form-row form-row-3">
         <div>
           <label>Costo de compra (S/)</label>
           <input
@@ -227,6 +227,21 @@
             [ngModel]="form.precioVenta"
             (ngModelChange)="onPrecioVentaChange($event)"
           />
+        </div>
+        <div class="margen-ganancia-campo">
+          <label class="margen-label">
+            Margen de ganancia
+            <button
+              type="button"
+              class="info-tooltip-btn"
+              (click)="mostrarInfoMargen = !mostrarInfoMargen"
+              aria-label="Qué es el margen de ganancia"
+            >?</button>
+          </label>
+          <div class="margen-display">S/ {{ margenForm.toFixed(2) }}</div>
+          <div class="info-tooltip-text" *ngIf="mostrarInfoMargen">
+            El margen de ganancia sin descontar IGV, gastos u otros costos.
+          </div>
         </div>
       </div>
 
@@ -304,7 +319,8 @@
       <div class="variante-columnas" *ngIf="form.variantes.length > 0">
         <span>Talla</span>
         <span>Stock</span>
-        <span>Almacén</span>
+        <span>Tipo</span>
+        <span>Almacén / Local</span>
         <span></span>
       </div>
 
@@ -320,15 +336,34 @@
           aria-label="Stock"
         />
 
-        <!-- Select unificado (Almacenes y Locales) -->
-        <select [(ngModel)]="v.ubicacion" aria-label="Ubicación">
-          <option value="">Seleccionar ubicación</option>
-          <optgroup label="Almacenes">
-            <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
-          </optgroup>
-          <optgroup label="Locales (Tiendas)">
-            <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
-          </optgroup>
+        <!-- Paso 1: elegir el tipo (Almacén o Local) -->
+        <select [ngModel]="v.tipoUbicacion" (ngModelChange)="onTipoUbicacionChange(i, $event)" aria-label="Tipo de ubicación">
+          <option value="">Tipo…</option>
+          <option value="almacen">Almacén</option>
+          <option value="local">Local</option>
+        </select>
+
+        <!-- Paso 2: según el tipo elegido, solo muestra almacenes o solo locales -->
+        <select
+          *ngIf="v.tipoUbicacion === 'almacen'"
+          [(ngModel)]="v.ubicacion"
+          aria-label="Almacén"
+        >
+          <option value="">Seleccionar almacén</option>
+          <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
+        </select>
+
+        <select
+          *ngIf="v.tipoUbicacion === 'local'"
+          [(ngModel)]="v.ubicacion"
+          aria-label="Local"
+        >
+          <option value="">Seleccionar local</option>
+          <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
+        </select>
+
+        <select *ngIf="!v.tipoUbicacion" disabled aria-label="Almacén o local">
+          <option value="">Elige un tipo primero</option>
         </select>
 
         <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla">
@@ -341,7 +376,8 @@
       <!-- Total de stock sumado (alineado justo debajo de la columna "Stock") -->
       <div class="variante-fila variantes-total-fila" *ngIf="form.variantes.length > 0">
         <span></span>
-        <span class="variantes-total">Total: <strong>{{ stockTotalForm }}</strong></span>
+        <span class="variantes-total">Total de stock: <strong>{{ stockTotalForm }}</strong></span>
+        <span></span>
         <span></span>
         <span></span>
       </div>
@@ -378,6 +414,34 @@
     <div class="confirm-salir-actions">
       <button class="btn-confirm-salir" (click)="confirmarSalirModal()">Sí, salir</button>
       <button class="btn-confirm-seguir" (click)="cancelarSalirModal()">No, quiero seguir</button>
+    </div>
+
+    <div class="confirm-salir-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="confirm-salir-logo" />
+      <div class="confirm-salir-brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: confirmar eliminación de producto ──────────────────────── -->
+<div class="modal-overlay confirm-salir-overlay" *ngIf="productoAEliminar">
+  <div class="confirm-salir-card" (click)="$event.stopPropagation()">
+    <div class="confirm-salir-icono">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirm-salir-titulo">¿Estás seguro de eliminar el producto?</h2>
+    <p class="confirm-salir-desc">Se eliminará de todas tus vistas donde lo tengas agregado.</p>
+
+    <div class="confirm-salir-actions">
+      <button class="btn-confirm-salir" (click)="confirmarEliminarProducto()" [disabled]="eliminandoProducto()">
+        <span *ngIf="eliminandoProducto()">Eliminando…</span>
+        <span *ngIf="!eliminandoProducto()">Sí, quiero eliminar</span>
+      </button>
+      <button class="btn-confirm-seguir" (click)="cancelarEliminarProducto()" [disabled]="eliminandoProducto()">No, no quiero</button>
     </div>
 
     <div class="confirm-salir-brand">

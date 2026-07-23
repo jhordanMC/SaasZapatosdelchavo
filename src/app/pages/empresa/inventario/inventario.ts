@@ -49,6 +49,9 @@ interface VarianteFormItem {
   // sin arrancar en "0"). Se convierte a número recién al guardar.
   cantidad: string;
   ubicacion: string;
+  // Filtro de UI: qué lista mostrar en el segundo select ('almacen' | 'local' | '').
+  // No se envía al backend, solo decide qué opciones ve el usuario.
+  tipoUbicacion: 'almacen' | 'local' | '';
 }
 
 interface ProductoForm {
@@ -112,6 +115,10 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   error = signal<string | null>(null);
   errorModal = signal<string | null>(null);
 
+  // ── Confirmación al eliminar un producto (reemplaza el confirm() nativo) ──
+  productoAEliminar: ProductoListItem | null = null;
+  eliminandoProducto = signal(false);
+
   // ── Paginación del catálogo (scroll infinito) ────────────────────────────
   private offset = 0;
   hayMasProductos = signal(true);
@@ -132,6 +139,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Confirmación al intentar salir del modal con datos sin guardar ──────
   mostrarConfirmarSalir = false;
+
+  // ── Tooltip informativo del margen de ganancia ───────────────────────────
+  mostrarInfoMargen = false;
 
   // ── Creador rápido de categoría (dentro del modal de producto) ──────────
   readonly categoriasSugeridas = CATEGORIAS_SUGERIDAS;
@@ -328,7 +338,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       costoCompra: '',
       precioVenta: '',
       fotoUrl: null,
-      variantes: [{ talla: '', cantidad: '', ubicacion: '' }],
+      variantes: [{ talla: '', cantidad: '', ubicacion: '', tipoUbicacion: '' }],
     };
   }
 
@@ -361,6 +371,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editandoId = null;
     this.form = this.formVacio();
     this.errorModal.set(null);
+    this.mostrarInfoMargen = false;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
     this.showModal = true;
@@ -413,6 +424,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
             talla: v.talla ?? '',
             cantidad: String(s.cantidad ?? ''),
             ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
+            tipoUbicacion: s.id_local ? 'local' as const : (s.id_almacen ? 'almacen' as const : '' as const),
           }))
       ),
     };
@@ -421,6 +433,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   cerrarModal(): void {
     this.showModal = false;
     this.mostrarConfirmarSalir = false;
+    this.mostrarInfoMargen = false;
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
@@ -454,16 +467,34 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mostrarConfirmarSalir = false;
   }
 
+  /** Margen de ganancia en vivo (precio venta - costo compra), texto plano → número.
+   *  Es solo informativo: no descuenta IGV, gastos ni otros costos. */
+  get margenForm(): number {
+    const costo = parseFloat(this.form.costoCompra) || 0;
+    const precio = parseFloat(this.form.precioVenta) || 0;
+    return precio - costo;
+  }
+
   /** Suma el stock de todas las filas de tallas del formulario (texto plano → número). */
   get stockTotalForm(): number {
     return this.form.variantes.reduce((total, v) => total + (parseInt(v.cantidad, 10) || 0), 0);
   }
 
   agregarFilaVariante(): void {
-    const primerUbicacion = this.locales().length > 0
+    const hayLocales = this.locales().length > 0;
+    const hayAlmacenes = this.almacenesReales().length > 0;
+    const tipo: 'almacen' | 'local' | '' = hayLocales ? 'local' : (hayAlmacenes ? 'almacen' : '');
+    const primerUbicacion = hayLocales
       ? `local:${this.locales()[0].id_local}`
-      : (this.almacenesReales().length > 0 ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
-    this.form.variantes.push({ talla: '', cantidad: '', ubicacion: primerUbicacion });
+      : (hayAlmacenes ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
+    this.form.variantes.push({ talla: '', cantidad: '', ubicacion: primerUbicacion, tipoUbicacion: tipo });
+  }
+
+  /** Al cambiar el tipo (Almacén/Local) se limpia la ubicación elegida, para que
+   *  el segundo select siempre muestre solo la lista del tipo seleccionado. */
+  onTipoUbicacionChange(index: number, tipo: 'almacen' | 'local' | ''): void {
+    this.form.variantes[index].tipoUbicacion = tipo;
+    this.form.variantes[index].ubicacion = '';
   }
 
   quitarFilaVariante(index: number): void {
@@ -642,13 +673,31 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /** Abre el modal de confirmación (en vez del confirm() nativo del navegador). */
   eliminar(p: ProductoListItem): void {
-    if (!confirm(`¿Eliminar "${p.nombre}" del inventario?`)) return;
+    this.productoAEliminar = p;
+  }
 
+  cancelarEliminarProducto(): void {
+    this.productoAEliminar = null;
+  }
+
+  confirmarEliminarProducto(): void {
+    const p = this.productoAEliminar;
+    if (!p) return;
+
+    this.eliminandoProducto.set(true);
     this.inventarioService.eliminarProducto(p.id_producto).subscribe({
-      next: () => this.recargarProductos(),
-      error: (err) =>
-        this.error.set(err?.error?.detail ?? 'No se pudo eliminar el producto.'),
+      next: () => {
+        this.eliminandoProducto.set(false);
+        this.productoAEliminar = null;
+        this.recargarProductos();
+      },
+      error: (err) => {
+        this.eliminandoProducto.set(false);
+        this.productoAEliminar = null;
+        this.error.set(err?.error?.detail ?? 'No se pudo eliminar el producto.');
+      },
     });
   }
 
