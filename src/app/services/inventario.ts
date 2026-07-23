@@ -248,9 +248,10 @@ export class InventarioService {
   listarProductos(
     filtros: FiltrosProducto = {},
     offset = 0,
-    limit = TAMANO_PAGINA_CATALOGO
+    limit = TAMANO_PAGINA_CATALOGO,
+    orden: 'ranking' | 'margen_desc' = 'ranking'
   ): Observable<ProductosPaginados> {
-    let params = new HttpParams().set('limit', limit).set('offset', offset);
+    let params = new HttpParams().set('limit', limit).set('offset', offset).set('orden', orden);
     if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
     if (filtros.id_categoria) params = params.set('id_categoria', filtros.id_categoria);
     if (filtros.sexo) params = params.set('sexo', filtros.sexo);

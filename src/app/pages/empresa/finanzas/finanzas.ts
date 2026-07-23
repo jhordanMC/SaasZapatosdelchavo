@@ -1,17 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FinanzasService, TipoGasto } from '../../../services/finanzas';
-import { ProductosService } from '../../../services/productos';
+import {
+  FinanzasService,
+  Frecuencia,
+  GastoOperativoCreate,
+  GastoRecurrenteCreate,
+  TIPOS_GASTO_SUGERIDOS,
+} from '../../../services/finanzas';
+import { InventarioService, ProductoListItem } from '../../../services/inventario';
 
-const TIPOS_GASTO: TipoGasto[] = [
-  'Pago de local',
-  'Seguridad local',
-  'Pago trabajador',
-  'Almuerzo trabajador',
-  'Pasajes trabajador',
-  'SaaS Vilcas',
-];
+function hoyISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 @Component({
   selector: 'app-finanzas',
@@ -20,69 +21,101 @@ const TIPOS_GASTO: TipoGasto[] = [
   templateUrl: './finanzas.html',
   styleUrls: ['./finanzas.css'],
 })
-export class FinanzasComponent {
-  constructor(public finanzasService: FinanzasService, private productosService: ProductosService) {}
+export class FinanzasComponent implements OnInit {
+  constructor(public finanzasService: FinanzasService, private inventarioService: InventarioService) {}
 
-  tiposGasto = TIPOS_GASTO;
+  tiposGastoSugeridos = TIPOS_GASTO_SUGERIDOS;
+  productosRentabilidad: ProductoListItem[] = [];
 
-  showModal = false;
-  form: { tipo: TipoGasto; monto: number; periodo: 'diario' | 'semanal' | 'mensual' } = {
-    tipo: 'Pago de local',
-    monto: 0,
-    periodo: 'mensual',
-  };
+  mostrarModalRecurrente = false;
+  mostrarModalUnico = false;
 
-  get ingresosMes() { return this.finanzasService.ingresosMes(); }
-  get ingresosSemana() { return this.finanzasService.ingresosSemana(); }
-  get gastoOperativoMensual() { return this.finanzasService.gastoOperativoMensualEstimado(); }
-  get gananciaNeta() { return this.finanzasService.gananciaNetaMensual(); }
-  get generandoGanancia() { return this.finanzasService.estaGenerandoGanancia(); }
+  formRecurrente: GastoRecurrenteCreate = this.formRecurrenteVacio();
+  formUnico: GastoOperativoCreate = this.formUnicoVacio();
 
-  // Panel de decisiones
-  get ticketPromedio() { return this.finanzasService.ticketPromedio(); }
-  get margenPromedio() { return this.finanzasService.margenPromedioPorcentaje(); }
-  get puntoEquilibrio() { return this.finanzasService.puntoEquilibrioMensual(); }
-  get progresoEquilibrio() { return this.finanzasService.progresoPuntoEquilibrio(); }
-  get proyeccionMes() { return this.finanzasService.proyeccionCierreMes(); }
-  get crecimientoSemanal() { return this.finanzasService.crecimientoSemanal(); }
-  get productoEstrella() { return this.finanzasService.productoEstrella(); }
-  get productoMasRentable() { return this.finanzasService.productoMasRentable(); }
-  get alertasStockBajo() { return this.finanzasService.alertasStockBajo(); }
-  get recomendacion() { return this.finanzasService.recomendacion(); }
-  get ingresosPorSemana() { return this.finanzasService.ingresosPorSemana(4); }
+  ngOnInit(): void {
+    this.finanzasService.recargarTodo();
+    this.inventarioService.listarProductos({}, 0, 10, 'margen_desc').subscribe((pagina) => {
+      this.productosRentabilidad = pagina.items;
+    });
+  }
+
+  get resumen() {
+    return this.finanzasService.resumen();
+  }
 
   get maxSemana(): number {
-    return Math.max(1, ...this.ingresosPorSemana.map((p) => p.total));
+    const puntos = this.finanzasService.ingresosPorSemana();
+    return Math.max(1, ...puntos.map((p) => p.total));
   }
 
   alturaBarra(total: number): number {
     return Math.round((total / this.maxSemana) * 100);
   }
 
-  get productosRentabilidad() {
-    return this.productosService.getProductos()().map((p) => ({
-      nombre: p.nombre,
-      margen: this.productosService.margen(p),
-      stock: this.productosService.stockTotal(p),
-    })).sort((a, b) => b.margen - a.margen);
+  // ── Gasto recurrente ─────────────────────────────────────────────────────
+
+  private formRecurrenteVacio(): GastoRecurrenteCreate {
+    return { concepto: '', tipo_gasto: '', monto: 0, frecuencia: 'mensual' as Frecuencia, fecha_inicio: hoyISO() };
   }
 
-  abrirModal(): void {
-    this.form = { tipo: 'Pago de local', monto: 0, periodo: 'mensual' };
-    this.showModal = true;
+  abrirModalRecurrente(): void {
+    this.formRecurrente = this.formRecurrenteVacio();
+    this.mostrarModalRecurrente = true;
   }
 
-  cerrarModal(): void {
-    this.showModal = false;
+  cerrarModalRecurrente(): void {
+    this.mostrarModalRecurrente = false;
   }
 
-  guardarGasto(): void {
-    if (this.form.monto <= 0) return;
-    this.finanzasService.agregarGasto(this.form);
-    this.showModal = false;
+  guardarGastoRecurrente(): void {
+    if (!this.formRecurrente.concepto.trim() || !this.formRecurrente.tipo_gasto.trim() || this.formRecurrente.monto <= 0) {
+      return;
+    }
+    this.finanzasService.crearGastoRecurrente(this.formRecurrente).subscribe(() => {
+      this.mostrarModalRecurrente = false;
+      this.finanzasService.recargarTodo();
+    });
   }
 
-  eliminarGasto(id: string): void {
-    this.finanzasService.eliminarGasto(id);
+  eliminarGastoRecurrente(idGastoRecurrente: string): void {
+    this.finanzasService.eliminarGastoRecurrente(idGastoRecurrente).subscribe(() => {
+      this.finanzasService.recargarTodo();
+    });
+  }
+
+  // ── Gasto único / extraordinario ────────────────────────────────────────
+
+  private formUnicoVacio(): GastoOperativoCreate {
+    return { concepto: '', tipo_gasto: '', monto: 0, fecha: hoyISO() };
+  }
+
+  abrirModalUnico(): void {
+    this.formUnico = this.formUnicoVacio();
+    this.mostrarModalUnico = true;
+  }
+
+  cerrarModalUnico(): void {
+    this.mostrarModalUnico = false;
+  }
+
+  guardarGastoUnico(): void {
+    if (!this.formUnico.concepto.trim() || !this.formUnico.tipo_gasto.trim() || this.formUnico.monto <= 0) {
+      return;
+    }
+    this.finanzasService.crearGastoOperativo(this.formUnico).subscribe(() => {
+      this.mostrarModalUnico = false;
+      this.finanzasService.recargarTodo();
+    });
+  }
+
+  eliminarGastoOperativo(idGasto: string): void {
+    this.finanzasService.eliminarGastoOperativo(idGasto).subscribe(() => {
+      this.finanzasService.recargarTodo();
+    });
+  }
+
+  cargarMasGastosOperativos(): void {
+    this.finanzasService.cargarGastosOperativos(this.finanzasService.gastosOperativos().length);
   }
 }

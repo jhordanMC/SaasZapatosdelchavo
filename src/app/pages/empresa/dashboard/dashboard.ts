@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Producto, ProductosService } from '../../../services/productos';
 import { VentasService } from '../../../services/ventas';
-import { FinanzasService, GastoOperativo } from '../../../services/finanzas';
+import { FinanzasService, GastoRecurrenteRead } from '../../../services/finanzas';
 import { TPipe } from '../../../core/t.pipe';
 
 /** Ventana de análisis para velocidad de venta / rotación de inventario. */
@@ -53,12 +53,16 @@ const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vier
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
-export class EmpresaDashboardComponent {
+export class EmpresaDashboardComponent implements OnInit {
   constructor(
     private productosService: ProductosService,
     public ventasService: VentasService,
     public finanzasService: FinanzasService
   ) { }
+
+  ngOnInit(): void {
+    this.finanzasService.recargarTodo();
+  }
 
   // ═══════════════════════════════════════════════════════════
   // Datos base
@@ -117,7 +121,7 @@ export class EmpresaDashboardComponent {
   }
 
   get gastosOperativosMes(): number {
-    return this.finanzasService.gastoOperativoMensualEstimado();
+    return this.finanzasService.resumen()?.gasto_operativo_periodo ?? 0;
   }
 
   get utilidadNetaMes(): number {
@@ -130,7 +134,7 @@ export class EmpresaDashboardComponent {
   }
 
   get ticketPromedio(): number {
-    return this.finanzasService.ticketPromedio();
+    return this.finanzasService.resumen()?.ticket_promedio ?? 0;
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -317,23 +321,26 @@ export class EmpresaDashboardComponent {
   }
 
   get crecimientoSemanal(): number {
-    return this.finanzasService.crecimientoSemanal();
+    return this.finanzasService.resumen()?.crecimiento_vs_periodo_anterior_pct ?? 0;
   }
 
   // ═══════════════════════════════════════════════════════════
   // 6) Gastos operativos de mayor impacto
   // ═══════════════════════════════════════════════════════════
+  // Solo considera gastos RECURRENTES (alquiler, sueldos, servicios): un
+  // gasto único/extraordinario no debería distorsionar la estructura de
+  // costos recurrentes mes a mes.
 
-  private mensualizarGasto(g: GastoOperativo): number {
-    if (g.periodo === 'mensual') return g.monto;
-    if (g.periodo === 'semanal') return g.monto * 4.33;
+  private mensualizarGasto(g: GastoRecurrenteRead): number {
+    if (g.frecuencia === 'mensual') return g.monto;
+    if (g.frecuencia === 'semanal') return g.monto * 4.33;
     return g.monto * 30; // diario
   }
 
   get gastosPorTipo(): FilaGasto[] {
     const mapa = new Map<string, number>();
-    for (const g of this.finanzasService.gastos()) {
-      mapa.set(g.tipo, (mapa.get(g.tipo) ?? 0) + this.mensualizarGasto(g));
+    for (const g of this.finanzasService.gastosRecurrentes()) {
+      mapa.set(g.tipo_gasto, (mapa.get(g.tipo_gasto) ?? 0) + this.mensualizarGasto(g));
     }
     const total = Array.from(mapa.values()).reduce((acc, v) => acc + v, 0);
     return Array.from(mapa.entries())
