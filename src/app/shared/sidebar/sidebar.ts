@@ -44,7 +44,6 @@ export class SidebarComponent {
   @Input() brandAccentIndex = 4;
 
   showLogoFallback = false;
-  showAvatarFallback = false;
   mobileOpen = false;
 
   /** Enlace del bloque "Powered by ALBA" del pie del sidebar. */

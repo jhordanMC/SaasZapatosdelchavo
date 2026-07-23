@@ -160,20 +160,9 @@
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="user-avatar">
-        <img *ngIf="!showAvatarFallback" [src]="avatarSrc" alt="Avatar" class="avatar-img" (error)="showAvatarFallback = true" />
-        <span *ngIf="showAvatarFallback">{{ avatarLabel }}</span>
-      </div>
-      <div class="user-info">
-        <div class="user-name">{{ userName }}</div>
-        <div class="user-role">{{ userRole }}</div>
-      </div>
-    </div>
-
     <a class="powered-by-alba" [href]="albaLinkedInUrl" target="_blank" rel="noopener noreferrer">
       <span class="powered-by-alba-text">Powered by <strong>ALBA</strong></span>
-      <img src="/LogoAlba.png" alt="ALBA" class="powered-by-alba-logo" />
+      <img src="/Logoalbasinfondo.png" alt="ALBA" class="powered-by-alba-logo" />
     </a>
   </div>
 </aside>
