@@ -415,13 +415,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return f.variantes.some((v) => v.talla.trim() !== '' || v.cantidad.trim() !== '' || v.ubicacion);
   }
 
-  /** Ligado al click fuera de la tarjeta del modal: si hay datos, pide confirmación en vez de cerrar de una. */
+  /** Ligado al click fuera de la tarjeta del modal: siempre pide confirmación antes de cerrar (nuevo o editar). */
   intentarCerrarModal(): void {
-    if (this.hayCambiosSinGuardar) {
-      this.mostrarConfirmarSalir = true;
-    } else {
-      this.cerrarModal();
-    }
+    this.mostrarConfirmarSalir = true;
   }
 
   /** "Sí, salir": descarta lo digitado y cierra ambos modales. */
@@ -436,8 +432,8 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   agregarFilaVariante(): void {
-    const primerUbicacion = this.locales().length > 0 
-      ? `local:${this.locales()[0].id_local}` 
+    const primerUbicacion = this.locales().length > 0
+      ? `local:${this.locales()[0].id_local}`
       : (this.almacenesReales().length > 0 ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
     this.form.variantes.push({ talla: '', cantidad: '', ubicacion: primerUbicacion });
   }
