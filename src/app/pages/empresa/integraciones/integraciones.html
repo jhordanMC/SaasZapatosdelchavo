@@ -1,0 +1,127 @@
+<!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+<div class="page-toolbar">
+  <div>
+    <p class="page-subtitle">Conecta tus marketplaces para sincronizar ventas y stock automáticamente.</p>
+  </div>
+
+  <!-- Las alertas en tiempo real (SSE) ya corren globalmente; esto solo confirma que el canal está vivo. -->
+  <span class="live-indicator" [class.live-on]="marketplaceRealtime.conectado()">
+    <span class="live-dot"></span>
+    {{ marketplaceRealtime.conectado() ? 'Alertas en vivo activas' : 'Conectando alertas en vivo…' }}
+  </span>
+</div>
+
+<div class="content">
+  <div class="estado-carga" *ngIf="cargandoEstado">
+    <span class="spinner"></span> Cargando estado de tus integraciones…
+  </div>
+
+  <!-- ── Grilla tipo "App Store" ─────────────────────────────────────────── -->
+  <div class="integraciones-grid">
+    <div class="integracion-card" *ngFor="let m of marketplaces">
+      <div class="integracion-icono" [style.background]="m.colorAcento">{{ m.iniciales }}</div>
+
+      <div class="integracion-info">
+        <div class="integracion-nombre-row">
+          <span class="integracion-nombre">{{ m.nombre }}</span>
+          <span
+            class="badge-estado"
+            [class.badge-conectado]="estados[m.id] === 'conectado'"
+            [class.badge-error]="estados[m.id] === 'error_credenciales'"
+          >
+            {{
+              estados[m.id] === 'conectado'
+                ? 'Conectado'
+                : (estados[m.id] === 'error_credenciales' ? 'Error de credenciales' : 'No conectado')
+            }}
+          </span>
+        </div>
+        <p class="integracion-desc">{{ m.descripcion }}</p>
+      </div>
+
+      <!-- Mercado Libre: OAuth automático, redirige directo al backend (sin API key, sin modal) -->
+      <button *ngIf="!m.requiereCredenciales" class="btn-primary" (click)="conectarMercadoLibre()">
+        {{ estados[m.id] === 'conectado' ? 'Reconectar' : 'Conectar con Mercado Libre' }}
+      </button>
+
+      <!-- Falabella / Ripley: abren el modal de Seller ID + API Key -->
+      <button *ngIf="m.requiereCredenciales" class="btn-primary" (click)="abrirModalCredencialesDesde(m.id)">
+        {{ estados[m.id] === 'conectado' ? 'Actualizar credenciales' : 'Conectar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Seller ID + API Key (Falabella / Ripley) ───────────────────── -->
+<div class="modal-overlay" *ngIf="proveedorModal" (click)="cerrarModalCredenciales()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Conectar con {{ nombreProveedor(proveedorModal) }}</h3>
+      <button class="modal-close" (click)="cerrarModalCredenciales()" [disabled]="guardandoCredenciales" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Ayuda: dónde encontrar el Seller ID / API Key -->
+      <div class="ayuda-credenciales">
+        <p class="ayuda-titulo">¿Dónde encuentro estos datos?</p>
+        <ol class="ayuda-pasos">
+          <li *ngFor="let paso of ayudaCredenciales[proveedorModal].pasos">{{ paso }}</li>
+        </ol>
+        <a
+          *ngIf="ayudaCredenciales[proveedorModal].videoUrl"
+          [href]="ayudaCredenciales[proveedorModal].videoUrl"
+          target="_blank"
+          rel="noopener"
+          class="ayuda-video-link"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Ver video (15s): dónde encontrar tus datos
+        </a>
+      </div>
+
+      <div class="form-row">
+        <label>Seller ID</label>
+        <input type="text" placeholder="Ej: 12345678" [(ngModel)]="formCredenciales.sellerId" />
+      </div>
+
+      <div class="form-row">
+        <label>API Key</label>
+        <div class="campo-con-boton">
+          <input
+            [type]="mostrarApiKey ? 'text' : 'password'"
+            placeholder="Pega aquí tu API Key"
+            [(ngModel)]="formCredenciales.apiKey"
+            autocomplete="off"
+          />
+          <button type="button" class="btn-icon-mostrar" (click)="toggleMostrarApiKey()" aria-label="Mostrar u ocultar API Key">
+            <svg *ngIf="!mostrarApiKey" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg *ngIf="mostrarApiKey" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="credenciales-nota">
+        Tus datos se guardan cifrados y solo se usan para sincronizar tus ventas y tu stock con {{ nombreProveedor(proveedorModal) }}.
+      </p>
+
+      <div class="modal-error" *ngIf="errorCredenciales">{{ errorCredenciales }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModalCredenciales()" [disabled]="guardandoCredenciales">Cancelar</button>
+      <button class="btn-primary" (click)="guardarCredenciales()" [disabled]="guardandoCredenciales">
+        <span *ngIf="guardandoCredenciales">Guardando…</span>
+        <span *ngIf="!guardandoCredenciales">Guardar y conectar</span>
+      </button>
+    </div>
+  </div>
+</div>

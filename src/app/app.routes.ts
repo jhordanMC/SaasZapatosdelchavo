@@ -15,6 +15,7 @@ import { InventarioComponent } from './pages/empresa/inventario/inventario';
 import { VentasComponent } from './pages/empresa/ventas/ventas';
 import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
+import { IntegracionesComponent } from './pages/empresa/integraciones/integraciones';
 import { NotFoundComponent } from './pages/not-found/not-found';
 import { AccesoRestringidoComponent } from './pages/acceso-restringido/acceso-restringido';
 import { roleGuard, redirigirSiAutenticado, vistaGuard, resolverPrimeraVista } from './core/auth.guard';
@@ -110,6 +111,12 @@ export const routes: Routes = [
         component: AnaliticaComponent,
         data: { title: 'Analítica' },
         canActivate: [roleGuard('dueño'), vistaGuard('analitica')],
+      },
+      {
+        path: 'integraciones',
+        component: IntegracionesComponent,
+        data: { title: 'Integraciones' },
+        canActivate: [roleGuard('dueño'), vistaGuard('integraciones')],
       },
     ],
   },
