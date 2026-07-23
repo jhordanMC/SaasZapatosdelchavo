@@ -273,6 +273,7 @@
 .profile-modal-brand-name {
   display: inline-flex;
   gap: 2px;
+  font-family: 'Poppins', sans-serif;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.1em;
