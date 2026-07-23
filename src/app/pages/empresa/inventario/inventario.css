@@ -583,3 +583,135 @@
   color: #c0392b;
   font-size: 13px;
 }
+
+/* Inputs de texto plano para costo/precio/cantidad: sin flechas de subir/bajar */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
+}
+
+/* ══════════════════════════════
+   MODAL: Confirmar salida (con datos sin guardar)
+   Mismo formato/colores que el modal de "Cerrar sesión"
+══════════════════════════════ */
+.confirm-salir-overlay {
+  z-index: 1100;
+}
+
+.confirm-salir-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #F5F8F0;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(1, 20, 16, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 24px 26px;
+}
+
+.confirm-salir-icono {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fbe3e2;
+  color: #b3413a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.confirm-salir-titulo {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0c3a2e;
+}
+
+.confirm-salir-desc {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  color: #4b5a63;
+  line-height: 1.5;
+}
+
+.confirm-salir-actions {
+  width: 100%;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-confirm-salir {
+  width: 100%;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fdecec;
+  color: #b23a3a;
+  border: 1px solid #f3caca;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-confirm-salir:hover {
+  background: #fbdede;
+}
+
+.btn-confirm-seguir {
+  width: 100%;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f4fbf6;
+  color: #024B40;
+  border: 1px solid #d8e6dd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-confirm-seguir:hover {
+  background: #e8f1ec;
+}
+
+.confirm-salir-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 0;
+  margin-top: 12px;
+  border-top: 1px solid #eef3f0;
+  width: 100%;
+}
+
+.confirm-salir-logo {
+  width: 40px;
+  height: auto;
+  margin-bottom: 6px;
+}
+
+.confirm-salir-brand-name {
+  display: inline-flex;
+  gap: 2px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.confirm-salir-brand-name .dk { color: #024B40; }
+.confirm-salir-brand-name .gd { color: #DA9E0B; }
+
+@media (max-width: 480px) {
+  .confirm-salir-card { width: 100%; max-width: 94vw; }
+}

@@ -45,7 +45,9 @@ import {
 
 interface VarianteFormItem {
   talla: string;
-  cantidad: number;
+  // Texto plano tal cual lo digita el usuario (sin flechas de subir/bajar,
+  // sin arrancar en "0"). Se convierte a número recién al guardar.
+  cantidad: string;
   ubicacion: string;
 }
 
@@ -53,8 +55,9 @@ interface ProductoForm {
   nombre: string;
   id_categoria: string | null;
   sexo: SexoProducto | null;
-  costoCompra: number;
-  precioVenta: number;
+  // Texto plano (ver VarianteFormItem.cantidad) — se parsean a número al guardar.
+  costoCompra: string;
+  precioVenta: string;
   fotoUrl: string | null;
   variantes: VarianteFormItem[];
 }
@@ -126,6 +129,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   showModal = false;
   editandoId: string | null = null;
   form: ProductoForm = this.formVacio();
+
+  // ── Confirmación al intentar salir del modal con datos sin guardar ──────
+  mostrarConfirmarSalir = false;
 
   // ── Creador rápido de categoría (dentro del modal de producto) ──────────
   readonly categoriasSugeridas = CATEGORIAS_SUGERIDAS;
@@ -319,11 +325,36 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       nombre: '',
       id_categoria: null,
       sexo: null,
-      costoCompra: 0,
-      precioVenta: 0,
+      costoCompra: '',
+      precioVenta: '',
       fotoUrl: null,
-      variantes: [{ talla: '', cantidad: 0, ubicacion: '' }],
+      variantes: [{ talla: '', cantidad: '', ubicacion: '' }],
     };
+  }
+
+  /** Deja pasar solo dígitos y un único punto decimal (costo/precio). */
+  private limpiarDecimal(valor: string): string {
+    let limpio = (valor ?? '').replace(/[^0-9.]/g, '');
+    const partes = limpio.split('.');
+    if (partes.length > 2) limpio = partes[0] + '.' + partes.slice(1).join('');
+    return limpio;
+  }
+
+  /** Deja pasar solo dígitos (cantidad de stock). */
+  private limpiarEntero(valor: string): string {
+    return (valor ?? '').replace(/[^0-9]/g, '');
+  }
+
+  onCostoCompraChange(valor: string): void {
+    this.form.costoCompra = this.limpiarDecimal(valor);
+  }
+
+  onPrecioVentaChange(valor: string): void {
+    this.form.precioVenta = this.limpiarDecimal(valor);
+  }
+
+  onCantidadVarianteChange(index: number, valor: string): void {
+    this.form.variantes[index].cantidad = this.limpiarEntero(valor);
   }
 
   abrirModalNuevo(): void {
@@ -344,13 +375,13 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           nombre: detalle.nombre,
           id_categoria: detalle.id_categoria,
           sexo: detalle.sexo,
-          costoCompra: detalle.costo_compra,
-          precioVenta: detalle.precio_venta,
+          costoCompra: String(detalle.costo_compra ?? ''),
+          precioVenta: String(detalle.precio_venta ?? ''),
           fotoUrl: null,
           variantes: detalle.variantes.flatMap((v) =>
             v.stock.map((s) => ({
                 talla: v.talla ?? '',
-                cantidad: s.cantidad,
+                cantidad: String(s.cantidad ?? ''),
                 ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
               }))
           ),
@@ -366,16 +397,49 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cerrarModal(): void {
     this.showModal = false;
+    this.mostrarConfirmarSalir = false;
     this.errorModal.set(null);
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
+  }
+
+  /** True si el formulario tiene algo digitado (para no perderlo por accidente). */
+  get hayCambiosSinGuardar(): boolean {
+    const f = this.form;
+    if (f.nombre.trim() !== '') return true;
+    if (f.id_categoria) return true;
+    if (f.sexo) return true;
+    if (f.costoCompra.trim() !== '') return true;
+    if (f.precioVenta.trim() !== '') return true;
+    if (f.fotoUrl) return true;
+    return f.variantes.some((v) => v.talla.trim() !== '' || v.cantidad.trim() !== '' || v.ubicacion);
+  }
+
+  /** Ligado al click fuera de la tarjeta del modal: si hay datos, pide confirmación en vez de cerrar de una. */
+  intentarCerrarModal(): void {
+    if (this.hayCambiosSinGuardar) {
+      this.mostrarConfirmarSalir = true;
+    } else {
+      this.cerrarModal();
+    }
+  }
+
+  /** "Sí, salir": descarta lo digitado y cierra ambos modales. */
+  confirmarSalirModal(): void {
+    this.mostrarConfirmarSalir = false;
+    this.cerrarModal();
+  }
+
+  /** "No, quiero seguir": vuelve al formulario sin perder nada. */
+  cancelarSalirModal(): void {
+    this.mostrarConfirmarSalir = false;
   }
 
   agregarFilaVariante(): void {
     const primerUbicacion = this.locales().length > 0 
       ? `local:${this.locales()[0].id_local}` 
       : (this.almacenesReales().length > 0 ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
-    this.form.variantes.push({ talla: '', cantidad: 0, ubicacion: primerUbicacion });
+    this.form.variantes.push({ talla: '', cantidad: '', ubicacion: primerUbicacion });
   }
 
   quitarFilaVariante(index: number): void {
@@ -491,11 +555,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         const [tipo, id] = v.ubicacion.split(':');
         return {
           talla: v.talla.trim(),
-          cantidad: v.cantidad,
+          cantidad: parseInt(v.cantidad, 10) || 0,
           id_local: tipo === 'local' ? id : null,
           id_almacen: tipo === 'almacen' ? id : null,
         };
       });
+
+    const costoCompra = parseFloat(this.form.costoCompra) || 0;
+    const precioVenta = parseFloat(this.form.precioVenta) || 0;
 
     this.guardando.set(true);
     this.errorModal.set(null);
@@ -507,8 +574,8 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           nombre: this.form.nombre,
           id_categoria: this.form.id_categoria,
           sexo: this.form.sexo,
-          costo_compra: this.form.costoCompra,
-          precio_venta: this.form.precioVenta,
+          costo_compra: costoCompra,
+          precio_venta: precioVenta,
           variantes,
         })
         .subscribe({
@@ -531,8 +598,8 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           nombre: this.form.nombre,
           id_categoria: this.form.id_categoria,
           sexo: this.form.sexo,
-          costo_compra: this.form.costoCompra,
-          precio_venta: this.form.precioVenta,
+          costo_compra: costoCompra,
+          precio_venta: precioVenta,
           variantes,
         })
         .subscribe({
