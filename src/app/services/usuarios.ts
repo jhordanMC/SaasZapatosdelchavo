@@ -65,6 +65,7 @@ export type ClaveVista =
   | 'ventas'
   | 'finanzas'
   | 'analitica'
+  | 'integraciones'
   | 'empresas'
   | 'suscripciones'
   | 'actividad'
@@ -93,6 +94,7 @@ export const VISTAS_POR_ROL: Record<RolUsuario, PermisoVista[]> = {
     { clave: 'inventario', etiqueta: 'Inventario' },
     { clave: 'ventas', etiqueta: 'Ventas' },
     { clave: 'finanzas', etiqueta: 'Finanzas' },
+    { clave: 'integraciones', etiqueta: 'Integraciones' },
   ],
   vendedor: [
     { clave: 'inventario', etiqueta: 'Inventario' },

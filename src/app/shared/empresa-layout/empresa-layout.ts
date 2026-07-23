@@ -62,6 +62,11 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
         // Analítica: oculta a pedido, se reactivará más adelante.
         // { label: this.i18n.t('NAV.ANALITICA'), route: '/empresa/analitica', icon: 'analitica' }
       }
+      // Integraciones maneja credenciales de marketplaces (Seller ID / API Key)
+      // y el OAuth de Mercado Libre — solo el dueño debe verla.
+      if (esDueño && puedeVer('integraciones')) {
+        base.push({ label: this.i18n.t('NAV.INTEGRACIONES'), route: '/empresa/integraciones', icon: 'integraciones' });
+      }
       // Configuración: oculta a pedido, se reactivará más adelante.
       // base.push({ label: this.i18n.t('NAV.CONFIGURACION'), href: '#', icon: 'config' });
       return base;

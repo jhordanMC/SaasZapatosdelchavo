@@ -18,7 +18,8 @@ export interface SidebarItem {
     | 'analitica'
     | 'actividad'
     | 'suscripciones'
-    | 'anuncios';
+    | 'anuncios'
+    | 'integraciones';
   exact?: boolean;
 }
 
