@@ -1,3 +1,14 @@
 
+<div class="app-boot-loader" *ngIf="cargandoInicial()">
+  <div class="app-boot-logo">
+    <img *ngIf="!logoFallback()" src="/vilcas.png" alt="VILCAS" (error)="logoFallback.set(true)" />
+    <svg *ngIf="logoFallback()" class="app-boot-logo-fallback" viewBox="0 0 68 56" fill="none">
+      <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
+      <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
+    </svg>
+  </div>
+  <div class="app-boot-spinner"></div>
+</div>
+
 <router-outlet />
 <app-session-expired-modal />
