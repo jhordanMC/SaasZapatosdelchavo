@@ -205,6 +205,53 @@
           </div>
         </div>
 
+        <!-- ══ Integraciones Omnicanal (solo si el plan asignado lo incluye) ══ -->
+        <div class="table-card omnicanal-card" *ngIf="planAsignado()?.integraciones_omnicanal">
+          <div class="table-header">
+            <div>
+              <h2>Integraciones Omnicanal</h2>
+              <p>Integración de APIs: Falabella, Ripley, Mercado Libre</p>
+            </div>
+          </div>
+
+          <p class="empty-state" *ngIf="cargandoIntegraciones()">Cargando integraciones…</p>
+
+          <div class="marketplace-lista" *ngIf="!cargandoIntegraciones()">
+            <div class="marketplace-row" *ngFor="let mp of marketplacesDisponibles">
+              <div class="marketplace-info">
+                <span class="marketplace-nombre">{{ mp.nombre }}</span>
+                <span
+                  class="status-pill marketplace-status"
+                  [class.active]="estadoIntegracion(mp.id)?.estado === 'conectado'"
+                  [class.marketplace-status-error]="estadoIntegracion(mp.id)?.estado === 'error_credenciales' || estadoIntegracion(mp.id)?.estado === 'token_vencido'"
+                >
+                  {{ etiquetaEstadoIntegracion(mp.id) }}
+                </span>
+                <span class="marketplace-tienda" *ngIf="estadoIntegracion(mp.id) as est">
+                  Tienda: {{ est.tienda_id }}
+                </span>
+              </div>
+              <div class="marketplace-acciones">
+                <button
+                  class="btn-accion"
+                  *ngIf="!estadoIntegracion(mp.id) || estadoIntegracion(mp.id)?.estado !== 'conectado'"
+                  (click)="abrirModalConectar(mp.id)"
+                >
+                  Conectar
+                </button>
+                <ng-container *ngIf="estadoIntegracion(mp.id) as est">
+                  <button class="btn-accion" *ngIf="est.estado === 'conectado'" (click)="abrirModalConectar(mp.id)">
+                    Editar credenciales
+                  </button>
+                  <button class="btn-accion btn-accion-danger" (click)="desconectarMarketplace(est)">
+                    Desconectar
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <ng-template #sinSuscripcion>
           <p class="empty-state">Esta empresa aún no tiene una suscripción configurada.</p>
           <button class="btn-primary" (click)="abrirModalCrearSuscripcion()" [disabled]="cargandoPlanes()">+ Asignar plan</button>
@@ -792,6 +839,50 @@
         <button class="btn-clear" (click)="cerrarModalAsignarPlan()">Cancelar</button>
         <button class="btn-primary" [disabled]="!idPlanAsignar || guardandoAsignacion" (click)="crearSuscripcion()">
           {{ guardandoAsignacion ? 'Asignando…' : 'Asignar plan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Conectar marketplace (credenciales) ══ -->
+<div class="modal-overlay" *ngIf="modalConectarAbierto" (click)="cerrarModalConectar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalConectar()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-header"><h2>Conectar {{ nombreProveedorSeleccionado }}</h2></div>
+
+    <div class="modal-body">
+      <p class="input-help">
+        Estas credenciales las genera {{ nombreProveedorSeleccionado }} en su portal de desarrolladores/sellers.
+        Se guardan cifradas — nunca se muestran de nuevo una vez conectadas.
+      </p>
+
+      <div class="form-group">
+        <label for="inputClientId">Client ID / API Key</label>
+        <input id="inputClientId" type="text" class="form-input" placeholder="Ej. 8f3a2c1e-..." [(ngModel)]="formCredenciales.client_id" />
+      </div>
+
+      <div class="form-group">
+        <label for="inputClientSecret">Client Secret / Token</label>
+        <input id="inputClientSecret" type="password" class="form-input" placeholder="••••••••••••" [(ngModel)]="formCredenciales.client_secret" />
+      </div>
+
+      <div class="form-group">
+        <label for="inputTiendaId">Tienda / Seller ID</label>
+        <input id="inputTiendaId" type="text" class="form-input" placeholder="Código de tienda en el marketplace" [(ngModel)]="formCredenciales.tienda_id" />
+      </div>
+
+      <p class="input-error" *ngIf="errorConexion">{{ errorConexion }}</p>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalConectar()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!credencialesValidas || guardandoConexion" (click)="conectarMarketplace()">
+          {{ guardandoConexion ? 'Conectando…' : 'Conectar' }}
         </button>
       </div>
     </div>

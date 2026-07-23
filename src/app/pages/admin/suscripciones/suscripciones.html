@@ -39,6 +39,9 @@
         <span>{{ plan.periodo }}</span>
         <span>
           {{ plan.max_usuarios ?? '∞' }} usuarios · {{ plan.max_locales ?? '∞' }} locales · {{ plan.max_ventas_mes ?? '∞' }} ventas/mes
+          <span class="omnicanal-badge" *ngIf="plan.integraciones_omnicanal" title="Integración de APIs: Falabella, Ripley, Mercado Libre">
+            🔗 Omnicanal
+          </span>
         </span>
         <span><span class="status-pill" [class.active]="plan.esta_activo">{{ plan.esta_activo ? 'activo' : 'inactivo' }}</span></span>
         <span class="acciones-cell">
@@ -194,6 +197,16 @@
           <label for="inputMaxVentas">Máx. ventas/mes (vacío = ilimitado)</label>
           <input id="inputMaxVentas" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxVentasMes" />
         </div>
+      </div>
+
+      <div class="form-group form-group-omnicanal">
+        <label class="checkbox-inline checkbox-omnicanal">
+          <input type="checkbox" [(ngModel)]="formPlan.integracionesOmnicanal" />
+          <span>
+            <strong>Integraciones Omnicanal</strong>
+            <span class="omnicanal-desc">Integración de APIs: Falabella, Ripley, Mercado Libre</span>
+          </span>
+        </label>
       </div>
 
       <label class="checkbox-inline">

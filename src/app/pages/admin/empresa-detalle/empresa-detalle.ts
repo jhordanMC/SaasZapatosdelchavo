@@ -17,6 +17,13 @@ import {
   mapearRol,
 } from '../../../services/usuarios';
 import { Plan, Suscripcion, SuscripcionCreateInput, SuscripcionesService } from '../../../services/suscripciones';
+import {
+  CredencialesMarketplaceInput,
+  IntegracionMarketplace,
+  MARKETPLACES_DISPONIBLES,
+  MarketplaceIntegracionesService,
+  MarketplaceProveedor,
+} from '../../../services/marketplace-integraciones';
 
 type TabDetalle = 'locales' | 'usuarios' | 'suscripcion';
 
@@ -78,6 +85,7 @@ export class EmpresaDetalleComponent implements OnInit {
     private empresasService: EmpresasService,
     private usuariosService: UsuariosService,
     private suscripcionesService: SuscripcionesService,
+    private marketplaceService: MarketplaceIntegracionesService,
     private pageTitleService: PageTitleService
   ) {
     this.idEmpresa = this.route.snapshot.paramMap.get('id') ?? '';
@@ -121,7 +129,17 @@ export class EmpresaDetalleComponent implements OnInit {
       if (!this.suscripcion() && !this.cargandoSuscripcion()) {
         this.cargarSuscripcion();
       }
+      // Si ambos ya estaban cacheados (no se disparó ninguna carga arriba),
+      // igual hay que evaluar si toca cargar integraciones.
+      this.evaluarCargaIntegraciones();
     }
+  }
+
+  /** Plan completo (con sus beneficios) de la suscripción vigente — cruza suscripcion() + planes(). */
+  planAsignado(): Plan | null {
+    const idPlan = this.suscripcion()?.id_plan;
+    if (!idPlan) return null;
+    return this.planes().find((p) => p.id_plan === idPlan) ?? null;
   }
 
   volver(): void {
@@ -770,6 +788,7 @@ export class EmpresaDetalleComponent implements OnInit {
       next: (suscripcion) => {
         this.suscripcion.set(suscripcion);
         this.cargandoSuscripcion.set(false);
+        this.evaluarCargaIntegraciones();
       },
       error: (err: HttpErrorResponse) => {
         if (err.status === 404) {
@@ -789,11 +808,19 @@ export class EmpresaDetalleComponent implements OnInit {
       next: (planes) => {
         this.planes.set(planes);
         this.cargandoPlanes.set(false);
+        this.evaluarCargaIntegraciones();
       },
       error: () => {
         this.cargandoPlanes.set(false);
       },
     });
+  }
+
+  /** Se llama tras resolver suscripcion() o planes() (lo que termine último) — evita carreras. */
+  private evaluarCargaIntegraciones(): void {
+    if (this.planAsignado()?.integraciones_omnicanal && !this.integracionesCargadas) {
+      this.cargarIntegracionesMarketplace();
+    }
   }
 
   // ── Modal "Asignar plan" (solo cuando la empresa aún no tiene suscripción) ──
@@ -836,6 +863,118 @@ export class EmpresaDetalleComponent implements OnInit {
         this.guardandoAsignacion = false;
         this.error.set('No se pudo asignar el plan.');
       },
+    });
+  }
+
+  // ════════════════════════════════════════════════════════
+  // ── "Integraciones Omnicanal" (Falabella, Ripley, Mercado Libre) ──
+  // Solo visible si el plan asignado a esta empresa incluye el beneficio
+  // `integraciones_omnicanal` (ver /admin/suscripciones → catálogo de planes).
+  // ════════════════════════════════════════════════════════
+  readonly marketplacesDisponibles = MARKETPLACES_DISPONIBLES;
+
+  integracionesMarketplace = signal<IntegracionMarketplace[]>([]);
+  cargandoIntegraciones = signal(false);
+  private integracionesCargadas = false;
+
+  private cargarIntegracionesMarketplace(): void {
+    this.cargandoIntegraciones.set(true);
+    this.marketplaceService.listarIntegraciones(this.idEmpresa).subscribe({
+      next: (integraciones) => {
+        this.integracionesMarketplace.set(integraciones);
+        this.cargandoIntegraciones.set(false);
+        this.integracionesCargadas = true;
+      },
+      error: () => {
+        this.cargandoIntegraciones.set(false);
+        // No se marca integracionesCargadas = true a propósito: si falló
+        // por un error transitorio, la próxima vez que se evalúe se
+        // reintenta en vez de quedar en blanco para siempre.
+      },
+    });
+  }
+
+  /** Estado actual de un marketplace puntual — null si nunca se conectó. */
+  estadoIntegracion(proveedor: MarketplaceProveedor): IntegracionMarketplace | null {
+    return this.integracionesMarketplace().find((i) => i.proveedor === proveedor) ?? null;
+  }
+
+  etiquetaEstadoIntegracion(proveedor: MarketplaceProveedor): string {
+    const integracion = this.estadoIntegracion(proveedor);
+    if (!integracion) return 'No conectado';
+    switch (integracion.estado) {
+      case 'conectado':
+        return 'Conectado';
+      case 'token_vencido':
+        return 'Conexión vencida';
+      case 'error_credenciales':
+        return 'Credenciales inválidas';
+      default:
+        return 'No conectado';
+    }
+  }
+
+  // ── Modal "Conectar marketplace" ──────────────────────────
+  modalConectarAbierto = false;
+  proveedorSeleccionado: MarketplaceProveedor | null = null;
+  formCredenciales: CredencialesMarketplaceInput = { client_id: '', client_secret: '', tienda_id: '' };
+  guardandoConexion = false;
+  errorConexion: string | null = null;
+
+  get nombreProveedorSeleccionado(): string {
+    return this.marketplacesDisponibles.find((m) => m.id === this.proveedorSeleccionado)?.nombre ?? '';
+  }
+
+  abrirModalConectar(proveedor: MarketplaceProveedor): void {
+    this.proveedorSeleccionado = proveedor;
+    this.formCredenciales = { client_id: '', client_secret: '', tienda_id: '' };
+    this.errorConexion = null;
+    this.modalConectarAbierto = true;
+  }
+
+  cerrarModalConectar(): void {
+    this.modalConectarAbierto = false;
+    this.proveedorSeleccionado = null;
+  }
+
+  get credencialesValidas(): boolean {
+    return (
+      this.formCredenciales.client_id.trim().length > 0 &&
+      this.formCredenciales.client_secret.trim().length > 0 &&
+      this.formCredenciales.tienda_id.trim().length > 0
+    );
+  }
+
+  conectarMarketplace(): void {
+    if (!this.proveedorSeleccionado || !this.credencialesValidas || this.guardandoConexion) return;
+    this.guardandoConexion = true;
+    this.errorConexion = null;
+
+    this.marketplaceService
+      .conectarIntegracion(this.idEmpresa, this.proveedorSeleccionado, this.formCredenciales)
+      .subscribe({
+        next: (integracion) => {
+          this.guardandoConexion = false;
+          const sinDuplicado = this.integracionesMarketplace().filter((i) => i.proveedor !== integracion.proveedor);
+          this.integracionesMarketplace.set([...sinDuplicado, integracion]);
+          this.integracionesCargadas = true;
+          this.cerrarModalConectar();
+        },
+        error: () => {
+          this.guardandoConexion = false;
+          this.errorConexion = 'No se pudo conectar. Verifica las credenciales e intenta de nuevo.';
+        },
+      });
+  }
+
+  desconectarMarketplace(integracion: IntegracionMarketplace): void {
+    this.marketplaceService.desconectarIntegracion(this.idEmpresa, integracion.id_integracion).subscribe({
+      next: () => {
+        this.integracionesMarketplace.set(
+          this.integracionesMarketplace().filter((i) => i.id_integracion !== integracion.id_integracion),
+        );
+      },
+      error: () => this.error.set('No se pudo desconectar la integración.'),
     });
   }
 }

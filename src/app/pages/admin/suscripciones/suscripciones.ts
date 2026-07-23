@@ -39,6 +39,7 @@ interface PlanForm {
   maxUsuarios: number | null;
   maxLocales: number | null;
   maxVentasMes: number | null;
+  integracionesOmnicanal: boolean;
   estaActivo: boolean;
 }
 
@@ -156,6 +157,7 @@ export class Suscripciones implements OnInit {
       maxUsuarios: null,
       maxLocales: null,
       maxVentasMes: null,
+      integracionesOmnicanal: false,
       estaActivo: true,
     };
   }
@@ -176,6 +178,7 @@ export class Suscripciones implements OnInit {
       maxUsuarios: plan.max_usuarios,
       maxLocales: plan.max_locales,
       maxVentasMes: plan.max_ventas_mes,
+      integracionesOmnicanal: plan.integraciones_omnicanal,
       estaActivo: plan.esta_activo,
     };
     this.modalPlanAbierto = true;
@@ -203,6 +206,7 @@ export class Suscripciones implements OnInit {
         max_usuarios: this.formPlan.maxUsuarios,
         max_locales: this.formPlan.maxLocales,
         max_ventas_mes: this.formPlan.maxVentasMes,
+        integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
         esta_activo: this.formPlan.estaActivo,
       };
       const idPlan = this.planEditando.id_plan;
@@ -228,6 +232,7 @@ export class Suscripciones implements OnInit {
       max_usuarios: this.formPlan.maxUsuarios,
       max_locales: this.formPlan.maxLocales,
       max_ventas_mes: this.formPlan.maxVentasMes,
+      integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
     };
     this.suscripcionesService.crearPlan(payload).subscribe({
       next: (creado) => {

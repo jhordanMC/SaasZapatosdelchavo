@@ -4,15 +4,17 @@ import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/ro
 import { Subscription, filter } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
+import { MarketplaceAlertaToastComponent } from '../marketplace-alerta-toast/marketplace-alerta-toast';
 import { PageTitleService } from '../admin-layout/page-title';
 import { AuthService } from '../../core/auth';
 import { I18nService } from '../../core/i18n.service';
 import { ClaveVista } from '../../services/usuarios';
+import { MarketplaceRealtimeService } from '../../services/marketplace-realtime';
 
 @Component({
   selector: 'app-empresa-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, MarketplaceAlertaToastComponent],
   templateUrl: './empresa-layout.html',
   styleUrls: ['./empresa-layout.css'],
 })
@@ -26,7 +28,8 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private authService: AuthService,
     public pageTitleService: PageTitleService,
-    private i18n: I18nService
+    private i18n: I18nService,
+    private marketplaceRealtime: MarketplaceRealtimeService,
   ) {
     this.usuario = this.authService.usuarioActual;
 
@@ -87,10 +90,12 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     this.routerSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => this.actualizarTitulo());
+    this.marketplaceRealtime.conectar();
   }
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
+    this.marketplaceRealtime.desconectar();
   }
 
   private actualizarTitulo(): void {

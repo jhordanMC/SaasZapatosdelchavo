@@ -17,6 +17,8 @@ export interface Plan {
   max_usuarios: number | null;
   max_locales: number | null;
   max_ventas_mes: number | null;
+  /** Beneficio: acceso a conectar marketplaces (Falabella, Ripley, Mercado Libre). */
+  integraciones_omnicanal: boolean;
   esta_activo: boolean;
 }
 
@@ -28,6 +30,7 @@ export interface PlanCreateInput {
   max_usuarios?: number | null;
   max_locales?: number | null;
   max_ventas_mes?: number | null;
+  integraciones_omnicanal?: boolean;
 }
 
 export interface PlanUpdateInput {
@@ -38,6 +41,7 @@ export interface PlanUpdateInput {
   max_usuarios?: number | null;
   max_locales?: number | null;
   max_ventas_mes?: number | null;
+  integraciones_omnicanal?: boolean;
   esta_activo?: boolean;
 }
 
