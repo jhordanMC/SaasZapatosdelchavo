@@ -19,11 +19,6 @@ interface AnuncioForm {
   expiraEn: string;
   estaActivo: boolean;
   opciones: string[];
-  esSatisfaccion: boolean;
-  // Solo aplica cuando esSatisfaccion === true: en vez de tipear opciones de
-  // texto libre, se elige cuántas estrellas tiene la escala (3 a 10) y las
-  // opciones se generan solas ('1'..'N') — ver guardarAnuncio().
-  cantidadEstrellas: number;
 }
 
 @Component({
@@ -86,7 +81,7 @@ export class Anuncios implements OnInit {
   private formularioVacio(): AnuncioForm {
     return {
       tipo: 'anuncio', titulo: '', mensaje: '', imagenUrl: null, expiraEn: '',
-      estaActivo: true, opciones: ['', ''], esSatisfaccion: false, cantidadEstrellas: 5,
+      estaActivo: true, opciones: ['', ''],
     };
   }
 
@@ -106,8 +101,6 @@ export class Anuncios implements OnInit {
       expiraEn: anuncio.expira_en ? anuncio.expira_en.slice(0, 10) : '',
       estaActivo: anuncio.esta_activo,
       opciones: anuncio.opciones.length ? anuncio.opciones.map((o) => o.texto) : ['', ''],
-      esSatisfaccion: anuncio.es_satisfaccion,
-      cantidadEstrellas: anuncio.opciones.length || 5,
     };
     this.modalAbierto = true;
   }
@@ -131,13 +124,9 @@ export class Anuncios implements OnInit {
     this.form.opciones = this.form.opciones.filter((_, i) => i !== indice);
   }
 
-  ajustarEstrellas(delta: number): void {
-    const nuevoValor = this.form.cantidadEstrellas + delta;
-    this.form.cantidadEstrellas = Math.min(10, Math.max(3, nuevoValor));
-  }
-
   /** Repite el ícono de estrella según el valor de la opción — solo para
-   *  encuestas de satisfacción, cuyas opciones son '1'..'N' por diseño. */
+   *  encuestas de satisfacción HISTÓRICAS (ya no se pueden crear nuevas,
+   *  ver docstring de Anuncio.es_satisfaccion), cuyas opciones son '1'..'N'. */
   estrellasDe(opcion: { texto: string }): string {
     return '★'.repeat(Number(opcion.texto) || 0);
   }
@@ -172,7 +161,6 @@ export class Anuncios implements OnInit {
   get formValido(): boolean {
     if (!this.form.titulo.trim() || !this.form.mensaje.trim()) return false;
     if (this.form.tipo === 'encuesta' && !this.anuncioEditando) {
-      if (this.form.esSatisfaccion) return this.form.cantidadEstrellas >= 2;
       const opcionesValidas = this.form.opciones.map((o) => o.trim()).filter((o) => o.length > 0);
       return opcionesValidas.length >= 2;
     }
@@ -180,9 +168,6 @@ export class Anuncios implements OnInit {
   }
 
   private generarOpciones(): string[] {
-    if (this.form.esSatisfaccion) {
-      return Array.from({ length: this.form.cantidadEstrellas }, (_, i) => String(i + 1));
-    }
     return this.form.opciones.map((o) => o.trim()).filter((o) => o);
   }
 
@@ -197,7 +182,6 @@ export class Anuncios implements OnInit {
         imagen_url: this.form.imagenUrl,
         expira_en: this.form.expiraEn ? new Date(this.form.expiraEn).toISOString() : null,
         esta_activo: this.form.estaActivo,
-        es_satisfaccion: this.form.esSatisfaccion,
       };
       const idAnuncio = this.anuncioEditando.id_anuncio;
       this.anunciosService.actualizarAnuncio(idAnuncio, payload).subscribe({
@@ -221,7 +205,6 @@ export class Anuncios implements OnInit {
       imagen_url: this.form.imagenUrl,
       expira_en: this.form.expiraEn ? new Date(this.form.expiraEn).toISOString() : null,
       opciones: this.form.tipo === 'encuesta' ? this.generarOpciones() : undefined,
-      es_satisfaccion: this.form.tipo === 'encuesta' ? this.form.esSatisfaccion : false,
     };
     this.anunciosService.crearAnuncio(payload).subscribe({
       next: (creado) => {

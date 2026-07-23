@@ -6,15 +6,15 @@ import { LivelineHandle, mountLiveline, unmountLiveline } from '../../../livelin
 import { Empresa as EmpresaReal, EmpresasService } from '../../../services/empresas';
 import { SuscripcionesService, SuscripcionListItem } from '../../../services/suscripciones';
 import { UsuariosService } from '../../../services/usuarios';
-import { AnunciosService } from '../../../services/anuncios';
+import { SatisfaccionService } from '../../../services/satisfaccion';
 
 /**
- * `scorePromedio` es real-condicional: viene de GET /anuncios/satisfaccion/
- * por-empresa (promedio de los votos de esa empresa en la encuesta de
- * satisfacción vigente marcada `es_satisfaccion` en /admin/anuncios — ver
- * AnunciosService en el backend). `null` = sin dato — empresa inactiva, no
- * hay ninguna encuesta de satisfacción vigente, o sus usuarios todavía no
- * votaron esa encuesta en particular. Importante: NO se usa 0 como
+ * `scorePromedio` es real-condicional: viene de GET /satisfaccion/
+ * por-empresa (promedio histórico completo de las calificaciones que los
+ * usuarios de esa empresa mandaron desde "Califícanos", topbar — ver
+ * SatisfaccionService en el backend). `null` = sin dato — empresa inactiva,
+ * nadie calificó nunca todavía, o sus usuarios en particular todavía no
+ * calificaron. Importante: NO se usa 0 como
  * sentinel de "sin dato", porque 0% es un resultado real y válido (todos
  * los usuarios de esa empresa calificaron con la peor opción de la
  * escala) — confundirlo con "sin dato" excluiría injustamente ese
@@ -122,7 +122,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     private empresasService: EmpresasService,
     private suscripcionesService: SuscripcionesService,
     private usuariosService: UsuariosService,
-    private anunciosService: AnunciosService
+    private satisfaccionService: SatisfaccionService
   ) {
     const today = new Date().toLocaleDateString('es-ES', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -130,23 +130,23 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     this.capitalizedDate = today.charAt(0).toUpperCase() + today.slice(1);
   }
 
-  /** Real — GET /anuncios/satisfaccion/por-empresa. false = no hay ninguna
-   *  encuesta de satisfacción vigente creada todavía (distinto de "hay
-   *  encuesta pero nadie votó", que si trae datos pero vacíos). */
-  existeEncuestaSatisfaccion = false;
+  /** Real — GET /satisfaccion/por-empresa. false = todavía nadie calificó
+   *  nunca desde "Califícanos" (distinto de "hay calificaciones pero de
+   *  otras empresas", que sí trae datos pero puede venir vacío para esta). */
+  existenCalificaciones = false;
 
   ngOnInit(): void {
     forkJoin({
       empresas: this.empresasService.listarEmpresas(),
       suscripciones: this.suscripcionesService.listarTodas(),
       usuariosActivos: this.usuariosService.obtenerUsuariosActivosPorEmpresa(),
-      scoreSatisfaccion: this.anunciosService.obtenerScoreSatisfaccionPorEmpresa(),
+      scoreSatisfaccion: this.satisfaccionService.obtenerScorePorEmpresa(),
     }).subscribe({
       next: ({ empresas, suscripciones, usuariosActivos, scoreSatisfaccion }) => {
         const suscripcionPorEmpresa = new Map(suscripciones.map((s) => [s.id_empresa, s]));
         const usuariosActivosPorEmpresa = new Map(usuariosActivos.map((u) => [u.id_empresa, u.usuarios_activos]));
         const scorePorEmpresa = new Map(scoreSatisfaccion.scores.map((s) => [s.id_empresa, s.score_promedio]));
-        this.existeEncuestaSatisfaccion = scoreSatisfaccion.existe_encuesta_vigente;
+        this.existenCalificaciones = scoreSatisfaccion.existen_calificaciones;
         this.todasEmpresas = empresas.map((e) =>
           this.enriquecerEmpresa(
             e,
@@ -221,12 +221,12 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     if (conScore.length === 0) return null;
     return Math.round(conScore.reduce((a, e) => a + e.scorePromedio, 0) / conScore.length);
   }
-  /** Texto de la KPI "Score global de satisfacción" — distingue "no hay
-   *  encuesta creada" de "hay encuesta pero nadie votó todavía". */
+  /** Texto de la KPI "Score global de satisfacción" — distingue "nadie
+   *  calificó nunca" de "hay calificaciones pero de otras empresas". */
   get scoreGlobalTexto(): string {
-    if (!this.existeEncuestaSatisfaccion) return 'Sin encuestas creadas';
+    if (!this.existenCalificaciones) return 'Sin calificaciones aún';
     const score = this.scoreGlobal;
-    return score === null ? 'Sin votos aún' : `${score}%`;
+    return score === null ? 'Sin calificaciones aún' : `${score}%`;
   }
   /** Cuántas empresas entran en el promedio de scoreGlobal (para el texto de tendencia). */
   get empresasConScore(): number {

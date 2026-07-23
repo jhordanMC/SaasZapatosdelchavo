@@ -221,8 +221,12 @@
       <!-- ══ VISTA: CAMBIO DE CONTRASEÑA ══ -->
       <ng-container *ngIf="vistaPerfil === 'password'">
         <div class="profile-subview-body" *ngIf="pasoCambioPassword === 'form'">
-          <p class="profile-subview-desc">Ingresa tu nueva contraseña. Te enviaremos un código a tu correo para confirmar el cambio.</p>
+          <p class="profile-subview-desc">Ingresa tu contraseña actual y la nueva. Te enviaremos un código a tu correo para confirmar el cambio.</p>
 
+          <div class="profile-field">
+            <label class="profile-field-label">Contraseña actual</label>
+            <input type="password" class="profile-field-input" placeholder="Tu contraseña actual" [(ngModel)]="passwordActual" />
+          </div>
           <div class="profile-field">
             <label class="profile-field-label">Nueva contraseña</label>
             <input type="password" class="profile-field-input" placeholder="Mínimo 8 caracteres" [(ngModel)]="passwordNueva" />

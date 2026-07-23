@@ -110,8 +110,7 @@
             </div>
           </div>
           <div class="kpi-trend neutral" *ngIf="scoreGlobal !== null">promedio de {{ empresasConScore }} empresa{{ empresasConScore !== 1 ? 's' : '' }}</div>
-          <div class="kpi-trend neutral" *ngIf="scoreGlobal === null && existeEncuestaSatisfaccion">todavía nadie votó</div>
-          <div class="kpi-trend neutral" *ngIf="!existeEncuestaSatisfaccion">creá una encuesta de satisfacción en Anuncios</div>
+          <div class="kpi-trend neutral" *ngIf="!existenCalificaciones">todavía nadie calificó desde el perfil</div>
         </div>
       </div>
     </div>
@@ -357,7 +356,7 @@
             <span class="score-text">{{ scoreStars(e.scorePromedio) }} / 5</span>
           </div>
           <ng-template #sinScore>
-            <span class="score-sin-dato" [title]="existeEncuestaSatisfaccion ? 'Sin votos de esta empresa todavía' : 'Sin encuestas creadas'">-</span>
+            <span class="score-sin-dato" [title]="existenCalificaciones ? 'Sin calificaciones de esta empresa todavía' : 'Sin calificaciones aún'">-</span>
           </ng-template>
           <span class="cell-num" [class.zero]="e.ingresosMes === 0">{{ fmtPEN(e.ingresosMes) }}</span>
           <div class="estado-cell">

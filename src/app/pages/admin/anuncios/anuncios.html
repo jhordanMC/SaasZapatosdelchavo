@@ -31,7 +31,7 @@
           <p class="anuncio-mensaje">{{ anuncio.mensaje }}</p>
 
           <div class="anuncio-opciones" *ngIf="anuncio.tipo === 'encuesta'">
-            <span class="satisfaccion-badge" *ngIf="anuncio.es_satisfaccion">★ Encuesta de satisfacción del dashboard</span>
+            <span class="satisfaccion-badge" *ngIf="anuncio.es_satisfaccion">★ Encuesta de satisfacción (histórica)</span>
             <div class="opcion-resultado" *ngFor="let opcion of anuncio.opciones">
               <div class="opcion-resultado-top">
                 <span *ngIf="!anuncio.es_satisfaccion">{{ opcion.texto }}</span>
@@ -114,26 +114,6 @@
       </div>
 
       <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando">
-        <label class="checkbox-inline">
-          <input type="checkbox" [(ngModel)]="form.esSatisfaccion" />
-          Encuesta de satisfacción (alimenta el "Score global" del dashboard)
-        </label>
-      </div>
-
-      <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando && form.esSatisfaccion">
-        <label>Cantidad de estrellas</label>
-        <div class="estrellas-stepper">
-          <button type="button" class="stepper-btn" (click)="ajustarEstrellas(-1)" [disabled]="form.cantidadEstrellas <= 3" aria-label="Restar estrella">−</button>
-          <span class="stepper-value">
-            {{ form.cantidadEstrellas }}
-            <span class="estrella-icono">★</span>
-          </span>
-          <button type="button" class="stepper-btn" (click)="ajustarEstrellas(1)" [disabled]="form.cantidadEstrellas >= 10" aria-label="Agregar estrella">+</button>
-        </div>
-        <p class="paso-ayuda">Los usuarios votarán eligiendo de 1 a {{ form.cantidadEstrellas }} estrellas.</p>
-      </div>
-
-      <div class="form-group" *ngIf="form.tipo === 'encuesta' && !anuncioEditando && !form.esSatisfaccion">
         <label>Opciones (mínimo 2)</label>
         <div class="opcion-input-row" *ngFor="let opcion of form.opciones; let i = index">
           <input type="text" class="form-input" [placeholder]="'Opción ' + (i + 1)" [(ngModel)]="form.opciones[i]" name="opcion{{ i }}" />

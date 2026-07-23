@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
@@ -156,6 +157,7 @@ export class TopbarComponent implements OnInit {
 
   // ── "Cambio de contraseña" (2 pasos: nueva password → código por email) ──
   pasoCambioPassword: 'form' | 'codigo' | 'exito' = 'form';
+  passwordActual = '';
   passwordNueva = '';
   passwordConfirmar = '';
   codigoCambioPassword = '';
@@ -165,21 +167,31 @@ export class TopbarComponent implements OnInit {
   errorCodigoPassword = '';
 
   get passwordNuevaValida(): boolean {
-    return this.passwordNueva.length >= 8 && this.passwordNueva === this.passwordConfirmar;
+    return (
+      this.passwordActual.length > 0 &&
+      this.passwordNueva.length >= 8 &&
+      this.passwordNueva === this.passwordConfirmar
+    );
   }
 
   solicitarCambioPassword(): void {
     if (!this.passwordNuevaValida || this.enviandoCambioPassword) return;
     this.enviandoCambioPassword = true;
     this.errorCambioPassword = '';
-    this.authService.solicitarCambioPassword(this.passwordNueva).subscribe({
+    this.authService.solicitarCambioPassword(this.passwordActual, this.passwordNueva).subscribe({
       next: () => {
         this.enviandoCambioPassword = false;
         this.pasoCambioPassword = 'codigo';
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.enviandoCambioPassword = false;
-        this.errorCambioPassword = 'No pudimos enviar el código. Intenta nuevamente en unos minutos.';
+        if (error.status === 401) {
+          this.errorCambioPassword = 'La contraseña actual es incorrecta.';
+        } else if (error.status === 429) {
+          this.errorCambioPassword = 'Demasiados intentos. Espera unos minutos antes de volver a intentar.';
+        } else {
+          this.errorCambioPassword = 'No pudimos enviar el código. Intenta nuevamente en unos minutos.';
+        }
       },
     });
   }
@@ -193,15 +205,20 @@ export class TopbarComponent implements OnInit {
         this.verificandoCodigoPassword = false;
         this.pasoCambioPassword = 'exito';
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.verificandoCodigoPassword = false;
-        this.errorCodigoPassword = 'Código incorrecto o vencido. Verifica e intenta de nuevo.';
+        if (error.status === 401) {
+          this.errorCodigoPassword = 'Código vencido o demasiados intentos. Vuelve a solicitar el cambio.';
+        } else {
+          this.errorCodigoPassword = 'Código incorrecto. Verifica e intenta de nuevo.';
+        }
       },
     });
   }
 
   private resetCambioPassword(): void {
     this.pasoCambioPassword = 'form';
+    this.passwordActual = '';
     this.passwordNueva = '';
     this.passwordConfirmar = '';
     this.codigoCambioPassword = '';

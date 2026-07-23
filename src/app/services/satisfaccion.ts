@@ -8,21 +8,30 @@ export interface CalificacionTopbarInput {
   comentario: string | null;
 }
 
+/** Score de satisfacción (0-100) de una empresa — panel /admin/dashboard. */
+export interface EmpresaScoreSatisfaccion {
+  id_empresa: string;
+  score_promedio: number;
+}
+
 /**
- * "Califícanos" del toolbar (topbar): distinto del sistema de encuestas de
- * anuncios.ts (que depende de que ALBA publique una encuesta). Este es un
- * widget siempre disponible desde el menú de perfil del usuario.
- *
- * TODO(backend): el endpoint POST /satisfaccion/topbar todavía NO existe
- * en backendsaasalba — hay que coordinarlo con el equipo de backend para
- * que:
- *   1) reciba { calificacion: number (1-5), comentario: string | null }
- *   2) guarde id_usuario / id_empresa del token igual que el resto de
- *      endpoints autenticados (ver interceptor en core/auth.interceptor.ts)
- *   3) exponga un GET (ej. /admin/satisfaccion) para que el panel
- *      /admin/actividad (o una sección nueva) pueda listarlas
- * Mientras ese endpoint no exista, esta llamada devolverá 404 y el topbar
- * mostrará el mensaje de error ya contemplado en la UI.
+ * `existen_calificaciones=false` = todavía nadie calificó nunca desde el
+ * topbar (distinto de "hay calificaciones pero de otras empresas"). Una
+ * empresa ausente de `scores` significa que sus usuarios todavía no
+ * calificaron.
+ */
+export interface ScoreSatisfaccionResponse {
+  existen_calificaciones: boolean;
+  scores: EmpresaScoreSatisfaccion[];
+}
+
+/**
+ * "Califícanos" del topbar: único canal oficial de satisfacción de
+ * usuarios (reemplaza a la vieja encuesta `es_satisfaccion` de
+ * anuncios.ts, que queda solo como historial). Widget siempre disponible
+ * desde el menú de perfil, sin encuesta ni vencimiento — el score por
+ * empresa de /admin/dashboard es el promedio histórico completo de todas
+ * las calificaciones.
  */
 @Injectable({ providedIn: 'root' })
 export class SatisfaccionService {
@@ -32,5 +41,10 @@ export class SatisfaccionService {
 
   enviarCalificacionTopbar(datos: CalificacionTopbarInput): Observable<{ mensaje: string }> {
     return this.http.post<{ mensaje: string }>(`${this.apiUrl}/satisfaccion/topbar`, datos);
+  }
+
+  /** Score de satisfacción (0-100) por empresa — panel /admin/dashboard. */
+  obtenerScorePorEmpresa(): Observable<ScoreSatisfaccionResponse> {
+    return this.http.get<ScoreSatisfaccionResponse>(`${this.apiUrl}/satisfaccion/por-empresa`);
   }
 }
