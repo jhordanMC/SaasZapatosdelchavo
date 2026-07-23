@@ -12,7 +12,7 @@
   justify-content: space-between;
   gap: 18px;
   padding: 20px 28px;
-  background: white;
+  background: #F5F8F0;
   border-bottom: 1px solid rgba(226, 229, 229, 0.9);
   box-shadow: 0 12px 32px rgba(2, 75, 64, 0.05);
 }
@@ -24,7 +24,7 @@
 }
 
 .filters-bar {
-  background: white;
+  background: #F5F8F0;
   border-bottom: 1px solid #e8f1ea;
   padding: 18px 28px;
   display: flex;
@@ -91,7 +91,7 @@
   font-weight: 600;
   border: 1px solid #d8e6dd;
   border-radius: 10px;
-  background: white;
+  background: #F5F8F0;
   color: #024b40;
   cursor: pointer;
 }
@@ -117,7 +117,7 @@
 }
 
 .producto-card {
-  background: white;
+  background: #F5F8F0;
   border: 1px solid #e8f1ea;
   border-radius: 16px;
   overflow: hidden;
@@ -182,7 +182,7 @@
   position: relative;
   width: 100%;
   max-width: 520px;
-  background: white;
+  background: #F5F8F0;
   border-radius: 24px;
   max-height: 88vh;
   overflow-y: auto;
@@ -289,7 +289,7 @@
   font-weight: 600;
   border: 1px solid #d8e6dd;
   border-radius: 999px;
-  background: white;
+  background: #F5F8F0;
   color: #1f4034;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -305,7 +305,7 @@
   font-size: 13px;
   border: 1px solid #d8e6dd;
   border-radius: 10px;
-  background: white;
+  background: #F5F8F0;
   color: #1f4034;
   outline: none;
 }
@@ -354,7 +354,7 @@
   font-size: 12.5px;
   border: 1px solid #d8e6dd;
   border-radius: 10px;
-  background: white;
+  background: #F5F8F0;
   color: #1f4034;
   outline: none;
 }
@@ -373,7 +373,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
-  background: white;
+  background: #F5F8F0;
   border: 1px solid #e8f1ea;
   border-radius: 10px;
 }
@@ -416,14 +416,30 @@
   font-size: 12.5px;
   border: 1px solid #d8e6dd;
   border-radius: 10px;
-  background: white;
+  background: #F5F8F0;
   color: #1f4034;
   outline: none;
 }
 
 .variantes-header { display: flex; justify-content: space-between; align-items: center; }
 .variantes-header label { font-size: 12px; font-weight: 600; color: #1f4034; }
-.btn-link { background: none; border: none; color: #024b40; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #024b40;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 2px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.btn-link svg { display: block; flex-shrink: 0; }
+.btn-link:hover { color: #036b54; background: rgba(2, 75, 64, 0.06); }
 
 .variante-columnas {
   display: grid;
