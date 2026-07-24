@@ -519,7 +519,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       productoId: p.id_producto,
       nombre: `${p.nombre} (talla ${variante.talla ?? variante.sku})`,
       talla: variante.talla,
-      fotoUrl: null,
+      fotoUrl: p.imagen_url,
       precioUnitario: p.precio_venta,
       cantidad: this.cantidadSeleccionada,
       descuentoMonto: this.descuentoSeleccionado,

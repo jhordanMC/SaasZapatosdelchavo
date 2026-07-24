@@ -113,7 +113,8 @@
       <div class="carrito-item" [class.removing]="removingVarianteId === item.varianteId" *ngFor="let item of ventasService.carrito()">
         <ng-container *ngIf="editandoVarianteId !== item.varianteId; else edicionTpl">
           <div class="carrito-item-foto">
-            <svg class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <img *ngIf="item.fotoUrl" [src]="imagenSrc(item.fotoUrl)" alt="" />
+            <svg *ngIf="!item.fotoUrl" class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2"/>
               <circle cx="8.5" cy="8.5" r="1.5"/>
               <polyline points="21 15 16 10 5 21"/>
@@ -394,7 +395,8 @@
         <div class="confirmar-productos">
           <div class="confirmar-producto-item" *ngFor="let item of itemsCarrito">
             <div class="confirmar-producto-foto">
-              <svg class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <img *ngIf="item.fotoUrl" [src]="imagenSrc(item.fotoUrl)" alt="" />
+              <svg *ngIf="!item.fotoUrl" class="foto-placeholder-mini" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
