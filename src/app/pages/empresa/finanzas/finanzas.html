@@ -223,12 +223,20 @@
 <!-- Modal: gasto recurrente -->
 <div class="modal-overlay" *ngIf="mostrarModalRecurrente" (click)="cerrarModalRecurrente()">
   <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalRecurrente()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg></button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
     <div class="modal-header">
       <h3>Registrar gasto recurrente</h3>
-      <button class="modal-close" (click)="cerrarModalRecurrente()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button>
     </div>
     <div class="modal-body">
       <div class="form-row">
@@ -273,12 +281,20 @@
 <!-- Modal: gasto único / extraordinario -->
 <div class="modal-overlay" *ngIf="mostrarModalUnico" (click)="cerrarModalUnico()">
   <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalUnico()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg></button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
     <div class="modal-header">
       <h3>Registrar gasto único o extraordinario</h3>
-      <button class="modal-close" (click)="cerrarModalUnico()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button>
     </div>
     <div class="modal-body">
       <div class="form-row">
@@ -315,12 +331,20 @@
 <!-- Modal: Confirmar Eliminación -->
 <div class="modal-overlay" *ngIf="gastoAEliminar" (click)="cerrarModalEliminar()">
   <div class="modal-card modal-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg></button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
     <div class="modal-header">
       <h3>Eliminar gasto</h3>
-      <button class="modal-close" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button>
     </div>
     <div class="modal-body">
       <p style="color: #1f4034; font-size: 14px;">¿Estás seguro de que deseas eliminar permanentemente este gasto? Esta acción no se puede deshacer.</p>
