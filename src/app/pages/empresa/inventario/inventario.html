@@ -99,6 +99,12 @@
 <!-- ── Modal crear / editar producto ─────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showModal" (click)="intentarCerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
     <div class="modal-brand-top">
       <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
       <div class="modal-brand-top-name">
@@ -108,11 +114,6 @@
 
     <div class="modal-header">
       <h3>{{ editandoId ? 'Editar producto' : 'Nuevo producto' }}</h3>
-      <button class="modal-close" (click)="cerrarModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
     </div>
 
     <div class="modal-body">
