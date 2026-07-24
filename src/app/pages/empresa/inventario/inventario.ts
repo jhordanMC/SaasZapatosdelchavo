@@ -23,6 +23,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import {
   AlmacenCreateInput,
   AlmacenRead,
@@ -114,6 +115,10 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   guardando = signal(false);
   error = signal<string | null>(null);
   errorModal = signal<string | null>(null);
+
+  // ── Subida de foto del producto (upload real al backend, no solo preview) ──
+  subiendoFoto = signal(false);
+  errorFoto = signal<string | null>(null);
 
   // ── Confirmación al eliminar un producto (reemplaza el confirm() nativo) ──
   productoAEliminar: ProductoListItem | null = null;
@@ -378,6 +383,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editandoId = null;
     this.form = this.formVacio();
     this.errorModal.set(null);
+    this.errorFoto.set(null);
     this.mostrarInfoMargen = false;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
@@ -390,8 +396,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.inventarioService.obtenerProducto(p.id_producto).subscribe({
       next: (detalle: ProductoRead) => {
         this.editandoId = detalle.id_producto;
-        this.form = this.formDesdeDetalle(detalle);
+        this.form = this.formDesdeDetalle(detalle, true);
         this.errorModal.set(null);
+        this.errorFoto.set(null);
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
@@ -412,9 +419,10 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.inventarioService.obtenerProducto(p.id_producto).subscribe({
       next: (detalle: ProductoRead) => {
         this.editandoId = null;
-        this.form = this.formDesdeDetalle(detalle);
+        this.form = this.formDesdeDetalle(detalle, false);
         this.form.nombre = `${detalle.nombre} (copia)`;
         this.errorModal.set(null);
+        this.errorFoto.set(null);
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
@@ -427,15 +435,22 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /** Arma el formulario a partir del detalle del backend (usado por editar y duplicar). */
-  private formDesdeDetalle(detalle: ProductoRead): ProductoForm {
+  /**
+   * Arma el formulario a partir del detalle del backend (usado por editar y
+   * duplicar). copiarFoto=false en duplicar a propósito: si el "copia"
+   * heredara la misma imagen_url del original, ambos productos quedarían
+   * apuntando al mismo archivo en disco — y si más adelante uno de los dos
+   * reemplaza su foto, el borrado del archivo viejo (ver backend,
+   * actualizar_producto) rompería la foto del otro sin que nadie la tocara.
+   */
+  private formDesdeDetalle(detalle: ProductoRead, copiarFoto: boolean): ProductoForm {
     return {
       nombre: detalle.nombre,
       id_categoria: detalle.id_categoria,
       sexo: detalle.sexo,
       costoCompra: String(detalle.costo_compra ?? ''),
       precioVenta: String(detalle.precio_venta ?? ''),
-      fotoUrl: null,
+      fotoUrl: copiarFoto ? detalle.imagen_url : null,
       variantes: detalle.variantes.flatMap((v) =>
         v.stock.map((s) => ({
             talla: v.talla ?? '',
@@ -605,18 +620,52 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Vista previa instantánea en base64 mientras se sube de verdad al
+   * backend — al terminar, form.fotoUrl pasa a ser la URL relativa real
+   * (/uploads/inventario/...) que sí se guarda en el producto. Si la subida
+   * falla, se descarta la preview (el producto no puede quedar apuntando
+   * a una foto que nunca llegó al servidor).
+   */
   onFotoSeleccionada(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => (this.form.fotoUrl = reader.result as string);
     reader.readAsDataURL(file);
+
+    this.subiendoFoto.set(true);
+    this.errorFoto.set(null);
+    this.inventarioService.subirImagenProducto(file).subscribe({
+      next: (resp) => {
+        this.form.fotoUrl = resp.url;
+        this.subiendoFoto.set(false);
+      },
+      error: (err) => {
+        this.form.fotoUrl = null;
+        this.subiendoFoto.set(false);
+        this.errorFoto.set(err?.error?.detail ?? 'No se pudo subir la foto. Intenta de nuevo.');
+      },
+    });
+  }
+
+  /** Arma la URL absoluta de una foto de producto (imagen_url guarda solo la ruta relativa). */
+  imagenSrc(imagenUrl: string | null): string | null {
+    if (!imagenUrl) return null;
+    // Mientras se sube, form.fotoUrl es un data: URL (base64) de la
+    // preview local — ya es una URL válida tal cual, no lleva prefijo.
+    return imagenUrl.startsWith('data:') ? imagenUrl : `${environment.apiUrl}${imagenUrl}`;
   }
 
   guardar(): void {
     if (!this.form.nombre.trim()) {
       this.errorModal.set('El nombre del producto es obligatorio.');
+      return;
+    }
+    if (this.subiendoFoto()) {
+      this.errorModal.set('Espera a que termine de subirse la foto.');
       return;
     }
 
@@ -648,6 +697,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           sexo: this.form.sexo,
           costo_compra: costoCompra,
           precio_venta: precioVenta,
+          imagen_url: this.form.fotoUrl,
           variantes,
         })
         .subscribe({
@@ -672,6 +722,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           sexo: this.form.sexo,
           costo_compra: costoCompra,
           precio_venta: precioVenta,
+          imagen_url: this.form.fotoUrl,
           variantes,
         })
         .subscribe({

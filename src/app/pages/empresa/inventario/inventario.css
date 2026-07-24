@@ -278,10 +278,22 @@
   gap: 16px;
   align-items: flex-start;
 }
+.foto-upload-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .foto-upload-compacta {
   width: 150px;
   height: 150px;
   flex-shrink: 0;
+}
+.foto-upload-error {
+  max-width: 150px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #b23a3a;
 }
 .basicos-columna {
   flex: 1;
@@ -686,7 +698,9 @@
   .productos-grid { grid-template-columns: repeat(2, 1fr); }
   .form-row-2, .form-row-3 { flex-direction: column; }
   .foto-y-basicos { flex-direction: column; }
+  .foto-upload-wrap { width: 100%; }
   .foto-upload-compacta { width: 100%; height: 120px; }
+  .foto-upload-error { max-width: 100%; }
   .variante-columnas,
   .variante-fila { grid-template-columns: 1fr 1fr; }
   .modal-footer { flex-direction: column-reverse; }

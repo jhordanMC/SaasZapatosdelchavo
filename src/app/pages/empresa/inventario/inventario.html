@@ -53,7 +53,8 @@
   <div class="productos-grid">
     <div class="producto-card" *ngFor="let p of productos()">
       <div class="producto-foto">
-        <span class="foto-placeholder">Sin foto</span>
+        <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" />
+        <span class="foto-placeholder" *ngIf="!p.imagen_url">Sin foto</span>
       </div>
       <div class="producto-info">
         <div class="producto-nombre">{{ p.nombre }}</div>
@@ -119,11 +120,15 @@
     <div class="modal-body">
       <div class="foto-y-basicos">
         <!-- Foto (opcional) -->
-        <label class="foto-upload foto-upload-compacta">
-          <img *ngIf="form.fotoUrl" [src]="form.fotoUrl" alt="Vista previa" />
-          <span *ngIf="!form.fotoUrl">Tomar / subir foto</span>
-          <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" hidden />
-        </label>
+        <div class="foto-upload-wrap">
+          <label class="foto-upload foto-upload-compacta">
+            <img *ngIf="form.fotoUrl" [src]="imagenSrc(form.fotoUrl)" alt="Vista previa" />
+            <span *ngIf="!form.fotoUrl && !subiendoFoto()">Tomar / subir foto</span>
+            <span class="spinner" *ngIf="subiendoFoto()"></span>
+            <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" [disabled]="subiendoFoto()" hidden />
+          </label>
+          <span class="foto-upload-error" *ngIf="errorFoto()">{{ errorFoto() }}</span>
+        </div>
 
         <div class="basicos-columna">
           <!-- Nombre -->

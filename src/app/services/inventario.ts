@@ -85,6 +85,7 @@ export interface ProductoListItem {
   costo_compra: number;
   margen: number;
   stock_total: number;
+  imagen_url: string | null;
   esta_activo: boolean;
 }
 
@@ -124,6 +125,7 @@ export interface ProductoCreateInput {
   sexo: SexoProducto | null;
   costo_compra: number;
   precio_venta: number;
+  imagen_url?: string | null;
   variantes: VarianteStockInput[];
 }
 
@@ -133,8 +135,13 @@ export interface ProductoUpdateInput {
   sexo?: SexoProducto | null;
   costo_compra?: number;
   precio_venta?: number;
+  imagen_url?: string | null;
   esta_activo?: boolean;
   variantes?: VarianteStockInput[];
+}
+
+export interface SubirImagenResponse {
+  url: string;
 }
 
 export interface CategoriaCreateInput {
@@ -260,6 +267,13 @@ export class InventarioService {
 
   obtenerProducto(idProducto: string): Observable<ProductoRead> {
     return this.http.get<ProductoRead>(`${this.base}/productos/${idProducto}`);
+  }
+
+  /** Sube y comprime la foto de un producto; devuelve la URL ya lista para guardar en imagen_url. */
+  subirImagenProducto(archivo: File): Observable<SubirImagenResponse> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<SubirImagenResponse>(`${this.base}/productos/upload-imagen`, formData);
   }
 
   crearProducto(datos: ProductoCreateInput): Observable<ProductoRead> {
