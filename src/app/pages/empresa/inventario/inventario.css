@@ -550,6 +550,11 @@
   border-top: 1px solid #e8f1ea;
 }
 
+/* Marca VILCAS al pie del modal, mismo formato que el modal de perfil/topbar */
+.modal-card .confirm-salir-brand {
+  padding: 12px 22px 20px;
+}
+
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
