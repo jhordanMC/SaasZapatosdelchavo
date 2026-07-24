@@ -2,7 +2,8 @@
   <p class="page-subtitle">Costos operativos, rentabilidad y flujo de caja de tu negocio.</p>
   <div>
     <button class="btn-secondary" (click)="abrirModalRecurrente()">+ Gasto recurrente</button>
-    <button class="btn-primary" (click)="abrirModalUnico()">+ Gasto único</button>
+    <button class="btn-secondary" (click)="abrirModalUnico()">+ Gasto único</button>
+    <button class="btn-primary" (click)="abrirModalCompra()">+ Compra</button>
   </div>
 </div>
 
@@ -174,9 +175,9 @@
           <td>{{ g.frecuencia }}</td>
           <td>{{ g.fecha_inicio }}</td>
           <td>
-            <button class="btn-icon-danger" 
-                    [disabled]="eliminandoId() === g.id_gasto_recurrente" 
-                    [class.btn-loading]="eliminandoId() === g.id_gasto_recurrente" 
+            <button class="btn-icon-danger"
+                    [disabled]="eliminandoId() === g.id_gasto_recurrente"
+                    [class.btn-loading]="eliminandoId() === g.id_gasto_recurrente"
                     (click)="abrirModalEliminar(g.id_gasto_recurrente, 'recurrente')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -203,9 +204,9 @@
           <td>S/{{ g.monto.toFixed(2) }}</td>
           <td>{{ g.fecha }}</td>
           <td>
-            <button class="btn-icon-danger" 
-                    [disabled]="eliminandoId() === g.id_gasto" 
-                    [class.btn-loading]="eliminandoId() === g.id_gasto" 
+            <button class="btn-icon-danger"
+                    [disabled]="eliminandoId() === g.id_gasto"
+                    [class.btn-loading]="eliminandoId() === g.id_gasto"
                     (click)="abrirModalEliminar(g.id_gasto, 'unico')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -217,6 +218,98 @@
       </tbody>
     </table>
     <button class="btn-secondary" *ngIf="finanzasService.hayMasGastosOperativos()" (click)="cargarMasGastosOperativos()">Cargar más</button>
+  </div>
+
+  <div class="panel">
+    <h3>Compras a proveedores</h3>
+    <p class="panel-subtitulo">Reposición de mercadería y stock comprado a proveedores.</p>
+    <table class="tabla">
+      <thead>
+        <tr><th>Proveedor</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of comprasService.compras()">
+          <td>{{ c.proveedor }}</td>
+          <td>{{ c.concepto }}</td>
+          <td>S/{{ c.monto.toFixed(2) }}</td>
+          <td>{{ c.fecha }}</td>
+          <td>
+            <button class="btn-icon-danger"
+                    [disabled]="eliminandoId() === c.id_compra"
+                    [class.btn-loading]="eliminandoId() === c.id_compra"
+                    (click)="abrirModalEliminar(c.id_compra, 'compra')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="comprasService.compras().length === 0">
+          <td colspan="5" style="text-align:center; color:#94a798;">Todavía no registras compras.</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn-secondary" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
+  </div>
+
+  <div class="panel">
+    <h3>Resumen mensual de compras y ventas</h3>
+    <p class="panel-subtitulo">Elige un mes y descárgalo en PDF o Excel para tus registros o tu contador.</p>
+
+    <div class="resumen-mensual-toolbar">
+      <input type="month" [ngModel]="mesSeleccionado" (ngModelChange)="mesSeleccionado = $event" />
+      <button class="btn-primary" [disabled]="generandoResumenMensual" [class.btn-loading]="generandoResumenMensual" (click)="generarResumenMensual()">
+        {{ generandoResumenMensual ? 'Generando...' : 'Generar resumen' }}
+      </button>
+    </div>
+
+    <p class="aviso-margen-parcial" *ngIf="errorResumenMensual">
+      No se pudo generar el resumen de ese mes. Intenta de nuevo en unos segundos.
+    </p>
+
+    <ng-container *ngIf="resumenMensual as rm">
+      <p class="panel-subtitulo" style="margin-top: 14px;">{{ rm.etiquetaMes }} · del {{ rm.desde }} al {{ rm.hasta }}</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Ventas del mes</div>
+          <div class="kpi-value">S/{{ rm.ventas.ingresos_periodo.toFixed(2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Compras del mes</div>
+          <div class="kpi-value">S/{{ rm.compras.total.toFixed(2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Cantidad ventas / compras</div>
+          <div class="kpi-value">{{ rm.ventas.cantidad_ventas }} / {{ rm.compras.cantidad }}</div>
+        </div>
+        <div class="kpi-card" [class.kpi-positivo]="rm.balanceNeto >= 0" [class.kpi-negativo]="rm.balanceNeto < 0">
+          <div class="kpi-label">Balance neto del mes</div>
+          <div class="kpi-value">S/{{ rm.balanceNeto.toFixed(2) }}</div>
+        </div>
+      </div>
+
+      <table class="tabla" *ngIf="rm.compras.detalle.length > 0" style="margin-top: 16px;">
+        <thead>
+          <tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th>Monto</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of rm.compras.detalle">
+            <td>{{ c.fecha }}</td>
+            <td>{{ c.proveedor }}</td>
+            <td>{{ c.concepto }}</td>
+            <td>S/{{ c.monto.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="rm.compras.detalle.length === 0" class="panel-subtitulo" style="margin-top: 12px;">Sin compras registradas ese mes.</p>
+
+      <div class="resumen-mensual-descargas">
+        <button class="btn-secondary" (click)="descargarResumenPDF()">Descargar PDF</button>
+        <button class="btn-secondary" (click)="descargarResumenExcel()">Descargar Excel</button>
+      </div>
+    </ng-container>
   </div>
 </div>
 
@@ -328,6 +421,61 @@
   </div>
 </div>
 
+<!-- Modal: registrar compra -->
+<div class="modal-overlay" *ngIf="mostrarModalCompra" (click)="cerrarModalCompra()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalCompra()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg></button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
+    <div class="modal-header">
+      <h3>Registrar compra a proveedor</h3>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Proveedor</label>
+        <input type="text" [ngModel]="formCompra.proveedor" (ngModelChange)="formCompra.proveedor = $event" placeholder="Ej. Calzados Trujillo SAC" />
+      </div>
+      <div class="form-row">
+        <label>Concepto</label>
+        <input type="text" [ngModel]="formCompra.concepto" (ngModelChange)="formCompra.concepto = $event" placeholder="Ej. Reposición de zapatillas urbanas" />
+      </div>
+      <div class="form-row form-row-2">
+        <div>
+          <label>Monto (S/)</label>
+          <input type="number" [ngModel]="formCompra.monto" (ngModelChange)="formCompra.monto = $event" min="0" />
+        </div>
+        <div>
+          <label>Fecha</label>
+          <input type="date" [ngModel]="formCompra.fecha" (ngModelChange)="formCompra.fecha = $event" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Cantidad de ítems (opcional)</label>
+        <input type="number" [ngModel]="formCompra.cantidad_items" (ngModelChange)="formCompra.cantidad_items = $event" min="0" />
+      </div>
+      <div class="form-row">
+        <label>Notas (opcional)</label>
+        <input type="text" [ngModel]="formCompra.notas" (ngModelChange)="formCompra.notas = $event" placeholder="Ej. Pagado al contado" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModalCompra()">Cancelar</button>
+      <button class="btn-primary" [disabled]="guardandoCompra" [class.btn-loading]="guardandoCompra" (click)="guardarCompra()">
+        {{ guardandoCompra ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Confirmar Eliminación -->
 <div class="modal-overlay" *ngIf="gastoAEliminar" (click)="cerrarModalEliminar()">
   <div class="modal-card modal-confirmacion" (click)="$event.stopPropagation()">
@@ -344,10 +492,10 @@
     </div>
 
     <div class="modal-header">
-      <h3>Eliminar gasto</h3>
+      <h3>{{ gastoAEliminar.tipo === 'compra' ? 'Eliminar compra' : 'Eliminar gasto' }}</h3>
     </div>
     <div class="modal-body">
-      <p style="color: #1f4034; font-size: 14px;">¿Estás seguro de que deseas eliminar permanentemente este gasto? Esta acción no se puede deshacer.</p>
+      <p style="color: #1f4034; font-size: 14px;">¿Estás seguro de que deseas eliminar permanentemente este {{ gastoAEliminar.tipo === 'compra' ? 'registro de compra' : 'gasto' }}? Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal-footer" style="justify-content: flex-end; gap: 12px; margin-top: 10px;">
       <button class="btn-secondary" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()">Cancelar</button>

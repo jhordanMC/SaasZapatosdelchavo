@@ -145,6 +145,16 @@ export class FinanzasService {
       .subscribe((resumen) => this.resumen.set(resumen));
   }
 
+  /**
+   * Igual que cargarResumen, pero sin tocar el signal `resumen` — pensado
+   * para reportes por rango arbitrario (p. ej. el resumen mensual de
+   * compras y ventas) que no deben pisar el período que se ve en pantalla.
+   */
+  obtenerResumenPeriodo(desde: string, hasta: string): Observable<ResumenFinanciero> {
+    const params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    return this.http.get<ResumenFinanciero>(`${this.base}/resumen`, { params });
+  }
+
   cargarIngresosPorSemana(semanas = 4): void {
     const params = new HttpParams().set('semanas', semanas);
     this.http

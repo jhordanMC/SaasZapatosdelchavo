@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import {
   FinanzasService,
   Frecuencia,
@@ -10,6 +11,15 @@ import {
   TIPOS_GASTO_SUGERIDOS,
 } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
+import { ComprasService, CompraCreate } from '../../../services/compras';
+import {
+  ResumenMensual,
+  construirResumenMensual,
+  exportarResumenMensualExcel,
+  exportarResumenMensualPDF,
+  mesActualISO,
+  rangoMes,
+} from '../../../utils/exportar-resumen-mensual';
 
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -31,20 +41,27 @@ type VistaIngresos = 'completos' | 'margen';
   styleUrls: ['./finanzas.css'],
 })
 export class FinanzasComponent implements OnInit {
-  constructor(public finanzasService: FinanzasService, private inventarioService: InventarioService) {}
+  constructor(
+    public finanzasService: FinanzasService,
+    private inventarioService: InventarioService,
+    public comprasService: ComprasService
+  ) {}
 
   tiposGastoSugeridos = TIPOS_GASTO_SUGERIDOS;
   productosRentabilidad: ProductoListItem[] = [];
 
   mostrarModalRecurrente = false;
   mostrarModalUnico = false;
+  mostrarModalCompra = false;
   guardandoRecurrente = false;
   guardandoUnico = false;
+  guardandoCompra = false;
   eliminandoId = signal<string | null>(null);
-  gastoAEliminar: { id: string, tipo: 'recurrente' | 'unico' } | null = null;
+  gastoAEliminar: { id: string, tipo: 'recurrente' | 'unico' | 'compra' } | null = null;
 
   formRecurrente: GastoRecurrenteCreate = this.formRecurrenteVacio();
   formUnico: GastoOperativoCreate = this.formUnicoVacio();
+  formCompra: CompraCreate = this.formCompraVacio();
 
   readonly vistaIngresos = signal<VistaIngresos>('completos');
 
@@ -90,6 +107,7 @@ export class FinanzasComponent implements OnInit {
     this.inventarioService.listarProductos({}, 0, 10, 'margen_desc').subscribe((pagina) => {
       this.productosRentabilidad = pagina.items;
     });
+    this.comprasService.cargarCompras();
   }
 
   get resumen() {
@@ -137,7 +155,7 @@ export class FinanzasComponent implements OnInit {
     });
   }
 
-  abrirModalEliminar(id: string, tipo: 'recurrente' | 'unico'): void {
+  abrirModalEliminar(id: string, tipo: 'recurrente' | 'unico' | 'compra'): void {
     this.gastoAEliminar = { id, tipo };
   }
 
@@ -151,15 +169,22 @@ export class FinanzasComponent implements OnInit {
     const { id, tipo } = this.gastoAEliminar;
     this.eliminandoId.set(id);
 
-    const request$ = tipo === 'recurrente'
-      ? this.finanzasService.eliminarGastoRecurrente(id)
-      : this.finanzasService.eliminarGastoOperativo(id);
+    const request$ =
+      tipo === 'recurrente'
+        ? this.finanzasService.eliminarGastoRecurrente(id)
+        : tipo === 'unico'
+        ? this.finanzasService.eliminarGastoOperativo(id)
+        : this.comprasService.eliminarCompra(id);
 
     request$.subscribe({
       next: () => {
         this.eliminandoId.set(null);
         this.gastoAEliminar = null;
-        this.finanzasService.recargarTodo();
+        if (tipo === 'compra') {
+          this.comprasService.cargarCompras();
+        } else {
+          this.finanzasService.recargarTodo();
+        }
       },
       error: () => this.eliminandoId.set(null)
     });
@@ -201,5 +226,77 @@ export class FinanzasComponent implements OnInit {
 
   cargarMasGastosOperativos(): void {
     this.finanzasService.cargarGastosOperativos(this.finanzasService.gastosOperativos().length);
+  }
+
+  // ── Compras a proveedores ────────────────────────────────────────────────
+
+  private formCompraVacio(): CompraCreate {
+    return { proveedor: '', concepto: '', monto: 0, cantidad_items: null, fecha: hoyISO() };
+  }
+
+  abrirModalCompra(): void {
+    this.formCompra = this.formCompraVacio();
+    this.mostrarModalCompra = true;
+  }
+
+  cerrarModalCompra(): void {
+    this.mostrarModalCompra = false;
+  }
+
+  guardarCompra(): void {
+    if (!this.formCompra.proveedor.trim() || !this.formCompra.concepto.trim() || this.formCompra.monto <= 0) {
+      return;
+    }
+    this.guardandoCompra = true;
+    this.comprasService.crearCompra(this.formCompra).subscribe({
+      next: () => {
+        this.mostrarModalCompra = false;
+        this.guardandoCompra = false;
+        this.comprasService.cargarCompras();
+      },
+      error: () => {
+        this.guardandoCompra = false;
+      }
+    });
+  }
+
+  cargarMasCompras(): void {
+    this.comprasService.cargarCompras(this.comprasService.compras().length);
+  }
+
+  // ── Resumen mensual de compras y ventas (descargable) ───────────────────
+
+  mesSeleccionado: string = mesActualISO();
+  resumenMensual: ResumenMensual | null = null;
+  generandoResumenMensual = false;
+  errorResumenMensual = false;
+
+  generarResumenMensual(): void {
+    this.generandoResumenMensual = true;
+    this.errorResumenMensual = false;
+    this.resumenMensual = null;
+    const { desde, hasta } = rangoMes(this.mesSeleccionado);
+
+    forkJoin({
+      ventas: this.finanzasService.obtenerResumenPeriodo(desde, hasta),
+      compras: this.comprasService.listarComprasEnRango(desde, hasta),
+    }).subscribe({
+      next: ({ ventas, compras }) => {
+        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, compras);
+        this.generandoResumenMensual = false;
+      },
+      error: () => {
+        this.generandoResumenMensual = false;
+        this.errorResumenMensual = true;
+      },
+    });
+  }
+
+  descargarResumenPDF(): void {
+    if (this.resumenMensual) exportarResumenMensualPDF(this.resumenMensual);
+  }
+
+  descargarResumenExcel(): void {
+    if (this.resumenMensual) exportarResumenMensualExcel(this.resumenMensual);
   }
 }
