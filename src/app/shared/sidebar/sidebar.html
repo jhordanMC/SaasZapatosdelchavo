@@ -31,7 +31,12 @@
 
   <nav class="sidebar-nav">
     <ng-container *ngFor="let item of items">
-    <div class="nav-group">
+    <div
+      class="nav-group"
+      [class.tiene-subitem]="!!item.subItem"
+      routerLinkActive="grupo-activo"
+      [routerLinkActiveOptions]="{ exact: false }"
+    >
       <a
         *ngIf="item.route"
         class="nav-item"

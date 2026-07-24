@@ -113,28 +113,79 @@
   gap: 2px;
 }
 
-/* Sub-enlace bajo un ítem principal (ej. "Ventas" → "Ver Historial") */
+/* Todo lo de abajo aplica SOLO a grupos que de verdad tienen un sub-enlace
+   (hoy, únicamente Ventas → Ver Historial) — nunca a un ítem normal, aun
+   cuando ese ítem sea la ruta activa (lo cual también dispara
+   "grupo-activo" sobre su propio nav-group, ya que su propio enlace es
+   descendiente de sí mismo). El class .tiene-subitem evita que este
+   estilo se filtre a Dashboard, Inventario, etc. */
+.nav-group.tiene-subitem.grupo-activo {
+  gap: 0;
+}
+
+.nav-group.tiene-subitem.grupo-activo .nav-item {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* Se quita el "levitado" (sombra + borde blanco) que usan los ítems
+   activos normales: dentro de un grupo desplegable, Ventas debe leerse
+   plana para soldarse visualmente con Ver Historial en vez de flotar
+   como una tarjeta separada. */
+.nav-group.tiene-subitem.grupo-activo .nav-item.active {
+  background: #F5F8F0;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* Ventas sigue "dentro" del grupo (estamos en Ver Historial) pero no es la
+   sub-ruta exacta: un blanco más opaco para no competir con quien sí está
+   seleccionada. */
+.nav-group.tiene-subitem.grupo-activo .nav-item:not(.active) {
+  background: rgba(245, 248, 240, 0.6);
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* Sub-enlace bajo un ítem principal (ej. "Ventas" → "Ver Historial").
+   Solo se muestra cuando el grupo está activo (Ventas expandida/seleccionada
+   o ya dentro de Ver Historial); el resto del tiempo permanece oculto. */
 .nav-subitem {
-  display: block;
-  margin-left: 46px;
-  padding: 6px 14px;
+  display: none;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(2, 75, 64, 0.55);
   text-decoration: none;
-  border-radius: 10px;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.nav-subitem:hover {
-  background: rgba(2, 75, 64, 0.06);
+.nav-group.tiene-subitem.grupo-activo .nav-subitem {
+  display: block;
+  /* Mismo ancho que Ventas (para que el borde superior quede "soldado"),
+     pero con el texto desplazado hacia el interior en vez de pegado al
+     borde, dando la sensación de sub-elemento anidado. */
+  padding: 8px 16px 8px 46px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+.nav-group.tiene-subitem.grupo-activo .nav-subitem:hover {
+  background: rgba(2, 75, 64, 0.1);
   color: #024B40;
 }
 
-.nav-subitem.active {
+.nav-group.tiene-subitem.grupo-activo .nav-subitem.active {
   color: #024B40;
   font-weight: 700;
-  background: rgba(2, 75, 64, 0.08);
+  background: #F5F8F0;
+}
+
+/* Ver Historial visible pero no seleccionada: mismo tono opaco que recibe
+   Ventas en el caso inverso. */
+.nav-group.tiene-subitem.grupo-activo .nav-subitem:not(.active) {
+  color: rgba(2, 75, 64, 0.6);
+  background: rgba(245, 248, 240, 0.6);
 }
 
 .nav-item svg {
@@ -269,7 +320,7 @@
     line-height: 0;
   }
   .nav-icon { width: 34px; height: 34px; }
-  .nav-subitem { display: none; } /* riel de solo íconos: sin espacio para el sub-enlace de texto */
+  .nav-group.tiene-subitem.grupo-activo .nav-subitem { display: none; } /* riel de solo íconos: sin espacio para el sub-enlace de texto */
   .sidebar-footer { padding: 14px 10px; }
 }
 
@@ -329,6 +380,6 @@
     line-height: 1.2;
   }
   .nav-icon { width: 30px; height: 30px; }
-  .nav-subitem { display: block; }
+  .nav-group.tiene-subitem.grupo-activo .nav-subitem { display: block; }
   .sidebar-footer { padding: 16px 12px calc(16px + env(safe-area-inset-bottom)); }
 }
