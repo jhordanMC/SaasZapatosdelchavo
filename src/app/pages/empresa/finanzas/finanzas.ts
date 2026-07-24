@@ -38,6 +38,10 @@ export class FinanzasComponent implements OnInit {
 
   mostrarModalRecurrente = false;
   mostrarModalUnico = false;
+  guardandoRecurrente = false;
+  guardandoUnico = false;
+  eliminandoId = signal<string | null>(null);
+  gastoAEliminar: { id: string, tipo: 'recurrente' | 'unico' } | null = null;
 
   formRecurrente: GastoRecurrenteCreate = this.formRecurrenteVacio();
   formUnico: GastoOperativoCreate = this.formUnicoVacio();
@@ -120,15 +124,44 @@ export class FinanzasComponent implements OnInit {
     if (!this.formRecurrente.concepto.trim() || !this.formRecurrente.tipo_gasto.trim() || this.formRecurrente.monto <= 0) {
       return;
     }
-    this.finanzasService.crearGastoRecurrente(this.formRecurrente).subscribe(() => {
-      this.mostrarModalRecurrente = false;
-      this.finanzasService.recargarTodo();
+    this.guardandoRecurrente = true;
+    this.finanzasService.crearGastoRecurrente(this.formRecurrente).subscribe({
+      next: () => {
+        this.mostrarModalRecurrente = false;
+        this.guardandoRecurrente = false;
+        this.finanzasService.recargarTodo();
+      },
+      error: () => {
+        this.guardandoRecurrente = false;
+      }
     });
   }
 
-  eliminarGastoRecurrente(idGastoRecurrente: string): void {
-    this.finanzasService.eliminarGastoRecurrente(idGastoRecurrente).subscribe(() => {
-      this.finanzasService.recargarTodo();
+  abrirModalEliminar(id: string, tipo: 'recurrente' | 'unico'): void {
+    this.gastoAEliminar = { id, tipo };
+  }
+
+  cerrarModalEliminar(): void {
+    if (this.eliminandoId()) return; // Prevenir cierre si está cargando
+    this.gastoAEliminar = null;
+  }
+
+  confirmarEliminacion(): void {
+    if (!this.gastoAEliminar) return;
+    const { id, tipo } = this.gastoAEliminar;
+    this.eliminandoId.set(id);
+
+    const request$ = tipo === 'recurrente'
+      ? this.finanzasService.eliminarGastoRecurrente(id)
+      : this.finanzasService.eliminarGastoOperativo(id);
+
+    request$.subscribe({
+      next: () => {
+        this.eliminandoId.set(null);
+        this.gastoAEliminar = null;
+        this.finanzasService.recargarTodo();
+      },
+      error: () => this.eliminandoId.set(null)
     });
   }
 
@@ -151,17 +184,20 @@ export class FinanzasComponent implements OnInit {
     if (!this.formUnico.concepto.trim() || !this.formUnico.tipo_gasto.trim() || this.formUnico.monto <= 0) {
       return;
     }
-    this.finanzasService.crearGastoOperativo(this.formUnico).subscribe(() => {
-      this.mostrarModalUnico = false;
-      this.finanzasService.recargarTodo();
+    this.guardandoUnico = true;
+    this.finanzasService.crearGastoOperativo(this.formUnico).subscribe({
+      next: () => {
+        this.mostrarModalUnico = false;
+        this.guardandoUnico = false;
+        this.finanzasService.recargarTodo();
+      },
+      error: () => {
+        this.guardandoUnico = false;
+      }
     });
   }
 
-  eliminarGastoOperativo(idGasto: string): void {
-    this.finanzasService.eliminarGastoOperativo(idGasto).subscribe(() => {
-      this.finanzasService.recargarTodo();
-    });
-  }
+  // Eliminar movido a confirmarEliminacion()
 
   cargarMasGastosOperativos(): void {
     this.finanzasService.cargarGastosOperativos(this.finanzasService.gastosOperativos().length);

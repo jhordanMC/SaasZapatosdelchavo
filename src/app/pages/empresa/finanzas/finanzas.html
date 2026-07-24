@@ -173,10 +173,17 @@
           <td>S/{{ g.monto.toFixed(2) }}</td>
           <td>{{ g.frecuencia }}</td>
           <td>{{ g.fecha_inicio }}</td>
-          <td><button class="btn-icon-danger" (click)="eliminarGastoRecurrente(g.id_gasto_recurrente)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button></td>
+          <td>
+            <button class="btn-icon-danger" 
+                    [disabled]="eliminandoId() === g.id_gasto_recurrente" 
+                    [class.btn-loading]="eliminandoId() === g.id_gasto_recurrente" 
+                    (click)="abrirModalEliminar(g.id_gasto_recurrente, 'recurrente')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -195,10 +202,17 @@
           <td>{{ g.tipo_gasto }}</td>
           <td>S/{{ g.monto.toFixed(2) }}</td>
           <td>{{ g.fecha }}</td>
-          <td><button class="btn-icon-danger" (click)="eliminarGastoOperativo(g.id_gasto)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg></button></td>
+          <td>
+            <button class="btn-icon-danger" 
+                    [disabled]="eliminandoId() === g.id_gasto" 
+                    [class.btn-loading]="eliminandoId() === g.id_gasto" 
+                    (click)="abrirModalEliminar(g.id_gasto, 'unico')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -249,7 +263,9 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModalRecurrente()">Cancelar</button>
-      <button class="btn-primary" (click)="guardarGastoRecurrente()">Guardar</button>
+      <button class="btn-primary" [disabled]="guardandoRecurrente" [class.btn-loading]="guardandoRecurrente" (click)="guardarGastoRecurrente()">
+        {{ guardandoRecurrente ? 'Guardando...' : 'Guardar' }}
+      </button>
     </div>
   </div>
 </div>
@@ -289,7 +305,31 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModalUnico()">Cancelar</button>
-      <button class="btn-primary" (click)="guardarGastoUnico()">Guardar</button>
+      <button class="btn-primary" [disabled]="guardandoUnico" [class.btn-loading]="guardandoUnico" (click)="guardarGastoUnico()">
+        {{ guardandoUnico ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar Eliminación -->
+<div class="modal-overlay" *ngIf="gastoAEliminar" (click)="cerrarModalEliminar()">
+  <div class="modal-card modal-confirmacion" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Eliminar gasto</h3>
+      <button class="modal-close" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #1f4034; font-size: 14px;">¿Estás seguro de que deseas eliminar permanentemente este gasto? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer" style="justify-content: flex-end; gap: 12px; margin-top: 10px;">
+      <button class="btn-secondary" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn-primary" style="background: #b23a3a;" [disabled]="eliminandoId() !== null" [class.btn-loading]="eliminandoId() !== null" (click)="confirmarEliminacion()">
+        {{ eliminandoId() ? 'Eliminando...' : 'Eliminar' }}
+      </button>
     </div>
   </div>
 </div>

@@ -149,8 +149,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (sedes) => {
         this.sedes.set(sedes);
         if (sedes.length > 0) {
-          // Por defecto, selecciona la primera sede para mostrar en el catálogo
-          this.sedeFiltro.set(sedes[0]);
+          // Por defecto, mantenemos Todas las sedes (null) para mostrar todo el catálogo global.
+          // this.sedeFiltro.set(sedes[0]);
 
           // Preselecciona la caja si solo hay un local disponible
           const locales = sedes.filter(s => s.tipo === 'local');
