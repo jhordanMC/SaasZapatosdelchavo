@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://backendsaasalba-bebycudydhbdczbx.chilecentral-01.azurewebsites.net',
+  apiUrl: 'http://72.60.255.62:8001',
 };
