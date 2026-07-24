@@ -2,10 +2,18 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
+export interface SidebarSubItem {
+  label: string;
+  route: string;
+  exact?: boolean;
+}
+
 export interface SidebarItem {
   label: string;
   route?: string;
   href?: string;
+  /** Único sub-enlace bajo este ítem (ej. "Ventas" → "Ver Historial"). No es un submenú de varios niveles. */
+  subItem?: SidebarSubItem;
   icon:
     | 'dashboard'
     | 'empresas'

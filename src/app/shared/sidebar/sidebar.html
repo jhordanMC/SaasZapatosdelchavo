@@ -31,6 +31,7 @@
 
   <nav class="sidebar-nav">
     <ng-container *ngFor="let item of items">
+    <div class="nav-group">
       <a
         *ngIf="item.route"
         class="nav-item"
@@ -164,6 +165,17 @@
         </span>
         {{ item.label }}
       </a>
+      <a
+        *ngIf="item.subItem"
+        class="nav-subitem"
+        [routerLink]="item.subItem.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.subItem.exact ?? false }"
+        (click)="closeMobile()"
+      >
+        {{ item.subItem.label }}
+      </a>
+    </div>
     </ng-container>
   </nav>
 

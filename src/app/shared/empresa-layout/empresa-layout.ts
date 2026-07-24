@@ -55,7 +55,13 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
         base.push({ label: this.i18n.t('NAV.INVENTARIO'), route: '/empresa/inventario', icon: 'inventario' });
       }
       if (puedeVer('ventas')) {
-        base.push({ label: this.i18n.t('NAV.VENTAS'), route: '/empresa/ventas', icon: 'ventas' });
+        base.push({
+          label: this.i18n.t('NAV.VENTAS'),
+          route: '/empresa/ventas',
+          icon: 'ventas',
+          exact: true,
+          subItem: { label: this.i18n.t('NAV.VENTAS_HISTORIAL'), route: '/empresa/ventas/historial' },
+        });
       }
       if (esDueño && puedeVer('finanzas')) {
         base.push({ label: this.i18n.t('NAV.FINANZAS'), route: '/empresa/finanzas', icon: 'finanzas' });

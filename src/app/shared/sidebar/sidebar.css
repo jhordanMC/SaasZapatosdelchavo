@@ -107,6 +107,36 @@
   border-color: rgba(255, 255, 255, 0.95);
 }
 
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Sub-enlace bajo un ítem principal (ej. "Ventas" → "Ver Historial") */
+.nav-subitem {
+  display: block;
+  margin-left: 46px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(2, 75, 64, 0.55);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-subitem:hover {
+  background: rgba(2, 75, 64, 0.06);
+  color: #024B40;
+}
+
+.nav-subitem.active {
+  color: #024B40;
+  font-weight: 700;
+  background: rgba(2, 75, 64, 0.08);
+}
+
 .nav-item svg {
   flex-shrink: 0;
   opacity: 0.88;
@@ -239,6 +269,7 @@
     line-height: 0;
   }
   .nav-icon { width: 34px; height: 34px; }
+  .nav-subitem { display: none; } /* riel de solo íconos: sin espacio para el sub-enlace de texto */
   .sidebar-footer { padding: 14px 10px; }
 }
 
@@ -298,5 +329,6 @@
     line-height: 1.2;
   }
   .nav-icon { width: 30px; height: 30px; }
+  .nav-subitem { display: block; }
   .sidebar-footer { padding: 16px 12px calc(16px + env(safe-area-inset-bottom)); }
 }

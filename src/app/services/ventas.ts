@@ -102,9 +102,14 @@ export interface VentaCreate {
 export interface DetalleVentaRead {
   id_detalle_venta: string;
   id_variante: string;
+  id_local: string | null;
+  nombre_local: string | null;
+  id_almacen: string | null;
+  nombre_almacen: string | null;
   nombre_producto: string | null;
   talla: string | null;
   sku: string | null;
+  imagen_url: string | null;
   cantidad: number;
   precio_unitario: number;
   descuento_monto: number;
@@ -130,7 +135,7 @@ export interface VentaRead {
   id_usuario: string;
   id_cliente: string | null;
   total: number;
-  estado: string;
+  estado: EstadoVenta;
   detalles: DetalleVentaRead[];
   pagos: PagoRead[];
   creado_en: string;
@@ -139,6 +144,32 @@ export interface VentaRead {
 
 export interface MensajeResponse {
   mensaje: string;
+}
+
+// ── Historial de ventas ──────────────────────────────────────────────────────
+
+export interface VentaListItem {
+  id_venta: string;
+  total: number;
+  estado: EstadoVenta;
+  id_usuario: string;
+  nombre_vendedor: string | null;
+  id_cliente: string | null;
+  nombre_cliente: string | null;
+  cantidad_items: number;
+  creado_en: string;
+}
+
+export type EstadoVenta = 'pendiente' | 'pagada' | 'anulada' | 'devuelta';
+
+export interface FiltrosHistorialVentas {
+  estado?: EstadoVenta;
+}
+
+export interface EliminarVentaRequest {
+  motivo: string;
+  /** true (default) = devuelve el stock al local/almacén de origen. false = no lo devuelve. */
+  restaurar_stock: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,6 +204,9 @@ export interface ItemCarrito {
  * se define — cambiarlo acá es todo lo que hace falta para ajustarlo.
  */
 export const TAMANO_PAGINA_CATALOGO_POS = 30;
+
+/** Tamaño de página del historial de ventas — cambiarlo acá es todo lo que hace falta. */
+export const TAMANO_PAGINA_HISTORIAL_VENTAS = 30;
 
 @Injectable({ providedIn: 'root' })
 export class VentasService {
@@ -213,6 +247,37 @@ export class VentasService {
   /** Confirma la venta: envía el carrito completo al backend. */
   confirmarVenta(payload: VentaCreate): Observable<VentaRead> {
     return this.http.post<VentaRead>(`${this.base}/pos/confirmar`, payload);
+  }
+
+  // ── Historial de ventas ──────────────────────────────────────────────────
+
+  /**
+   * Página del historial de ventas del tenant, más reciente primero.
+   * Sin envoltorio hay_mas/siguiente_offset: el llamador compara
+   * `resultado.length < limit` para saber si ya no hay más páginas.
+   */
+  listarVentas(
+    filtros: FiltrosHistorialVentas = {},
+    offset = 0,
+    limit = TAMANO_PAGINA_HISTORIAL_VENTAS
+  ): Observable<VentaListItem[]> {
+    let params = new HttpParams().set('limit', limit).set('offset', offset);
+    if (filtros.estado) params = params.set('estado', filtros.estado);
+    return this.http.get<VentaListItem[]>(`${this.base}`, { params });
+  }
+
+  /** Detalle completo de una venta: ítems (con imagen/talla/precio/descuento) + pagos. */
+  obtenerVenta(idVenta: string): Observable<VentaRead> {
+    return this.http.get<VentaRead>(`${this.base}/${idVenta}`);
+  }
+
+  /**
+   * "Eliminar" una venta del historial = anularla en el backend. El
+   * usuario decide explícitamente si el stock de los productos vendidos
+   * vuelve al inventario o no (ver EliminarVentaRequest.restaurar_stock).
+   */
+  eliminarVenta(idVenta: string, data: EliminarVentaRequest): Observable<MensajeResponse> {
+    return this.http.post<MensajeResponse>(`${this.base}/${idVenta}/anular`, data);
   }
 
   // ── Gestión del carrito (local) ──────────────────────────────────────────

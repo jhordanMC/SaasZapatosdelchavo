@@ -1,0 +1,191 @@
+<div class="page-toolbar">
+  <div>
+    <p class="page-title">Historial de ventas</p>
+    <p class="page-subtitle">Todas las ventas registradas en el POS, con su detalle completo.</p>
+  </div>
+  <select class="filter-select" [ngModel]="filtroEstado" (ngModelChange)="onFiltroEstadoChange($event)">
+    <option value="">Todos los estados</option>
+    <option value="pagada">Pagada</option>
+    <option value="pendiente">Pendiente</option>
+    <option value="anulada">Eliminada</option>
+    <option value="devuelta">Devuelta</option>
+  </select>
+</div>
+
+<div class="content">
+  <div class="estado-carga" *ngIf="cargando()">
+    <span class="spinner"></span> Cargando historial…
+  </div>
+
+  <div class="estado-error" *ngIf="error()">{{ error() }}</div>
+
+  <div class="panel" *ngIf="!cargando() && !error()">
+    <table class="tabla" *ngIf="ventas().length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Vendedor</th>
+          <th>Cliente</th>
+          <th>Ítems</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let v of ventas()">
+          <td>{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ v.nombre_vendedor ?? '—' }}</td>
+          <td>{{ nombreCliente(v) }}</td>
+          <td>{{ v.cantidad_items }}</td>
+          <td>S/{{ v.total.toFixed(2) }}</td>
+          <td>
+            <span class="badge" [ngClass]="'badge-estado-' + v.estado">{{ etiquetaEstado(v.estado) }}</span>
+          </td>
+          <td class="tabla-acciones">
+            <button class="btn-secondary btn-sm" (click)="abrirDetalle(v)">Ver detalle</button>
+            <button
+              class="btn-icon-danger"
+              *ngIf="puedeEliminar() && v.estado !== 'anulada'"
+              title="Eliminar venta"
+              (click)="abrirEliminar(v)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="tabla-vacia" *ngIf="ventas().length === 0">Todavía no hay ventas registradas.</p>
+
+    <div class="cargando-mini" *ngIf="cargandoMas()">
+      <span class="spinner spinner-sm"></span> Cargando más ventas…
+    </div>
+    <button class="btn-secondary" *ngIf="hayMas() && !cargandoMas() && ventas().length > 0" (click)="cargarMas()">
+      Cargar más
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: detalle de venta ═══════════════ -->
+<div class="modal-overlay" *ngIf="ventaDetalle() || cargandoDetalle() || errorDetalle()" (click)="cerrarDetalle()">
+  <div class="modal-card modal-detalle" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Detalle de la venta" (cerrar)="cerrarDetalle()"></app-modal-brand-header>
+
+    <div class="modal-body" *ngIf="cargandoDetalle()">
+      <div class="estado-carga"><span class="spinner"></span> Cargando detalle…</div>
+    </div>
+
+    <div class="modal-body" *ngIf="errorDetalle()">
+      <div class="estado-error">{{ errorDetalle() }}</div>
+    </div>
+
+    <div class="modal-body" *ngIf="ventaDetalle() as venta">
+      <div class="detalle-cabecera">
+        <div>
+          <span class="detalle-cabecera-label">Fecha</span>
+          <span class="detalle-cabecera-valor">{{ venta.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div>
+          <span class="detalle-cabecera-label">Estado</span>
+          <span class="badge" [ngClass]="'badge-estado-' + venta.estado">{{ etiquetaEstado(venta.estado) }}</span>
+        </div>
+      </div>
+
+      <p class="detalle-subtitulo">Productos vendidos</p>
+      <div class="detalle-productos">
+        <div class="detalle-producto-item" *ngFor="let d of venta.detalles">
+          <div class="detalle-producto-foto">
+            <img *ngIf="d.imagen_url" [src]="d.imagen_url" [alt]="d.nombre_producto ?? ''" />
+            <span *ngIf="!d.imagen_url" class="foto-placeholder-mini">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+              </svg>
+            </span>
+          </div>
+          <div class="detalle-producto-info">
+            <span class="detalle-producto-nombre">{{ d.nombre_producto ?? 'Producto eliminado' }}</span>
+            <span class="detalle-producto-meta">
+              Talla {{ d.talla ?? '—' }} · {{ d.cantidad }} unidad(es) · S/{{ d.precio_unitario.toFixed(2) }} c/u
+              <span *ngIf="d.descuento_monto > 0"> · Descuento −S/{{ d.descuento_monto.toFixed(2) }}</span>
+            </span>
+            <span class="detalle-producto-meta">Desde: {{ d.nombre_local ?? d.nombre_almacen ?? '—' }}</span>
+          </div>
+          <span class="detalle-producto-subtotal">S/{{ d.subtotal.toFixed(2) }}</span>
+        </div>
+      </div>
+
+      <p class="detalle-subtitulo">Pago</p>
+      <div class="confirmar-pago">
+        <div class="confirmar-pago-fila" *ngFor="let p of venta.pagos">
+          <span>{{ p.metodo }} <span *ngIf="p.numero_operacion">· {{ p.numero_operacion }}</span></span>
+          <strong>S/{{ p.monto.toFixed(2) }}</strong>
+        </div>
+        <div class="confirmar-pago-fila" *ngIf="venta.pagos.length > 1">
+          <span>Total pagado</span>
+          <strong>S/{{ totalPagos(venta).toFixed(2) }}</strong>
+        </div>
+      </div>
+
+      <div class="resumen-total detalle-total">
+        <span>Total de la venta</span>
+        <span>S/{{ venta.total.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: eliminar venta ═══════════════ -->
+<div class="modal-overlay" *ngIf="ventaAEliminar() as venta" (click)="cerrarEliminar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Eliminar venta" (cerrar)="cerrarEliminar()"></app-modal-brand-header>
+
+    <div class="modal-body">
+      <p class="pregunta-confirmacion">
+        ¿Seguro que quieres eliminar la venta del {{ venta.creado_en | date: 'dd/MM/yyyy HH:mm' }} por S/{{ venta.total.toFixed(2) }}?
+      </p>
+
+      <div class="form-row">
+        <label>Motivo <span class="obligatorio">*</span></label>
+        <textarea
+          rows="3"
+          placeholder="Ej. Venta registrada por error, producto devuelto, etc."
+          [ngModel]="motivoEliminar"
+          (ngModelChange)="motivoEliminar = $event"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <label>¿Qué hacemos con el stock de los productos vendidos?</label>
+        <div class="restaurar-stock-opciones">
+          <label class="restaurar-stock-opcion">
+            <input type="radio" name="restaurarStock" [value]="true" [ngModel]="restaurarStock" (ngModelChange)="restaurarStock = $event" />
+            Devolver al inventario (lo más común)
+          </label>
+          <label class="restaurar-stock-opcion">
+            <input type="radio" name="restaurarStock" [value]="false" [ngModel]="restaurarStock" (ngModelChange)="restaurarStock = $event" />
+            No devolver — la mercadería ya no existe o se dañó
+          </label>
+        </div>
+      </div>
+
+      <p class="error-text" *ngIf="errorEliminar()">{{ errorEliminar() }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" [disabled]="eliminando()" (click)="cerrarEliminar()">Cancelar</button>
+      <button class="btn-primary btn-peligro" [disabled]="eliminando()" (click)="confirmarEliminar()">
+        <span class="spinner spinner-sm spinner-inline" *ngIf="eliminando()"></span>
+        Eliminar venta
+      </button>
+    </div>
+  </div>
+</div>

@@ -13,6 +13,7 @@ import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
 import { VentasComponent } from './pages/empresa/ventas/ventas';
+import { HistorialVentasComponent } from './pages/empresa/ventas/historial-ventas/historial-ventas';
 import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
 import { IntegracionesComponent } from './pages/empresa/integraciones/integraciones';
@@ -98,6 +99,12 @@ export const routes: Routes = [
         path: 'ventas',
         component: VentasComponent,
         data: { title: 'Ventas' },
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
+      },
+      {
+        path: 'ventas/historial',
+        component: HistorialVentasComponent,
+        data: { title: 'Historial de ventas' },
         canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
       },
       {
