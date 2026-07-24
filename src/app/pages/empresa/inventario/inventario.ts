@@ -229,8 +229,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   private cargarPaginaProductos(reiniciar: boolean): void {
     if (reiniciar) {
       this.offset = 0;
-      this.productos.set([]);
       this.hayMasProductos.set(true);
+      // OJO: no se vacía `productos` acá — se reemplaza recién cuando llega
+      // la respuesta (ver next), para que la grilla no se quede en blanco
+      // ("resetee") mientras espera la página 1 (ej. justo después de
+      // guardar un producto).
     }
     if (!this.hayMasProductos() || this.cargandoPagina()) return;
 
@@ -244,7 +247,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.inventarioService.listarProductos(filtros, this.offset).subscribe({
       next: (resp: ProductosPaginados) => {
-        this.productos.update((lista) => [...lista, ...resp.items]);
+        this.productos.update((lista) => (reiniciar ? resp.items : [...lista, ...resp.items]));
         this.hayMasProductos.set(resp.hay_mas);
         this.offset = resp.siguiente_offset;
         this.cargandoPagina.set(false);

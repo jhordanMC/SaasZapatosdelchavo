@@ -83,7 +83,11 @@
   background: #024b40;
   color: white;
   cursor: pointer;
+  transition: transform 0.12s, filter 0.15s;
 }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-primary:active:not(:disabled) { transform: scale(0.96); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-secondary {
   display: inline-flex;
@@ -638,13 +642,6 @@
 }
 
 /* Botones del modal — mismos colores que profile-btn-primary/secondary del topbar */
-.modal-card .btn-primary {
-  background: linear-gradient(135deg, #64D59C 0%, #3db87a 100%);
-}
-.modal-card .btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 /* Marca VILCAS arriba del modal, mismo formato que el modal de perfil/topbar */
 .modal-brand-top {
   display: flex;
