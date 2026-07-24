@@ -11,6 +11,10 @@ export interface SesionUsuario {
   correo: string;
   telefono: string | null;
   dni: string | null;
+  // Ruta relativa devuelta por el backend (/uploads/usuarios/...), null si
+  // el usuario no subió foto todavía. El prefijo de apiUrl se arma recién
+  // al mostrarla (ver TopbarComponent.avatarSrc), igual que en Inventario/Ventas.
+  avatarUrl: string | null;
   rol: RolUsuario;
   empresaId: string | null;
   nombreEmpresa: string;
@@ -34,6 +38,7 @@ interface MiPerfilResponse {
   email: string;
   telefono: string | null;
   dni: string | null;
+  avatar_url: string | null;
   estado: string;
   roles: string[];
 }
@@ -101,6 +106,7 @@ export class AuthService {
           correo: perfil.email,
           telefono: perfil.telefono,
           dni: perfil.dni,
+          avatarUrl: perfil.avatar_url,
           rol: mapearRol(perfil.roles),
           empresaId: perfil.id_empresa,
           nombreEmpresa: perfil.nombre_empresa,
@@ -178,6 +184,31 @@ export class AuthService {
     return this.http.post<{ mensaje: string }>(
       `${this.apiUrl}/iam/auth/confirmar-cambio-password`,
       { codigo },
+    );
+  }
+
+  /** Sube y guarda de una el nuevo avatar; actualiza la sesión en memoria con la URL real. */
+  subirAvatar(archivo: File): Observable<SesionUsuario> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<MiPerfilResponse>(`${this.apiUrl}/iam/mi-perfil/avatar`, formData).pipe(
+      map((perfil) => {
+        const actual = this.sesion();
+        const usuario: SesionUsuario = {
+          idUsuario: perfil.id_usuario,
+          nombre: `${perfil.nombres} ${perfil.apellidos}`.trim(),
+          correo: perfil.email,
+          telefono: perfil.telefono,
+          dni: perfil.dni,
+          avatarUrl: perfil.avatar_url,
+          rol: actual?.rol ?? mapearRol(perfil.roles),
+          empresaId: perfil.id_empresa,
+          nombreEmpresa: perfil.nombre_empresa,
+          vistasDeshabilitadas: actual?.vistasDeshabilitadas ?? [],
+        };
+        this.sesion.set(usuario);
+        return usuario;
+      }),
     );
   }
 

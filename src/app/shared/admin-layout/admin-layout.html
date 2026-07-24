@@ -16,6 +16,7 @@
     [title]="pageTitleService.title()"
     company="ALBA Corporation"
     [avatarLabel]="iniciales()"
+    [avatarUrl]="usuario()?.avatarUrl ?? null"
     [userName]="usuario()?.nombre ?? 'Usuario'"
     userRole="Administrador"
     [userId]="usuario()?.idUsuario ?? '—'"

@@ -26,6 +26,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
+import { environment } from '../../../../environments/environment';
 import { SexoProducto } from '../../../services/inventario';
 import {
   FiltrosPOS,
@@ -322,6 +323,11 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     return total;
+  }
+
+  /** Arma la URL absoluta de una foto de producto (imagen_url guarda solo la ruta relativa). */
+  imagenSrc(imagenUrl: string | null): string | null {
+    return imagenUrl ? `${environment.apiUrl}${imagenUrl}` : null;
   }
 
   // ── Modal selector de variante ───────────────────────────────────────────

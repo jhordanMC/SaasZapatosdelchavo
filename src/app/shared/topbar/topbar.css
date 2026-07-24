@@ -300,6 +300,7 @@
 }
 
 .profile-avatar-lg {
+  position: relative;
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -309,6 +310,57 @@
   justify-content: center;
   background: rgba(2, 75, 64, 0.08);
   margin-bottom: 14px;
+}
+
+.profile-avatar-editable {
+  cursor: pointer;
+}
+
+.profile-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.profile-avatar-overlay-hover {
+  background: rgba(2, 20, 16, 0.45);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.profile-avatar-editable:hover .profile-avatar-overlay-hover {
+  opacity: 1;
+}
+
+.profile-avatar-overlay-activo {
+  background: rgba(2, 20, 16, 0.45);
+}
+
+.profile-avatar-error {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #b23a3a;
+  text-align: center;
+  max-width: 220px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.spinner-sm { width: 14px; height: 14px; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .profile-avatar-lg img {

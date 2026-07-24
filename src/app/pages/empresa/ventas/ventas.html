@@ -63,7 +63,8 @@
     <div class="ventas-grid">
       <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productos()" (click)="abrirSelectorVariante(p, $event)">
         <div class="venta-foto">
-          <span class="foto-placeholder">Sin foto</span>
+          <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" />
+          <span class="foto-placeholder" *ngIf="!p.imagen_url">Sin foto</span>
         </div>
         <div class="added-badge" *ngIf="p.id_producto === justAddedProductoId">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -203,7 +204,8 @@
     <div class="modal-body">
       <!-- Foto del producto -->
       <div class="producto-modal-foto">
-        <span class="foto-placeholder">Sin foto</span>
+        <img *ngIf="showVariantePicker.imagen_url" [src]="imagenSrc(showVariantePicker.imagen_url)" alt="" />
+        <span class="foto-placeholder" *ngIf="!showVariantePicker.imagen_url">Sin foto</span>
       </div>
 
       <!-- Tallas disponibles (Chips) -->

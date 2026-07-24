@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -31,7 +31,10 @@ export class TopbarComponent implements OnInit {
   @Input() title = 'Dashboard';
   @Input() company = 'ALBA Corporation';
   @Input() avatarLabel = 'A';
-  @Input() avatarSrc = '/LogoAlba.png';
+  // Ruta relativa (/uploads/usuarios/...) o null si no tiene foto todavía
+  // — el prefijo de apiUrl se arma acá mismo (ver avatarSrc()), no en el
+  // layout que lo pasa.
+  @Input() avatarUrl: string | null = null;
   @Input() userName = 'Admin ALBA';
   @Input() userRole = 'Administrador';
   @Input() userId = 'EMP-0231';
@@ -45,6 +48,36 @@ export class TopbarComponent implements OnInit {
   showAvatarFallback = false;
   showProfileModal = false;
   confirmandoCierre = false;
+
+  // ── Foto de perfil (avatar) ────────────────────────────────────────
+  subiendoAvatar = signal(false);
+  errorAvatar = signal<string | null>(null);
+
+  /** URL absoluta lista para <img> — avatarUrl solo guarda la ruta relativa. */
+  avatarSrc(): string | null {
+    return this.avatarUrl ? `${this.apiUrl}${this.avatarUrl}` : null;
+  }
+
+  onAvatarSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = ''; // permite re-seleccionar el mismo archivo después de un error
+    if (!archivo) return;
+
+    this.subiendoAvatar.set(true);
+    this.errorAvatar.set(null);
+    this.authService.subirAvatar(archivo).subscribe({
+      next: (usuario) => {
+        this.avatarUrl = usuario.avatarUrl;
+        this.showAvatarFallback = false;
+        this.subiendoAvatar.set(false);
+      },
+      error: (err) => {
+        this.subiendoAvatar.set(false);
+        this.errorAvatar.set(err?.error?.detail ?? 'No se pudo subir la foto. Intenta de nuevo.');
+      },
+    });
+  }
 
   // ── Menú de perfil: 4 secciones dentro del mismo toolbar ──────────
   readonly VERSION_APP = 'V1.0';

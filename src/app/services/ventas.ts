@@ -50,6 +50,7 @@ export interface ProductoPOSRead {
   sexo: SexoProducto | null;
   precio_venta: number;
   stock_total: number;
+  imagen_url: string | null;
   variantes: VariantePOSRead[];
 }
 

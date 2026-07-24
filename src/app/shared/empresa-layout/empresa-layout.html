@@ -16,6 +16,7 @@
     [title]="pageTitleService.title()"
     [company]="usuario()?.nombreEmpresa || 'Mi Empresa'"
     [avatarLabel]="iniciales()"
+    [avatarUrl]="usuario()?.avatarUrl ?? null"
     [userName]="usuario()?.nombre ?? 'Usuario'"
     [userRole]="rolEtiqueta()"
     [userId]="usuario()?.idUsuario ?? '—'"
