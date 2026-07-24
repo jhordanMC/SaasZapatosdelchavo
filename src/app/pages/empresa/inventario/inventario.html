@@ -119,15 +119,13 @@
 
     <div class="modal-body">
       <div class="foto-y-basicos">
-        <!-- Foto (opcional) -->
+        <!-- Foto (opcional) — se sube al backend recién al guardar el producto -->
         <div class="foto-upload-wrap">
           <label class="foto-upload foto-upload-compacta">
             <img *ngIf="form.fotoUrl" [src]="imagenSrc(form.fotoUrl)" alt="Vista previa" />
-            <span *ngIf="!form.fotoUrl && !subiendoFoto()">Tomar / subir foto</span>
-            <span class="spinner" *ngIf="subiendoFoto()"></span>
-            <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" [disabled]="subiendoFoto()" hidden />
+            <span *ngIf="!form.fotoUrl">Tomar / subir foto</span>
+            <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" hidden />
           </label>
-          <span class="foto-upload-error" *ngIf="errorFoto()">{{ errorFoto() }}</span>
         </div>
 
         <div class="basicos-columna">

@@ -116,9 +116,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   error = signal<string | null>(null);
   errorModal = signal<string | null>(null);
 
-  // ── Subida de foto del producto (upload real al backend, no solo preview) ──
-  subiendoFoto = signal(false);
-  errorFoto = signal<string | null>(null);
+  // ── Foto del producto: se sube al backend recién en guardar(), no al
+  //    elegirla — form.fotoUrl es un preview base64 hasta ese momento. ──
+  private archivoFotoPendiente: File | null = null;
 
   // ── Confirmación al eliminar un producto (reemplaza el confirm() nativo) ──
   productoAEliminar: ProductoListItem | null = null;
@@ -383,7 +383,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editandoId = null;
     this.form = this.formVacio();
     this.errorModal.set(null);
-    this.errorFoto.set(null);
+    this.archivoFotoPendiente = null;
     this.mostrarInfoMargen = false;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
@@ -398,7 +398,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.editandoId = detalle.id_producto;
         this.form = this.formDesdeDetalle(detalle, true);
         this.errorModal.set(null);
-        this.errorFoto.set(null);
+        this.archivoFotoPendiente = null;
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
@@ -422,7 +422,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.form = this.formDesdeDetalle(detalle, false);
         this.form.nombre = `${detalle.nombre} (copia)`;
         this.errorModal.set(null);
-        this.errorFoto.set(null);
+        this.archivoFotoPendiente = null;
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
@@ -467,6 +467,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mostrarConfirmarSalir = false;
     this.mostrarInfoMargen = false;
     this.errorModal.set(null);
+    this.archivoFotoPendiente = null;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
   }
@@ -621,34 +622,21 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Vista previa instantánea en base64 mientras se sube de verdad al
-   * backend — al terminar, form.fotoUrl pasa a ser la URL relativa real
-   * (/uploads/inventario/...) que sí se guarda en el producto. Si la subida
-   * falla, se descarta la preview (el producto no puede quedar apuntando
-   * a una foto que nunca llegó al servidor).
+   * Solo vista previa local (base64) acá — la subida real al backend queda
+   * pendiente hasta guardar() (ver archivoFotoPendiente). Si se sube de
+   * una al elegir la foto, cancelar el modal o cambiar de foto de nuevo
+   * antes de guardar deja archivos huérfanos en el disco del VPS, sin que
+   * ningún producto los termine referenciando.
    */
   onFotoSeleccionada(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
+    this.archivoFotoPendiente = file;
     const reader = new FileReader();
     reader.onload = () => (this.form.fotoUrl = reader.result as string);
     reader.readAsDataURL(file);
-
-    this.subiendoFoto.set(true);
-    this.errorFoto.set(null);
-    this.inventarioService.subirImagenProducto(file).subscribe({
-      next: (resp) => {
-        this.form.fotoUrl = resp.url;
-        this.subiendoFoto.set(false);
-      },
-      error: (err) => {
-        this.form.fotoUrl = null;
-        this.subiendoFoto.set(false);
-        this.errorFoto.set(err?.error?.detail ?? 'No se pudo subir la foto. Intenta de nuevo.');
-      },
-    });
   }
 
   /** Arma la URL absoluta de una foto de producto (imagen_url guarda solo la ruta relativa). */
@@ -664,11 +652,34 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       this.errorModal.set('El nombre del producto es obligatorio.');
       return;
     }
-    if (this.subiendoFoto()) {
-      this.errorModal.set('Espera a que termine de subirse la foto.');
+
+    this.guardando.set(true);
+    this.errorModal.set(null);
+
+    // La foto recién se sube al backend acá (no al elegirla) — así, si el
+    // usuario cancela el modal o cambia de foto varias veces antes de
+    // guardar, nunca queda un archivo huérfano en el disco del VPS.
+    if (this.archivoFotoPendiente) {
+      const archivo = this.archivoFotoPendiente;
+      this.inventarioService.subirImagenProducto(archivo).subscribe({
+        next: (resp) => {
+          this.archivoFotoPendiente = null;
+          this.form.fotoUrl = resp.url;
+          this.guardarProductoConDatos();
+        },
+        error: (err) => {
+          this.guardando.set(false);
+          this.errorModal.set(err?.error?.detail ?? 'No se pudo subir la foto. Intenta de nuevo.');
+        },
+      });
       return;
     }
 
+    this.guardarProductoConDatos();
+  }
+
+  /** Segunda mitad de guardar(): ya con form.fotoUrl resuelto a una URL real (o null). */
+  private guardarProductoConDatos(): void {
     // Construye las variantes filtrando filas incompletas
     const variantes: VarianteStockInput[] = this.form.variantes
       .filter((v) => v.talla.trim() && v.ubicacion)
@@ -684,9 +695,6 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const costoCompra = parseFloat(this.form.costoCompra) || 0;
     const precioVenta = parseFloat(this.form.precioVenta) || 0;
-
-    this.guardando.set(true);
-    this.errorModal.set(null);
 
     if (this.editandoId) {
       // Actualización
