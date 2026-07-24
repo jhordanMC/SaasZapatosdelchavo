@@ -119,9 +119,9 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   productoAEliminar: ProductoListItem | null = null;
   eliminandoProducto = signal(false);
 
-  // ── Id del producto cuyo detalle se está trayendo para Editar/Duplicar
-  //    (para mostrar spinner solo en ese botón mientras responde el backend) ──
-  cargandoDetalleId = signal<string | null>(null);
+  // ── Producto + acción cuyo detalle se está trayendo (Editar o Duplicar),
+  //    para mostrar el spinner solo en el botón que se clickeó, no en el otro ──
+  cargandoDetalle = signal<{ id: string; accion: 'editar' | 'duplicar' } | null>(null);
 
   // ── Paginación del catálogo (scroll infinito) ────────────────────────────
   private offset = 0;
@@ -383,7 +383,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   abrirModalEditar(p: ProductoListItem): void {
     // Carga el detalle completo (con variantes) para poblar el formulario
-    this.cargandoDetalleId.set(p.id_producto);
+    this.cargandoDetalle.set({ id: p.id_producto, accion: 'editar' });
     this.inventarioService.obtenerProducto(p.id_producto).subscribe({
       next: (detalle: ProductoRead) => {
         this.editandoId = detalle.id_producto;
@@ -392,11 +392,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
-        this.cargandoDetalleId.set(null);
+        this.cargandoDetalle.set(null);
       },
       error: () => {
         this.error.set('No se pudo cargar el detalle del producto.');
-        this.cargandoDetalleId.set(null);
+        this.cargandoDetalle.set(null);
       },
     });
   }
@@ -405,7 +405,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
    *  para no tener que digitar todo de nuevo cuando es muy parecido (mismo modelo,
    *  otro color, etc). Al guardar se crea un producto aparte, no se sobreescribe el original. */
   duplicarProducto(p: ProductoListItem): void {
-    this.cargandoDetalleId.set(p.id_producto);
+    this.cargandoDetalle.set({ id: p.id_producto, accion: 'duplicar' });
     this.inventarioService.obtenerProducto(p.id_producto).subscribe({
       next: (detalle: ProductoRead) => {
         this.editandoId = null;
@@ -415,11 +415,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
         this.showModal = true;
-        this.cargandoDetalleId.set(null);
+        this.cargandoDetalle.set(null);
       },
       error: () => {
         this.error.set('No se pudo cargar el detalle del producto para duplicarlo.');
-        this.cargandoDetalleId.set(null);
+        this.cargandoDetalle.set(null);
       },
     });
   }

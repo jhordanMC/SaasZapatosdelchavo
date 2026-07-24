@@ -69,15 +69,15 @@
           {{ stockTotal(p) }} unidades en stock
         </div>
         <div class="producto-acciones">
-          <button class="btn-secondary" [disabled]="cargandoDetalleId() === p.id_producto" (click)="abrirModalEditar(p)">
-            <span class="spinner spinner-sm" *ngIf="cargandoDetalleId() === p.id_producto"></span>
-            <span *ngIf="cargandoDetalleId() !== p.id_producto">Editar</span>
+          <button class="btn-secondary" [disabled]="cargandoDetalle()?.id === p.id_producto" (click)="abrirModalEditar(p)">
+            <span class="spinner spinner-sm" *ngIf="cargandoDetalle()?.id === p.id_producto && cargandoDetalle()?.accion === 'editar'"></span>
+            <span *ngIf="!(cargandoDetalle()?.id === p.id_producto && cargandoDetalle()?.accion === 'editar')">Editar</span>
           </button>
-          <button class="btn-secondary" [disabled]="cargandoDetalleId() === p.id_producto" (click)="duplicarProducto(p)" title="Crear un producto nuevo a partir de este">
-            <span class="spinner spinner-sm" *ngIf="cargandoDetalleId() === p.id_producto"></span>
-            <span *ngIf="cargandoDetalleId() !== p.id_producto">Duplicar</span>
+          <button class="btn-secondary" [disabled]="cargandoDetalle()?.id === p.id_producto" (click)="duplicarProducto(p)" title="Crear un producto nuevo a partir de este">
+            <span class="spinner spinner-sm" *ngIf="cargandoDetalle()?.id === p.id_producto && cargandoDetalle()?.accion === 'duplicar'"></span>
+            <span *ngIf="!(cargandoDetalle()?.id === p.id_producto && cargandoDetalle()?.accion === 'duplicar')">Duplicar</span>
           </button>
-          <button class="btn-danger" [disabled]="cargandoDetalleId() === p.id_producto" (click)="eliminar(p)">Eliminar</button>
+          <button class="btn-danger" [disabled]="cargandoDetalle()?.id === p.id_producto" (click)="eliminar(p)">Eliminar</button>
         </div>
       </div>
     </div>
