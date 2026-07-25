@@ -1,9 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService, FilaRotacion } from '../../../services/dashboard';
+import { AvancePorLocal, DashboardService, FilaRotacion, ProductoRanking } from '../../../services/dashboard';
 import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero } from '../../../services/finanzas';
-import { InventarioService, ProductoListItem } from '../../../services/inventario';
+import { InventarioService, LocalRead, ProductoListItem } from '../../../services/inventario';
 import { TPipe } from '../../../core/t.pipe';
 
 /** Período del panel "Tu avance" — 'personalizado' deja que el usuario elija el rango a mano. */
@@ -19,6 +19,15 @@ interface FilaModelo {
   nombre: string;
   stock: number;
   valorCosto: number;
+}
+
+/** Fila del "Top categorías" — se usa como el sustituto más cercano a "marca",
+ * ya que el catálogo no tiene un campo de marca propiamente (solo categoría
+ * y, a nivel de variante, modelo). */
+interface FilaCategoria {
+  nombre: string;
+  unidades: number;
+  ingresos: number;
 }
 
 /** Tamaño de página para "Inventario por modelo" — un dashboard no necesita scroll infinito, alcanza con un límite generoso. */
@@ -40,11 +49,14 @@ export class EmpresaDashboardComponent implements OnInit {
 
   inventarioPorModelo: FilaModelo[] = [];
 
+  /** id_producto → nombre_categoria, para poder agrupar el ranking de ventas por categoría (top "marcas"). */
+  private categoriaPorProducto = new Map<string, string>();
+
   ngOnInit(): void {
     this.dashboardService.recargarTodo();
     this.finanzasService.recargarTodo();
     this.finanzasService.cargarIngresosPorSemana(6);
-    this.cambiarPeriodoAvance('dia');
+
     this.inventarioService.listarProductos({}, 0, LIMITE_INVENTARIO_POR_MODELO).subscribe((pagina) => {
       this.inventarioPorModelo = pagina.items
         .map((p: ProductoListItem) => ({
@@ -53,7 +65,24 @@ export class EmpresaDashboardComponent implements OnInit {
           valorCosto: p.stock_total * p.costo_compra,
         }))
         .sort((a, b) => b.stock - a.stock);
+
+      this.categoriaPorProducto.clear();
+      for (const p of pagina.items) {
+        this.categoriaPorProducto.set(p.id_producto, p.nombre_categoria ?? 'Sin categoría');
+      }
     });
+
+    this.inventarioService.listarLocales().subscribe((locales) => {
+      this.locales.set(locales.filter((l) => l.esta_activo));
+      const r = this.avanceResumen();
+      if (r) this.cargarAvancePorLocal(r.ingresos_periodo, r.gasto_operativo_periodo);
+    });
+
+    this.dashboardService.obtenerRankingProductosAmpliado().subscribe((lista) => {
+      this.rankingAmpliado.set(lista);
+    });
+
+    this.cambiarPeriodoAvance('dia');
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -127,12 +156,80 @@ export class EmpresaDashboardComponent implements OnInit {
       next: (r) => {
         this.avanceResumen.set(r);
         this.avanceCargando.set(false);
+        this.cargarAvancePorLocal(r.ingresos_periodo, r.gasto_operativo_periodo);
       },
       error: () => {
         this.avanceError.set('No se pudo cargar el avance de este período.');
         this.avanceCargando.set(false);
       },
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 0-bis) Avance por local/almacén
+  // ═══════════════════════════════════════════════════════════
+  // NOTA: sin endpoint todavía — ver el comentario de `AvancePorLocal` y
+  // `cargarAvancePorLocal` en services/dashboard.ts. Los montos que se ven
+  // acá son de EJEMPLO (repartidos a partir del total real del período),
+  // no ventas reales por local.
+
+  locales = signal<LocalRead[]>([]);
+  avancePorLocal = signal<AvancePorLocal[]>([]);
+  avancePorLocalCargando = signal(false);
+
+  private cargarAvancePorLocal(ingresosTotalPeriodo: number, gastoTotalPeriodo: number): void {
+    const locales = this.locales();
+    if (locales.length === 0) {
+      this.avancePorLocal.set([]);
+      return;
+    }
+    this.avancePorLocalCargando.set(true);
+    this.dashboardService
+      .cargarAvancePorLocal(
+        this.avanceDesde,
+        this.avanceHasta,
+        locales.map((l) => ({ id_local: l.id_local, nombre: l.nombre })),
+        ingresosTotalPeriodo,
+        gastoTotalPeriodo
+      )
+      .subscribe((lista) => {
+        this.avancePorLocal.set(lista);
+        this.avancePorLocalCargando.set(false);
+      });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 0-ter) Producto más / menos vendido, top 5 y top de categorías
+  // ═══════════════════════════════════════════════════════════
+  // "Top de marcas": el catálogo no tiene un campo de marca — se usa la
+  // categoría del producto como el agrupador más cercano disponible.
+
+  rankingAmpliado = signal<ProductoRanking[]>([]);
+
+  get top5Productos(): ProductoRanking[] {
+    return this.rankingAmpliado().slice(0, 5);
+  }
+
+  /** Menos vendidos, pero solo entre los que sí tuvieron alguna venta (0 ventas ya se muestra en "Sin ventas"). */
+  get bottom5Productos(): ProductoRanking[] {
+    return [...this.rankingAmpliado()]
+      .filter((p) => p.unidades > 0)
+      .sort((a, b) => a.unidades - b.unidades)
+      .slice(0, 5);
+  }
+
+  get topCategorias(): FilaCategoria[] {
+    const mapa = new Map<string, FilaCategoria>();
+    for (const p of this.rankingAmpliado()) {
+      const nombreCategoria = this.categoriaPorProducto.get(p.id_producto) ?? 'Sin categoría';
+      const fila = mapa.get(nombreCategoria) ?? { nombre: nombreCategoria, unidades: 0, ingresos: 0 };
+      fila.unidades += p.unidades;
+      fila.ingresos += p.ingresos;
+      mapa.set(nombreCategoria, fila);
+    }
+    return Array.from(mapa.values())
+      .sort((a, b) => b.ingresos - a.ingresos)
+      .slice(0, 5);
   }
 
   // ═══════════════════════════════════════════════════════════

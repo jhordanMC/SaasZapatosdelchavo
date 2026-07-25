@@ -9,6 +9,7 @@
  */
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export type EstadoRotacion = 'saludable' | 'lenta' | 'riesgo' | 'sin-movimiento';
@@ -67,6 +68,30 @@ export interface VentasPorDiaSemana {
 export interface PuntoMes {
   etiqueta: string;
   ingresos: number;
+}
+
+/**
+ * Avance de ventas/ganancia/gastos por local, para un rango de fechas.
+ *
+ * TODAVÍA NO HAY ENDPOINT EN EL BACKEND para esto — ver `cargarAvancePorLocal`
+ * más abajo, que por ahora arma datos de ejemplo. Contrato propuesto para
+ * cuando se implemente:
+ *
+ *   GET /dashboard/avance-por-local?desde=YYYY-MM-DD&hasta=YYYY-MM-DD
+ *   → 200 OK: AvancePorLocal[]  (uno por cada local con al menos una venta
+ *     en el rango, o todos los locales activos con 0 si no vendieron)
+ *
+ * `ingresos`, `gasto_operativo` y `ganancia_neta` deberían calcularse igual
+ * que en ResumenFinanciero (mismo criterio de costo real de ventas), solo
+ * que agrupado por id_local en vez de para toda la empresa.
+ */
+export interface AvancePorLocal {
+  id_local: string;
+  nombre_local: string;
+  ingresos: number;
+  cantidad_ventas: number;
+  gasto_operativo: number;
+  ganancia_neta: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -136,5 +161,60 @@ export class DashboardService {
     this.http
       .get<PuntoMes[]>(`${this.base}/ingresos-por-mes`, { params })
       .subscribe((lista) => this.ingresosPorMes.set(lista));
+  }
+
+  /**
+   * Ranking completo (o casi) de productos, para poder calcular en el
+   * frontend el "menos vendido (con ventas)" y el top de categorías —
+   * cosas que `cargarRankingProductos` (pensado para mostrar solo el
+   * top 10) no cubre. Mismo endpoint, solo que con un límite más alto.
+   */
+  obtenerRankingProductosAmpliado(limit = 300): Observable<ProductoRanking[]> {
+    const params = new HttpParams().set('limit', limit);
+    return this.http.get<ProductoRanking[]>(`${this.base}/ranking-productos`, { params });
+  }
+
+  /**
+   * Avance por local — ver el comentario de `AvancePorLocal` más arriba:
+   * todavía no hay endpoint, así que este método arma datos de EJEMPLO a
+   * partir de los locales reales de la empresa (nombres reales, montos
+   * inventados repartidos de forma pareja). El componente que lo llama
+   * marca visualmente que son datos de ejemplo.
+   *
+   * Cuando exista el endpoint, reemplazar el cuerpo de este método por:
+   *   const params = new HttpParams().set('desde', desde).set('hasta', hasta);
+   *   return this.http.get<AvancePorLocal[]>(`${this.base}/avance-por-local`, { params });
+   * (no hay que tocar nada más: el componente ya consume este método tal cual).
+   */
+  cargarAvancePorLocal(
+    desde: string,
+    hasta: string,
+    locales: { id_local: string; nombre: string }[],
+    ingresosTotalPeriodo: number,
+    gastoTotalPeriodo: number
+  ): Observable<AvancePorLocal[]> {
+    if (locales.length === 0) return of([]);
+
+    // Reparto de ejemplo: no es real, solo para poder ver el diseño del
+    // panel mientras no exista el endpoint. Pesos fijos decrecientes para
+    // que no todos los locales muestren el mismo número.
+    const pesos = locales.map((_, i) => 1 / (i + 1));
+    const sumaPesos = pesos.reduce((a, b) => a + b, 0);
+
+    const datosEjemplo: AvancePorLocal[] = locales.map((local, i) => {
+      const proporcion = sumaPesos > 0 ? pesos[i] / sumaPesos : 1 / locales.length;
+      const ingresos = Math.round(ingresosTotalPeriodo * proporcion * 100) / 100;
+      const gasto = Math.round(gastoTotalPeriodo * proporcion * 100) / 100;
+      return {
+        id_local: local.id_local,
+        nombre_local: local.nombre,
+        ingresos,
+        cantidad_ventas: Math.round(proporcion * 40),
+        gasto_operativo: gasto,
+        ganancia_neta: Math.round((ingresos - gasto) * 100) / 100,
+      };
+    });
+
+    return of(datosEjemplo);
   }
 }
