@@ -1,5 +1,64 @@
 <div class="content" *ngIf="resumen as r">
 
+  <!-- ═══════════════ 0. TU AVANCE (filtrable: día / semana / mes / personalizado) ═══════════════ -->
+  <div class="panel panel-avance">
+    <div class="panel-head avance-head">
+      <div>
+        <h3>Tu avance</h3>
+        <p class="panel-sub">Ventas, ganancia y gastos del período que elijas.</p>
+      </div>
+
+      <div class="avance-filtros">
+        <div class="periodo-toggle">
+          <button [class.active]="periodoAvance === 'dia'" (click)="cambiarPeriodoAvance('dia')">Hoy</button>
+          <button [class.active]="periodoAvance === 'semana'" (click)="cambiarPeriodoAvance('semana')">Semana</button>
+          <button [class.active]="periodoAvance === 'mes'" (click)="cambiarPeriodoAvance('mes')">Mes</button>
+          <button [class.active]="periodoAvance === 'personalizado'" (click)="cambiarPeriodoAvance('personalizado')">Personalizado</button>
+        </div>
+
+        <div class="rango-personalizado" *ngIf="periodoAvance === 'personalizado'">
+          <input type="date" [ngModel]="avanceDesde" (ngModelChange)="avanceDesde = $event; onFechaAvancePersonalizadaChange()" [max]="avanceHasta" />
+          <span>—</span>
+          <input type="date" [ngModel]="avanceHasta" (ngModelChange)="avanceHasta = $event; onFechaAvancePersonalizadaChange()" [min]="avanceDesde" />
+        </div>
+      </div>
+    </div>
+
+    <div class="estado-carga-avance" *ngIf="avanceCargando()">
+      <span class="spinner"></span> Calculando…
+    </div>
+
+    <p class="error-text" *ngIf="avanceError()">{{ avanceError() }}</p>
+
+    <ng-container *ngIf="avanceResumen() as a">
+      <div class="avance-kpi-grid" *ngIf="!avanceCargando()">
+        <div class="avance-kpi">
+          <span class="avance-kpi-label">Ventas</span>
+          <span class="avance-kpi-valor">S/{{ a.ingresos_periodo.toFixed(2) }}</span>
+          <span class="avance-kpi-nota">{{ a.cantidad_ventas }} venta(s) · ticket S/{{ a.ticket_promedio.toFixed(2) }}</span>
+        </div>
+        <div class="avance-kpi" [class.avance-positivo]="a.ganancia_neta_periodo >= 0" [class.avance-negativo]="a.ganancia_neta_periodo < 0">
+          <span class="avance-kpi-label">Ganancia neta</span>
+          <span class="avance-kpi-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</span>
+          <span class="avance-kpi-nota">{{ a.margen_promedio_pct.toFixed(0) }}% de margen</span>
+        </div>
+        <div class="avance-kpi">
+          <span class="avance-kpi-label">Gastos operativos</span>
+          <span class="avance-kpi-valor">S/{{ a.gasto_operativo_periodo.toFixed(2) }}</span>
+          <span class="avance-kpi-nota">del período</span>
+        </div>
+        <div class="avance-kpi">
+          <span class="avance-kpi-label">Utilidad bruta</span>
+          <span class="avance-kpi-valor">S/{{ a.margen_bruto_periodo.toFixed(2) }}</span>
+          <span class="avance-kpi-nota">antes de gastos operativos</span>
+        </div>
+      </div>
+      <p class="avance-rango">Del {{ a.desde }} al {{ a.hasta }}</p>
+    </ng-container>
+
+    <p class="tabla-vacia" *ngIf="!avanceResumen() && !avanceCargando() && !avanceError()">Sin datos para este período.</p>
+  </div>
+
   <!-- ═══════════════ 1. RESUMEN EJECUTIVO ═══════════════ -->
   <div class="kpi-grid">
     <div class="kpi-card">

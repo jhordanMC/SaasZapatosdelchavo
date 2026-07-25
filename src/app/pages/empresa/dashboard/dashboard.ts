@@ -1,9 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DashboardService, FilaRotacion } from '../../../services/dashboard';
-import { FinanzasService, GastoRecurrenteRead } from '../../../services/finanzas';
+import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
 import { TPipe } from '../../../core/t.pipe';
+
+/** Período del panel "Tu avance" — 'personalizado' deja que el usuario elija el rango a mano. */
+type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'personalizado';
 
 interface FilaGasto {
   tipo: string;
@@ -23,7 +27,7 @@ const LIMITE_INVENTARIO_POR_MODELO = 100;
 @Component({
   selector: 'app-empresa-dashboard',
   standalone: true,
-  imports: [CommonModule, TPipe],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
@@ -40,6 +44,7 @@ export class EmpresaDashboardComponent implements OnInit {
     this.dashboardService.recargarTodo();
     this.finanzasService.recargarTodo();
     this.finanzasService.cargarIngresosPorSemana(6);
+    this.cambiarPeriodoAvance('dia');
     this.inventarioService.listarProductos({}, 0, LIMITE_INVENTARIO_POR_MODELO).subscribe((pagina) => {
       this.inventarioPorModelo = pagina.items
         .map((p: ProductoListItem) => ({
@@ -48,6 +53,85 @@ export class EmpresaDashboardComponent implements OnInit {
           valorCosto: p.stock_total * p.costo_compra,
         }))
         .sort((a, b) => b.stock - a.stock);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 0) Tu avance — ventas / ganancia / gastos, filtrable por período
+  // ═══════════════════════════════════════════════════════════
+  // Reutiliza FinanzasService.obtenerResumenPeriodo(desde, hasta), que ya
+  // existe para el reporte mensual — no toca el signal `resumen` global,
+  // así que este panel puede pedir cualquier rango sin pisar el resto del
+  // dashboard (que sigue mostrando el mes actual como siempre).
+
+  periodoAvance: PeriodoAvance = 'dia';
+  avanceDesde = this.hoyISO();
+  avanceHasta = this.hoyISO();
+  avanceResumen = signal<ResumenFinanciero | null>(null);
+  avanceCargando = signal(false);
+  avanceError = signal<string | null>(null);
+
+  private hoyISO(): string {
+    return this.formatearISO(new Date());
+  }
+
+  private formatearISO(fecha: Date): string {
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${fecha.getFullYear()}-${mes}-${dia}`;
+  }
+
+  private lunesDeEstaSemanaISO(): string {
+    const hoy = new Date();
+    const diaSemana = hoy.getDay(); // 0 = domingo, 1 = lunes, ...
+    const diasDesdeElLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - diasDesdeElLunes);
+    return this.formatearISO(lunes);
+  }
+
+  private primerDiaDeEsteMesISO(): string {
+    const hoy = new Date();
+    return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  }
+
+  cambiarPeriodoAvance(periodo: PeriodoAvance): void {
+    this.periodoAvance = periodo;
+    if (periodo === 'dia') {
+      this.avanceDesde = this.hoyISO();
+      this.avanceHasta = this.hoyISO();
+    } else if (periodo === 'semana') {
+      this.avanceDesde = this.lunesDeEstaSemanaISO();
+      this.avanceHasta = this.hoyISO();
+    } else if (periodo === 'mes') {
+      this.avanceDesde = this.primerDiaDeEsteMesISO();
+      this.avanceHasta = this.hoyISO();
+    }
+    // 'personalizado' deja las fechas tal como estén — el usuario las edita con los inputs.
+    if (periodo !== 'personalizado') {
+      this.cargarAvance();
+    }
+  }
+
+  /** Se llama al editar las fechas del filtro personalizado. */
+  onFechaAvancePersonalizadaChange(): void {
+    if (!this.avanceDesde || !this.avanceHasta) return;
+    if (this.avanceDesde > this.avanceHasta) return; // rango inválido: se espera a que el usuario lo corrija
+    this.cargarAvance();
+  }
+
+  private cargarAvance(): void {
+    this.avanceCargando.set(true);
+    this.avanceError.set(null);
+    this.finanzasService.obtenerResumenPeriodo(this.avanceDesde, this.avanceHasta).subscribe({
+      next: (r) => {
+        this.avanceResumen.set(r);
+        this.avanceCargando.set(false);
+      },
+      error: () => {
+        this.avanceError.set('No se pudo cargar el avance de este período.');
+        this.avanceCargando.set(false);
+      },
     });
   }
 
