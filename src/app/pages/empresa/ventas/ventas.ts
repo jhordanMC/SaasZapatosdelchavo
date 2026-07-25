@@ -23,6 +23,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
@@ -51,7 +52,7 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalBrandHeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ModalBrandHeaderComponent],
   templateUrl: './ventas.html',
   styleUrls: ['./ventas.css'],
 })
@@ -120,7 +121,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   get localesSoloCaja(): SedePOSRead[] {
     return this.sedes().filter(s => s.tipo === 'local');
   }
-  
+
   get nombreCajaSeleccionada(): string {
     if (!this.cajaSeleccionadaId) return '';
     const caja = this.localesSoloCaja.find(c => c.id_sede === this.cajaSeleccionadaId);
@@ -335,7 +336,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   abrirSelectorVariante(p: ProductoPOSRead, event?: MouseEvent): void {
     this.origenVueloEl = (event?.currentTarget as HTMLElement) ?? null;
     this.showVariantePicker = p;
-    
+
     const globalTalla = this.filtroTalla !== 'Todas' ? this.filtroTalla : null;
     const globalSede = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
 
@@ -349,10 +350,10 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     if (preUbi && !p.variantes.some(v => v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
         preUbi = null;
     }
-    
+
     if (preTalla && preUbi) {
        if (!p.variantes.some(v => v.talla === preTalla && v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
-           preTalla = null; 
+           preTalla = null;
        }
     }
 
@@ -365,7 +366,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorTalla = null;
     this.errorUbicacion = null;
     this.errorCantidad = null;
-    
+
     this.actualizarOpcionesModal();
   }
 
@@ -389,7 +390,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       this._opcionesUbicacionModal = [];
       return;
     }
-    
+
     let varsTalla = this.showVariantePicker.variantes;
     if (this.ubicacionModalActiva) {
         varsTalla = varsTalla.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
@@ -463,7 +464,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.showVariantePicker) return 0;
     const precio = Number(this.showVariantePicker.precio_venta) || 0;
     const descuento = Number(this.descuentoSeleccionado) || 0;
-    
+
     let totalDescuento = descuento;
     if (this.tipoDescuentoSeleccionado === 'unidad') {
        totalDescuento = descuento * this.cantidadSeleccionada;

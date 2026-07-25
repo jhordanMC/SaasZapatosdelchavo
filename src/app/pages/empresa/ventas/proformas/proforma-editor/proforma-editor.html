@@ -1,0 +1,210 @@
+<div class="page-toolbar">
+  <div>
+    <p class="page-title">{{ modoEdicion ? 'Editar proforma' : 'Nueva proforma' }}</p>
+    <p class="page-subtitle">Arma la cotización con los productos, el cliente y las condiciones de venta.</p>
+  </div>
+  <a class="btn-secondary" routerLink="/empresa/ventas/proformas">Volver al listado</a>
+</div>
+
+<!-- ═══════════════ Paso: formulario ═══════════════ -->
+<div class="editor-layout" *ngIf="paso === 'formulario'">
+
+  <!-- ── Columna izquierda: catálogo ─────────────────────────────────────── -->
+  <div class="columna-catalogo">
+    <div class="search-box">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Buscar producto para cotizar" [ngModel]="busquedaCatalogo" (ngModelChange)="onBusquedaCatalogoChange($event)" />
+    </div>
+
+    <div class="estado-carga" *ngIf="cargandoCatalogo()">
+      <span class="spinner"></span> Cargando catálogo…
+    </div>
+
+    <div class="catalogo-grid" *ngIf="!cargandoCatalogo()">
+      <div class="producto-card" *ngFor="let p of productos()" (click)="abrirAgregarProducto(p)">
+        <div class="producto-foto">
+          <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" />
+          <span class="foto-placeholder" *ngIf="!p.imagen_url">Sin foto</span>
+        </div>
+        <div class="producto-nombre">{{ p.nombre }}</div>
+        <div class="producto-precio">S/{{ p.precio_venta }}</div>
+      </div>
+
+      <p class="tabla-vacia" *ngIf="productos().length === 0">No se encontraron productos.</p>
+    </div>
+
+    <div class="cargando-mini" *ngIf="cargandoMasCatalogo()">
+      <span class="spinner spinner-sm"></span> Cargando más productos…
+    </div>
+    <button class="btn-secondary" *ngIf="hayMasCatalogo() && !cargandoMasCatalogo() && productos().length > 0" (click)="cargarMasCatalogo()">
+      Cargar más productos
+    </button>
+  </div>
+
+  <!-- ── Columna derecha: cliente + ítems + condiciones ──────────────────── -->
+  <div class="columna-formulario">
+
+    <div class="panel">
+      <p class="panel-titulo">Datos del cliente</p>
+      <div class="form-row">
+        <label>Nombre <span class="obligatorio">*</span></label>
+        <input type="text" placeholder="Nombre o razón social" [ngModel]="cliente.nombre" (ngModelChange)="cliente.nombre = $event" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Teléfono</label>
+          <input type="text" placeholder="999 999 999" [ngModel]="cliente.telefono" (ngModelChange)="cliente.telefono = $event" />
+        </div>
+        <div class="form-row">
+          <label>Correo</label>
+          <input type="email" placeholder="cliente@correo.com" [ngModel]="cliente.correo" (ngModelChange)="cliente.correo = $event" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Dirección</label>
+        <input type="text" placeholder="Opcional" [ngModel]="cliente.direccion" (ngModelChange)="cliente.direccion = $event" />
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-titulo">Productos cotizados</p>
+
+      <div class="items-lista" *ngIf="items().length > 0">
+        <div class="item-fila" *ngFor="let item of items()">
+          <div class="item-foto">
+            <img *ngIf="item.imagenUrl" [src]="imagenSrc(item.imagenUrl)" alt="" />
+            <span class="foto-placeholder-mini" *ngIf="!item.imagenUrl">Sin foto</span>
+          </div>
+          <div class="item-info">
+            <span class="item-nombre">{{ item.nombre }}</span>
+            <div class="item-controles">
+              <input type="text" class="input-mini input-talla" placeholder="Talla" [ngModel]="item.talla" (ngModelChange)="item.talla = $event" />
+              <input type="number" min="1" class="input-mini" title="Cantidad" [ngModel]="item.cantidad" (ngModelChange)="item.cantidad = $event" />
+              <input type="number" min="0" step="0.10" class="input-mini input-precio" title="Precio unitario" [ngModel]="item.precioUnitario" (ngModelChange)="item.precioUnitario = $event" />
+              <input type="number" min="0" step="0.10" class="input-mini" title="Descuento S/" [ngModel]="item.descuentoMonto" (ngModelChange)="item.descuentoMonto = $event" />
+            </div>
+          </div>
+          <div class="item-subtotal">S/{{ totalItem(item).toFixed(2) }}</div>
+          <button class="btn-icon-danger" title="Quitar" (click)="quitarItem(item.id)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="tabla-vacia" *ngIf="items().length === 0">Toca un producto del catálogo para agregarlo aquí.</p>
+
+      <div class="items-encabezados" *ngIf="items().length > 0">
+        <span class="items-encabezados-label">Talla · Cant. · P. unit. · Desc.</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-titulo">Condiciones de la cotización</p>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Fecha de emisión</label>
+          <input type="date" [ngModel]="fechaEmision" (ngModelChange)="fechaEmision = $event" />
+        </div>
+        <div class="form-row">
+          <label>Vigencia (días)</label>
+          <input type="number" min="1" [ngModel]="validoHastaDias" (ngModelChange)="validoHastaDias = $event" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Descuento global (S/)</label>
+        <input type="number" min="0" step="0.10" [ngModel]="descuentoGlobal" (ngModelChange)="descuentoGlobal = $event" />
+      </div>
+      <div class="form-row">
+        <label>Notas para el cliente</label>
+        <textarea rows="3" placeholder="Ej. Precios válidos por 7 días, no incluye envío." [ngModel]="notas" (ngModelChange)="notas = $event"></textarea>
+      </div>
+    </div>
+
+    <div class="resumen-panel">
+      <div class="resumen-fila">
+        <span>Subtotal</span>
+        <span>S/{{ subtotal.toFixed(2) }}</span>
+      </div>
+      <div class="resumen-fila" *ngIf="descuentoGlobal > 0">
+        <span>Descuento</span>
+        <span>− S/{{ descuentoGlobal.toFixed(2) }}</span>
+      </div>
+      <div class="resumen-fila resumen-total">
+        <span>Total</span>
+        <span>S/{{ total.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <p class="error-text" *ngIf="errorGuardar()">{{ errorGuardar() }}</p>
+
+    <button class="btn-primary btn-guardar" [disabled]="guardando()" (click)="guardar()">
+      <span class="spinner spinner-sm spinner-inline" *ngIf="guardando()"></span>
+      {{ modoEdicion ? 'Guardar cambios' : 'Guardar proforma' }}
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ Paso: guardada (con opciones de impresión) ═══════════════ -->
+<div class="exito-layout" *ngIf="paso === 'guardada' && proformaGuardada as p">
+  <div class="exito-card">
+    <div class="exito-icono">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <p class="exito-titulo">Proforma {{ p.numero }} guardada</p>
+    <p class="exito-subtitulo">Cliente: {{ p.cliente.nombre }} · Total S/{{ total.toFixed(2) }}</p>
+
+    <div class="exito-acciones">
+      <button class="btn-secondary" (click)="imprimirSinImagenes()">
+        Imprimir sin imágenes
+      </button>
+      <button class="btn-secondary" [disabled]="generandoPdf()" (click)="imprimirConImagenes()">
+        <span class="spinner spinner-sm spinner-inline" *ngIf="generandoPdf()"></span>
+        Imprimir con imágenes
+      </button>
+    </div>
+
+    <div class="exito-acciones exito-acciones-secundarias">
+      <button class="btn-secondary" (click)="seguirEditando()">Seguir editando</button>
+      <button class="btn-primary" (click)="volverAlListado()">Volver al listado</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: agregar producto ═══════════════ -->
+<div class="modal-overlay" *ngIf="productoSeleccionado as p" (click)="cerrarAgregarProducto()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <app-modal-brand-header [subtitle]="p.nombre" (cerrar)="cerrarAgregarProducto()"></app-modal-brand-header>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Talla (opcional)</label>
+        <input type="text" placeholder="Ej. 38" [ngModel]="tallaNueva" (ngModelChange)="tallaNueva = $event" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label>Cantidad</label>
+          <input type="number" min="1" [ngModel]="cantidadNueva" (ngModelChange)="cantidadNueva = $event" />
+        </div>
+        <div class="form-row">
+          <label>Precio unitario (S/)</label>
+          <input type="number" min="0" step="0.10" [ngModel]="precioNuevo" (ngModelChange)="precioNuevo = $event" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Descuento por línea (S/)</label>
+        <input type="number" min="0" step="0.10" [ngModel]="descuentoNuevo" (ngModelChange)="descuentoNuevo = $event" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarAgregarProducto()">Cancelar</button>
+      <button class="btn-primary" (click)="confirmarAgregarProducto()">Agregar a la cotización</button>
+    </div>
+  </div>
+</div>

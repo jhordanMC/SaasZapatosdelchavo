@@ -14,6 +14,8 @@ import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
 import { VentasComponent } from './pages/empresa/ventas/ventas';
 import { HistorialVentasComponent } from './pages/empresa/ventas/historial-ventas/historial-ventas';
+import { ProformasComponent } from './pages/empresa/ventas/proformas/proformas';
+import { ProformaEditorComponent } from './pages/empresa/ventas/proformas/proforma-editor/proforma-editor';
 import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
 import { IntegracionesComponent } from './pages/empresa/integraciones/integraciones';
@@ -105,6 +107,26 @@ export const routes: Routes = [
         path: 'ventas/historial',
         component: HistorialVentasComponent,
         data: { title: 'Historial de ventas' },
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
+      },
+      {
+        path: 'ventas/proformas',
+        component: ProformasComponent,
+        data: { title: 'Proformas' },
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
+      },
+      {
+        // Debe ir antes que 'ventas/proformas/:id' — si no, Angular intenta
+        // resolver "nueva" como si fuera un id de proforma.
+        path: 'ventas/proformas/nueva',
+        component: ProformaEditorComponent,
+        data: { title: 'Nueva proforma' },
+        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
+      },
+      {
+        path: 'ventas/proformas/:id',
+        component: ProformaEditorComponent,
+        data: { title: 'Editar proforma' },
         canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('ventas')],
       },
       {
