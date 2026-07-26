@@ -166,19 +166,15 @@
             <div class="form-row-2">
               <div>
                 <label>Cantidad</label>
-                <div class="qty-stepper qty-stepper-sm">
-                  <button type="button" class="qty-btn" (click)="decrementarEdicion()" [disabled]="edicionCantidad <= 1">−</button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    class="qty-value qty-input"
-                    [class.pop]="qtyPulseEdicion"
-                    [value]="edicionCantidad"
-                    (change)="onEdicionCantidadInput($any($event.target).value)"
-                    (blur)="onEdicionCantidadInput($any($event.target).value)"
-                  />
-                  <button type="button" class="qty-btn" (click)="incrementarEdicion()">+</button>
-                </div>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  class="qty-input-plano qty-input-plano-sm"
+                  [class.pop]="qtyPulseEdicion"
+                  [value]="edicionCantidad"
+                  (change)="onEdicionCantidadInput($any($event.target).value)"
+                  (blur)="onEdicionCantidadInput($any($event.target).value)"
+                />
               </div>
               <div>
                 <label>Descuento (S/)</label>
@@ -254,19 +250,15 @@
       <div class="form-row form-row-2">
         <div>
           <label>Cantidad <span class="error-inline" *ngIf="errorCantidad">- {{ errorCantidad }}</span></label>
-          <div class="qty-stepper">
-            <button type="button" class="qty-btn" (click)="decrementarCantidadModal()" [disabled]="cantidadSeleccionada <= 1">−</button>
-            <input
-              type="text"
-              inputmode="numeric"
-              class="qty-value qty-input"
-              [class.pop]="qtyPulseModal"
-              [value]="cantidadSeleccionada"
-              (change)="onCantidadModalInput($any($event.target).value)"
-              (blur)="onCantidadModalInput($any($event.target).value)"
-            />
-            <button type="button" class="qty-btn" (click)="incrementarCantidadModal()" [disabled]="!varianteSeleccionada || cantidadSeleccionada >= varianteSeleccionada.stock_disponible">+</button>
-          </div>
+          <input
+            type="text"
+            inputmode="numeric"
+            class="qty-input-plano"
+            [class.pop]="qtyPulseModal"
+            [value]="cantidadSeleccionada"
+            (change)="onCantidadModalInput($any($event.target).value)"
+            (blur)="onCantidadModalInput($any($event.target).value)"
+          />
         </div>
         <div>
           <label>Descuento (S/)</label>

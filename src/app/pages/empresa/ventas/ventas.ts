@@ -568,24 +568,9 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pulseTotal();
   }
 
-  // ── Cantidad: steppers +/- (modal y edición inline) ─────────────────────
+  // ── Cantidad: se escribe directamente como texto plano ──────────────────
 
-  incrementarCantidadModal(): void {
-    const max = this.varianteSeleccionada?.stock_disponible ?? 1;
-    if (this.cantidadSeleccionada >= max) return;
-    this.cantidadSeleccionada++;
-    this.errorCantidad = null;
-    this.pulseQty('modal');
-  }
-
-  decrementarCantidadModal(): void {
-    if (this.cantidadSeleccionada <= 1) return;
-    this.cantidadSeleccionada--;
-    this.errorCantidad = null;
-    this.pulseQty('modal');
-  }
-
-  /** Escribir la cantidad directamente como texto plano (en vez de solo +/-). */
+  /** Escribir la cantidad directamente como texto plano (ya no hay botones +/-). */
   onCantidadModalInput(valor: string): void {
     const max = this.varianteSeleccionada?.stock_disponible ?? 1;
     let n = parseInt(valor, 10);
@@ -593,22 +578,13 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     if (n > max) n = max;
     this.cantidadSeleccionada = n;
     this.errorCantidad = null;
+    this.pulseQty('modal');
   }
 
   onEdicionCantidadInput(valor: string): void {
     let n = parseInt(valor, 10);
     if (isNaN(n) || n < 1) n = 1;
     this.edicionCantidad = n;
-  }
-
-  incrementarEdicion(): void {
-    this.edicionCantidad++;
-    this.pulseQty('edicion');
-  }
-
-  decrementarEdicion(): void {
-    if (this.edicionCantidad <= 1) return;
-    this.edicionCantidad--;
     this.pulseQty('edicion');
   }
 
