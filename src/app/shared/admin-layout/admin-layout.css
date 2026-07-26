@@ -4,6 +4,8 @@
   display: flex;
   width: 100%;
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .main {
@@ -12,4 +14,10 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+}
+
+@media (max-width: 768px) {
+  /* En mobile el sidebar pasa a ser un drawer superpuesto (ver sidebar.css):
+     .main ya no necesita reservarle espacio, ocupa todo el ancho. */
+  .main { width: 100%; }
 }

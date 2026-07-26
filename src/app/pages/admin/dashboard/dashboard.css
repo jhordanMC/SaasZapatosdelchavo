@@ -349,7 +349,7 @@
   box-shadow: var(--shadow);
   border: 1px solid #eef5f1;
 }
-.table-card.full { width: 100%; }
+.table-card.full { width: 100%; overflow-x: auto; }
 
 .card-head {
   display: flex; align-items: flex-start; justify-content: space-between;

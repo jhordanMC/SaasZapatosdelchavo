@@ -774,6 +774,7 @@
 @media (max-width: 480px) {
   .filters-bar { flex-direction: column; align-items: stretch; }
   .form-grid-2 { grid-template-columns: 1fr; }
+  .ver-usuario-grid { grid-template-columns: 1fr; }
   .modal-card, .modal-card-wide { max-width: 94vw; }
   .modal-actions-split { flex-direction: column; }
   .plan-grid { grid-template-columns: 1fr 1fr; }
