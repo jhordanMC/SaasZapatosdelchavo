@@ -112,7 +112,8 @@
   cursor: help;
 }
 
-.subtitulo-mini { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; color: #024b40; }
+.subtitulo-mini { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; color: #024b40; display: flex; align-items: center; gap: 6px; }
+.subtitulo-mini svg { flex-shrink: 0; }
 .subtitulo-mini-espaciado { margin-top: 18px; }
 
 .estado-carga-avance { display: flex; align-items: center; gap: 10px; padding: 24px 0; color: #5a8a78; font-size: 13px; }
