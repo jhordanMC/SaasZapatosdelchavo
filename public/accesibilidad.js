@@ -16,7 +16,7 @@
   ───────────────────────────────────────────── */
   const LANGS = {
     es: {
-      title:'Accesibilidad', subtitle:'Personaliza tu experiencia · PAS',
+      title:'Accesibilidad', subtitle:'Personaliza tu experiencia',
       tabs:['Visión','Texto','Idioma','Salud Visual','Voz'],
       tabKeys:['vision','texto','idioma','herramientas','voz'],
       sec_contrast:'Contraste', sec_colortemp:'Temperatura de color',
@@ -86,7 +86,7 @@
       toastReset:'Configuración restablecida ✓',
     },
     qu: {
-      title:'Yanapakuy', subtitle:'Servicioykita allichay · PAS',
+      title:'Yanapakuy', subtitle:'Servicioykita allichay',
       tabs:['Qhaway','Qillqa','Rimay','Ñawi Qhali','Kunka'],
       tabKeys:['vision','texto','idioma','herramientas','voz'],
       sec_contrast:'Contraste', sec_colortemp:'Pantalla ruphaynin',
@@ -151,7 +151,7 @@
       toastReset:'Configuración kutichisqa ✓',
     },
     en: {
-      title:'Accessibility', subtitle:'Customize your experience · PAS',
+      title:'Accessibility', subtitle:'Customize your experience',
       tabs:['Vision','Text','Language','Eye Health','Voice'],
       tabKeys:['vision','texto','idioma','herramientas','voz'],
       sec_contrast:'Contrast', sec_colortemp:'Color temperature',
@@ -221,7 +221,7 @@
       toastReset:'Settings reset ✓',
     },
     pt: {
-      title:'Acessibilidade', subtitle:'Personalize sua experiência · PAS',
+      title:'Acessibilidade', subtitle:'Personalize sua experiência',
       tabs:['Visão','Texto','Idioma','Saúde Visual','Voz'],
       tabKeys:['vision','texto','idioma','herramientas','voz'],
       sec_contrast:'Contraste', sec_colortemp:'Temperatura de cor',
@@ -343,12 +343,16 @@
   #accPanel .ap-close:hover{background:rgba(255,255,255,.25);transform:rotate(90deg);}
 
   /* TABS */
-  #accPanel .ap-tabs{flex-shrink:0;display:flex;background:#F0F4FF;border-bottom:1.5px solid var(--s-border);padding:0 16px;gap:2px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;}
-#accPanel .ap-tabs::-webkit-scrollbar{height:4px;width:0px;}
-#accPanel .ap-tabs::-webkit-scrollbar-thumb{background:var(--s-border);border-radius:3px;}
-  #accPanel .ap-tab{padding:11px 14px 10px;border:none;background:transparent;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;color:var(--s-muted);letter-spacing:.4px;text-transform:uppercase;cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:color .2s,border-color .2s;display:flex;align-items:center;gap:6px;}
-  #accPanel .ap-tab:hover{color:var(--s-navy);}
-  #accPanel .ap-tab.active{color:var(--s-navy);border-bottom-color:var(--s-navy);}
+  #accPanel .ap-tabs-wrap{flex-shrink:0;position:relative;border-bottom:1.5px solid var(--s-border);}
+  #accPanel .ap-tabs-toggle{width:100%;display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;background:#F0F4FF;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;color:var(--s-navy);letter-spacing:.4px;text-transform:uppercase;cursor:pointer;}
+  #accPanel .ap-tabs-toggle:hover{background:#E6ECFF;}
+  #accPanel .ap-tabs-chevron{margin-left:auto;font-size:10px;color:var(--s-muted);transition:transform .2s;}
+  #accPanel .ap-tabs-wrap.open .ap-tabs-chevron{transform:rotate(180deg);}
+  #accPanel .ap-tabs{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--s-border);border-top:none;border-radius:0 0 14px 14px;box-shadow:0 16px 32px rgba(6,30,25,.16);z-index:30;max-height:260px;overflow-y:auto;padding:4px;gap:1px;}
+  #accPanel .ap-tabs-wrap.open .ap-tabs{display:flex;}
+  #accPanel .ap-tab{padding:10px 12px;border:none;border-radius:9px;background:transparent;font-family:'Barlow',sans-serif;font-size:12.5px;font-weight:700;color:var(--s-muted);letter-spacing:.2px;cursor:pointer;display:flex;align-items:center;gap:9px;text-align:left;white-space:normal;}
+  #accPanel .ap-tab:hover{background:#F0F4FF;color:var(--s-navy);}
+  #accPanel .ap-tab.active{background:var(--s-grad);color:#fff;}
 
   /* BODY */
   #accPanel .ap-body{flex:1;overflow-y:auto;overflow-x:auto;padding:18px 18px 22px;scrollbar-width:thin;scrollbar-color:var(--s-border) transparent;}
@@ -440,14 +444,12 @@
   .langs-grid{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
 
   /* GLOBAL EFFECTS */
-  html.acc-contrast-light{filter:contrast(1.15) saturate(1.05)}
-  html.acc-contrast-dark{filter:invert(1) hue-rotate(180deg)}
+  html.acc-contrast-light{filter:brightness(0.92) contrast(0.97) saturate(0.95)}
   html.acc-daltonic-protanopia{filter:url('#acc-protanopia')}
   html.acc-daltonic-deuteranopia{filter:url('#acc-deuteranopia')}
   html.acc-daltonic-tritanopia{filter:url('#acc-tritanopia')}
   html.acc-daltonic-acromatopsia{filter:url('#acc-acromatopsia')}
   html.acc-big-cursor,html.acc-big-cursor *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M8 4L8 32L16 24L22 36L26 34L20 22L32 22Z' fill='%23024B40' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 4 4,auto!important}
-  html.acc-spacing-plus p,html.acc-spacing-plus li,html.acc-spacing-plus td,html.acc-spacing-plus div{margin-bottom:1.3em!important;word-spacing:.16em!important}
   html.acc-ctl *{font-size:var(--acc-font-scale,100%);letter-spacing:var(--acc-letter-spacing,0px);line-height:var(--acc-line-height,normal)}
   #accPanel,#accPanel *{font-size:min(var(--acc-font-scale,100%),115%)!important;letter-spacing:min(var(--acc-letter-spacing,0px),2px)!important;line-height:min(var(--acc-line-height,normal),1.6)!important;}
   html.acc-night-mode{filter:sepia(.15) brightness(.88)!important;}
@@ -475,7 +477,7 @@
   const defaults={
     contrast:null,daltonic:null,textSize:'medium',
     voiceFeedback:false,focusMode:false,bigCursor:false,
-    spacingPlus:false,nightMode:false
+    nightMode:false
   };
   let settings={...defaults};
 
@@ -606,6 +608,45 @@
 
   /* ── TTS ── */
   let reading=false,paused=false;
+  let ttsQueue=[],ttsIndex=0,ttsWatchdog=null;
+
+  /* Bug conocido de Chrome: si se le pasa TODO el texto en una sola
+     SpeechSynthesisUtterance larga, el motor se "cuelga" en silencio a los
+     ~15s (2-4 oraciones) y no vuelve a hablar. Se evita partiendo el texto
+     en fragmentos cortos por oración y encadenándolos con onend. */
+  function ttsSplitChunks(text,maxLen=180){
+    const sentences=text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g)||[text];
+    const chunks=[];
+    for(let s of sentences){
+      s=s.trim();if(!s) continue;
+      while(s.length>maxLen){
+        let cut=s.lastIndexOf(' ',maxLen);if(cut<=0) cut=maxLen;
+        chunks.push(s.slice(0,cut).trim());
+        s=s.slice(cut).trim();
+      }
+      if(s) chunks.push(s);
+    }
+    return chunks;
+  }
+  function ttsStartWatchdog(){
+    ttsStopWatchdog();
+    /* Refuerzo extra contra el mismo bug de Chrome: pausar/reanudar cada 5s
+       mientras se lee "resetea" el temporizador interno del navegador. */
+    ttsWatchdog=setInterval(()=>{
+      if(!reading||paused) return;
+      try{window.speechSynthesis.pause();window.speechSynthesis.resume();}catch{}
+    },5000);
+  }
+  function ttsStopWatchdog(){if(ttsWatchdog){clearInterval(ttsWatchdog);ttsWatchdog=null;}}
+  function ttsSpeakNext(){
+    if(ttsIndex>=ttsQueue.length){reading=false;paused=false;ttsStopWatchdog();syncTTS();return;}
+    const u=new SpeechSynthesisUtterance(ttsQueue[ttsIndex]);
+    if(preferredVoice) u.voice=preferredVoice;
+    u.lang=preferredVoice?.lang||'es-ES';u.rate=1.05;u.pitch=1;
+    u.onend=()=>{ttsIndex++;ttsSpeakNext();};
+    u.onerror=()=>{ttsIndex++;ttsSpeakNext();}; /* si un fragmento falla, sigue con el siguiente en vez de quedar colgado */
+    window.speechSynthesis.speak(u);
+  }
   function ttsReadAll(){
     try{window.speechSynthesis.cancel()}catch{}
     const root=document.querySelector('main')||document.querySelector('[role="main"]')||document.body;
@@ -614,16 +655,15 @@
     });
     let text='';while(walker.nextNode()) text+=' '+walker.currentNode.nodeValue;
     text=text.replace(/\s+/g,' ').trim();if(!text) return;
-    const u=new SpeechSynthesisUtterance(text.slice(0,250000));
-    if(preferredVoice) u.voice=preferredVoice;
-    u.lang=preferredVoice?.lang||'es-ES';u.rate=1.05;u.pitch=1;
-    u.onend=()=>{reading=false;paused=false;syncTTS();};
-    reading=true;paused=false;syncTTS();window.speechSynthesis.speak(u);
+    ttsQueue=ttsSplitChunks(text.slice(0,250000));ttsIndex=0;
+    reading=true;paused=false;syncTTS();
+    ttsStartWatchdog();
+    ttsSpeakNext();
     trackStat('tts');
   }
   function ttsPause(){try{window.speechSynthesis.pause();paused=true;syncTTS();}catch{}}
 function ttsResume(){try{window.speechSynthesis.resume();paused=false;syncTTS();}catch{}}
-function ttsStop(){try{window.speechSynthesis.cancel();reading=false;paused=false;syncTTS();}catch{}}
+function ttsStop(){try{window.speechSynthesis.cancel();}catch{}ttsQueue=[];ttsIndex=0;reading=false;paused=false;ttsStopWatchdog();syncTTS();}
 function syncTTS(){
     const p=$('#ttsPlay'),s=$('#ttsStop');
     if(!p) return;
@@ -756,15 +796,13 @@ function render2020(){
   function apply(){
     localStorage.setItem('acc_settings_summas', JSON.stringify(settings));
     const html=document.documentElement;
-    html.classList.remove('acc-contrast-light','acc-contrast-dark','acc-daltonic-protanopia','acc-daltonic-deuteranopia','acc-daltonic-tritanopia','acc-daltonic-acromatopsia','acc-big-cursor','acc-spacing-plus','acc-night-mode','acc-focus-mode');
+    html.classList.remove('acc-contrast-light','acc-daltonic-protanopia','acc-daltonic-deuteranopia','acc-daltonic-tritanopia','acc-daltonic-acromatopsia','acc-big-cursor','acc-night-mode','acc-focus-mode');
     if(settings.contrast==='light') html.classList.add('acc-contrast-light');
-    if(settings.contrast==='dark') html.classList.add('acc-contrast-dark');
     if(settings.daltonic==='protanopia') html.classList.add('acc-daltonic-protanopia');
     if(settings.daltonic==='deuteranopia') html.classList.add('acc-daltonic-deuteranopia');
     if(settings.daltonic==='tritanopia') html.classList.add('acc-daltonic-tritanopia');
     if(settings.daltonic==='acromatopsia') html.classList.add('acc-daltonic-acromatopsia');
     if(settings.bigCursor) html.classList.add('acc-big-cursor');
-    if(settings.spacingPlus) html.classList.add('acc-spacing-plus');
     if(settings.nightMode) html.classList.add('acc-night-mode');
     if(settings.focusMode) html.classList.add('acc-focus-mode');
 
@@ -819,7 +857,7 @@ function render2020(){
     if(!$('#acc-widget-styles')){const s=document.createElement('style');s.id='acc-widget-styles';s.textContent=css;document.head.appendChild(s);}
     if(!$('#acc-svg-filters-wrap')){
       const w=document.createElement('div');w.id='acc-svg-filters-wrap';w.style.cssText='display:none;position:absolute;width:0;height:0;overflow:hidden';
-      w.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="acc-protanopia"><feColorMatrix type="matrix" values="0.567,0.433,0,0,0,0.558,0.442,0,0,0,0,0.242,0.758,0,0,0,0,0,1,0"/></filter><filter id="acc-deuteranopia"><feColorMatrix type="matrix" values="0.625,0.375,0,0,0,0.7,0.3,0,0,0,0,0,0.3,0.7,0,0,0,0,0,1,0"/></filter><filter id="acc-tritanopia"><feColorMatrix type="matrix" values="0.95,0.05,0,0,0,0,0.433,0.567,0,0,0,0,0.475,0.525,0,0,0,0,0,1,0"/></filter><filter id="acc-acromatopsia"><feColorMatrix type="matrix" values="0.299,0.587,0.114,0,0,0.299,0.587,0.114,0,0,0.299,0.587,0.114,0,0,0,0,0,1,0"/></filter></defs></svg>`;
+      w.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="acc-protanopia"><feColorMatrix type="matrix" values="0.567,0.433,0,0,0,0.558,0.442,0,0,0,0,0.242,0.758,0,0,0,0,0,1,0"/></filter><filter id="acc-deuteranopia"><feColorMatrix type="matrix" values="0.625,0.375,0,0,0,0.7,0.3,0,0,0,0,0.3,0.7,0,0,0,0,0,1,0"/></filter><filter id="acc-tritanopia"><feColorMatrix type="matrix" values="0.95,0.05,0,0,0,0,0.433,0.567,0,0,0,0.475,0.525,0,0,0,0,0,1,0"/></filter><filter id="acc-acromatopsia"><feColorMatrix type="matrix" values="0.299,0.587,0.114,0,0,0.299,0.587,0.114,0,0,0.299,0.587,0.114,0,0,0,0,0,1,0"/></filter></defs></svg>`;
       document.body.appendChild(w);
     }
 
@@ -849,12 +887,19 @@ function render2020(){
       <button class="ap-close" id="accClose" aria-label="Cerrar">✕</button>
     </div>
 
-    <div class="ap-tabs" role="tablist" id="ap-tabs-container">
-      <button class="ap-tab active" data-tab="vision" role="tab" aria-selected="true"><i class="fas fa-eye"></i> <span class="tab-text">${t.tabs[0]}</span></button>
-      <button class="ap-tab" data-tab="texto" role="tab" aria-selected="false"><i class="fas fa-font"></i> <span class="tab-text">${t.tabs[1]}</span></button>
-      <button class="ap-tab" data-tab="idioma" role="tab" aria-selected="false"><i class="fas fa-globe"></i> <span class="tab-text">${t.tabs[2]}</span></button>
-      <button class="ap-tab" data-tab="herramientas" role="tab" aria-selected="false"><i class="fas fa-eye"></i> <span class="tab-text">${t.tabs[3]}</span></button>
-      <button class="ap-tab" data-tab="voz" role="tab" aria-selected="false"><i class="fas fa-microphone"></i> <span class="tab-text">${t.tabs[4]}</span></button>
+    <div class="ap-tabs-wrap" id="ap-tabs-wrap">
+      <button type="button" class="ap-tabs-toggle" id="ap-tabs-toggle" aria-haspopup="listbox" aria-expanded="false">
+        <i class="fas fa-eye" id="ap-tabs-toggle-icon"></i>
+        <span class="tab-text" id="ap-tabs-toggle-label">${t.tabs[0]}</span>
+        <i class="fas fa-chevron-down ap-tabs-chevron"></i>
+      </button>
+      <div class="ap-tabs" role="listbox" id="ap-tabs-container">
+        <button class="ap-tab active" data-tab="vision" data-icon="fa-eye" role="option" aria-selected="true"><i class="fas fa-eye"></i> <span class="tab-text">${t.tabs[0]}</span></button>
+        <button class="ap-tab" data-tab="texto" data-icon="fa-font" role="option" aria-selected="false"><i class="fas fa-font"></i> <span class="tab-text">${t.tabs[1]}</span></button>
+        <button class="ap-tab" data-tab="idioma" data-icon="fa-globe" role="option" aria-selected="false"><i class="fas fa-globe"></i> <span class="tab-text">${t.tabs[2]}</span></button>
+        <button class="ap-tab" data-tab="herramientas" data-icon="fa-eye" role="option" aria-selected="false"><i class="fas fa-eye"></i> <span class="tab-text">${t.tabs[3]}</span></button>
+        <button class="ap-tab" data-tab="voz" data-icon="fa-microphone" role="option" aria-selected="false"><i class="fas fa-microphone"></i> <span class="tab-text">${t.tabs[4]}</span></button>
+      </div>
     </div>
 
     <div class="ap-body">
@@ -864,7 +909,6 @@ function render2020(){
         <div class="ap-section"><i class="fas fa-adjust"></i> <span data-i="sec_contrast">${t.sec_contrast}</span></div>
         <div class="ap-grid">
           <button class="acc-tile" id="contrastLight" aria-pressed="false"><div class="ico"><i class="fas fa-sun"></i></div><div class="tile-label" data-i="t_lightContrast">${t.t_lightContrast}</div><div class="tile-note" data-i="t_lightNote">${t.t_lightNote}</div></button>
-          <button class="acc-tile" id="contrastDark" aria-pressed="false"><div class="ico"><i class="fas fa-moon"></i></div><div class="tile-label" data-i="t_dark">${t.t_dark}</div><div class="tile-note" data-i="t_darkNote">${t.t_darkNote}</div></button>
           <button class="acc-tile tile-orange" id="nightMode" aria-pressed="false"><div class="ico"><i class="fas fa-moon"></i></div><div class="tile-label" data-i="t_night">${t.t_night}</div><div class="tile-note" data-i="t_nightNote">${t.t_nightNote}</div></button>
           <button class="acc-tile" id="cursor" aria-pressed="false"><div class="ico"><i class="fas fa-mouse-pointer"></i></div><div class="tile-label" data-i="t_bigCursor">${t.t_bigCursor}</div><div class="tile-note" data-i="t_bigCursorNote">${t.t_bigCursorNote}</div></button>
         </div>
@@ -885,7 +929,6 @@ function render2020(){
               <span data-i="t_sizeSmall">${t.t_sizeSmall}</span><span data-i="t_sizeMedium">${t.t_sizeMedium}</span><span data-i="t_sizeLarge">${t.t_sizeLarge}</span>
             </div>
           </div>
-          <button class="acc-tile" id="spacingPlus" aria-pressed="false"><div class="ico"><i class="fas fa-text-width"></i></div><div class="tile-label" data-i="t_spacing">${t.t_spacing}</div><div class="tile-note" data-i="t_spacingNote">${t.t_spacingNote}</div></button>
         </div>
         <div class="ap-section"><i class="fas fa-brain"></i> <span data-i="sec_focus">${t.sec_focus}</span></div>
         <div class="ap-grid-2"><button class="acc-tile tile-green span2" id="focusMode" aria-pressed="false"><div class="ico"><i class="fas fa-brain"></i></div><div class="tile-label" data-i="t_focus">${t.t_focus}</div><div class="tile-note" data-i="t_focusNote">${t.t_focusNote}</div></button></div>
@@ -914,7 +957,7 @@ function render2020(){
       <!-- VOZ -->
       <div class="ap-pane" id="pane-voz">
         <div class="ap-section"><i class="fas fa-volume-up"></i> <span data-i="sec_tts">${t.sec_tts}</span></div>
-        <div class="ap-grid"><div class="acc-tile no-click span3"><div class="ico"><i class="fas fa-volume-up"></i></div><div class="tile-label" data-i="ttsLabel">${t.ttsLabel}</div><div class="tile-note" data-i="ttsNote">${t.ttsNote}</div><div class="tts-row"><button class="ap-btn primary" id="ttsPlay"><i class="fas fa-play"></i> <span>${t.ttsRead}</span><button class="ap-btn danger" id="ttsStop"><i class="fas fa-stop"></i> <span>${t.ttsStop}</span></button></div></div></div>
+        <div class="ap-grid"><div class="acc-tile no-click span3"><div class="ico"><i class="fas fa-volume-up"></i></div><div class="tile-label" data-i="ttsLabel">${t.ttsLabel}</div><div class="tile-note" data-i="ttsNote">${t.ttsNote}</div><div class="tts-row"><button class="ap-btn primary" id="ttsPlay"><i class="fas fa-play"></i> <span>${t.ttsRead}</span></button><button class="ap-btn danger" id="ttsStop"><i class="fas fa-stop"></i> <span>${t.ttsStop}</span></button></div></div></div>
         <div class="ap-section"><i class="fas fa-microphone"></i> <span data-i="sec_narrator">${t.sec_narrator}</span></div>
         <div class="ap-grid"><button class="acc-tile span3" id="info" aria-pressed="false"><div class="ico"><i class="fas fa-microphone-alt"></i></div><div class="tile-label" data-i="narratorLabel">${t.narratorLabel}</div><div class="tile-note" data-i="narratorNote">${t.narratorNote}</div></button></div>
       </div>
@@ -970,6 +1013,9 @@ function render2020(){
       $$('.ap-tab .tab-text').forEach((el,i)=>{if(tr.tabs[i] !== undefined) el.textContent=tr.tabs[i];});
       /* Lang tab badge */
       const ltab=$(`.ap-tab[data-tab="idioma"] .tab-text`);if(ltab) ltab.textContent=lang.toUpperCase();
+      /* Etiqueta del botón desplegable de tabs: refleja la pestaña activa en el nuevo idioma */
+      const tabActivo=$('.ap-tab.active');const toggleLbl=$('#ap-tabs-toggle-label');
+      if(tabActivo && toggleLbl){const txt=tabActivo.querySelector('.tab-text');if(txt) toggleLbl.textContent=txt.textContent;}
       /* All data-i elements */
       $$('[data-i]',panel).forEach(el=>{const key=el.dataset.i;if(tr[key]!==undefined) el.textContent=tr[key];});
       /* Footer powered by */
@@ -999,7 +1045,37 @@ function render2020(){
       });
     });
 
-    /* ── TABS ── */
+    /* ── TABS (menú desplegable) ── */
+    const tabsWrap=$('#ap-tabs-wrap');
+    const tabsToggle=$('#ap-tabs-toggle');
+    const tabsToggleIcon=$('#ap-tabs-toggle-icon');
+    const tabsToggleLabel=$('#ap-tabs-toggle-label');
+
+    function closeTabsMenu(){
+      if(!tabsWrap) return;
+      tabsWrap.classList.remove('open');
+      if(tabsToggle) tabsToggle.setAttribute('aria-expanded','false');
+    }
+    function toggleTabsMenu(){
+      if(!tabsWrap) return;
+      const abierto=tabsWrap.classList.toggle('open');
+      if(tabsToggle) tabsToggle.setAttribute('aria-expanded',abierto?'true':'false');
+    }
+    function syncTabsToggle(tab){
+      if(!tab) return;
+      if(tabsToggleLabel){const txt=tab.querySelector('.tab-text');if(txt) tabsToggleLabel.textContent=txt.textContent;}
+      if(tabsToggleIcon){const icon=tab.dataset.icon;if(icon) tabsToggleIcon.className='fas '+icon;}
+    }
+    if(tabsToggle){
+      tabsToggle.addEventListener('click',(e)=>{e.stopPropagation();toggleTabsMenu();});
+    }
+    document.addEventListener('click',(e)=>{
+      if(tabsWrap && tabsWrap.classList.contains('open') && !tabsWrap.contains(e.target)) closeTabsMenu();
+    });
+    document.addEventListener('keydown',(e)=>{
+      if(e.key==='Escape' && tabsWrap && tabsWrap.classList.contains('open')) closeTabsMenu();
+    });
+
     $$('.ap-tab').forEach(tab=>{
       tab.addEventListener('click',()=>{
         try{
@@ -1008,6 +1084,8 @@ function render2020(){
           tab.classList.add('active');tab.setAttribute('aria-selected','true');
           const pane=$('#pane-'+tab.dataset.tab);if(pane) pane.classList.add('active');
           if(tab.dataset.tab==='herramientas') render2020();
+          syncTabsToggle(tab);
+          closeTabsMenu();
         }catch(err){
           /* Nunca dejar que un error interno del widget se propague fuera de él
              (Zone.js de Angular parchea addEventListener globalmente, y un error
@@ -1097,7 +1175,6 @@ window.addEventListener('touchend',function(){
       if(ctrl&&(e.key==='u'||e.key==='U')){e.preventDefault();openPanel();}
       if(alt&&(e.key==='n'||e.key==='N')){e.preventDefault();settings.voiceFeedback=!settings.voiceFeedback;if(settings.voiceFeedback)enableNarrator();else disableNarrator();syncTiles();}
       if(alt&&(e.key==='r'||e.key==='R')){e.preventDefault();ttsReadAll();}
-      if(alt&&(e.key==='d'||e.key==='D')){e.preventDefault();settings.contrast=settings.contrast==='dark'?null:'dark';apply();syncTiles();}
       if(e.key==='Escape'){closePanel();}
     });
 
@@ -1122,8 +1199,6 @@ window.addEventListener('touchend',function(){
     /* ── TILES ── */
     function tile(id,fn){const el=$(id);if(!el) return;el.addEventListener('click',()=>{fn();syncTiles();apply();trackStat(id);});}
     tile('#contrastLight',()=>settings.contrast=settings.contrast==='light'?null:'light');
-    tile('#contrastDark',()=>settings.contrast=settings.contrast==='dark'?null:'dark');
-    tile('#spacingPlus',()=>settings.spacingPlus=!settings.spacingPlus);
     tile('#focusMode',()=>settings.focusMode=!settings.focusMode);
     tile('#nightMode',()=>settings.nightMode=!settings.nightMode);
     tile('#cursor',()=>{
@@ -1156,8 +1231,8 @@ $('#ttsStop').addEventListener('click',ttsStop);
     /* ── SYNC TILES ── */
     function syncTiles(){
       const sT=(id,on)=>{const el=$(id);if(el) el.setAttribute('aria-pressed',String(!!on));};
-      sT('#contrastLight',settings.contrast==='light');sT('#contrastDark',settings.contrast==='dark');
-      sT('#spacingPlus',settings.spacingPlus);sT('#focusMode',settings.focusMode);
+      sT('#contrastLight',settings.contrast==='light');
+      sT('#focusMode',settings.focusMode);
       sT('#nightMode',settings.nightMode);
       sT('#cursor',settings.bigCursor);sT('#info',settings.voiceFeedback);
       const gaugeEl=$('#rng-textsize');if(gaugeEl){const stops=['small','medium','large'];const tr=T();const labels={small:[tr.t_sizeSmall,tr.t_sizeSmallNote],medium:[tr.t_sizeMedium,tr.t_sizeMediumNote],large:[tr.t_sizeLarge,tr.t_sizeLargeNote]};const[lbl,note]=labels[settings.textSize]||labels.medium;gaugeEl.value=String(Math.max(0,stops.indexOf(settings.textSize)));const lblEl=$('#textSizeGaugeLabel');if(lblEl) lblEl.textContent=lbl;const noteEl=$('#textSizeGaugeNote');if(noteEl) noteEl.textContent=note;}

@@ -585,6 +585,22 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pulseQty('modal');
   }
 
+  /** Escribir la cantidad directamente como texto plano (en vez de solo +/-). */
+  onCantidadModalInput(valor: string): void {
+    const max = this.varianteSeleccionada?.stock_disponible ?? 1;
+    let n = parseInt(valor, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    if (n > max) n = max;
+    this.cantidadSeleccionada = n;
+    this.errorCantidad = null;
+  }
+
+  onEdicionCantidadInput(valor: string): void {
+    let n = parseInt(valor, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    this.edicionCantidad = n;
+  }
+
   incrementarEdicion(): void {
     this.edicionCantidad++;
     this.pulseQty('edicion');
