@@ -121,48 +121,13 @@ export class ComprasService {
   }
 
   /**
-   * Obtener resumen de proveedores agrupando compras registradas.
-   * Si no hay compras registradas, devuelve una muestra estructurada de demostración.
+   * Obtener resumen de proveedores agrupando compras registradas reales.
+   * Si no hay compras registradas por el usuario, devuelve un arreglo vacío.
    */
   obtenerResumenProveedores(): ProveedorResumen[] {
     const lista = this.compras();
     if (lista.length === 0) {
-      // Datos representativos iniciales para visualizar gráficos y KPIs
-      return [
-        {
-          proveedor: 'Calzados Trujillo SAC',
-          comprasCount: 4,
-          unidadesCompradas: 180,
-          unidadesVendidas: 142,
-          montoCompras: 8500,
-          cantidadDevoluciones: 3,
-          porcentajeDevoluciones: 2.11,
-          estadoDevolucion: 'excelente',
-          conceptos: ['Calzados Ejecutivos', 'Mocasines de Cuero']
-        },
-        {
-          proveedor: 'Distribuidora Gamarra',
-          comprasCount: 3,
-          unidadesCompradas: 130,
-          unidadesVendidas: 98,
-          montoCompras: 5200,
-          cantidadDevoluciones: 7,
-          porcentajeDevoluciones: 7.14,
-          estadoDevolucion: 'alerta',
-          conceptos: ['Zapatillas Urbanas', 'Calzado Deportivo']
-        },
-        {
-          proveedor: 'Calzados El Chavo',
-          comprasCount: 2,
-          unidadesCompradas: 90,
-          unidadesVendidas: 74,
-          montoCompras: 3800,
-          cantidadDevoluciones: 3,
-          porcentajeDevoluciones: 4.05,
-          estadoDevolucion: 'aceptable',
-          conceptos: ['Sandalias Escolares', 'Botines Confort']
-        }
-      ];
+      return [];
     }
 
     const mapa = new Map<string, {

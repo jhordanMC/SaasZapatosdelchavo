@@ -10,6 +10,7 @@
 <div class="content" *ngIf="resumen as r">
   <!-- Primer cuadro: texto plano que indica si está ganando y siendo rentable -->
   <div class="cuadro-rentabilidad-plano" [class.es-rentable]="r.esta_generando_ganancia" [class.no-rentable]="!r.esta_generando_ganancia">
+    <div class="card-help" title="Muestra en texto plano si los ingresos de tu negocio superan los costos totales en el período, confirmando de inmediato si estás en ganancia (SÍ) o en pérdida/recuperación (NO).">?</div>
     <div class="cuadro-header">
       <span class="cuadro-badge">{{ r.esta_generando_ganancia ? 'ESTADO: RENTABLE' : 'ESTADO: EN PERDIDA O RECUPERACION' }}</span>
       <h2 class="cuadro-titulo">¿Estás ganando dinero y siendo rentable? <strong>{{ r.esta_generando_ganancia ? 'SÍ' : 'NO' }}</strong></h2>
@@ -24,6 +25,71 @@
     </div>
   </div>
 
+  <!-- Panel: Resumen mensual de compras y ventas (Mover al inicio) -->
+  <div class="panel">
+    <div class="card-help" title="Permite consultar el acumulado de compras y ventas de cualquier mes seleccionado y exportar el reporte oficial en PDF o Excel.">?</div>
+    <h3>Resumen mensual de compras y ventas</h3>
+    <p class="panel-subtitulo">Elige un mes y descárgalo en PDF o Excel para tus registros o tu contador.</p>
+
+    <div class="resumen-mensual-toolbar">
+      <input type="month" [ngModel]="mesSeleccionado" (ngModelChange)="mesSeleccionado = $event" />
+      <button class="btn-primary" [disabled]="generandoResumenMensual" [class.btn-loading]="generandoResumenMensual" (click)="generarResumenMensual()">
+        {{ generandoResumenMensual ? 'Generando...' : 'Generar resumen' }}
+      </button>
+    </div>
+
+    <p class="aviso-margen-parcial" *ngIf="errorResumenMensual">
+      No se pudo generar el resumen de ese mes. Intenta de nuevo en unos segundos.
+    </p>
+
+    <ng-container *ngIf="resumenMensual as rm">
+      <p class="panel-subtitulo" style="margin-top: 14px;">{{ rm.etiquetaMes }} · del {{ rm.desde }} al {{ rm.hasta }}</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="card-help" title="Suma total de dinero ingresado por ventas durante el mes seleccionado.">?</div>
+          <div class="kpi-label">Ventas del mes</div>
+          <div class="kpi-value">S/{{ rm.ventas.ingresos_periodo.toFixed(2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="card-help" title="Monto total gastado en compras de reposición de mercadería a proveedores durante este mes.">?</div>
+          <div class="kpi-label">Compras del mes</div>
+          <div class="kpi-value">S/{{ rm.compras.total.toFixed(2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="card-help" title="Relación de cantidad de transacciones de ventas frente al número de comprobantes de compras registrados.">?</div>
+          <div class="kpi-label">Cantidad ventas / compras</div>
+          <div class="kpi-value">{{ rm.ventas.cantidad_ventas }} / {{ rm.compras.cantidad }}</div>
+        </div>
+        <div class="kpi-card" [class.kpi-positivo]="rm.balanceNeto >= 0" [class.kpi-negativo]="rm.balanceNeto < 0">
+          <div class="card-help" title="Resultado neto del mes: Ingresos por ventas menos compras de mercadería y gastos operativos del mes.">?</div>
+          <div class="kpi-label">Balance neto del mes</div>
+          <div class="kpi-value">S/{{ rm.balanceNeto.toFixed(2) }}</div>
+        </div>
+      </div>
+
+      <table class="tabla" *ngIf="rm.compras.detalle.length > 0" style="margin-top: 16px;">
+        <thead>
+          <tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th>Monto</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of rm.compras.detalle">
+            <td>{{ c.fecha }}</td>
+            <td>{{ c.proveedor }}</td>
+            <td>{{ c.concepto }}</td>
+            <td>S/{{ c.monto.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="rm.compras.detalle.length === 0" class="panel-subtitulo" style="margin-top: 12px;">Sin compras registradas ese mes.</p>
+
+      <div class="resumen-mensual-descargas">
+        <button class="btn-secondary" (click)="descargarResumenPDF()">Descargar PDF</button>
+        <button class="btn-secondary" (click)="descargarResumenExcel()">Descargar Excel</button>
+      </div>
+    </ng-container>
+  </div>
+
   <div class="vista-toggle">
     <button [class.activo]="vistaIngresos() === 'completos'" (click)="cambiarVista('completos')">Ingresos completos</button>
     <button [class.activo]="vistaIngresos() === 'margen'" (click)="cambiarVista('margen')">Ingresos con margen</button>
@@ -36,24 +102,29 @@
 
   <div class="kpi-grid">
     <div class="kpi-card">
+      <div class="card-help" title="Ingresos totales del período: Suma total de dinero que ingresó por ventas. Si cambias a 'Ingresos con margen', refleja la ganancia bruta descontando costo de productos.">?</div>
       <div class="kpi-label">{{ etiquetaIngresos() }}</div>
       <div class="kpi-value">S/{{ valorIngresos(r).toFixed(2) }}</div>
     </div>
     <div class="kpi-card">
+      <div class="card-help" title="Cantidad total de ventas registradas exitosamente en la plataforma durante este período.">?</div>
       <div class="kpi-label">Ventas registradas</div>
       <div class="kpi-value">{{ r.cantidad_ventas }}</div>
     </div>
     <div class="kpi-card">
+      <div class="card-help" title="Suma total de gastos fijos (alquiler, sueldos, servicios) y gastos extraordinarios ejecutados en el período.">?</div>
       <div class="kpi-label">Gasto operativo del período</div>
       <div class="kpi-value">S/{{ r.gasto_operativo_periodo.toFixed(2) }}</div>
     </div>
     <div class="kpi-card" [class.kpi-positivo]="resultadoEsPositivo(r)" [class.kpi-negativo]="!resultadoEsPositivo(r)">
+      <div class="card-help" title="Flujo de caja: Ingresos por ventas menos Gastos operativos. En modo 'margen', representa tu ganancia neta real.">?</div>
       <div class="kpi-label">{{ etiquetaResultado() }}</div>
       <div class="kpi-value">S/{{ valorResultado(r).toFixed(2) }}</div>
     </div>
   </div>
 
   <div class="panel">
+    <div class="card-help" title="Indicadores estratégicos calculados automáticamente para apoyar tus decisiones operativas y comerciales.">?</div>
     <h3>Panel de decisiones</h3>
     <p class="panel-subtitulo">
       Del {{ r.desde }} al {{ r.hasta }}.
@@ -62,26 +133,31 @@
 
     <div class="decision-grid">
       <div class="decision-card">
+        <div class="card-help" title="Monto promedio gastado por cada cliente en cada compra (Total Ingresos / Número de ventas).">?</div>
         <div class="decision-label">Ticket promedio</div>
         <div class="decision-valor">S/{{ r.ticket_promedio.toFixed(2) }}</div>
         <div class="decision-nota">por venta, en el período</div>
       </div>
       <div class="decision-card">
+        <div class="card-help" title="Porcentaje promedio de margen de ganancia obtenido sobre el precio de venta de tus productos.">?</div>
         <div class="decision-label">Margen promedio</div>
         <div class="decision-valor">{{ r.margen_promedio_pct.toFixed(0) }}%</div>
         <div class="decision-nota">{{ r.margen_basado_en_ventas_reales ? 'de tus ventas reales' : 'sobre precio de venta (catálogo)' }}</div>
       </div>
       <div class="decision-card">
+        <div class="card-help" title="Monto de ventas en Soles necesario para cubrir todos tus costos operativos sin perder ni ganar.">?</div>
         <div class="decision-label">Punto de equilibrio</div>
         <div class="decision-valor">{{ r.punto_equilibrio_periodo !== null ? 'S/' + r.punto_equilibrio_periodo.toFixed(0) : 'No calculable' }}</div>
         <div class="decision-nota">ventas necesarias en el período</div>
       </div>
       <div class="decision-card">
+        <div class="card-help" title="Estimación del monto total de ingresos con el que cerrarías el período al ritmo de venta actual.">?</div>
         <div class="decision-label">Proyección de cierre</div>
         <div class="decision-valor">{{ r.proyeccion_cierre_periodo !== null ? 'S/' + r.proyeccion_cierre_periodo.toFixed(0) : '—' }}</div>
         <div class="decision-nota">si mantienes el ritmo actual</div>
       </div>
       <div class="decision-card" [class.decision-positiva]="r.crecimiento_vs_periodo_anterior_pct >= 0" [class.decision-negativa]="r.crecimiento_vs_periodo_anterior_pct < 0">
+        <div class="card-help" title="Porcentaje de variación de los ingresos con respecto al período anterior equivalente.">?</div>
         <div class="decision-label">Crecimiento</div>
         <div class="decision-valor">{{ r.crecimiento_vs_periodo_anterior_pct >= 0 ? '+' : '' }}{{ r.crecimiento_vs_periodo_anterior_pct.toFixed(0) }}%</div>
         <div class="decision-nota">vs. período anterior</div>
@@ -90,6 +166,7 @@
 
     <div class="decision-destacados" *ngIf="r.producto_estrella">
       <div class="destacado-card">
+        <div class="card-help" title="Producto con el mayor volumen de unidades vendidas acumuladas en este período.">?</div>
         <span class="destacado-tag">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 21h8"/>
@@ -107,6 +184,7 @@
   </div>
 
   <div class="panel">
+    <div class="card-help" title="Lista de costos fijos que se repiten periódicamente (alquileres, nóminas, servicios de luz, agua e internet).">?</div>
     <h3>Gastos recurrentes</h3>
     <p class="panel-subtitulo">Se aplican automáticamente cada período mientras estén vigentes (alquiler, sueldos, servicios).</p>
     <table class="tabla">
@@ -137,6 +215,7 @@
   </div>
 
   <div class="panel">
+    <div class="card-help" title="Gastos esporádicos o excepcionales registrados en fechas específicas (reparaciones de tienda, mantenimiento de equipos).">?</div>
     <h3>Gastos únicos y extraordinarios</h3>
     <p class="panel-subtitulo">Solo afectan el período en el que ocurrieron (reparaciones, compras puntuales, etc.).</p>
     <table class="tabla">
@@ -167,6 +246,7 @@
   </div>
 
   <div class="panel">
+    <div class="card-help" title="Modulo de gestión de compras de mercadería a proveedores, volumen de ventas e incidencias de devoluciones.">?</div>
     <div class="panel-header-toolbar">
       <div>
         <h3>Compras a proveedores</h3>
@@ -178,18 +258,22 @@
     <!-- KPIs del Módulo Proveedores -->
     <div class="kpi-grid kpi-grid-proveedores">
       <div class="kpi-card">
+        <div class="card-help" title="Suma total de dinero invertido en compras de mercadería a tus proveedores.">?</div>
         <div class="kpi-label">Inversión total compras</div>
         <div class="kpi-value">S/{{ totalesProveedores.totalComprasMonto.toFixed(2) }}</div>
       </div>
       <div class="kpi-card">
+        <div class="card-help" title="Cantidad total de unidades vendidas asociadas a tus compras de proveedores.">?</div>
         <div class="kpi-label">Productos vendidos por proveedor</div>
         <div class="kpi-value">{{ totalesProveedores.totalUnidadesVendidas }} u.</div>
       </div>
       <div class="kpi-card">
+        <div class="card-help" title="Total de unidades devueltas a proveedores por garantía o fallas de calidad.">?</div>
         <div class="kpi-label">Total devoluciones realizadas</div>
         <div class="kpi-value kpi-devoluciones-val">{{ totalesProveedores.totalCantidadDevoluciones }} u.</div>
       </div>
       <div class="kpi-card" [class.kpi-positivo]="totalesProveedores.tasaDevolucionPromedio <= 3" [class.kpi-negativo]="totalesProveedores.tasaDevolucionPromedio > 6">
+        <div class="card-help" title="Porcentaje de productos devueltos frente a las unidades vendidas por proveedor.">?</div>
         <div class="kpi-label">Tasa prom. de devoluciones</div>
         <div class="kpi-value">{{ totalesProveedores.tasaDevolucionPromedio.toFixed(2) }}%</div>
       </div>
@@ -197,18 +281,19 @@
 
     <!-- Gráfico Visual: Ventas vs Devoluciones por Proveedor -->
     <div class="proveedores-chart-container">
+      <div class="card-help" title="Gráfico de barras comparativo de unidades vendidas frente a devoluciones de tus proveedores.">?</div>
       <div class="chart-header">
         <div>
           <span class="chart-titulo">Gráfico: Ventas y Devoluciones por Proveedor</span>
-          <span class="chart-subtitulo">Comparativa de volumen de ventas e incidencias de devolución</span>
+          <span class="chart-subtitulo">Comparativa de volumen de ventas e incidencias de devolución de tus compras</span>
         </div>
-        <div class="chart-leyenda">
+        <div class="chart-leyenda" *ngIf="resumenProveedores.length > 0">
           <span class="leyenda-item item-vendidas"><span class="dot"></span> Unidades Vendidas</span>
           <span class="leyenda-item item-devoluciones"><span class="dot"></span> Devoluciones</span>
         </div>
       </div>
 
-      <div class="proveedores-chart-barras">
+      <div class="proveedores-chart-barras" *ngIf="resumenProveedores.length > 0">
         <div class="chart-col-proveedor" *ngFor="let p of resumenProveedores">
           <div class="bar-group-wrapper" [title]="p.proveedor + ': ' + p.unidadesVendidas + ' vendidas, ' + p.cantidadDevoluciones + ' devueltas (' + p.porcentajeDevoluciones + '%)'">
             <div class="bar-group">
@@ -226,10 +311,15 @@
           <span class="chart-label-prov" [title]="p.proveedor">{{ p.proveedor }}</span>
         </div>
       </div>
+
+      <div *ngIf="resumenProveedores.length === 0" style="text-align: center; padding: 24px 12px; color: #5a8a78; font-size: 13px;">
+        Todavía no registras compras ni proveedores para mostrar en tu gráfico. Haz clic en "+ Registrar compra" para agregar tus registros de proveedor.
+      </div>
     </div>
 
     <!-- Tabla 1: Productos vendidos y % de Devoluciones por Proveedor -->
-    <div class="seccion-subpanel">
+    <div class="seccion-subpanel" *ngIf="resumenProveedores.length > 0">
+      <div class="card-help" title="Tabla con el resumen de productos, unidades vendidas y tasa de devolución específica por proveedor.">?</div>
       <h4 class="subpanel-titulo">Desglose por Proveedor</h4>
       <table class="tabla tabla-proveedores">
         <thead>
@@ -265,6 +355,7 @@
 
     <!-- Tabla 2: Historial de Compras -->
     <div class="seccion-subpanel" style="margin-top: 24px;">
+      <div class="card-help" title="Lista cronológica de todas las compras registradas a proveedores con opción para eliminar.">?</div>
       <h4 class="subpanel-titulo">Historial de Registros de Compras</h4>
       <table class="tabla">
         <thead>
@@ -300,71 +391,12 @@
             </td>
           </tr>
           <tr *ngIf="comprasService.compras().length === 0">
-            <td colspan="6" style="text-align:center; color:#94a798;">Todavía no registras compras individuales (mostrando métricas de proveedores arriba).</td>
+            <td colspan="6" style="text-align:center; color:#94a798;">Todavía no registras compras de proveedores. Usa "+ Registrar compra" para agregar tus datos.</td>
           </tr>
         </tbody>
       </table>
       <button class="btn-secondary" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
     </div>
-  </div>
-
-  <div class="panel">
-    <h3>Resumen mensual de compras y ventas</h3>
-    <p class="panel-subtitulo">Elige un mes y descárgalo en PDF o Excel para tus registros o tu contador.</p>
-
-    <div class="resumen-mensual-toolbar">
-      <input type="month" [ngModel]="mesSeleccionado" (ngModelChange)="mesSeleccionado = $event" />
-      <button class="btn-primary" [disabled]="generandoResumenMensual" [class.btn-loading]="generandoResumenMensual" (click)="generarResumenMensual()">
-        {{ generandoResumenMensual ? 'Generando...' : 'Generar resumen' }}
-      </button>
-    </div>
-
-    <p class="aviso-margen-parcial" *ngIf="errorResumenMensual">
-      No se pudo generar el resumen de ese mes. Intenta de nuevo en unos segundos.
-    </p>
-
-    <ng-container *ngIf="resumenMensual as rm">
-      <p class="panel-subtitulo" style="margin-top: 14px;">{{ rm.etiquetaMes }} · del {{ rm.desde }} al {{ rm.hasta }}</p>
-
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Ventas del mes</div>
-          <div class="kpi-value">S/{{ rm.ventas.ingresos_periodo.toFixed(2) }}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Compras del mes</div>
-          <div class="kpi-value">S/{{ rm.compras.total.toFixed(2) }}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Cantidad ventas / compras</div>
-          <div class="kpi-value">{{ rm.ventas.cantidad_ventas }} / {{ rm.compras.cantidad }}</div>
-        </div>
-        <div class="kpi-card" [class.kpi-positivo]="rm.balanceNeto >= 0" [class.kpi-negativo]="rm.balanceNeto < 0">
-          <div class="kpi-label">Balance neto del mes</div>
-          <div class="kpi-value">S/{{ rm.balanceNeto.toFixed(2) }}</div>
-        </div>
-      </div>
-
-      <table class="tabla" *ngIf="rm.compras.detalle.length > 0" style="margin-top: 16px;">
-        <thead>
-          <tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th>Monto</th></tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let c of rm.compras.detalle">
-            <td>{{ c.fecha }}</td>
-            <td>{{ c.proveedor }}</td>
-            <td>{{ c.concepto }}</td>
-            <td>S/{{ c.monto.toFixed(2) }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p *ngIf="rm.compras.detalle.length === 0" class="panel-subtitulo" style="margin-top: 12px;">Sin compras registradas ese mes.</p>
-
-      <div class="resumen-mensual-descargas">
-        <button class="btn-secondary" (click)="descargarResumenPDF()">Descargar PDF</button>
-        <button class="btn-secondary" (click)="descargarResumenExcel()">Descargar Excel</button>
-      </div>
-    </ng-container>
   </div>
 </div>
 
