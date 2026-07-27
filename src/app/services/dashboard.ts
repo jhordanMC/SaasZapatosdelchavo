@@ -138,10 +138,16 @@ export class DashboardService {
   }
 
   cargarRotacionInventario(dias = 30, limit = 20): void {
+    this.obtenerRotacionInventario(dias, limit).subscribe((lista) => this.rotacionInventario.set(lista));
+  }
+
+  /** Igual que cargarRotacionInventario, pero devuelve el Observable sin suscribirse,
+   * para poder encadenar algo después de que lleguen los datos (ej. revisar tallas
+   * del top vendido) sin disparar el HTTP request dos veces. Quien lo llama decide
+   * si también quiere guardar el resultado en `rotacionInventario`. */
+  obtenerRotacionInventario(dias = 30, limit = 20): Observable<FilaRotacion[]> {
     const params = new HttpParams().set('dias', dias).set('limit', limit);
-    this.http
-      .get<FilaRotacion[]>(`${this.base}/rotacion-inventario`, { params })
-      .subscribe((lista) => this.rotacionInventario.set(lista));
+    return this.http.get<FilaRotacion[]>(`${this.base}/rotacion-inventario`, { params });
   }
 
   cargarInventarioPorTalla(): void {

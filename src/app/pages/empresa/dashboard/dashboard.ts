@@ -2,12 +2,11 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService, FilaRotacion, ProductoRanking } from '../../../services/dashboard';
-import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero } from '../../../services/finanzas';
+import { FinanzasService, GastoRecurrenteRead, PuntoSemana, ResumenFinanciero } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
-import { TPipe } from '../../../core/t.pipe';
 
 /** Período del filtro único del dashboard — 'personalizado' deja que el usuario elija el rango a mano. */
-type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'personalizado';
+type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'anio' | 'personalizado';
 
 interface FilaGasto {
   tipo: string;
@@ -24,15 +23,26 @@ interface FilaCategoria {
   ingresos: number;
 }
 
+interface PuntoEvolucion {
+  etiqueta: string;
+  ingresos: number;
+  gananciaEstimada: number;
+}
+
+interface TallaRota {
+  producto: string;
+  talla: string;
+}
+
 @Component({
   selector: 'app-empresa-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TPipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
 export class EmpresaDashboardComponent implements OnInit {
-  /** Expuesto al template para Math.max(...) en el ancho mínimo de las barras del gráfico. */
+  /** Expuesto al template para Math.max(...) en anchos mínimos de barras. */
   readonly Math = Math;
 
   constructor(
@@ -41,41 +51,39 @@ export class EmpresaDashboardComponent implements OnInit {
     private inventarioService: InventarioService
   ) {}
 
-  /** id_producto → nombre_categoria, para poder agrupar el ranking de ventas por categoría (top "marcas"). */
+  /** id_producto → nombre_categoria y costo_compra, para cruzar el ranking de ventas
+   * con la categoría (top "marcas") y calcular capital atrapado a costo real. */
   private categoriaPorProducto = new Map<string, string>();
+  private costoPorProducto = new Map<string, number>();
 
   ngOnInit(): void {
-    // Solo lo que el dashboard sigue usando de verdad (nada de talla/día-semana/ingresos-mes: esas
-    // secciones se quitaron, así que ya no vale la pena pedirle esos datos al backend).
     this.dashboardService.cargarResumen();
-    this.dashboardService.cargarProductosSinVentas();
-    this.dashboardService.cargarRotacionInventario();
     this.finanzasService.recargarTodo();
+
+    this.dashboardService.obtenerRotacionInventario(30, 40).subscribe((lista) => {
+      this.dashboardService.rotacionInventario.set(lista);
+      this.cargarTallasRotasDelMasVendido();
+    });
 
     this.inventarioService.listarProductos({}, 0, 300).subscribe((pagina) => {
       this.categoriaPorProducto.clear();
+      this.costoPorProducto.clear();
       for (const p of pagina.items) {
         this.categoriaPorProducto.set(p.id_producto, p.nombre_categoria ?? 'Sin categoría');
+        this.costoPorProducto.set(p.id_producto, p.costo_compra);
       }
+    });
+
+    this.dashboardService.obtenerRankingProductosAmpliado().subscribe((lista) => {
+      this.rankingAmpliado.set(lista);
     });
 
     this.cambiarPeriodo('dia');
   }
 
-  private cargarRankingProductos(): void {
-    this.dashboardService
-      .obtenerRankingProductosAmpliado(300, this.avanceDesde, this.avanceHasta)
-      .subscribe((lista) => this.rankingAmpliado.set(lista));
-  }
-
   // ═══════════════════════════════════════════════════════════
-  // Filtro único (día / semana / mes / personalizado)
+  // Barra superior de control: período + canal
   // ═══════════════════════════════════════════════════════════
-  // Un solo control, ubicado al final del dashboard, que maneja el período
-  // de "Tu avance" (arriba) y de "Salud financiera real". El estado vive acá
-  // en el componente, no en el DOM, así que no importa que el control visual
-  // esté más abajo en la página: los paneles de arriba reaccionan igual.
-  // Reutiliza FinanzasService.obtenerResumenPeriodo(desde, hasta).
 
   periodoAvance: PeriodoAvance = 'dia';
   avanceDesde = this.hoyISO();
@@ -83,6 +91,12 @@ export class EmpresaDashboardComponent implements OnInit {
   avanceResumen = signal<ResumenFinanciero | null>(null);
   avanceCargando = signal(false);
   avanceError = signal<string | null>(null);
+
+  /** El sistema todavía no distingue ventas al por menor de al por mayor
+   * (no hay un campo "canal"/tipo de venta en el modelo de datos) — el
+   * selector queda visible para que se note el hueco, pero no filtra nada
+   * todavía. Necesitaría un campo nuevo en Venta + este endpoint filtrando por él. */
+  canal: 'todos' | 'menor' | 'mayor' = 'todos';
 
   private hoyISO(): string {
     return this.formatearISO(new Date());
@@ -96,7 +110,7 @@ export class EmpresaDashboardComponent implements OnInit {
 
   private lunesDeEstaSemanaISO(): string {
     const hoy = new Date();
-    const diaSemana = hoy.getDay(); // 0 = domingo, 1 = lunes, ...
+    const diaSemana = hoy.getDay();
     const diasDesdeElLunes = diaSemana === 0 ? 6 : diaSemana - 1;
     const lunes = new Date(hoy);
     lunes.setDate(hoy.getDate() - diasDesdeElLunes);
@@ -106,6 +120,11 @@ export class EmpresaDashboardComponent implements OnInit {
   private primerDiaDeEsteMesISO(): string {
     const hoy = new Date();
     return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  }
+
+  private primerDiaDeEsteAnioISO(): string {
+    const hoy = new Date();
+    return this.formatearISO(new Date(hoy.getFullYear(), 0, 1));
   }
 
   cambiarPeriodo(periodo: PeriodoAvance): void {
@@ -119,18 +138,19 @@ export class EmpresaDashboardComponent implements OnInit {
     } else if (periodo === 'mes') {
       this.avanceDesde = this.primerDiaDeEsteMesISO();
       this.avanceHasta = this.hoyISO();
+    } else if (periodo === 'anio') {
+      this.avanceDesde = this.primerDiaDeEsteAnioISO();
+      this.avanceHasta = this.hoyISO();
     }
-    // 'personalizado' deja las fechas tal como estén — el usuario las edita con los inputs.
     if (periodo !== 'personalizado') {
       this.cargarAvance();
       this.cargarRankingProductos();
     }
   }
 
-  /** Se llama al editar las fechas del filtro personalizado. */
   onFechaPersonalizadaChange(): void {
     if (!this.avanceDesde || !this.avanceHasta) return;
-    if (this.avanceDesde > this.avanceHasta) return; // rango inválido: se espera a que el usuario lo corrija
+    if (this.avanceDesde > this.avanceHasta) return;
     this.cargarAvance();
     this.cargarRankingProductos();
   }
@@ -150,12 +170,15 @@ export class EmpresaDashboardComponent implements OnInit {
     });
   }
 
+  private cargarRankingProductos(): void {
+    this.dashboardService
+      .obtenerRankingProductosAmpliado(300, this.avanceDesde, this.avanceHasta)
+      .subscribe((lista) => this.rankingAmpliado.set(lista));
+  }
+
   // ═══════════════════════════════════════════════════════════
-  // Tu avance — tarjetas KPI del período filtrado + 2 datos "actuales"
+  // KPIs "actuales" (no varían por período)
   // ═══════════════════════════════════════════════════════════
-  // Valor de inventario y Productos en riesgo de merma son estado ACTUAL del
-  // negocio (una foto de hoy), no algo que tenga sentido acumular por rango
-  // de fechas — por eso salen del resumen fijo del dashboard, no del filtro.
 
   get valorInventario(): number {
     return this.dashboardService.resumen()?.valor_inventario_costo ?? 0;
@@ -166,47 +189,31 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Salud financiera real (venta → ganancia real), mismo período filtrado
+  // Evolución de ventas vs. ganancia real (últimas semanas)
   // ═══════════════════════════════════════════════════════════
-  // Antes este cuadro usaba un resumen FIJO (siempre "mes actual") mientras
-  // "Tu avance" mostraba el período que el usuario elegía — por eso los
-  // números de ambos cuadros no coincidían y parecía que estaba roto. Ahora
-  // los dos leen del mismo `avanceResumen`, así que siempre están de acuerdo.
+  // El backend expone ingresos reales por semana, pero no un desglose de
+  // ganancia por semana — así que la ganancia de cada punto es una
+  // ESTIMACIÓN: ingresos de esa semana × tu margen promedio del período
+  // filtrado arriba. Se muestra clarísimo en el HTML que es estimado.
 
-  get costoMercaderiaPeriodo(): number {
-    const a = this.avanceResumen();
-    if (!a) return 0;
-    return Math.max(0, a.ingresos_periodo - a.margen_bruto_periodo);
+  get evolucion(): PuntoEvolucion[] {
+    const margenFrac = (this.avanceResumen()?.margen_promedio_pct ?? 0) / 100;
+    return this.finanzasService.ingresosPorSemana().map((p: PuntoSemana) => ({
+      etiqueta: p.etiqueta,
+      ingresos: p.total,
+      gananciaEstimada: Math.max(0, p.total * margenFrac),
+    }));
   }
 
-  get margenBrutoPct(): number {
-    const a = this.avanceResumen();
-    if (!a || a.ingresos_periodo <= 0) return 0;
-    return (a.margen_bruto_periodo / a.ingresos_periodo) * 100;
+  get maxIngresoEvolucion(): number {
+    return Math.max(1, ...this.evolucion.map((p) => p.ingresos));
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Producto más / menos vendido, top 5 y top de categorías (gráficos)
+  // Producto más / menos vendido, top 5 y top de categorías
   // ═══════════════════════════════════════════════════════════
-  // "Top de marcas": el catálogo no tiene un campo de marca — se usa la
-  // categoría del producto como el agrupador más cercano disponible.
-  // El filtro único de abajo (día/semana/mes/personalizado) recarga este
-  // ranking con ese mismo rango — ver la nota en DashboardService sobre
-  // si el backend ya soporta desde/hasta en este endpoint.
 
   rankingAmpliado = signal<ProductoRanking[]>([]);
-
-  get top5Productos(): ProductoRanking[] {
-    return this.rankingAmpliado().slice(0, 5);
-  }
-
-  /** Menos vendidos, pero solo entre los que sí tuvieron alguna venta (0 ventas ya se muestra en "Sin ventas"). */
-  get bottom5Productos(): ProductoRanking[] {
-    return [...this.rankingAmpliado()]
-      .filter((p) => p.unidades > 0)
-      .sort((a, b) => a.unidades - b.unidades)
-      .slice(0, 5);
-  }
 
   get topCategorias(): FilaCategoria[] {
     const mapa = new Map<string, FilaCategoria>();
@@ -222,49 +229,97 @@ export class EmpresaDashboardComponent implements OnInit {
       .slice(0, 5);
   }
 
-  get maxUnidadesTop5(): number {
-    return Math.max(1, ...this.top5Productos.map((p) => p.unidades));
-  }
-
-  get maxUnidadesBottom5(): number {
-    return Math.max(1, ...this.bottom5Productos.map((p) => p.unidades));
-  }
-
   get maxIngresosCategoria(): number {
     return Math.max(1, ...this.topCategorias.map((c) => c.ingresos));
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Productos sin ventas (nota informativa)
-  // ═══════════════════════════════════════════════════════════
-
-  get productosSinVentas() {
-    return this.dashboardService.productosSinVentas();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // Rotación de inventario y riesgo de merma
+  // Rotación de inventario — fuente única para "Top vendidos",
+  // "Riesgo de merma" y las alertas ámbar/verde (mismos datos, coherentes).
   // ═══════════════════════════════════════════════════════════
 
   get analisisRotacion(): FilaRotacion[] {
     return this.dashboardService.rotacionInventario();
   }
 
-  get productoMayorMerma(): FilaRotacion | null {
-    return this.analisisRotacion[0] ?? null;
+  get top5MasVendidos(): FilaRotacion[] {
+    return [...this.analisisRotacion]
+      .filter((f) => f.unidades_periodo > 0)
+      .sort((a, b) => b.unidades_periodo - a.unidades_periodo)
+      .slice(0, 5);
+  }
+
+  get top5RiesgoMerma(): FilaRotacion[] {
+    return [...this.analisisRotacion]
+      .filter((f) => f.estado === 'sin-movimiento' || f.estado === 'riesgo')
+      .sort((a, b) => a.unidades_periodo - b.unidades_periodo)
+      .slice(0, 5);
+  }
+
+  get maxUnidadesTop5(): number {
+    return Math.max(1, ...this.top5MasVendidos.map((f) => f.unidades_periodo));
+  }
+
+  get maxDiasMerma(): number {
+    return Math.max(1, ...this.top5RiesgoMerma.map((f) => f.dias_para_agotar ?? f.stock_actual));
+  }
+
+  // ── Alerta ámbar: capital atrapado (productos sin movimiento, a costo real) ──
+
+  get capitalAtrapado(): { cantidad: number; monto: number; ejemplo: FilaRotacion | null } {
+    const sinMovimiento = this.analisisRotacion.filter((f) => f.estado === 'sin-movimiento');
+    const monto = sinMovimiento.reduce((acc, f) => acc + f.stock_actual * (this.costoPorProducto.get(f.id_producto) ?? 0), 0);
+    return { cantidad: sinMovimiento.length, monto, ejemplo: sinMovimiento[0] ?? null };
+  }
+
+  // ── Alerta verde: sugerencia de reabastecimiento ──
+  // Asume un tiempo de reposición de 15 días (ajustable) — el backend no
+  // tiene todavía un "lead time" configurable por proveedor.
+
+  private readonly DIAS_REPOSICION_ASUMIDOS = 15;
+
+  get sugerenciaReabastecimiento(): { producto: FilaRotacion; pares: number } | null {
+    const candidatos = this.analisisRotacion
+      .filter((f) => (f.estado === 'saludable' || f.estado === 'lenta') && f.dias_para_agotar !== null && f.dias_para_agotar <= 10)
+      .sort((a, b) => (a.dias_para_agotar ?? 0) - (b.dias_para_agotar ?? 0));
+    const producto = candidatos[0];
+    if (!producto) return null;
+    const pares = Math.max(1, Math.ceil(producto.velocidad_diaria * this.DIAS_REPOSICION_ASUMIDOS));
+    return { producto, pares };
+  }
+
+  // ── Alerta roja: tallas rotas del producto más vendido (datos reales, cruzando catálogo) ──
+
+  tallasRotas = signal<TallaRota[]>([]);
+  productoTopNombre = signal<string | null>(null);
+
+  private cargarTallasRotasDelMasVendido(): void {
+    const top = this.top5MasVendidos[0];
+    if (!top) {
+      this.tallasRotas.set([]);
+      this.productoTopNombre.set(null);
+      return;
+    }
+    this.productoTopNombre.set(top.nombre);
+    this.inventarioService.obtenerProducto(top.id_producto).subscribe((detalle) => {
+      const rotas: TallaRota[] = [];
+      for (const variante of detalle.variantes) {
+        if (!variante.esta_activo || !variante.talla) continue;
+        const stockTotal = variante.stock.reduce((acc, s) => acc + s.cantidad, 0);
+        if (stockTotal === 0) rotas.push({ producto: top.nombre, talla: variante.talla });
+      }
+      this.tallasRotas.set(rotas);
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
   // Gastos operativos de mayor impacto
   // ═══════════════════════════════════════════════════════════
-  // Solo considera gastos RECURRENTES (alquiler, sueldos, servicios): un
-  // gasto único/extraordinario no debería distorsionar la estructura de
-  // costos recurrentes mes a mes.
 
   private mensualizarGasto(g: GastoRecurrenteRead): number {
     if (g.frecuencia === 'mensual') return g.monto;
     if (g.frecuencia === 'semanal') return g.monto * 4.33;
-    return g.monto * 30; // diario
+    return g.monto * 30;
   }
 
   get gastosPorTipo(): FilaGasto[] {
