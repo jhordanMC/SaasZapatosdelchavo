@@ -162,7 +162,7 @@
   <div class="panel">
     <div class="panel-head">
       <h3>Producto más y menos vendido</h3>
-      <p class="panel-sub">Datos de los últimos 30 días. El filtro de abajo controla "Tu avance" y "Salud financiera real"; este ranking en particular todavía usa el período fijo del backend.</p>
+      <p class="panel-sub">Filtrado por: {{ avanceDesde }} al {{ avanceHasta }} (usa el filtro de abajo). Si tu backend todavía no soporta filtrar este ranking por fecha, vas a ver siempre los mismos números sin importar lo que elijas — avísame y reviso el endpoint.</p>
     </div>
 
     <p class="subtitulo-mini">
@@ -172,11 +172,14 @@
       </svg>
       Top 5 más vendidos
     </p>
-    <div class="bar-list" *ngIf="top5Productos.length > 0">
-      <div class="bar-list-row" *ngFor="let p of top5Productos">
-        <span class="bar-list-label" [title]="p.nombre">{{ p.nombre }}</span>
-        <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(p.unidades / maxUnidadesTop5) * 100"></span></span>
-        <span class="bar-list-valor">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+    <div class="chart-productos" *ngIf="top5Productos.length > 0">
+      <div class="chart-productos-fila" *ngFor="let p of top5Productos">
+        <span class="chart-productos-nombre" [title]="p.nombre">{{ p.nombre }}</span>
+        <div class="chart-productos-track">
+          <div class="chart-productos-fill" [style.width.%]="Math.max(12, (p.unidades / maxUnidadesTop5) * 100)">
+            <span class="chart-productos-fill-texto">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+          </div>
+        </div>
       </div>
     </div>
     <p class="tabla-vacia" *ngIf="top5Productos.length === 0">Todavía no hay ventas suficientes.</p>
@@ -187,11 +190,14 @@
       </svg>
       Top 5 menos vendidos (con ventas)
     </p>
-    <div class="bar-list" *ngIf="bottom5Productos.length > 0">
-      <div class="bar-list-row" *ngFor="let p of bottom5Productos">
-        <span class="bar-list-label" [title]="p.nombre">{{ p.nombre }}</span>
-        <span class="bar-list-track"><span class="bar-list-fill bar-list-fill-gasto" [style.width.%]="(p.unidades / maxUnidadesBottom5) * 100"></span></span>
-        <span class="bar-list-valor">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+    <div class="chart-productos" *ngIf="bottom5Productos.length > 0">
+      <div class="chart-productos-fila" *ngFor="let p of bottom5Productos">
+        <span class="chart-productos-nombre" [title]="p.nombre">{{ p.nombre }}</span>
+        <div class="chart-productos-track">
+          <div class="chart-productos-fill chart-productos-fill-gasto" [style.width.%]="Math.max(12, (p.unidades / maxUnidadesBottom5) * 100)">
+            <span class="chart-productos-fill-texto">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+          </div>
+        </div>
       </div>
     </div>
     <p class="tabla-vacia" *ngIf="bottom5Productos.length === 0">Todavía no hay ventas suficientes.</p>
@@ -204,18 +210,21 @@
       Top categorías
       <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto, que es el dato más cercano disponible.">como sustituto de marca</span>
     </p>
-    <div class="bar-list" *ngIf="topCategorias.length > 0">
-      <div class="bar-list-row" *ngFor="let c of topCategorias">
-        <span class="bar-list-label" [title]="c.nombre">{{ c.nombre }}</span>
-        <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(c.ingresos / maxIngresosCategoria) * 100"></span></span>
-        <span class="bar-list-valor">{{ c.unidades }} und · S/{{ c.ingresos.toFixed(0) }}</span>
+    <div class="chart-productos" *ngIf="topCategorias.length > 0">
+      <div class="chart-productos-fila" *ngFor="let c of topCategorias">
+        <span class="chart-productos-nombre" [title]="c.nombre">{{ c.nombre }}</span>
+        <div class="chart-productos-track">
+          <div class="chart-productos-fill" [style.width.%]="Math.max(12, (c.ingresos / maxIngresosCategoria) * 100)">
+            <span class="chart-productos-fill-texto">{{ c.unidades }} und · S/{{ c.ingresos.toFixed(0) }}</span>
+          </div>
+        </div>
       </div>
     </div>
     <p class="tabla-vacia" *ngIf="topCategorias.length === 0">Todavía no hay ventas suficientes.</p>
 
     <!-- ── Filtro único del dashboard: día / semana / mes / personalizado ── -->
     <div class="filtro-inferior">
-      <span class="filtro-inferior-label">Filtrar "Tu avance" y "Salud financiera real" por:</span>
+      <span class="filtro-inferior-label">Filtrar todo el dashboard por:</span>
       <div class="periodo-toggle">
         <button [class.active]="periodoAvance === 'dia'" (click)="cambiarPeriodo('dia')">Día</button>
         <button [class.active]="periodoAvance === 'semana'" (click)="cambiarPeriodo('semana')">Semana</button>

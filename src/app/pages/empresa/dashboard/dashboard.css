@@ -224,6 +224,48 @@
 .bar-list-fill-gasto { background: linear-gradient(90deg, #f0c869, #da9e0b); }
 .bar-list-valor { font-size: 12.5px; font-weight: 700; color: #024b40; text-align: right; }
 
+/* ── Gráfico de barras horizontal (producto más/menos vendido, top categorías) ──
+   A diferencia de .bar-list (pensado para etiquetas cortas tipo "Talla 40"),
+   acá el nombre va ARRIBA de la barra (los nombres de producto son largos) y
+   la barra es gruesa, con el valor escrito adentro — para que se lea como
+   gráfico, no como una tabla con una rayita al costado. */
+.chart-productos { display: flex; flex-direction: column; gap: 12px; }
+.chart-productos-fila { display: flex; flex-direction: column; gap: 4px; }
+.chart-productos-nombre {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1f4034;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chart-productos-track {
+  height: 26px;
+  border-radius: 8px;
+  background: #eef5f0;
+  overflow: hidden;
+}
+.chart-productos-fill {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  min-width: 12%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #64d59c, #024b40);
+  padding: 0 10px;
+  box-sizing: border-box;
+  transition: width 0.4s ease;
+}
+.chart-productos-fill-gasto { background: linear-gradient(90deg, #f0c869, #da9e0b); }
+.chart-productos-fill-texto {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 /* ══════════════════════════════
    Gráficos de barras verticales (semana / mes / día)
 ══════════════════════════════ */

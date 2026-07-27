@@ -32,6 +32,9 @@ interface FilaCategoria {
   styleUrls: ['./dashboard.css'],
 })
 export class EmpresaDashboardComponent implements OnInit {
+  /** Expuesto al template para Math.max(...) en el ancho mínimo de las barras del gráfico. */
+  readonly Math = Math;
+
   constructor(
     public dashboardService: DashboardService,
     public finanzasService: FinanzasService,
@@ -56,11 +59,13 @@ export class EmpresaDashboardComponent implements OnInit {
       }
     });
 
-    this.dashboardService.obtenerRankingProductosAmpliado().subscribe((lista) => {
-      this.rankingAmpliado.set(lista);
-    });
-
     this.cambiarPeriodo('dia');
+  }
+
+  private cargarRankingProductos(): void {
+    this.dashboardService
+      .obtenerRankingProductosAmpliado(300, this.avanceDesde, this.avanceHasta)
+      .subscribe((lista) => this.rankingAmpliado.set(lista));
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -118,6 +123,7 @@ export class EmpresaDashboardComponent implements OnInit {
     // 'personalizado' deja las fechas tal como estén — el usuario las edita con los inputs.
     if (periodo !== 'personalizado') {
       this.cargarAvance();
+      this.cargarRankingProductos();
     }
   }
 
@@ -126,6 +132,7 @@ export class EmpresaDashboardComponent implements OnInit {
     if (!this.avanceDesde || !this.avanceHasta) return;
     if (this.avanceDesde > this.avanceHasta) return; // rango inválido: se espera a que el usuario lo corrija
     this.cargarAvance();
+    this.cargarRankingProductos();
   }
 
   private cargarAvance(): void {
@@ -183,9 +190,9 @@ export class EmpresaDashboardComponent implements OnInit {
   // ═══════════════════════════════════════════════════════════
   // "Top de marcas": el catálogo no tiene un campo de marca — se usa la
   // categoría del producto como el agrupador más cercano disponible.
-  // Nota: este ranking usa el período fijo del backend (últimos 30 días) —
-  // el endpoint de ranking todavía no acepta un rango de fechas, así que no
-  // se conecta al filtro de abajo (ver nota en el HTML).
+  // El filtro único de abajo (día/semana/mes/personalizado) recarga este
+  // ranking con ese mismo rango — ver la nota en DashboardService sobre
+  // si el backend ya soporta desde/hasta en este endpoint.
 
   rankingAmpliado = signal<ProductoRanking[]>([]);
 

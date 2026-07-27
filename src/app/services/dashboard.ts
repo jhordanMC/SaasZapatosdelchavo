@@ -169,8 +169,19 @@ export class DashboardService {
    * cosas que `cargarRankingProductos` (pensado para mostrar solo el
    * top 10) no cubre. Mismo endpoint, solo que con un límite más alto.
    */
-  obtenerRankingProductosAmpliado(limit = 300): Observable<ProductoRanking[]> {
-    const params = new HttpParams().set('limit', limit);
+  /**
+   * Ranking de productos, opcionalmente acotado a un rango de fechas.
+   *
+   * OJO: no hay forma de confirmar desde el frontend si el backend YA
+   * soporta `desde`/`hasta` en este endpoint (no tengo acceso al código del
+   * backend). Si los ignora, este método simplemente devuelve el mismo
+   * ranking de siempre (últimos 30 días) sin importar el rango pedido —
+   * no falla, solo no filtra. Si el backend los soporta, funciona tal cual.
+   */
+  obtenerRankingProductosAmpliado(limit = 300, desde?: string, hasta?: string): Observable<ProductoRanking[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
     return this.http.get<ProductoRanking[]>(`${this.base}/ranking-productos`, { params });
   }
 
