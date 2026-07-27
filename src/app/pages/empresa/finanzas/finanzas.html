@@ -221,36 +221,145 @@
   </div>
 
   <div class="panel">
-    <h3>Compras a proveedores</h3>
-    <p class="panel-subtitulo">Reposición de mercadería y stock comprado a proveedores.</p>
-    <table class="tabla">
-      <thead>
-        <tr><th>Proveedor</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let c of comprasService.compras()">
-          <td>{{ c.proveedor }}</td>
-          <td>{{ c.concepto }}</td>
-          <td>S/{{ c.monto.toFixed(2) }}</td>
-          <td>{{ c.fecha }}</td>
-          <td>
-            <button class="btn-icon-danger"
-                    [disabled]="eliminandoId() === c.id_compra"
-                    [class.btn-loading]="eliminandoId() === c.id_compra"
-                    (click)="abrirModalEliminar(c.id_compra, 'compra')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </td>
-        </tr>
-        <tr *ngIf="comprasService.compras().length === 0">
-          <td colspan="5" style="text-align:center; color:#94a798;">Todavía no registras compras.</td>
-        </tr>
-      </tbody>
-    </table>
-    <button class="btn-secondary" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
+    <div class="panel-header-toolbar">
+      <div>
+        <h3>Compras a proveedores</h3>
+        <p class="panel-subtitulo">Reposición de mercadería, productos vendidos por proveedor y métricas de devoluciones.</p>
+      </div>
+      <button class="btn-primary btn-sm" (click)="abrirModalCompra()">+ Registrar compra</button>
+    </div>
+
+    <!-- KPIs del Módulo Proveedores -->
+    <div class="kpi-grid kpi-grid-proveedores">
+      <div class="kpi-card">
+        <div class="kpi-label">Inversión total compras</div>
+        <div class="kpi-value">S/{{ totalesProveedores.totalComprasMonto.toFixed(2) }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Productos vendidos por proveedor</div>
+        <div class="kpi-value">{{ totalesProveedores.totalUnidadesVendidas }} u.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total devoluciones realizadas</div>
+        <div class="kpi-value kpi-devoluciones-val">{{ totalesProveedores.totalCantidadDevoluciones }} u.</div>
+      </div>
+      <div class="kpi-card" [class.kpi-positivo]="totalesProveedores.tasaDevolucionPromedio <= 3" [class.kpi-negativo]="totalesProveedores.tasaDevolucionPromedio > 6">
+        <div class="kpi-label">Tasa prom. de devoluciones</div>
+        <div class="kpi-value">{{ totalesProveedores.tasaDevolucionPromedio.toFixed(2) }}%</div>
+      </div>
+    </div>
+
+    <!-- Gráfico Visual: Ventas vs Devoluciones por Proveedor -->
+    <div class="proveedores-chart-container">
+      <div class="chart-header">
+        <div>
+          <span class="chart-titulo">Gráfico: Ventas y Devoluciones por Proveedor</span>
+          <span class="chart-subtitulo">Comparativa de volumen de ventas e incidencias de devolución</span>
+        </div>
+        <div class="chart-leyenda">
+          <span class="leyenda-item item-vendidas"><span class="dot"></span> Unidades Vendidas</span>
+          <span class="leyenda-item item-devoluciones"><span class="dot"></span> Devoluciones</span>
+        </div>
+      </div>
+
+      <div class="proveedores-chart-barras">
+        <div class="chart-col-proveedor" *ngFor="let p of resumenProveedores">
+          <div class="bar-group-wrapper" [title]="p.proveedor + ': ' + p.unidadesVendidas + ' vendidas, ' + p.cantidadDevoluciones + ' devueltas (' + p.porcentajeDevoluciones + '%)'">
+            <div class="bar-group">
+              <div class="bar-fill bar-vendidas" [style.height.%]="alturaBarraVendidas(p.unidadesVendidas)">
+                <span class="bar-num" *ngIf="p.unidadesVendidas > 0">{{ p.unidadesVendidas }}</span>
+              </div>
+              <div class="bar-fill bar-devoluciones" [style.height.%]="alturaBarraDevoluciones(p.cantidadDevoluciones, p.unidadesVendidas)">
+                <span class="bar-num" *ngIf="p.cantidadDevoluciones > 0">{{ p.cantidadDevoluciones }}</span>
+              </div>
+            </div>
+            <span class="badge-pct" [class.badge-baja]="p.estadoDevolucion === 'excelente'" [class.badge-media]="p.estadoDevolucion === 'aceptable'" [class.badge-alta]="p.estadoDevolucion === 'alerta'">
+              {{ p.porcentajeDevoluciones }}% dev.
+            </span>
+          </div>
+          <span class="chart-label-prov" [title]="p.proveedor">{{ p.proveedor }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla 1: Productos vendidos y % de Devoluciones por Proveedor -->
+    <div class="seccion-subpanel">
+      <h4 class="subpanel-titulo">Desglose por Proveedor</h4>
+      <table class="tabla tabla-proveedores">
+        <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th>Categorías / Productos</th>
+            <th>Unid. Compradas</th>
+            <th>Unid. Vendidas</th>
+            <th>Devoluciones</th>
+            <th>% Devoluciones</th>
+            <th>Estado Calidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of resumenProveedores">
+            <td><strong>{{ p.proveedor }}</strong></td>
+            <td>
+              <span class="tag-concepto" *ngFor="let c of p.conceptos">{{ c }}</span>
+            </td>
+            <td>{{ p.unidadesCompradas }}</td>
+            <td><strong>{{ p.unidadesVendidas }} u.</strong></td>
+            <td><span class="val-devolucion">{{ p.cantidadDevoluciones }} u.</span></td>
+            <td><strong>{{ p.porcentajeDevoluciones.toFixed(2) }}%</strong></td>
+            <td>
+              <span class="badge-estado-calidad" [class.estado-excelente]="p.estadoDevolucion === 'excelente'" [class.estado-aceptable]="p.estadoDevolucion === 'aceptable'" [class.estado-alerta]="p.estadoDevolucion === 'alerta'">
+                {{ p.estadoDevolucion === 'excelente' ? 'Bajo (% < 3%)' : p.estadoDevolucion === 'aceptable' ? 'Aceptable (3-6%)' : 'Alto (> 6%)' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tabla 2: Historial de Compras -->
+    <div class="seccion-subpanel" style="margin-top: 24px;">
+      <h4 class="subpanel-titulo">Historial de Registros de Compras</h4>
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th>Concepto</th>
+            <th>Monto</th>
+            <th>Ítems / Devoluciones</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of comprasService.compras()">
+            <td>{{ c.proveedor }}</td>
+            <td>{{ c.concepto }}</td>
+            <td>S/{{ c.monto.toFixed(2) }}</td>
+            <td>
+              {{ c.cantidad_items ?? '—' }} ítems
+              <span *ngIf="c.cantidad_devoluciones" class="val-devolucion" style="font-size: 11px;">({{ c.cantidad_devoluciones }} dev.)</span>
+            </td>
+            <td>{{ c.fecha }}</td>
+            <td>
+              <button class="btn-icon-danger"
+                      [disabled]="eliminandoId() === c.id_compra"
+                      [class.btn-loading]="eliminandoId() === c.id_compra"
+                      (click)="abrirModalEliminar(c.id_compra, 'compra')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="comprasService.compras().length === 0">
+            <td colspan="6" style="text-align:center; color:#94a798;">Todavía no registras compras individuales (mostrando métricas de proveedores arriba).</td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn-secondary" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
+    </div>
   </div>
 
   <div class="panel">
@@ -458,9 +567,19 @@
           <input type="date" [ngModel]="formCompra.fecha" (ngModelChange)="formCompra.fecha = $event" />
         </div>
       </div>
+      <div class="form-row form-row-2">
+        <div>
+          <label>Cantidad de ítems (opcional)</label>
+          <input type="number" [ngModel]="formCompra.cantidad_items" (ngModelChange)="formCompra.cantidad_items = $event" min="0" placeholder="Ej. 50" />
+        </div>
+        <div>
+          <label>Devoluciones (opcional)</label>
+          <input type="number" [ngModel]="formCompra.cantidad_devoluciones" (ngModelChange)="formCompra.cantidad_devoluciones = $event" min="0" placeholder="Ej. 2" />
+        </div>
+      </div>
       <div class="form-row">
-        <label>Cantidad de ítems (opcional)</label>
-        <input type="number" [ngModel]="formCompra.cantidad_items" (ngModelChange)="formCompra.cantidad_items = $event" min="0" />
+        <label>Unidades vendidas de este lote (opcional)</label>
+        <input type="number" [ngModel]="formCompra.unidades_vendidas" (ngModelChange)="formCompra.unidades_vendidas = $event" min="0" placeholder="Ej. 35" />
       </div>
       <div class="form-row">
         <label>Notas (opcional)</label>

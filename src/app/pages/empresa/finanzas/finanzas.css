@@ -288,6 +288,157 @@
 }
 .btn-secondary:hover:not(:disabled) { background: #e8f1ec; }
 
+.panel-header-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.btn-sm { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
+
+.kpi-grid-proveedores { margin-bottom: 20px; }
+.kpi-devoluciones-val { color: #d9534f !important; }
+
+/* ── Gráfico Visual de Proveedores ───────────────────────────────────────── */
+.proveedores-chart-container {
+  background: #f8faf8;
+  border: 1px solid #e2ebe4;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.chart-titulo { display: block; font-size: 13.5px; font-weight: 700; color: #024b40; }
+.chart-subtitulo { display: block; font-size: 11.5px; color: #5a8a78; margin-top: 2px; }
+.chart-leyenda { display: flex; align-items: center; gap: 16px; font-size: 11.5px; color: #1f4034; }
+.leyenda-item { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.leyenda-item .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.item-vendidas .dot { background: linear-gradient(180deg, #024b40, #036b58); }
+.item-devoluciones .dot { background: linear-gradient(180deg, #e05252, #c93030); }
+
+.proveedores-chart-barras {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 20px;
+  height: 170px;
+  padding: 10px 10px 0;
+  border-bottom: 1px solid #e0eae2;
+}
+.chart-col-proveedor {
+  flex: 1;
+  max-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+.bar-group-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  position: relative;
+}
+.bar-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+.bar-fill {
+  width: 22px;
+  min-height: 6px;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3px;
+  transition: height 0.3s ease;
+}
+.bar-vendidas {
+  background: linear-gradient(180deg, #024b40, #036b58);
+  color: white;
+}
+.bar-devoluciones {
+  background: linear-gradient(180deg, #e05252, #c93030);
+  color: white;
+}
+.bar-num { font-size: 9px; font-weight: 700; line-height: 1; }
+
+.badge-pct {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.badge-baja { background: #e5f6ec; color: #1d7a4c; }
+.badge-media { background: #fef7e0; color: #b8860b; }
+.badge-alta { background: #fdecec; color: #b23a3a; }
+
+.chart-label-prov {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1f4034;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tablas y Subpaneles ─────────────────────────────────────────────────── */
+.seccion-subpanel {
+  background: white;
+  border: 1px solid #eaf2ec;
+  border-radius: 12px;
+  padding: 16px;
+}
+.subpanel-titulo {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #024b40;
+}
+.tabla-proveedores td { vertical-align: middle; }
+.tag-concepto {
+  display: inline-block;
+  background: #f0f6f2;
+  color: #024b40;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin: 2px;
+}
+.val-devolucion { color: #c93030; font-weight: 700; }
+
+.badge-estado-calidad {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 8px;
+}
+.estado-excelente { background: #e5f6ec; color: #1d7a4c; }
+.estado-aceptable { background: #fef7e0; color: #b8860b; }
+.estado-alerta { background: #fdecec; color: #b23a3a; }
+
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
@@ -304,6 +455,8 @@
   .banner-progreso { align-items: flex-start; width: 100%; min-width: 0; }
   .banner-progreso-track { width: 100%; }
   .mini-chart-barras { gap: 8px; }
+  .proveedores-chart-barras { gap: 10px; height: 150px; }
+  .panel-header-toolbar { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 480px) {
@@ -314,3 +467,4 @@
   .modal-footer { flex-direction: column-reverse; }
   .modal-footer button { width: 100%; }
 }
+

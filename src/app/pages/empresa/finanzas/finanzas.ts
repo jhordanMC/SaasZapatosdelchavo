@@ -228,10 +228,41 @@ export class FinanzasComponent implements OnInit {
     this.finanzasService.cargarGastosOperativos(this.finanzasService.gastosOperativos().length);
   }
 
-  // ── Compras a proveedores ────────────────────────────────────────────────
+  // ── Compras a proveedores y métricas de devoluciones ───────────────────────
+
+  get resumenProveedores() {
+    return this.comprasService.obtenerResumenProveedores();
+  }
+
+  get totalesProveedores() {
+    return this.comprasService.obtenerTotalesProveedores();
+  }
+
+  get maxUnidadesVendidasProveedor(): number {
+    const resumen = this.resumenProveedores;
+    return Math.max(1, ...resumen.map((p) => p.unidadesVendidas));
+  }
+
+  alturaBarraVendidas(unidades: number): number {
+    return Math.round((unidades / this.maxUnidadesVendidasProveedor) * 100);
+  }
+
+  alturaBarraDevoluciones(devoluciones: number, unidadesVendidas: number): number {
+    if (unidadesVendidas === 0) return 0;
+    // Escalar altura de devoluciones proporcional a las ventas para comparación visual limpia
+    return Math.max(8, Math.round((devoluciones / this.maxUnidadesVendidasProveedor) * 100 * 3));
+  }
 
   private formCompraVacio(): CompraCreate {
-    return { proveedor: '', concepto: '', monto: 0, cantidad_items: null, fecha: hoyISO() };
+    return {
+      proveedor: '',
+      concepto: '',
+      monto: 0,
+      cantidad_items: null,
+      unidades_vendidas: null,
+      cantidad_devoluciones: null,
+      fecha: hoyISO()
+    };
   }
 
   abrirModalCompra(): void {
