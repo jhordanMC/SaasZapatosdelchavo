@@ -1,27 +1,10 @@
-<div class="content" *ngIf="resumen as r">
+<div class="content">
 
-  <!-- ═══════════════ 0. TU AVANCE (filtrable: día / semana / mes / personalizado) ═══════════════ -->
+  <!-- ═══════════════ TU AVANCE ═══════════════ -->
   <div class="panel panel-avance">
-    <div class="panel-head avance-head">
-      <div>
-        <h3>Tu avance</h3>
-        <p class="panel-sub">Ventas, ganancia y gastos del período que elijas.</p>
-      </div>
-
-      <div class="avance-filtros">
-        <div class="periodo-toggle">
-          <button [class.active]="periodoAvance === 'dia'" (click)="cambiarPeriodoAvance('dia')">Hoy</button>
-          <button [class.active]="periodoAvance === 'semana'" (click)="cambiarPeriodoAvance('semana')">Semana</button>
-          <button [class.active]="periodoAvance === 'mes'" (click)="cambiarPeriodoAvance('mes')">Mes</button>
-          <button [class.active]="periodoAvance === 'personalizado'" (click)="cambiarPeriodoAvance('personalizado')">Personalizado</button>
-        </div>
-
-        <div class="rango-personalizado" *ngIf="periodoAvance === 'personalizado'">
-          <input type="date" [ngModel]="avanceDesde" (ngModelChange)="avanceDesde = $event; onFechaAvancePersonalizadaChange()" [max]="avanceHasta" />
-          <span>—</span>
-          <input type="date" [ngModel]="avanceHasta" (ngModelChange)="avanceHasta = $event; onFechaAvancePersonalizadaChange()" [min]="avanceDesde" />
-        </div>
-      </div>
+    <div class="panel-head">
+      <h3>Tu avance</h3>
+      <p class="panel-sub">Ventas, ganancia y gastos del período que elijas más abajo. Mostrando: <strong>{{ avanceDesde }} al {{ avanceHasta }}</strong>.</p>
     </div>
 
     <div class="estado-carga-avance" *ngIf="avanceCargando()">
@@ -30,180 +13,56 @@
 
     <p class="error-text" *ngIf="avanceError()">{{ avanceError() }}</p>
 
-    <ng-container *ngIf="avanceResumen() as a">
-      <div class="avance-kpi-grid" *ngIf="!avanceCargando()">
-        <div class="avance-kpi">
-          <span class="avance-kpi-label">Ventas</span>
-          <span class="avance-kpi-valor">S/{{ a.ingresos_periodo.toFixed(2) }}</span>
-          <span class="avance-kpi-nota">{{ a.cantidad_ventas }} venta(s) · ticket S/{{ a.ticket_promedio.toFixed(2) }}</span>
-        </div>
-        <div class="avance-kpi" [class.avance-positivo]="a.ganancia_neta_periodo >= 0" [class.avance-negativo]="a.ganancia_neta_periodo < 0">
-          <span class="avance-kpi-label">Ganancia neta</span>
-          <span class="avance-kpi-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</span>
-          <span class="avance-kpi-nota">{{ a.margen_promedio_pct.toFixed(0) }}% de margen</span>
-        </div>
-        <div class="avance-kpi">
-          <span class="avance-kpi-label">Gastos operativos</span>
-          <span class="avance-kpi-valor">S/{{ a.gasto_operativo_periodo.toFixed(2) }}</span>
-          <span class="avance-kpi-nota">del período</span>
-        </div>
-        <div class="avance-kpi">
-          <span class="avance-kpi-label">Utilidad bruta</span>
-          <span class="avance-kpi-valor">S/{{ a.margen_bruto_periodo.toFixed(2) }}</span>
-          <span class="avance-kpi-nota">antes de gastos operativos</span>
-        </div>
+    <div class="avance-kpi-grid" *ngIf="avanceResumen() as a">
+      <div class="avance-kpi">
+        <span class="avance-kpi-label">Ventas</span>
+        <span class="avance-kpi-valor">S/{{ a.ingresos_periodo.toFixed(2) }}</span>
+        <span class="avance-kpi-nota">{{ a.cantidad_ventas }} venta(s)</span>
       </div>
-      <p class="avance-rango">Del {{ a.desde }} al {{ a.hasta }}</p>
-    </ng-container>
+      <div class="avance-kpi" [class.avance-positivo]="a.ganancia_neta_periodo >= 0" [class.avance-negativo]="a.ganancia_neta_periodo < 0">
+        <span class="avance-kpi-label">Ganancia neta</span>
+        <span class="avance-kpi-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</span>
+        <span class="avance-kpi-nota">{{ a.margen_promedio_pct.toFixed(0) }}% de margen</span>
+      </div>
+      <div class="avance-kpi">
+        <span class="avance-kpi-label">Gastos operativos</span>
+        <span class="avance-kpi-valor">S/{{ a.gasto_operativo_periodo.toFixed(2) }}</span>
+        <span class="avance-kpi-nota">del período</span>
+      </div>
+      <div class="avance-kpi">
+        <span class="avance-kpi-label">Utilidad bruta</span>
+        <span class="avance-kpi-valor">S/{{ a.margen_bruto_periodo.toFixed(2) }}</span>
+        <span class="avance-kpi-nota">antes de gastos operativos</span>
+      </div>
+      <div class="avance-kpi">
+        <span class="avance-kpi-label">Venta promedio</span>
+        <span class="avance-kpi-valor">S/{{ a.ticket_promedio.toFixed(2) }}</span>
+        <span class="avance-kpi-nota">por venta (ticket)</span>
+      </div>
+      <div class="avance-kpi">
+        <span class="avance-kpi-label">Valor de inventario</span>
+        <span class="avance-kpi-valor">S/{{ valorInventario.toFixed(0) }}</span>
+        <span class="avance-kpi-nota">actual, a costo</span>
+      </div>
+      <div class="avance-kpi" [class.avance-negativo]="productosEnRiesgoMerma > 0">
+        <span class="avance-kpi-label">Riesgo de merma</span>
+        <span class="avance-kpi-valor">{{ productosEnRiesgoMerma }}</span>
+        <span class="avance-kpi-nota">producto(s) actual</span>
+      </div>
+    </div>
 
     <p class="tabla-vacia" *ngIf="!avanceResumen() && !avanceCargando() && !avanceError()">Sin datos para este período.</p>
   </div>
 
-  <!-- ═══════════════ 0-bis. AVANCE POR LOCAL/ALMACÉN ═══════════════ -->
-  <div class="panel" *ngIf="locales().length > 0">
-    <div class="panel-head">
-      <h3>
-        Avance por local
-        <span class="badge-ejemplo" title="Todavía no hay endpoint de backend para esto — los montos están repartidos a partir del total real del período, no son ventas reales por local.">datos de ejemplo</span>
-      </h3>
-      <p class="panel-sub">Mismo período elegido arriba ({{ avanceDesde }} al {{ avanceHasta }}). En cuanto el backend tenga el endpoint de ventas por local, esta tabla pasa a mostrar números reales sin cambiar nada más de la pantalla.</p>
-    </div>
-
-    <div class="estado-carga-avance" *ngIf="avancePorLocalCargando()">
-      <span class="spinner"></span> Calculando…
-    </div>
-
-    <table class="tabla" *ngIf="!avancePorLocalCargando() && avancePorLocal().length > 0">
-      <thead>
-        <tr>
-          <th>Local</th>
-          <th>Ventas</th>
-          <th># ventas</th>
-          <th>Gastos</th>
-          <th>Ganancia neta</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let loc of avancePorLocal()">
-          <td>{{ loc.nombre_local }}</td>
-          <td>S/{{ loc.ingresos.toFixed(2) }}</td>
-          <td>{{ loc.cantidad_ventas }}</td>
-          <td>S/{{ loc.gasto_operativo.toFixed(2) }}</td>
-          <td [class.trend-up]="loc.ganancia_neta >= 0" [class.trend-down]="loc.ganancia_neta < 0">S/{{ loc.ganancia_neta.toFixed(2) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ═══════════════ 0-ter. TOP DE PRODUCTOS Y CATEGORÍAS ═══════════════ -->
-  <div class="panel">
-    <div class="panel-head">
-      <h3>Producto más y menos vendido</h3>
-      <p class="panel-sub">Este ranking usa el período fijo del backend (últimos 30 días), igual que el resto del dashboard — no cambia con el filtro de "Tu avance" de arriba.</p>
-    </div>
-
-    <div class="two-col">
-      <div>
-        <p class="subtitulo-mini">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
-            <path d="M7 5H4a2 2 0 0 0 0 4c.5 1.2 1.3 2 2.2 2.4"/><path d="M17 5h3a2 2 0 0 1 0 4c-.5 1.2-1.3 2-2.2 2.4"/>
-          </svg>
-          Top 5 más vendidos
-        </p>
-        <table class="tabla" *ngIf="top5Productos.length > 0">
-          <thead><tr><th>Producto</th><th>Unid.</th><th>Ingresos</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let p of top5Productos">
-              <td>{{ p.nombre }}</td>
-              <td>{{ p.unidades }}</td>
-              <td>S/{{ p.ingresos.toFixed(2) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="tabla-vacia" *ngIf="top5Productos.length === 0">Todavía no hay ventas suficientes.</p>
-      </div>
-
-      <div>
-        <p class="subtitulo-mini">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
-          </svg>
-          Top 5 menos vendidos (con ventas)
-        </p>
-        <table class="tabla" *ngIf="bottom5Productos.length > 0">
-          <thead><tr><th>Producto</th><th>Unid.</th><th>Ingresos</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let p of bottom5Productos">
-              <td>{{ p.nombre }}</td>
-              <td>{{ p.unidades }}</td>
-              <td>S/{{ p.ingresos.toFixed(2) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="tabla-vacia" *ngIf="bottom5Productos.length === 0">Todavía no hay ventas suficientes.</p>
-      </div>
-    </div>
-
-    <p class="subtitulo-mini subtitulo-mini-espaciado">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/>
-        <circle cx="7.5" cy="7.5" r="1.5"/>
-      </svg>
-      Top categorías
-      <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto, que es el dato más cercano disponible.">como sustituto de marca</span>
-    </p>
-    <table class="tabla" *ngIf="topCategorias.length > 0">
-      <thead><tr><th>Categoría</th><th>Unid.</th><th>Ingresos</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let c of topCategorias">
-          <td>{{ c.nombre }}</td>
-          <td>{{ c.unidades }}</td>
-          <td>S/{{ c.ingresos.toFixed(2) }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="tabla-vacia" *ngIf="topCategorias.length === 0">Todavía no hay ventas suficientes.</p>
-  </div>
-
-  <!-- ═══════════════ 1. RESUMEN EJECUTIVO ═══════════════ -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">{{ 'DASH.INGRESOS_MES' | t }}</div>
-      <div class="kpi-value">S/{{ r.ingresos_periodo.toFixed(2) }}</div>
-      <div class="kpi-nota">{{ 'DASH.INGRESOS_MES_SUB' | t }}</div>
-    </div>
-    <div class="kpi-card" [class.kpi-positivo]="r.utilidad_neta_periodo >= 0" [class.kpi-negativo]="r.utilidad_neta_periodo < 0">
-      <div class="kpi-label">{{ 'DASH.UTILIDAD_NETA' | t }}</div>
-      <div class="kpi-value">S/{{ r.utilidad_neta_periodo.toFixed(2) }}</div>
-      <div class="kpi-nota">{{ 'DASH.UTILIDAD_NETA_SUB' | t }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">{{ 'DASH.TICKET_PROMEDIO' | t }}</div>
-      <div class="kpi-value">S/{{ r.ticket_promedio.toFixed(2) }}</div>
-      <div class="kpi-nota">{{ 'DASH.TICKET_PROMEDIO_SUB' | t }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">{{ 'DASH.VALOR_INVENTARIO' | t }}</div>
-      <div class="kpi-value">S/{{ r.valor_inventario_costo.toFixed(0) }}</div>
-      <div class="kpi-nota">{{ 'DASH.VALOR_INVENTARIO_SUB' | t }}</div>
-    </div>
-    <div class="kpi-card" [class.alerta]="r.productos_en_riesgo_merma > 0">
-      <div class="kpi-label">{{ 'DASH.RIESGO_MERMA' | t }}</div>
-      <div class="kpi-value">{{ r.productos_en_riesgo_merma }}</div>
-      <div class="kpi-nota">{{ 'DASH.RIESGO_MERMA_SUB' | t }}</div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ 2. SALUD FINANCIERA REAL ═══════════════ -->
-  <div class="panel">
+  <!-- ═══════════════ SALUD FINANCIERA REAL (venta → ganancia real) ═══════════════ -->
+  <div class="panel" *ngIf="avanceResumen() as a">
     <div class="panel-head">
       <h3>{{ 'DASH.WATERFALL_TITLE' | t }}</h3>
       <p class="panel-sub">
-        {{ 'DASH.WATERFALL_SUB' | t }}
-        <span *ngIf="!r.margen_basado_en_ventas_reales">El margen todavía usa el catálogo actual como referencia (aún no hay ventas con costo registrado este mes).</span>
-        <span *ngIf="r.margen_basado_en_ventas_reales && r.ingresos_con_costo_periodo < r.ingresos_periodo">
-          Costo de mercadería basado solo en las ventas con costo registrado (S/{{ r.ingresos_con_costo_periodo.toFixed(2) }} de S/{{ r.ingresos_periodo.toFixed(2) }} en ventas del mes).
+        Mismo período de "Tu avance" ({{ avanceDesde }} al {{ avanceHasta }}).
+        <span *ngIf="!a.margen_basado_en_ventas_reales">El margen todavía usa el catálogo actual como referencia (aún no hay ventas con costo registrado en este período).</span>
+        <span *ngIf="a.margen_basado_en_ventas_reales && a.ingresos_con_costo_periodo < a.ingresos_periodo">
+          Costo de mercadería basado solo en las ventas con costo registrado (S/{{ a.ingresos_con_costo_periodo.toFixed(2) }} de S/{{ a.ingresos_periodo.toFixed(2) }} en ventas del período).
         </span>
       </p>
     </div>
@@ -212,37 +71,28 @@
       <div class="wf-row">
         <span class="wf-label">{{ 'DASH.INGRESOS_VENTAS' | t }}</span>
         <span class="wf-bar-track"><span class="wf-bar wf-bar-in" style="width:100%"></span></span>
-        <span class="wf-valor">S/{{ r.ingresos_periodo.toFixed(2) }}</span>
+        <span class="wf-valor">S/{{ a.ingresos_periodo.toFixed(2) }}</span>
       </div>
       <div class="wf-row wf-resta">
         <span class="wf-label">{{ 'DASH.COSTO_MERCADERIA' | t }}</span>
-        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="r.ingresos_periodo > 0 ? (r.costo_mercaderia_periodo / r.ingresos_periodo * 100) : 0"></span></span>
-        <span class="wf-valor wf-valor-resta">−S/{{ r.costo_mercaderia_periodo.toFixed(2) }}</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="a.ingresos_periodo > 0 ? (costoMercaderiaPeriodo / a.ingresos_periodo * 100) : 0"></span></span>
+        <span class="wf-valor wf-valor-resta">−S/{{ costoMercaderiaPeriodo.toFixed(2) }}</span>
       </div>
       <div class="wf-row wf-subtotal">
         <span class="wf-label">{{ 'DASH.UTILIDAD_BRUTA' | t }}</span>
-        <span class="wf-bar-track"><span class="wf-bar wf-bar-bruta" [style.width.%]="r.ingresos_periodo > 0 ? (r.utilidad_bruta_periodo / r.ingresos_periodo * 100) : 0"></span></span>
-        <span class="wf-valor">S/{{ r.utilidad_bruta_periodo.toFixed(2) }} <small>({{ r.margen_bruto_pct.toFixed(0) }}%)</small></span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-bruta" [style.width.%]="a.ingresos_periodo > 0 ? (a.margen_bruto_periodo / a.ingresos_periodo * 100) : 0"></span></span>
+        <span class="wf-valor">S/{{ a.margen_bruto_periodo.toFixed(2) }} <small>({{ margenBrutoPct.toFixed(0) }}%)</small></span>
       </div>
       <div class="wf-row wf-resta">
         <span class="wf-label">{{ 'DASH.GASTOS_OPERATIVOS' | t }}</span>
-        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="r.ingresos_periodo > 0 ? (r.gasto_operativo_periodo / r.ingresos_periodo * 100) : 0"></span></span>
-        <span class="wf-valor wf-valor-resta">−S/{{ r.gasto_operativo_periodo.toFixed(2) }}</span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-costo" [style.width.%]="a.ingresos_periodo > 0 ? (a.gasto_operativo_periodo / a.ingresos_periodo * 100) : 0"></span></span>
+        <span class="wf-valor wf-valor-resta">−S/{{ a.gasto_operativo_periodo.toFixed(2) }}</span>
       </div>
-      <div class="wf-row wf-total" [class.wf-total-negativo]="r.utilidad_neta_periodo < 0">
+      <div class="wf-row wf-total" [class.wf-total-negativo]="a.ganancia_neta_periodo < 0">
         <span class="wf-label">{{ 'DASH.UTILIDAD_NETA_REAL' | t }}</span>
-        <span class="wf-bar-track"><span class="wf-bar wf-bar-neta" [style.width.%]="r.ingresos_periodo > 0 ? (r.utilidad_neta_periodo / r.ingresos_periodo * 100 > 0 ? (r.utilidad_neta_periodo / r.ingresos_periodo * 100) : 0) : 0"></span></span>
-        <span class="wf-valor">S/{{ r.utilidad_neta_periodo.toFixed(2) }} <small>({{ r.margen_neto_pct.toFixed(0) }}%)</small></span>
+        <span class="wf-bar-track"><span class="wf-bar wf-bar-neta" [style.width.%]="a.ingresos_periodo > 0 ? (a.ganancia_neta_periodo / a.ingresos_periodo * 100 > 0 ? (a.ganancia_neta_periodo / a.ingresos_periodo * 100) : 0) : 0"></span></span>
+        <span class="wf-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }} <small>({{ a.margen_promedio_pct.toFixed(0) }}%)</small></span>
       </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ 3. PRODUCTO ESTRELLA ═══════════════ -->
-  <div class="two-col" *ngIf="productoMasVendido">
-    <div class="callout callout-positivo">
-      <span class="callout-tag">🥇 {{ 'DASH.PRODUCTO_MAS_VENDIDO' | t }}</span>
-      <span class="callout-nombre">{{ productoMasVendido.nombre }}</span>
-      <span class="callout-detalle">{{ productoMasVendido.unidades }} unidades · S/{{ productoMasVendido.ingresos.toFixed(2) }} generados · {{ productoMasVendido.participacion_pct.toFixed(0) }}% del total vendido</span>
     </div>
   </div>
 
@@ -251,30 +101,7 @@
     {{ productosSinVentas.slice(0, 4).map(p => p.nombre).join(', ') }}<span *ngIf="productosSinVentas.length > 4">…</span>
   </p>
 
-  <!-- ═══════════════ 4. RANKING COMPLETO DE PRODUCTOS ═══════════════ -->
-  <div class="panel">
-    <div class="panel-head">
-      <h3>Ranking de productos por ventas</h3>
-      <p class="panel-sub">Qué modelos mueven realmente tu negocio (top {{ rankingProductos.length }}).</p>
-    </div>
-    <table class="tabla" *ngIf="rankingProductos.length > 0">
-      <thead><tr><th>Modelo</th><th>Unidades</th><th>Ingresos generados</th><th>Participación</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let p of rankingProductos">
-          <td>{{ p.nombre }}</td>
-          <td>{{ p.unidades }}</td>
-          <td>S/{{ p.ingresos.toFixed(2) }}</td>
-          <td>
-            <div class="mini-bar-track"><div class="mini-bar" [style.width.%]="p.participacion_pct"></div></div>
-            <span class="mini-bar-pct">{{ p.participacion_pct.toFixed(0) }}%</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="tabla-vacia" *ngIf="rankingProductos.length === 0">Aún no hay ventas registradas.</p>
-  </div>
-
-  <!-- ═══════════════ 5. ROTACIÓN Y RIESGO DE MERMA ═══════════════ -->
+  <!-- ═══════════════ ROTACIÓN Y RIESGO DE MERMA ═══════════════ -->
   <div class="panel">
     <div class="panel-head">
       <h3>Rotación de inventario y riesgo de merma</h3>
@@ -316,95 +143,7 @@
     </table>
   </div>
 
-  <!-- ═══════════════ 6. INVENTARIO POR TALLA Y POR MODELO ═══════════════ -->
-  <div class="two-col">
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Inventario por talla</h3>
-        <p class="panel-sub">Unidades en stock, todas las tallas y modelos.</p>
-      </div>
-      <div class="bar-list">
-        <div class="bar-list-row" *ngFor="let t of inventarioPorTalla">
-          <span class="bar-list-label">Talla {{ t.talla }}</span>
-          <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(t.stock / maxStockTalla) * 100"></span></span>
-          <span class="bar-list-valor">{{ t.stock }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Inventario por modelo</h3>
-        <p class="panel-sub">Unidades y valor (a costo) inmovilizado por modelo.</p>
-      </div>
-      <table class="tabla">
-        <thead><tr><th>Modelo</th><th>Stock</th><th>Valor a costo</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let m of inventarioPorModelo">
-            <td>{{ m.nombre }}</td>
-            <td>{{ m.stock }}</td>
-            <td>S/{{ m.valorCosto.toFixed(0) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ═══════════════ 7. COMPARATIVOS TEMPORALES ═══════════════ -->
-  <div class="two-col">
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Ingresos semana a semana</h3>
-        <p class="panel-sub">
-          Últimas 6 semanas ·
-          <span [class.trend-up]="crecimientoSemanal >= 0" [class.trend-down]="crecimientoSemanal < 0">
-            {{ crecimientoSemanal >= 0 ? '▲' : '▼' }} {{ crecimientoSemanal.toFixed(0) }}% vs. semana anterior
-          </span>
-        </p>
-      </div>
-      <div class="chart-barras">
-        <div class="chart-col" *ngFor="let p of ingresosPorSemana">
-          <div class="chart-bar" [style.height.%]="alturaBarra(p.total, maxIngresosSemana)" [title]="'S/' + p.total.toFixed(2)"></div>
-          <span class="chart-valor">S/{{ p.total.toFixed(0) }}</span>
-          <span class="chart-label">{{ p.etiqueta }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Ingresos mes a mes</h3>
-        <p class="panel-sub">Últimos 6 meses, para ver la tendencia de fondo del negocio.</p>
-      </div>
-      <div class="chart-barras">
-        <div class="chart-col" *ngFor="let p of ingresosPorMes">
-          <div class="chart-bar chart-bar-mes" [style.height.%]="alturaBarra(p.ingresos, maxIngresosMes)" [title]="'S/' + p.ingresos.toFixed(2)"></div>
-          <span class="chart-valor">S/{{ p.ingresos.toFixed(0) }}</span>
-          <span class="chart-label">{{ p.etiqueta }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ 8. DÍAS DE MAYOR FOCO DE VENTA ═══════════════ -->
-  <div class="panel">
-    <div class="panel-head">
-      <h3>¿Qué días vendes más?</h3>
-      <p class="panel-sub">
-        Patrón acumulado por día de la semana, útil para planear personal y reposición.
-        <span class="trend-up" *ngIf="mejorDiaVenta"> Tu mejor día es <strong>{{ mejorDiaVenta.dia_semana }}</strong>.</span>
-      </p>
-    </div>
-    <div class="chart-barras chart-barras-dias">
-      <div class="chart-col" *ngFor="let d of ventasPorDiaSemana" [class.chart-col-best]="mejorDiaVenta && d.dia_semana === mejorDiaVenta.dia_semana">
-        <div class="chart-bar chart-bar-dia" [style.height.%]="alturaBarra(d.ingresos, maxIngresosDia)" [title]="'S/' + d.ingresos.toFixed(2)"></div>
-        <span class="chart-valor">S/{{ d.ingresos.toFixed(0) }}</span>
-        <span class="chart-label">{{ d.dia_semana.slice(0, 3) }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ 9. GASTOS OPERATIVOS DE MAYOR IMPACTO ═══════════════ -->
+  <!-- ═══════════════ GASTOS OPERATIVOS DE MAYOR IMPACTO ═══════════════ -->
   <div class="panel" *ngIf="gastosPorTipo.length > 0">
     <div class="panel-head">
       <h3>Gastos operativos de mayor impacto</h3>
@@ -415,6 +154,78 @@
         <span class="bar-list-label">{{ g.tipo }}</span>
         <span class="bar-list-track"><span class="bar-list-fill bar-list-fill-gasto" [style.width.%]="g.pct"></span></span>
         <span class="bar-list-valor">S/{{ g.montoMensual.toFixed(0) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PRODUCTO MÁS Y MENOS VENDIDO (gráficos) + FILTRO ═══════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Producto más y menos vendido</h3>
+      <p class="panel-sub">Datos de los últimos 30 días. El filtro de abajo controla "Tu avance" y "Salud financiera real"; este ranking en particular todavía usa el período fijo del backend.</p>
+    </div>
+
+    <p class="subtitulo-mini">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+        <path d="M7 5H4a2 2 0 0 0 0 4c.5 1.2 1.3 2 2.2 2.4"/><path d="M17 5h3a2 2 0 0 1 0 4c-.5 1.2-1.3 2-2.2 2.4"/>
+      </svg>
+      Top 5 más vendidos
+    </p>
+    <div class="bar-list" *ngIf="top5Productos.length > 0">
+      <div class="bar-list-row" *ngFor="let p of top5Productos">
+        <span class="bar-list-label" [title]="p.nombre">{{ p.nombre }}</span>
+        <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(p.unidades / maxUnidadesTop5) * 100"></span></span>
+        <span class="bar-list-valor">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+      </div>
+    </div>
+    <p class="tabla-vacia" *ngIf="top5Productos.length === 0">Todavía no hay ventas suficientes.</p>
+
+    <p class="subtitulo-mini subtitulo-mini-espaciado">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
+      </svg>
+      Top 5 menos vendidos (con ventas)
+    </p>
+    <div class="bar-list" *ngIf="bottom5Productos.length > 0">
+      <div class="bar-list-row" *ngFor="let p of bottom5Productos">
+        <span class="bar-list-label" [title]="p.nombre">{{ p.nombre }}</span>
+        <span class="bar-list-track"><span class="bar-list-fill bar-list-fill-gasto" [style.width.%]="(p.unidades / maxUnidadesBottom5) * 100"></span></span>
+        <span class="bar-list-valor">{{ p.unidades }} und · S/{{ p.ingresos.toFixed(0) }}</span>
+      </div>
+    </div>
+    <p class="tabla-vacia" *ngIf="bottom5Productos.length === 0">Todavía no hay ventas suficientes.</p>
+
+    <p class="subtitulo-mini subtitulo-mini-espaciado">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/>
+        <circle cx="7.5" cy="7.5" r="1.5"/>
+      </svg>
+      Top categorías
+      <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto, que es el dato más cercano disponible.">como sustituto de marca</span>
+    </p>
+    <div class="bar-list" *ngIf="topCategorias.length > 0">
+      <div class="bar-list-row" *ngFor="let c of topCategorias">
+        <span class="bar-list-label" [title]="c.nombre">{{ c.nombre }}</span>
+        <span class="bar-list-track"><span class="bar-list-fill" [style.width.%]="(c.ingresos / maxIngresosCategoria) * 100"></span></span>
+        <span class="bar-list-valor">{{ c.unidades }} und · S/{{ c.ingresos.toFixed(0) }}</span>
+      </div>
+    </div>
+    <p class="tabla-vacia" *ngIf="topCategorias.length === 0">Todavía no hay ventas suficientes.</p>
+
+    <!-- ── Filtro único del dashboard: día / semana / mes / personalizado ── -->
+    <div class="filtro-inferior">
+      <span class="filtro-inferior-label">Filtrar "Tu avance" y "Salud financiera real" por:</span>
+      <div class="periodo-toggle">
+        <button [class.active]="periodoAvance === 'dia'" (click)="cambiarPeriodo('dia')">Día</button>
+        <button [class.active]="periodoAvance === 'semana'" (click)="cambiarPeriodo('semana')">Semana</button>
+        <button [class.active]="periodoAvance === 'mes'" (click)="cambiarPeriodo('mes')">Mes</button>
+        <button [class.active]="periodoAvance === 'personalizado'" (click)="cambiarPeriodo('personalizado')">Fecha personalizada</button>
+      </div>
+      <div class="rango-personalizado" *ngIf="periodoAvance === 'personalizado'">
+        <input type="date" [ngModel]="avanceDesde" (ngModelChange)="avanceDesde = $event; onFechaPersonalizadaChange()" [max]="avanceHasta" />
+        <span>—</span>
+        <input type="date" [ngModel]="avanceHasta" (ngModelChange)="avanceHasta = $event; onFechaPersonalizadaChange()" [min]="avanceDesde" />
       </div>
     </div>
   </div>

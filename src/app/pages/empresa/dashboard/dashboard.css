@@ -51,6 +51,17 @@
 .avance-head { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
 .avance-filtros { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 
+.filtro-inferior {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e8f1ea;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.filtro-inferior-label { font-size: 12.5px; font-weight: 600; color: #5a8a78; }
+
 .periodo-toggle { display: flex; gap: 6px; }
 .periodo-toggle button {
   padding: 8px 14px;
@@ -250,6 +261,8 @@
   .chart-barras { gap: 6px; }
   .avance-head { flex-direction: column; align-items: stretch; }
   .avance-filtros { align-items: stretch; }
+  .filtro-inferior { flex-direction: column; align-items: stretch; }
+  .periodo-toggle { flex-wrap: wrap; }
   .periodo-toggle { flex-wrap: wrap; }
   .rango-personalizado { flex-wrap: wrap; }
 }

@@ -1,24 +1,18 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AvancePorLocal, DashboardService, FilaRotacion, ProductoRanking } from '../../../services/dashboard';
+import { DashboardService, FilaRotacion, ProductoRanking } from '../../../services/dashboard';
 import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero } from '../../../services/finanzas';
-import { InventarioService, LocalRead, ProductoListItem } from '../../../services/inventario';
+import { InventarioService, ProductoListItem } from '../../../services/inventario';
 import { TPipe } from '../../../core/t.pipe';
 
-/** Período del panel "Tu avance" — 'personalizado' deja que el usuario elija el rango a mano. */
+/** Período del filtro único del dashboard — 'personalizado' deja que el usuario elija el rango a mano. */
 type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'personalizado';
 
 interface FilaGasto {
   tipo: string;
   montoMensual: number;
   pct: number;
-}
-
-interface FilaModelo {
-  nombre: string;
-  stock: number;
-  valorCosto: number;
 }
 
 /** Fila del "Top categorías" — se usa como el sustituto más cercano a "marca",
@@ -29,9 +23,6 @@ interface FilaCategoria {
   unidades: number;
   ingresos: number;
 }
-
-/** Tamaño de página para "Inventario por modelo" — un dashboard no necesita scroll infinito, alcanza con un límite generoso. */
-const LIMITE_INVENTARIO_POR_MODELO = 100;
 
 @Component({
   selector: 'app-empresa-dashboard',
@@ -47,51 +38,39 @@ export class EmpresaDashboardComponent implements OnInit {
     private inventarioService: InventarioService
   ) {}
 
-  inventarioPorModelo: FilaModelo[] = [];
-
   /** id_producto → nombre_categoria, para poder agrupar el ranking de ventas por categoría (top "marcas"). */
   private categoriaPorProducto = new Map<string, string>();
 
   ngOnInit(): void {
-    this.dashboardService.recargarTodo();
+    // Solo lo que el dashboard sigue usando de verdad (nada de talla/día-semana/ingresos-mes: esas
+    // secciones se quitaron, así que ya no vale la pena pedirle esos datos al backend).
+    this.dashboardService.cargarResumen();
+    this.dashboardService.cargarProductosSinVentas();
+    this.dashboardService.cargarRotacionInventario();
     this.finanzasService.recargarTodo();
-    this.finanzasService.cargarIngresosPorSemana(6);
 
-    this.inventarioService.listarProductos({}, 0, LIMITE_INVENTARIO_POR_MODELO).subscribe((pagina) => {
-      this.inventarioPorModelo = pagina.items
-        .map((p: ProductoListItem) => ({
-          nombre: p.nombre,
-          stock: p.stock_total,
-          valorCosto: p.stock_total * p.costo_compra,
-        }))
-        .sort((a, b) => b.stock - a.stock);
-
+    this.inventarioService.listarProductos({}, 0, 300).subscribe((pagina) => {
       this.categoriaPorProducto.clear();
       for (const p of pagina.items) {
         this.categoriaPorProducto.set(p.id_producto, p.nombre_categoria ?? 'Sin categoría');
       }
     });
 
-    this.inventarioService.listarLocales().subscribe((locales) => {
-      this.locales.set(locales.filter((l) => l.esta_activo));
-      const r = this.avanceResumen();
-      if (r) this.cargarAvancePorLocal(r.ingresos_periodo, r.gasto_operativo_periodo);
-    });
-
     this.dashboardService.obtenerRankingProductosAmpliado().subscribe((lista) => {
       this.rankingAmpliado.set(lista);
     });
 
-    this.cambiarPeriodoAvance('dia');
+    this.cambiarPeriodo('dia');
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 0) Tu avance — ventas / ganancia / gastos, filtrable por período
+  // Filtro único (día / semana / mes / personalizado)
   // ═══════════════════════════════════════════════════════════
-  // Reutiliza FinanzasService.obtenerResumenPeriodo(desde, hasta), que ya
-  // existe para el reporte mensual — no toca el signal `resumen` global,
-  // así que este panel puede pedir cualquier rango sin pisar el resto del
-  // dashboard (que sigue mostrando el mes actual como siempre).
+  // Un solo control, ubicado al final del dashboard, que maneja el período
+  // de "Tu avance" (arriba) y de "Salud financiera real". El estado vive acá
+  // en el componente, no en el DOM, así que no importa que el control visual
+  // esté más abajo en la página: los paneles de arriba reaccionan igual.
+  // Reutiliza FinanzasService.obtenerResumenPeriodo(desde, hasta).
 
   periodoAvance: PeriodoAvance = 'dia';
   avanceDesde = this.hoyISO();
@@ -124,7 +103,7 @@ export class EmpresaDashboardComponent implements OnInit {
     return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
   }
 
-  cambiarPeriodoAvance(periodo: PeriodoAvance): void {
+  cambiarPeriodo(periodo: PeriodoAvance): void {
     this.periodoAvance = periodo;
     if (periodo === 'dia') {
       this.avanceDesde = this.hoyISO();
@@ -143,7 +122,7 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   /** Se llama al editar las fechas del filtro personalizado. */
-  onFechaAvancePersonalizadaChange(): void {
+  onFechaPersonalizadaChange(): void {
     if (!this.avanceDesde || !this.avanceHasta) return;
     if (this.avanceDesde > this.avanceHasta) return; // rango inválido: se espera a que el usuario lo corrija
     this.cargarAvance();
@@ -156,7 +135,6 @@ export class EmpresaDashboardComponent implements OnInit {
       next: (r) => {
         this.avanceResumen.set(r);
         this.avanceCargando.set(false);
-        this.cargarAvancePorLocal(r.ingresos_periodo, r.gasto_operativo_periodo);
       },
       error: () => {
         this.avanceError.set('No se pudo cargar el avance de este período.');
@@ -166,43 +144,48 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 0-bis) Avance por local/almacén
+  // Tu avance — tarjetas KPI del período filtrado + 2 datos "actuales"
   // ═══════════════════════════════════════════════════════════
-  // NOTA: sin endpoint todavía — ver el comentario de `AvancePorLocal` y
-  // `cargarAvancePorLocal` en services/dashboard.ts. Los montos que se ven
-  // acá son de EJEMPLO (repartidos a partir del total real del período),
-  // no ventas reales por local.
+  // Valor de inventario y Productos en riesgo de merma son estado ACTUAL del
+  // negocio (una foto de hoy), no algo que tenga sentido acumular por rango
+  // de fechas — por eso salen del resumen fijo del dashboard, no del filtro.
 
-  locales = signal<LocalRead[]>([]);
-  avancePorLocal = signal<AvancePorLocal[]>([]);
-  avancePorLocalCargando = signal(false);
+  get valorInventario(): number {
+    return this.dashboardService.resumen()?.valor_inventario_costo ?? 0;
+  }
 
-  private cargarAvancePorLocal(ingresosTotalPeriodo: number, gastoTotalPeriodo: number): void {
-    const locales = this.locales();
-    if (locales.length === 0) {
-      this.avancePorLocal.set([]);
-      return;
-    }
-    this.avancePorLocalCargando.set(true);
-    this.dashboardService
-      .cargarAvancePorLocal(
-        this.avanceDesde,
-        this.avanceHasta,
-        locales.map((l) => ({ id_local: l.id_local, nombre: l.nombre })),
-        ingresosTotalPeriodo,
-        gastoTotalPeriodo
-      )
-      .subscribe((lista) => {
-        this.avancePorLocal.set(lista);
-        this.avancePorLocalCargando.set(false);
-      });
+  get productosEnRiesgoMerma(): number {
+    return this.dashboardService.resumen()?.productos_en_riesgo_merma ?? 0;
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 0-ter) Producto más / menos vendido, top 5 y top de categorías
+  // Salud financiera real (venta → ganancia real), mismo período filtrado
+  // ═══════════════════════════════════════════════════════════
+  // Antes este cuadro usaba un resumen FIJO (siempre "mes actual") mientras
+  // "Tu avance" mostraba el período que el usuario elegía — por eso los
+  // números de ambos cuadros no coincidían y parecía que estaba roto. Ahora
+  // los dos leen del mismo `avanceResumen`, así que siempre están de acuerdo.
+
+  get costoMercaderiaPeriodo(): number {
+    const a = this.avanceResumen();
+    if (!a) return 0;
+    return Math.max(0, a.ingresos_periodo - a.margen_bruto_periodo);
+  }
+
+  get margenBrutoPct(): number {
+    const a = this.avanceResumen();
+    if (!a || a.ingresos_periodo <= 0) return 0;
+    return (a.margen_bruto_periodo / a.ingresos_periodo) * 100;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Producto más / menos vendido, top 5 y top de categorías (gráficos)
   // ═══════════════════════════════════════════════════════════
   // "Top de marcas": el catálogo no tiene un campo de marca — se usa la
   // categoría del producto como el agrupador más cercano disponible.
+  // Nota: este ranking usa el período fijo del backend (últimos 30 días) —
+  // el endpoint de ranking todavía no acepta un rango de fechas, así que no
+  // se conecta al filtro de abajo (ver nota en el HTML).
 
   rankingAmpliado = signal<ProductoRanking[]>([]);
 
@@ -232,32 +215,28 @@ export class EmpresaDashboardComponent implements OnInit {
       .slice(0, 5);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 1) Resumen ejecutivo del mes
-  // ═══════════════════════════════════════════════════════════
+  get maxUnidadesTop5(): number {
+    return Math.max(1, ...this.top5Productos.map((p) => p.unidades));
+  }
 
-  get resumen() {
-    return this.dashboardService.resumen();
+  get maxUnidadesBottom5(): number {
+    return Math.max(1, ...this.bottom5Productos.map((p) => p.unidades));
+  }
+
+  get maxIngresosCategoria(): number {
+    return Math.max(1, ...this.topCategorias.map((c) => c.ingresos));
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 2) Ranking de productos
+  // Productos sin ventas (nota informativa)
   // ═══════════════════════════════════════════════════════════
-
-  get rankingProductos() {
-    return this.dashboardService.rankingProductos();
-  }
-
-  get productoMasVendido() {
-    return this.rankingProductos[0] ?? null;
-  }
 
   get productosSinVentas() {
     return this.dashboardService.productosSinVentas();
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 3) Rotación de inventario y riesgo de merma
+  // Rotación de inventario y riesgo de merma
   // ═══════════════════════════════════════════════════════════
 
   get analisisRotacion(): FilaRotacion[] {
@@ -269,47 +248,7 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 4) Inventario por talla y por modelo
-  // ═══════════════════════════════════════════════════════════
-
-  get inventarioPorTalla() {
-    return this.dashboardService.inventarioPorTalla();
-  }
-
-  get maxStockTalla(): number {
-    return Math.max(1, ...this.inventarioPorTalla.map((t) => t.stock));
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 5) Comparativos temporales: semana a semana / mes a mes
-  // ═══════════════════════════════════════════════════════════
-
-  get ingresosPorSemana() {
-    return this.finanzasService.ingresosPorSemana();
-  }
-
-  get ingresosPorMes() {
-    return this.dashboardService.ingresosPorMes();
-  }
-
-  get maxIngresosSemana(): number {
-    return Math.max(1, ...this.ingresosPorSemana.map((p) => p.total));
-  }
-
-  get maxIngresosMes(): number {
-    return Math.max(1, ...this.ingresosPorMes.map((p) => p.ingresos));
-  }
-
-  alturaBarra(valor: number, max: number): number {
-    return Math.round((valor / max) * 100);
-  }
-
-  get crecimientoSemanal(): number {
-    return this.resumen?.crecimiento_semanal_pct ?? 0;
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 6) Gastos operativos de mayor impacto
+  // Gastos operativos de mayor impacto
   // ═══════════════════════════════════════════════════════════
   // Solo considera gastos RECURRENTES (alquiler, sueldos, servicios): un
   // gasto único/extraordinario no debería distorsionar la estructura de
@@ -330,24 +269,5 @@ export class EmpresaDashboardComponent implements OnInit {
     return Array.from(mapa.entries())
       .map(([tipo, montoMensual]) => ({ tipo, montoMensual, pct: total > 0 ? (montoMensual / total) * 100 : 0 }))
       .sort((a, b) => b.montoMensual - a.montoMensual);
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 7) Días de mayor foco de venta (patrón semanal)
-  // ═══════════════════════════════════════════════════════════
-
-  get ventasPorDiaSemana() {
-    // El backend ya devuelve lunes..domingo en ese orden.
-    return this.dashboardService.ventasPorDiaSemana();
-  }
-
-  get maxIngresosDia(): number {
-    return Math.max(1, ...this.ventasPorDiaSemana.map((d) => d.ingresos));
-  }
-
-  get mejorDiaVenta() {
-    const conVentas = this.ventasPorDiaSemana.filter((d) => d.cantidad_ventas > 0);
-    if (conVentas.length === 0) return null;
-    return [...conVentas].sort((a, b) => b.ingresos - a.ingresos)[0];
   }
 }
