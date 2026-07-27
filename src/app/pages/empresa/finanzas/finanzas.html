@@ -8,6 +8,22 @@
 </div>
 
 <div class="content" *ngIf="resumen as r">
+  <!-- Primer cuadro: texto plano que indica si está ganando y siendo rentable -->
+  <div class="cuadro-rentabilidad-plano" [class.es-rentable]="r.esta_generando_ganancia" [class.no-rentable]="!r.esta_generando_ganancia">
+    <div class="cuadro-header">
+      <span class="cuadro-badge">{{ r.esta_generando_ganancia ? 'ESTADO: RENTABLE' : 'ESTADO: EN PERDIDA O RECUPERACION' }}</span>
+      <h2 class="cuadro-titulo">¿Estás ganando dinero y siendo rentable? <strong>{{ r.esta_generando_ganancia ? 'SÍ' : 'NO' }}</strong></h2>
+    </div>
+    <div class="cuadro-cuerpo-texto">
+      <p *ngIf="r.esta_generando_ganancia">
+        <strong>SÍ ESTÁS SIENDO RENTABLE.</strong> Tu negocio está generando ganancias netas en este período por un total de <strong>S/{{ valorResultado(r).toFixed(2) }}</strong>. Tus ventas acumuladas superan los costos operativos y de mercadería, habiendo alcanzado el <strong>{{ r.progreso_punto_equilibrio_pct.toFixed(0) }}%</strong> de tu punto de equilibrio.
+      </p>
+      <p *ngIf="!r.esta_generando_ganancia">
+        <strong>NO ESTÁS SIENDO RENTABLE TODAVÍA.</strong> En este período tus ventas aún no cubren el total de tus costos operativos y reposición de mercadería. Te faltan <strong>S/{{ abs(valorResultado(r)).toFixed(2) }}</strong> para cubrirlos. {{ r.recomendacion }}
+      </p>
+    </div>
+  </div>
+
   <div class="vista-toggle">
     <button [class.activo]="vistaIngresos() === 'completos'" (click)="cambiarVista('completos')">Ingresos completos</button>
     <button [class.activo]="vistaIngresos() === 'margen'" (click)="cambiarVista('margen')">Ingresos con margen</button>
@@ -34,32 +50,6 @@
     <div class="kpi-card" [class.kpi-positivo]="resultadoEsPositivo(r)" [class.kpi-negativo]="!resultadoEsPositivo(r)">
       <div class="kpi-label">{{ etiquetaResultado() }}</div>
       <div class="kpi-value">S/{{ valorResultado(r).toFixed(2) }}</div>
-    </div>
-  </div>
-
-  <div class="banner" [class.banner-positivo]="r.esta_generando_ganancia" [class.banner-negativo]="!r.esta_generando_ganancia">
-    <div class="banner-icono">
-      <svg *ngIf="r.esta_generando_ganancia" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-        <polyline points="17 6 23 6 23 12"/>
-      </svg>
-      <svg *ngIf="!r.esta_generando_ganancia" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-    </div>
-    <div class="banner-texto">
-      <div class="banner-titulo">
-        {{ r.esta_generando_ganancia ? 'Estás generando ganancia este período' : 'Aún no cubres tus costos operativos' }}
-      </div>
-      <div class="banner-detalle">{{ r.recomendacion }}</div>
-    </div>
-    <div class="banner-progreso">
-      <div class="banner-progreso-track">
-        <div class="banner-progreso-fill" [style.width.%]="r.progreso_punto_equilibrio_pct > 100 ? 100 : r.progreso_punto_equilibrio_pct"></div>
-      </div>
-      <span>{{ r.progreso_punto_equilibrio_pct.toFixed(0) }}% del punto de equilibrio</span>
     </div>
   </div>
 
@@ -96,15 +86,10 @@
         <div class="decision-valor">{{ r.crecimiento_vs_periodo_anterior_pct >= 0 ? '+' : '' }}{{ r.crecimiento_vs_periodo_anterior_pct.toFixed(0) }}%</div>
         <div class="decision-nota">vs. período anterior</div>
       </div>
-      <div class="decision-card" [class.decision-negativa]="r.alertas_stock_bajo > 0">
-        <div class="decision-label">Tallas con stock bajo</div>
-        <div class="decision-valor">{{ r.alertas_stock_bajo }}</div>
-        <div class="decision-nota">revisa inventario</div>
-      </div>
     </div>
 
-    <div class="decision-destacados">
-      <div class="destacado-card" *ngIf="r.producto_estrella">
+    <div class="decision-destacados" *ngIf="r.producto_estrella">
+      <div class="destacado-card">
         <span class="destacado-tag">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 21h8"/>
@@ -118,46 +103,7 @@
         <span class="destacado-nombre">{{ r.producto_estrella }}</span>
         <span class="destacado-nota">{{ r.producto_estrella_unidades }} unidades vendidas</span>
       </div>
-      <div class="destacado-card" *ngIf="productosRentabilidad.length > 0">
-        <span class="destacado-tag">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 3h12l4 6-10 12L2 9z"/>
-            <path d="M2 9h20"/>
-            <path d="M9 3 8 9l4 12 4-12-1-6"/>
-          </svg>
-          Más rentable
-        </span>
-        <span class="destacado-nombre">{{ productosRentabilidad[0].nombre }}</span>
-        <span class="destacado-nota">S/{{ productosRentabilidad[0].margen.toFixed(2) }} de margen por unidad</span>
-      </div>
     </div>
-
-    <div class="mini-chart">
-      <div class="mini-chart-titulo">Ingresos por semana</div>
-      <div class="mini-chart-barras">
-        <div class="mini-chart-col" *ngFor="let p of finanzasService.ingresosPorSemana()">
-          <div class="mini-chart-bar" [style.height.%]="alturaBarra(p.total)" [title]="'S/' + p.total.toFixed(2)"></div>
-          <span class="mini-chart-valor">S/{{ p.total.toFixed(0) }}</span>
-          <span class="mini-chart-label">{{ p.etiqueta }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h3>Rentabilidad por producto</h3>
-    <table class="tabla">
-      <thead>
-        <tr><th>Producto</th><th>Margen unitario</th><th>Stock</th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of productosRentabilidad">
-          <td>{{ p.nombre }}</td>
-          <td>S/{{ p.margen.toFixed(2) }}</td>
-          <td>{{ p.stock_total }}</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 
   <div class="panel">

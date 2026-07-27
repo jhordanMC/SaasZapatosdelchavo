@@ -41,6 +41,61 @@
 
 .content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
 
+/* ── Primer Cuadro: Texto plano de Rentabilidad (¿Estás ganando SÍ/NO?) ───── */
+.cuadro-rentabilidad-plano {
+  background: white;
+  border-radius: 16px;
+  padding: 22px 24px;
+  border: 2px solid #e8f1ea;
+  box-shadow: 0 4px 12px rgba(2, 75, 64, 0.04);
+}
+.cuadro-rentabilidad-plano.es-rentable {
+  border-color: #27ae60;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fbf6 100%);
+}
+.cuadro-rentabilidad-plano.no-rentable {
+  border-color: #e74c3c;
+  background: linear-gradient(180deg, #ffffff 0%, #fdf5f5 100%);
+}
+.cuadro-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.cuadro-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.es-rentable .cuadro-badge { background: #e5f6ec; color: #1d7a4c; }
+.no-rentable .cuadro-badge { background: #fdecec; color: #b23a3a; }
+
+.cuadro-titulo {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f4034;
+}
+.cuadro-titulo strong {
+  font-size: 22px;
+}
+.es-rentable .cuadro-titulo strong { color: #1d7a4c; }
+.no-rentable .cuadro-titulo strong { color: #b23a3a; }
+
+.cuadro-cuerpo-texto {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2c4a3e;
+}
+.cuadro-cuerpo-texto p { margin: 0; }
+.cuadro-cuerpo-texto strong { color: #024b40; }
+
 .vista-toggle {
   display: inline-flex;
   align-self: flex-start;

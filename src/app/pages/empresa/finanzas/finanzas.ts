@@ -93,6 +93,10 @@ export class FinanzasComponent implements OnInit {
     return this.valorResultado(r) > 0;
   }
 
+  abs(val: number): number {
+    return Math.abs(val);
+  }
+
   /**
    * true si "Margen generado"/"Ganancia neta real" todavía no cubren todo
    * el período — porque parte de las ventas no tiene costo_unitario
