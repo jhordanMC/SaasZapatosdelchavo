@@ -1,74 +1,173 @@
 <div class="page-toolbar">
   <div>
-    <p class="page-title">Historial de ventas</p>
-    <p class="page-subtitle">Todas las ventas registradas en Vilcas, con su detalle completo.</p>
+    <p class="page-title">{{ vista() === 'ventas' ? 'Historial de ventas' : 'Historial de devoluciones' }}</p>
+    <p class="page-subtitle">
+      {{ vista() === 'ventas' ? 'Todas las ventas registradas en Vilcas, con su detalle completo.' : 'Devoluciones procesadas sobre las ventas del tenant.' }}
+    </p>
   </div>
-  <select class="filter-select" [ngModel]="filtroEstado" (ngModelChange)="onFiltroEstadoChange($event)">
+  <select
+    class="filter-select"
+    *ngIf="vista() === 'ventas'"
+    [ngModel]="filtroEstado"
+    (ngModelChange)="onFiltroEstadoChange($event)"
+  >
     <option value="">Todos los estados</option>
     <option value="pagada">Pagada</option>
     <option value="pendiente">Pendiente</option>
     <option value="anulada">Eliminada</option>
     <option value="devuelta">Devuelta</option>
   </select>
+  <select
+    class="filter-select"
+    *ngIf="vista() === 'devoluciones'"
+    [ngModel]="filtroEstadoDevolucion"
+    (ngModelChange)="onFiltroEstadoDevolucionChange($event)"
+  >
+    <option value="">Todos los estados</option>
+    <option value="procesada">Procesada</option>
+    <option value="rechazada">Eliminada</option>
+  </select>
 </div>
 
 <div class="content">
-  <div class="estado-carga" *ngIf="cargando()">
-    <span class="spinner"></span> Cargando historial…
+  <div class="vista-toggle">
+    <button [class.activo]="vista() === 'ventas'" (click)="cambiarVista('ventas')">Ventas</button>
+    <button [class.activo]="vista() === 'devoluciones'" (click)="cambiarVista('devoluciones')">Devoluciones</button>
   </div>
 
-  <div class="estado-error" *ngIf="error()">{{ error() }}</div>
-
-  <div class="panel" *ngIf="!cargando() && !error()">
-    <table class="tabla" *ngIf="ventas().length > 0">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Vendedor</th>
-          <th>Cliente</th>
-          <th>Ítems</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let v of ventas()">
-          <td>{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
-          <td>{{ v.nombre_vendedor ?? '—' }}</td>
-          <td>{{ nombreCliente(v) }}</td>
-          <td>{{ v.cantidad_items }}</td>
-          <td>S/{{ v.total.toFixed(2) }}</td>
-          <td>
-            <span class="badge" [ngClass]="'badge-estado-' + v.estado">{{ etiquetaEstado(v.estado) }}</span>
-          </td>
-          <td class="tabla-acciones">
-            <button class="btn-secondary btn-sm" (click)="abrirDetalle(v)">Ver detalle</button>
-            <button
-              class="btn-icon-danger"
-              *ngIf="puedeEliminar() && v.estado !== 'anulada'"
-              title="Eliminar venta"
-              (click)="abrirEliminar(v)"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <p class="tabla-vacia" *ngIf="ventas().length === 0">Todavía no hay ventas registradas.</p>
-
-    <div class="cargando-mini" *ngIf="cargandoMas()">
-      <span class="spinner spinner-sm"></span> Cargando más ventas…
+  <!-- ═══════════════ Vista: Ventas ═══════════════ -->
+  <ng-container *ngIf="vista() === 'ventas'">
+    <div class="estado-carga" *ngIf="cargando()">
+      <span class="spinner"></span> Cargando historial…
     </div>
-    <button class="btn-secondary" *ngIf="hayMas() && !cargandoMas() && ventas().length > 0" (click)="cargarMas()">
-      Cargar más
-    </button>
-  </div>
+
+    <div class="estado-error" *ngIf="error()">{{ error() }}</div>
+
+    <div class="panel" *ngIf="!cargando() && !error()">
+      <table class="tabla" *ngIf="ventas().length > 0">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Vendedor</th>
+            <th>Cliente</th>
+            <th>Ítems</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of ventas()">
+            <td>{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ v.nombre_vendedor ?? '—' }}</td>
+            <td>{{ nombreCliente(v) }}</td>
+            <td>{{ v.cantidad_items }}</td>
+            <td>S/{{ v.total.toFixed(2) }}</td>
+            <td>
+              <span class="badge" [ngClass]="'badge-estado-' + v.estado">{{ etiquetaEstado(v.estado) }}</span>
+            </td>
+            <td class="tabla-acciones">
+              <button class="btn-secondary btn-sm" (click)="abrirDetalle(v)">Ver detalle</button>
+              <button
+                class="btn-icon-devolucion"
+                *ngIf="puedeDevolver() && v.estado === 'pagada'"
+                title="Registrar devolución"
+                (click)="abrirDevolucion(v)"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 14 4 9 9 4" /><path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                </svg>
+              </button>
+              <button
+                class="btn-icon-danger"
+                *ngIf="puedeEliminar() && v.estado !== 'anulada'"
+                title="Eliminar venta"
+                (click)="abrirEliminar(v)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="tabla-vacia" *ngIf="ventas().length === 0">Todavía no hay ventas registradas.</p>
+
+      <div class="cargando-mini" *ngIf="cargandoMas()">
+        <span class="spinner spinner-sm"></span> Cargando más ventas…
+      </div>
+      <button class="btn-secondary" *ngIf="hayMas() && !cargandoMas() && ventas().length > 0" (click)="cargarMas()">
+        Cargar más
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════ Vista: Devoluciones ═══════════════ -->
+  <ng-container *ngIf="vista() === 'devoluciones'">
+    <div class="estado-carga" *ngIf="cargandoDevoluciones()">
+      <span class="spinner"></span> Cargando devoluciones…
+    </div>
+
+    <div class="estado-error" *ngIf="errorDevoluciones()">{{ errorDevoluciones() }}</div>
+
+    <div class="panel" *ngIf="!cargandoDevoluciones() && !errorDevoluciones()">
+      <table class="tabla" *ngIf="devoluciones().length > 0">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Venta relacionada</th>
+            <th>Motivo</th>
+            <th>Usuario</th>
+            <th>Monto devuelto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of devoluciones()">
+            <td>{{ d.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>Venta del {{ d.fecha_venta | date: 'dd/MM/yyyy' }} · S/{{ d.total_venta.toFixed(2) }}</td>
+            <td>{{ etiquetaMotivoDevolucion(d.motivo) }}</td>
+            <td>{{ d.nombre_usuario ?? '—' }}</td>
+            <td>−S/{{ d.total_devuelto.toFixed(2) }}</td>
+            <td>
+              <span class="badge" [ngClass]="'badge-estado-devolucion-' + d.estado">{{ etiquetaEstadoDevolucion(d.estado) }}</span>
+            </td>
+            <td class="tabla-acciones">
+              <button class="btn-secondary btn-sm" (click)="abrirDetalleDevolucion(d)">Ver detalle</button>
+              <button
+                class="btn-icon-danger"
+                *ngIf="puedeDevolver() && d.estado === 'procesada'"
+                title="Eliminar devolución"
+                (click)="abrirEliminarDevolucion(d)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="tabla-vacia" *ngIf="devoluciones().length === 0">Todavía no hay devoluciones registradas.</p>
+
+      <div class="cargando-mini" *ngIf="cargandoMasDevoluciones()">
+        <span class="spinner spinner-sm"></span> Cargando más devoluciones…
+      </div>
+      <button
+        class="btn-secondary"
+        *ngIf="hayMasDevoluciones() && !cargandoMasDevoluciones() && devoluciones().length > 0"
+        (click)="cargarMasDevoluciones()"
+      >
+        Cargar más
+      </button>
+    </div>
+  </ng-container>
 </div>
 
 <!-- ═══════════════ Modal: detalle de venta ═══════════════ -->
@@ -114,6 +213,9 @@
               <span *ngIf="d.descuento_monto > 0"> · Descuento −S/{{ d.descuento_monto.toFixed(2) }}</span>
             </span>
             <span class="detalle-producto-meta">Desde: {{ d.nombre_local ?? d.nombre_almacen ?? '—' }}</span>
+            <span class="detalle-producto-meta detalle-producto-devuelto" *ngIf="d.cantidad_devuelta > 0">
+              {{ d.cantidad_devuelta }} de {{ d.cantidad }} unidad(es) ya devueltas
+            </span>
           </div>
           <span class="detalle-producto-subtotal">S/{{ d.subtotal.toFixed(2) }}</span>
         </div>
@@ -154,16 +256,6 @@
       </p>
 
       <div class="form-row">
-        <label>Motivo <span class="obligatorio">*</span></label>
-        <textarea
-          rows="3"
-          placeholder="Ej. Venta registrada por error, producto devuelto, etc."
-          [ngModel]="motivoEliminar"
-          (ngModelChange)="motivoEliminar = $event"
-        ></textarea>
-      </div>
-
-      <div class="form-row">
         <label>¿Qué hacemos con el stock de los productos vendidos?</label>
         <div class="restaurar-stock-opciones">
           <label class="restaurar-stock-opcion">
@@ -185,6 +277,164 @@
       <button class="btn-primary btn-peligro" [disabled]="eliminando()" (click)="confirmarEliminar()">
         <span class="spinner spinner-sm spinner-inline" *ngIf="eliminando()"></span>
         Eliminar venta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: registrar devolución ═══════════════ -->
+<div class="modal-overlay" *ngIf="ventaADevolver() || cargandoVentaADevolver()" (click)="cerrarDevolucion()">
+  <div class="modal-card modal-detalle" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Registrar devolución" (cerrar)="cerrarDevolucion()"></app-modal-brand-header>
+
+    <div class="modal-body" *ngIf="cargandoVentaADevolver()">
+      <div class="estado-carga"><span class="spinner"></span> Cargando venta…</div>
+    </div>
+
+    <div class="modal-body" *ngIf="ventaADevolver() as venta">
+      <p class="detalle-subtitulo">¿Qué se devuelve?</p>
+      <div class="devolucion-lineas">
+        <div class="devolucion-linea" *ngFor="let l of lineasDevolucion">
+          <div class="devolucion-linea-info">
+            <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
+            <span class="devolucion-linea-meta">
+              Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
+            </span>
+          </div>
+          <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
+            <input
+              type="number"
+              class="devolucion-linea-cantidad"
+              min="0"
+              [max]="l.disponible"
+              [ngModel]="l.cantidad"
+              (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
+            />
+            <label class="restaurar-stock-opcion devolucion-linea-checkbox" *ngIf="l.cantidad > 0">
+              <input type="checkbox" [ngModel]="l.restaurarStock" (ngModelChange)="l.restaurarStock = $event" />
+              Vuelve al stock
+            </label>
+          </div>
+          <span class="devolucion-linea-sin-disponible" *ngIf="l.disponible === 0">Ya devuelta por completo</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Motivo <span class="obligatorio">*</span></label>
+        <select class="filter-select devolucion-motivo-select" [ngModel]="motivoDevolucion" (ngModelChange)="motivoDevolucion = $event">
+          <option *ngFor="let m of motivosDevolucion" [value]="m.valor">{{ m.etiqueta }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Notas (opcional)</label>
+        <textarea
+          rows="2"
+          placeholder="Detalle adicional, especialmente si el motivo es 'Otro'."
+          [ngModel]="notasDevolucion"
+          (ngModelChange)="notasDevolucion = $event"
+        ></textarea>
+      </div>
+
+      <p class="error-text" *ngIf="errorDevolucion()">{{ errorDevolucion() }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" [disabled]="registrandoDevolucion()" (click)="cerrarDevolucion()">Cancelar</button>
+      <button
+        class="btn-primary"
+        [disabled]="registrandoDevolucion() || cargandoVentaADevolver()"
+        (click)="confirmarDevolucion()"
+      >
+        <span class="spinner spinner-sm spinner-inline" *ngIf="registrandoDevolucion()"></span>
+        Registrar devolución
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: detalle de devolución ═══════════════ -->
+<div class="modal-overlay" *ngIf="devolucionDetalle() || cargandoDetalleDevolucion() || errorDetalleDevolucion()" (click)="cerrarDetalleDevolucion()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Detalle de la devolución" (cerrar)="cerrarDetalleDevolucion()"></app-modal-brand-header>
+
+    <div class="modal-body" *ngIf="cargandoDetalleDevolucion()">
+      <div class="estado-carga"><span class="spinner"></span> Cargando detalle…</div>
+    </div>
+
+    <div class="modal-body" *ngIf="errorDetalleDevolucion()">
+      <div class="estado-error">{{ errorDetalleDevolucion() }}</div>
+    </div>
+
+    <div class="modal-body" *ngIf="devolucionDetalle() as dev">
+      <div class="detalle-cabecera">
+        <div>
+          <span class="detalle-cabecera-label">Fecha</span>
+          <span class="detalle-cabecera-valor">{{ dev.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div>
+          <span class="detalle-cabecera-label">Estado</span>
+          <span class="badge" [ngClass]="'badge-estado-devolucion-' + dev.estado">{{ etiquetaEstadoDevolucion(dev.estado) }}</span>
+        </div>
+      </div>
+
+      <div class="detalle-cabecera">
+        <div>
+          <span class="detalle-cabecera-label">Motivo</span>
+          <span class="detalle-cabecera-valor">{{ etiquetaMotivoDevolucion(dev.motivo) }}</span>
+        </div>
+        <div>
+          <span class="detalle-cabecera-label">Registrado por</span>
+          <span class="detalle-cabecera-valor">{{ dev.nombre_usuario ?? '—' }}</span>
+        </div>
+      </div>
+
+      <p class="devolucion-item-notas" *ngIf="dev.notas">{{ dev.notas }}</p>
+
+      <p class="detalle-subtitulo">Productos devueltos</p>
+      <ul class="devolucion-item-lineas">
+        <li *ngFor="let d of dev.detalles">
+          {{ d.cantidad }}× {{ d.nombre_producto ?? 'Producto' }} (talla {{ d.talla ?? '—' }}) — S/{{ d.monto_devuelto.toFixed(2) }}
+          <span [ngClass]="d.restaurar_stock ? 'texto-ok' : 'texto-alerta'">
+            {{ d.restaurar_stock ? 'vuelve a stock' : 'no vuelve a stock' }}
+          </span>
+        </li>
+      </ul>
+
+      <div class="resumen-total detalle-total">
+        <span>Total devuelto</span>
+        <span>S/{{ dev.total_devuelto.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarDetalleDevolucion()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: eliminar (deshacer) devolución ═══════════════ -->
+<div class="modal-overlay" *ngIf="devolucionAEliminar() as dev" (click)="cerrarEliminarDevolucion()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Eliminar devolución" (cerrar)="cerrarEliminarDevolucion()"></app-modal-brand-header>
+
+    <div class="modal-body">
+      <p class="pregunta-confirmacion">
+        ¿Seguro que quieres eliminar esta devolución de S/{{ dev.total_devuelto.toFixed(2) }}?
+      </p>
+      <p class="devolucion-item-notas">
+        Esto reintegrará el monto a la venta original y, si esta devolución había devuelto unidades al stock,
+        se volverán a descontar.
+      </p>
+
+      <p class="error-text" *ngIf="errorEliminarDevolucion()">{{ errorEliminarDevolucion() }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" [disabled]="eliminandoDevolucion()" (click)="cerrarEliminarDevolucion()">Cancelar</button>
+      <button class="btn-primary btn-peligro" [disabled]="eliminandoDevolucion()" (click)="confirmarEliminarDevolucion()">
+        <span class="spinner spinner-sm spinner-inline" *ngIf="eliminandoDevolucion()"></span>
+        Eliminar devolución
       </button>
     </div>
   </div>

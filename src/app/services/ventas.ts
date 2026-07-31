@@ -114,6 +114,8 @@ export interface DetalleVentaRead {
   precio_unitario: number;
   descuento_monto: number;
   subtotal: number;
+  /** Suma de todas las devoluciones ya procesadas sobre esta línea. */
+  cantidad_devuelta: number;
   creado_en: string;
 }
 
@@ -167,9 +169,68 @@ export interface FiltrosHistorialVentas {
 }
 
 export interface EliminarVentaRequest {
-  motivo: string;
   /** true (default) = devuelve el stock al local/almacén de origen. false = no lo devuelve. */
   restaurar_stock: boolean;
+}
+
+// ── Devoluciones parciales (o totales) de una venta ─────────────────────────
+
+/** Categorías fijas de motivo — mismas que el CHECK de la tabla real en BD. */
+export type MotivoDevolucion = 'producto_defectuoso' | 'talla_incorrecta' | 'arrepentimiento' | 'otro';
+export type EstadoDevolucion = 'pendiente' | 'procesada' | 'rechazada';
+
+export interface ItemDevolucionRequest {
+  id_detalle_venta: string;
+  cantidad: number;
+  /** true (default) = esa cantidad vuelve al stock. false = se dio de baja (dañada/perdida). Es por línea. */
+  restaurar_stock: boolean;
+}
+
+export interface DevolucionRequest {
+  motivo: MotivoDevolucion;
+  notas?: string | null;
+  items: ItemDevolucionRequest[];
+}
+
+export interface DetalleDevolucionRead {
+  id_detalle_devolucion: string;
+  id_detalle_venta: string;
+  id_variante: string;
+  nombre_producto: string | null;
+  talla: string | null;
+  cantidad: number;
+  restaurar_stock: boolean;
+  monto_devuelto: number;
+}
+
+export interface DevolucionRead {
+  id_devolucion: string;
+  id_venta: string;
+  id_usuario: string;
+  nombre_usuario: string | null;
+  motivo: MotivoDevolucion;
+  notas: string | null;
+  total_devuelto: number;
+  estado: EstadoDevolucion;
+  detalles: DetalleDevolucionRead[];
+  creado_en: string;
+}
+
+/** Versión resumida (sin líneas) para la tabla de Historial de devoluciones. */
+export interface DevolucionListItem {
+  id_devolucion: string;
+  id_venta: string;
+  fecha_venta: string;
+  total_venta: number;
+  nombre_usuario: string | null;
+  motivo: MotivoDevolucion;
+  total_devuelto: number;
+  estado: EstadoDevolucion;
+  creado_en: string;
+}
+
+export interface FiltrosHistorialDevoluciones {
+  estado?: EstadoDevolucion;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,6 +268,9 @@ export const TAMANO_PAGINA_CATALOGO_POS = 30;
 
 /** Tamaño de página del historial de ventas — cambiarlo acá es todo lo que hace falta. */
 export const TAMANO_PAGINA_HISTORIAL_VENTAS = 30;
+
+/** Tamaño de página del historial de devoluciones — cambiarlo acá es todo lo que hace falta. */
+export const TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES = 30;
 
 @Injectable({ providedIn: 'root' })
 export class VentasService {
@@ -278,6 +342,41 @@ export class VentasService {
    */
   eliminarVenta(idVenta: string, data: EliminarVentaRequest): Observable<MensajeResponse> {
     return this.http.post<MensajeResponse>(`${this.base}/${idVenta}/anular`, data);
+  }
+
+  /**
+   * Registra que el cliente devolvió N unidades de una o más líneas de una
+   * venta 'pagada' — a diferencia de eliminarVenta (anula TODO), esto
+   * permite devolver solo algunas unidades y sigue vendida el resto.
+   */
+  registrarDevolucion(idVenta: string, data: DevolucionRequest): Observable<MensajeResponse> {
+    return this.http.post<MensajeResponse>(`${this.base}/${idVenta}/devoluciones`, data);
+  }
+
+  /** Historial de devoluciones ya procesadas sobre una venta, más recientes primero. */
+  listarDevolucionesVenta(idVenta: string): Observable<DevolucionRead[]> {
+    return this.http.get<DevolucionRead[]>(`${this.base}/${idVenta}/devoluciones`);
+  }
+
+  /** Página del historial de devoluciones del tenant (todas las ventas), más reciente primero. */
+  listarDevoluciones(
+    filtros: FiltrosHistorialDevoluciones = {},
+    offset = 0,
+    limit = TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES
+  ): Observable<DevolucionListItem[]> {
+    let params = new HttpParams().set('limit', limit).set('offset', offset);
+    if (filtros.estado) params = params.set('estado', filtros.estado);
+    return this.http.get<DevolucionListItem[]>(`${this.base}/devoluciones`, { params });
+  }
+
+  /** Detalle completo (con líneas) de una devolución puntual. */
+  obtenerDevolucion(idDevolucion: string): Observable<DevolucionRead> {
+    return this.http.get<DevolucionRead>(`${this.base}/devoluciones/${idDevolucion}`);
+  }
+
+  /** Elimina (deshace) una devolución: reintegra el monto a la venta y revierte el stock si aplicaba. */
+  eliminarDevolucion(idDevolucion: string): Observable<MensajeResponse> {
+    return this.http.post<MensajeResponse>(`${this.base}/devoluciones/${idDevolucion}/eliminar`, {});
   }
 
   // ── Gestión del carrito (local) ──────────────────────────────────────────
