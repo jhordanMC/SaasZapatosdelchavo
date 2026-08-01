@@ -25,6 +25,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalBrandHeaderComponent } from '../../../../shared/modal-brand-header/modal-brand-header';
 import { AuthService } from '../../../../core/auth';
+import { environment } from '../../../../../environments/environment';
 import {
   DetalleVentaRead,
   DevolucionListItem,
@@ -161,6 +162,11 @@ export class HistorialVentasComponent implements OnInit {
 
   etiquetaEstado(estado: EstadoVenta): string {
     return ETIQUETAS_ESTADO[estado] ?? estado;
+  }
+
+  /** Arma la URL absoluta de una foto de producto (imagen_url guarda solo la ruta relativa). */
+  imagenSrc(imagenUrl: string | null): string | null {
+    return imagenUrl ? `${environment.apiUrl}${imagenUrl}` : null;
   }
 
   etiquetaMotivoDevolucion(motivo: MotivoDevolucion): string {

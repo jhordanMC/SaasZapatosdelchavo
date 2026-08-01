@@ -60,7 +60,10 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
           route: '/empresa/ventas',
           icon: 'ventas',
           exact: true,
-          subItem: { label: this.i18n.t('NAV.VENTAS_HISTORIAL'), route: '/empresa/ventas/historial' },
+          subItems: [
+            { label: this.i18n.t('NAV.VENTAS_HISTORIAL'), route: '/empresa/ventas/historial' },
+            { label: this.i18n.t('NAV.VENTAS_PROFORMAS'), route: '/empresa/ventas/proformas' },
+          ],
         });
       }
       if (esDueño && puedeVer('finanzas')) {

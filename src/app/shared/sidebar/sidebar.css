@@ -113,9 +113,9 @@
   gap: 2px;
 }
 
-/* Todo lo de abajo aplica SOLO a grupos que de verdad tienen un sub-enlace
-   (hoy, únicamente Ventas → Ver Historial) — nunca a un ítem normal, aun
-   cuando ese ítem sea la ruta activa (lo cual también dispara
+/* Todo lo de abajo aplica SOLO a grupos que de verdad tienen sub-enlaces
+   (hoy, únicamente Ventas → Ver Historial / Proformas) — nunca a un ítem
+   normal, aun cuando ese ítem sea la ruta activa (lo cual también dispara
    "grupo-activo" sobre su propio nav-group, ya que su propio enlace es
    descendiente de sí mismo). El class .tiene-subitem evita que este
    estilo se filtre a Dashboard, Inventario, etc. */
@@ -147,9 +147,12 @@
   border-color: transparent;
 }
 
-/* Sub-enlace bajo un ítem principal (ej. "Ventas" → "Ver Historial").
-   Solo se muestra cuando el grupo está activo (Ventas expandida/seleccionada
-   o ya dentro de Ver Historial); el resto del tiempo permanece oculto. */
+/* Sub-enlace bajo un ítem principal (ej. "Ventas" → "Ver Historial",
+   "Proformas"). Solo se muestran cuando el grupo está activo (Ventas
+   expandida/seleccionada o ya dentro de uno de sus sub-enlaces); el resto
+   del tiempo permanecen ocultos. Pueden ser varios, apilados y "soldados"
+   entre sí (sin gap, sin radio en los bordes que se tocan) — solo el
+   primero (pegado a Ventas) y el último (final del bloque) llevan radio. */
 .nav-subitem {
   display: none;
   font-size: 12px;
@@ -164,8 +167,14 @@
      pero con el texto desplazado hacia el interior en vez de pegado al
      borde, dando la sensación de sub-elemento anidado. */
   padding: 8px 16px 8px 46px;
+}
+
+.nav-group.tiene-subitem.grupo-activo .nav-item + .nav-subitem {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
+}
+
+.nav-group.tiene-subitem.grupo-activo .nav-subitem:last-child {
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 18px;
 }

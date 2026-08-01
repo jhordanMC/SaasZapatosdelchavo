@@ -12,8 +12,8 @@ export interface SidebarItem {
   label: string;
   route?: string;
   href?: string;
-  /** Único sub-enlace bajo este ítem (ej. "Ventas" → "Ver Historial"). No es un submenú de varios niveles. */
-  subItem?: SidebarSubItem;
+  /** Sub-enlaces bajo este ítem (ej. "Ventas" → "Ver Historial", "Proformas"). No es un submenú de varios niveles. */
+  subItems?: SidebarSubItem[];
   icon:
     | 'dashboard'
     | 'empresas'

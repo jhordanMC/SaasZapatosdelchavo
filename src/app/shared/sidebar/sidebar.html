@@ -33,7 +33,7 @@
     <ng-container *ngFor="let item of items">
     <div
       class="nav-group"
-      [class.tiene-subitem]="!!item.subItem"
+      [class.tiene-subitem]="!!item.subItems?.length"
       routerLinkActive="grupo-activo"
       [routerLinkActiveOptions]="{ exact: false }"
     >
@@ -171,14 +171,14 @@
         {{ item.label }}
       </a>
       <a
-        *ngIf="item.subItem"
+        *ngFor="let sub of item.subItems"
         class="nav-subitem"
-        [routerLink]="item.subItem.route"
+        [routerLink]="sub.route"
         routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.subItem.exact ?? false }"
+        [routerLinkActiveOptions]="{ exact: sub.exact ?? false }"
         (click)="closeMobile()"
       >
-        {{ item.subItem.label }}
+        {{ sub.label }}
       </a>
     </div>
     </ng-container>
