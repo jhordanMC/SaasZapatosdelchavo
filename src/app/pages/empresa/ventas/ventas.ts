@@ -45,8 +45,6 @@ import {
   requiereComprobante,
 } from '../../../services/ventas';
 
-const MAX_FOTO_BYTES = 6 * 1024 * 1024; // 6 MB
-
 type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 
 @Component({
@@ -687,11 +685,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorFoto = '';
     if (!archivo.type.startsWith('image/')) {
       this.errorFoto = 'El archivo debe ser una imagen (foto).';
-      input.value = '';
-      return;
-    }
-    if (archivo.size > MAX_FOTO_BYTES) {
-      this.errorFoto = 'La imagen es muy pesada. Usa una foto de menos de 6MB.';
       input.value = '';
       return;
     }

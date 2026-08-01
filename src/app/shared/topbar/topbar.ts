@@ -64,6 +64,11 @@ export class TopbarComponent implements OnInit {
     input.value = ''; // permite re-seleccionar el mismo archivo después de un error
     if (!archivo) return;
 
+    if (!archivo.type.startsWith('image/')) {
+      this.errorAvatar.set('El archivo debe ser una imagen (foto).');
+      return;
+    }
+
     this.subiendoAvatar.set(true);
     this.errorAvatar.set(null);
     this.authService.subirAvatar(archivo).subscribe({
