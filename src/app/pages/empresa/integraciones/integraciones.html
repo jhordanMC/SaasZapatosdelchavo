@@ -4,10 +4,10 @@
     <p class="page-subtitle">Conecta tus marketplaces para sincronizar ventas y stock automáticamente.</p>
   </div>
 
-  <!-- Las alertas en tiempo real (SSE) ya corren globalmente; esto solo confirma que el canal está vivo. -->
+  <!-- El backend de alertas en tiempo real (SSE) todavía no existe — ver MarketplaceRealtimeService. -->
   <span class="live-indicator" [class.live-on]="marketplaceRealtime.conectado()">
     <span class="live-dot"></span>
-    {{ marketplaceRealtime.conectado() ? 'Alertas en vivo activas' : 'Conectando alertas en vivo…' }}
+    {{ marketplaceRealtime.conectado() ? 'Alertas en vivo activas' : 'Vista previa — alertas en vivo próximamente' }}
   </span>
 </div>
 
@@ -117,7 +117,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModalCredenciales()" [disabled]="guardandoCredenciales">Cancelar</button>
+      <button class="btn-clear" (click)="cerrarModalCredenciales()" [disabled]="guardandoCredenciales">Cancelar</button>
       <button class="btn-primary" (click)="guardarCredenciales()" [disabled]="guardandoCredenciales">
         <span *ngIf="guardandoCredenciales">Guardando…</span>
         <span *ngIf="!guardandoCredenciales">Guardar y conectar</span>

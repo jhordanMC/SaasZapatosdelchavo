@@ -102,6 +102,7 @@ export class EmpresaDetalleComponent implements OnInit {
       next: (empresa) => {
         this.empresa.set(empresa);
         this.pageTitleService.setTitle(empresa.nombre);
+        this.pageTitleService.setSubtitle('Locales, usuarios y suscripción');
         this.cargarLocales();
         this.cargarUsuarios();
         this.cargarRoles();

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { Liveline } from 'liveline';
-import type { LivelinePoint } from 'liveline';
+import type { LivelinePoint, ThemeMode } from 'liveline';
 
 export interface LivelineHandle {
   /** Empuja un valor real nuevo al gráfico (reemplaza el random-walk viejo). */
@@ -10,9 +10,20 @@ export interface LivelineHandle {
 
 const roots = new WeakMap<HTMLElement, Root>();
 
+/** ThemeService (Angular) escribe data-theme en <html> — este wrapper de
+ *  React no tiene DI, así que lee esa misma fuente de verdad en vez de
+ *  duplicar el estado del tema. */
+function leerTema(): ThemeMode {
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+/** Verde oscuro de marca (bueno sobre fondo claro) vs. mint claro (bueno sobre fondo oscuro) — mismo criterio que --brand-wordmark/--brand-mint en tokens.css. */
+const COLOR_POR_TEMA: Record<ThemeMode, string> = { light: '#024B40', dark: '#64D59C' };
+
 function LivelineChart({ onReady }: { onReady: (handle: LivelineHandle) => void }): React.ReactElement {
   const [data, setData] = React.useState<LivelinePoint[]>([{ time: Date.now() / 1000, value: 0 }]);
   const [value, setValue] = React.useState<number>(0);
+  const [tema, setTema] = React.useState<ThemeMode>(leerTema());
 
   React.useEffect(() => {
     onReady({
@@ -27,6 +38,12 @@ function LivelineChart({ onReady }: { onReady: (handle: LivelineHandle) => void 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => setTema(leerTema()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
   return React.createElement(
     'div',
     { style: { height: '100%', minHeight: '220px', width: '100%', display: 'flex', flexDirection: 'column' } },
@@ -36,8 +53,8 @@ function LivelineChart({ onReady }: { onReady: (handle: LivelineHandle) => void 
       React.createElement(Liveline, {
         data,
         value,
-        color: '#024B40',
-        theme: 'light',
+        color: COLOR_POR_TEMA[tema],
+        theme: tema,
         grid: true,
         fill: true,
         pulse: true,

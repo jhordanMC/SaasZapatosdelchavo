@@ -1,96 +1,99 @@
-<div class="page-toolbar">
-  <div>
-    <p class="page-title">Proformas</p>
-    <p class="page-subtitle">Cotizaciones para tus clientes. Créalas, edítalas e imprímelas cuando las necesites.</p>
-  </div>
-
-  <div class="toolbar-derecha">
-    <select class="filter-select" [ngModel]="filtroEstado" (ngModelChange)="filtroEstado = $event">
-      <option value="">Todos los estados</option>
-      <option value="vigente">Vigente</option>
-      <option value="vencida">Vencida</option>
-    </select>
-
-    <div class="search-box">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" placeholder="Buscar por cliente o número" [ngModel]="busqueda" (ngModelChange)="busqueda = $event" />
+<div class="content">
+  <div class="filtros-card">
+    <div class="filtro-campo filtro-campo-buscar">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Cliente o número
+      </label>
+      <input type="text" placeholder="Buscar por cliente o número" [(ngModel)]="busqueda" />
     </div>
 
-    <button class="btn-primary" (click)="nuevaProforma()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-      Nueva proforma
-    </button>
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Estado
+      </label>
+      <select [(ngModel)]="filtroEstado">
+        <option value="">Todos los estados</option>
+        <option value="vigente">Vigente</option>
+        <option value="vencida">Vencida</option>
+      </select>
+    </div>
+
+    <div class="filtro-acciones">
+      <button class="btn-clear" *ngIf="busqueda || filtroEstado" (click)="busqueda = ''; filtroEstado = ''">Limpiar</button>
+      <button class="btn-primary" (click)="nuevaProforma()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva proforma
+      </button>
+    </div>
   </div>
-</div>
 
-<div class="content">
-  <div class="panel">
-    <table class="tabla" *ngIf="proformasFiltradas.length > 0">
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Cliente</th>
-          <th>Emitida</th>
-          <th>Válida hasta</th>
-          <th>Ítems</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of proformasFiltradas">
-          <td class="celda-numero">{{ p.numero }}</td>
-          <td>{{ p.cliente.nombre || 'Cliente sin nombre' }}</td>
-          <td>{{ p.fechaEmision }}</td>
-          <td>{{ vencimiento(p) }}</td>
-          <td>{{ p.items.length }}</td>
-          <td>S/{{ total(p).toFixed(2) }}</td>
-          <td>
-            <span class="badge" [ngClass]="'badge-estado-' + estado(p)">{{ estado(p) === 'vigente' ? 'Vigente' : 'Vencida' }}</span>
-          </td>
-          <td class="tabla-acciones">
-            <button class="btn-secondary btn-sm" (click)="editar(p)">Editar</button>
+  <div class="data-table-card">
+    <div class="data-table-header">
+      <div>
+        <h2>Proformas</h2>
+        <p>{{ proformasFiltradas.length }} {{ proformasFiltradas.length === 1 ? 'proforma' : 'proformas' }}</p>
+      </div>
+    </div>
 
-            <button
-              class="btn-icon"
-              title="Imprimir sin imágenes"
-              [disabled]="generando() === p.id"
-              (click)="imprimirSinImagenes(p)"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
-              </svg>
-            </button>
+    <div class="table-wrap" *ngIf="proformasFiltradas.length > 0">
+      <div class="table-row table-head">
+        <span>Número</span>
+        <span>Cliente</span>
+        <span>Emitida</span>
+        <span>Válida hasta</span>
+        <span>Ítems</span>
+        <span>Total</span>
+        <span>Estado</span>
+        <span>Acciones</span>
+      </div>
 
-            <button
-              class="btn-icon"
-              title="Imprimir con imágenes"
-              [disabled]="generando() === p.id"
-              (click)="imprimirConImagenes(p)"
-            >
-              <span class="spinner spinner-sm" *ngIf="generando() === p.id"></span>
-              <svg *ngIf="generando() !== p.id" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-              </svg>
-            </button>
+      <div class="table-row" *ngFor="let p of proformasFiltradas">
+        <span class="celda-numero">{{ p.numero }}</span>
+        <span class="empresa-name">{{ p.cliente.nombre || 'Cliente sin nombre' }}</span>
+        <span>{{ p.fechaEmision }}</span>
+        <span>{{ vencimiento(p) }}</span>
+        <span>{{ p.items.length }}</span>
+        <span class="valor-monto">S/{{ total(p).toFixed(2) }}</span>
+        <span><span class="status-pill" [ngClass]="'status-pill-' + estado(p)">{{ estado(p) === 'vigente' ? 'Vigente' : 'Vencida' }}</span></span>
+        <span class="acciones-cell">
+          <button class="btn-accion" (click)="editar(p)">Editar</button>
 
-            <button class="btn-icon-danger" title="Eliminar proforma" (click)="abrirEliminar(p)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <button
+            class="btn-icon"
+            title="Imprimir sin imágenes"
+            [disabled]="generando() === p.id"
+            (click)="imprimirSinImagenes(p)"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+            </svg>
+          </button>
 
-    <p class="tabla-vacia" *ngIf="proformasFiltradas.length === 0">
+          <button
+            class="btn-icon"
+            title="Imprimir con imágenes"
+            [disabled]="generando() === p.id"
+            (click)="imprimirConImagenes(p)"
+          >
+            <span class="spinner spinner-sm" *ngIf="generando() === p.id"></span>
+            <svg *ngIf="generando() !== p.id" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+
+          <button class="btn-icon-danger" title="Eliminar proforma" (click)="abrirEliminar(p)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+            </svg>
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <p class="empty-state" *ngIf="proformasFiltradas.length === 0">
       {{ todas().length === 0 ? 'Todavía no has creado ninguna proforma.' : 'No hay proformas que coincidan con la búsqueda.' }}
     </p>
   </div>
@@ -109,7 +112,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" [disabled]="eliminando()" (click)="cerrarEliminar()">Cancelar</button>
+      <button class="btn-clear" [disabled]="eliminando()" (click)="cerrarEliminar()">Cancelar</button>
       <button class="btn-primary btn-peligro" [disabled]="eliminando()" (click)="confirmarEliminar()">
         <span class="spinner spinner-sm spinner-inline" *ngIf="eliminando()"></span>
         Eliminar proforma

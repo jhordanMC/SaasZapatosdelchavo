@@ -1,10 +1,7 @@
-<div class="page-toolbar">
-  <p class="page-subtitle">Costos operativos, rentabilidad y flujo de caja de tu negocio.</p>
-  <div>
-    <button class="btn-secondary" (click)="abrirModalRecurrente()">+ Gasto recurrente</button>
-    <button class="btn-secondary" (click)="abrirModalUnico()">+ Gasto único</button>
-    <button class="btn-primary" (click)="abrirModalCompra()">+ Compra</button>
-  </div>
+<div class="page-actions">
+  <button class="btn-clear" (click)="abrirModalRecurrente()">+ Gasto recurrente</button>
+  <button class="btn-clear" (click)="abrirModalUnico()">+ Gasto único</button>
+  <button class="btn-primary" (click)="abrirModalCompra()">+ Compra</button>
 </div>
 
 <div class="content" *ngIf="resumen as r">
@@ -84,8 +81,8 @@
       <p *ngIf="rm.compras.detalle.length === 0" class="panel-subtitulo" style="margin-top: 12px;">Sin compras registradas ese mes.</p>
 
       <div class="resumen-mensual-descargas">
-        <button class="btn-secondary" (click)="descargarResumenPDF()">Descargar PDF</button>
-        <button class="btn-secondary" (click)="descargarResumenExcel()">Descargar Excel</button>
+        <button class="btn-clear" (click)="descargarResumenPDF()">Descargar PDF</button>
+        <button class="btn-clear" (click)="descargarResumenExcel()">Descargar Excel</button>
       </div>
     </ng-container>
   </div>
@@ -242,7 +239,7 @@
         </tr>
       </tbody>
     </table>
-    <button class="btn-secondary" *ngIf="finanzasService.hayMasGastosOperativos()" (click)="cargarMasGastosOperativos()">Cargar más</button>
+    <button class="btn-clear" *ngIf="finanzasService.hayMasGastosOperativos()" (click)="cargarMasGastosOperativos()">Cargar más</button>
   </div>
 
   <div class="panel">
@@ -312,7 +309,7 @@
         </div>
       </div>
 
-      <div *ngIf="resumenProveedores.length === 0" style="text-align: center; padding: 24px 12px; color: #5a8a78; font-size: 13px;">
+      <div class="empty-state-mini" *ngIf="resumenProveedores.length === 0">
         Todavía no registras compras ni proveedores para mostrar en tu gráfico. Haz clic en "+ Registrar compra" para agregar tus registros de proveedor.
       </div>
     </div>
@@ -391,11 +388,11 @@
             </td>
           </tr>
           <tr *ngIf="comprasService.compras().length === 0">
-            <td colspan="6" style="text-align:center; color:#94a798;">Todavía no registras compras de proveedores. Usa "+ Registrar compra" para agregar tus datos.</td>
+            <td colspan="6" class="celda-vacia">Todavía no registras compras de proveedores. Usa "+ Registrar compra" para agregar tus datos.</td>
           </tr>
         </tbody>
       </table>
-      <button class="btn-secondary" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
+      <button class="btn-clear" *ngIf="comprasService.hayMasCompras()" (click)="cargarMasCompras()">Cargar más</button>
     </div>
   </div>
 </div>
@@ -450,7 +447,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModalRecurrente()">Cancelar</button>
+      <button class="btn-clear" (click)="cerrarModalRecurrente()">Cancelar</button>
       <button class="btn-primary" [disabled]="guardandoRecurrente" [class.btn-loading]="guardandoRecurrente" (click)="guardarGastoRecurrente()">
         {{ guardandoRecurrente ? 'Guardando...' : 'Guardar' }}
       </button>
@@ -500,7 +497,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModalUnico()">Cancelar</button>
+      <button class="btn-clear" (click)="cerrarModalUnico()">Cancelar</button>
       <button class="btn-primary" [disabled]="guardandoUnico" [class.btn-loading]="guardandoUnico" (click)="guardarGastoUnico()">
         {{ guardandoUnico ? 'Guardando...' : 'Guardar' }}
       </button>
@@ -565,7 +562,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModalCompra()">Cancelar</button>
+      <button class="btn-clear" (click)="cerrarModalCompra()">Cancelar</button>
       <button class="btn-primary" [disabled]="guardandoCompra" [class.btn-loading]="guardandoCompra" (click)="guardarCompra()">
         {{ guardandoCompra ? 'Guardando...' : 'Guardar' }}
       </button>
@@ -592,11 +589,11 @@
       <h3>{{ gastoAEliminar.tipo === 'compra' ? 'Eliminar compra' : 'Eliminar gasto' }}</h3>
     </div>
     <div class="modal-body">
-      <p style="color: #1f4034; font-size: 14px;">¿Estás seguro de que deseas eliminar permanentemente este {{ gastoAEliminar.tipo === 'compra' ? 'registro de compra' : 'gasto' }}? Esta acción no se puede deshacer.</p>
+      <p class="pregunta-confirmacion">¿Estás seguro de que deseas eliminar permanentemente este {{ gastoAEliminar.tipo === 'compra' ? 'registro de compra' : 'gasto' }}? Esta acción no se puede deshacer.</p>
     </div>
-    <div class="modal-footer" style="justify-content: flex-end; gap: 12px; margin-top: 10px;">
-      <button class="btn-secondary" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()">Cancelar</button>
-      <button class="btn-primary" style="background: #b23a3a;" [disabled]="eliminandoId() !== null" [class.btn-loading]="eliminandoId() !== null" (click)="confirmarEliminacion()">
+    <div class="modal-footer">
+      <button class="btn-clear" [disabled]="eliminandoId() !== null" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn-primary btn-peligro" [disabled]="eliminandoId() !== null" [class.btn-loading]="eliminandoId() !== null" (click)="confirmarEliminacion()">
         {{ eliminandoId() ? 'Eliminando...' : 'Eliminar' }}
       </button>
     </div>

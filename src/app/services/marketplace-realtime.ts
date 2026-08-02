@@ -114,6 +114,15 @@ export type EventoMarketplace =
  *      conexión detrás de proxies/load balancers que cierran conexiones
  *      idle.
  */
+/**
+ * El endpoint SSE todavía no existe en el backend (ver TODO arriba) — hasta
+ * que exista, `conectar()` no debe intentar nada. Sin este flag, cada carga
+ * de cualquier página bajo /empresa abre una conexión que 404ea y se
+ * reintenta sola cada 5s para siempre, ensuciando la consola sin parar.
+ * Cambiar a `true` el día que el backend implemente `/marketplace/eventos/stream`.
+ */
+const MARKETPLACE_REALTIME_HABILITADO = false;
+
 @Injectable({ providedIn: 'root' })
 export class MarketplaceRealtimeService implements OnDestroy {
   private eventSource: EventSource | null = null;
@@ -128,6 +137,7 @@ export class MarketplaceRealtimeService implements OnDestroy {
 
   /** Llamar una sola vez al iniciar sesión (ver AdminLayoutComponent / EmpresaLayoutComponent). */
   conectar(): void {
+    if (!MARKETPLACE_REALTIME_HABILITADO) return;
     if (this.eventSource) return;
     this.abrirConexion();
   }

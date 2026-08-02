@@ -1,42 +1,54 @@
-<!-- ── Toolbar: búsqueda + selector de local ───────────────────────────── -->
-<div class="page-toolbar">
-  <div class="search-box">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
+<!-- ── Filtros ─────────────────────────────────────────────────────────── -->
+<div class="filtros-card">
+  <div class="filtro-campo filtro-campo-buscar">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Producto
+    </label>
     <input type="text" placeholder="Ingresa el producto a buscar" [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" />
   </div>
 
-  <select class="filter-select" [ngModel]="filtroTalla" (ngModelChange)="onFiltroTallaChange($event)" title="Filtrar por talla">
-    <option value="Todas">Talla: Todas</option>
-    <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
-  </select>
-
-  <!-- Selector de local (siempre visible para poder elegir 'todos') -->
-  <select
-    class="filter-select local-select"
-    (change)="cambiarSede($any($event.target).value)"
-    title="Sede activa"
-  >
-    <option value="todos" [selected]="!sedeFiltro()"> Todas las sedes</option>
-    <option *ngFor="let s of sedes()" [value]="s.id_sede" [selected]="sedeFiltro()?.id_sede === s.id_sede">
-       {{ s.nombre }}
-    </option>
-  </select>
-
-  <div class="sexo-toggle">
-    <button *ngFor="let s of sexosDisponibles"
-      [class.active]="filtroSexo === s.valor"
-      (click)="toggleSexo(s.valor)"
-    >{{ s.label }}</button>
+  <div class="filtro-campo">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Talla
+    </label>
+    <select [ngModel]="filtroTalla" (ngModelChange)="onFiltroTallaChange($event)">
+      <option value="Todas">Todas</option>
+      <option *ngFor="let t of tallasDisponibles" [value]="t">Talla {{ t }}</option>
+    </select>
   </div>
 
-  <button class="btn-clear" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()" title="Limpiar filtros">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-    Limpiar
-  </button>
+  <div class="filtro-campo">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/></svg>
+      Sede
+    </label>
+    <!-- Selector de local (siempre visible para poder elegir 'todos') -->
+    <select class="local-select" (change)="cambiarSede($any($event.target).value)">
+      <option value="todos" [selected]="!sedeFiltro()"> Todas las sedes</option>
+      <option *ngFor="let s of sedes()" [value]="s.id_sede" [selected]="sedeFiltro()?.id_sede === s.id_sede">
+         {{ s.nombre }}
+      </option>
+    </select>
+  </div>
+
+  <div class="filtro-campo">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Sexo
+    </label>
+    <div class="sexo-toggle">
+      <button *ngFor="let s of sexosDisponibles"
+        [class.active]="filtroSexo === s.valor"
+        (click)="toggleSexo(s.valor)"
+      >{{ s.label }}</button>
+    </div>
+  </div>
+
+  <div class="filtro-acciones">
+    <button class="btn-clear" *ngIf="hayFiltrosActivos" (click)="limpiarFiltros()">Limpiar</button>
+  </div>
 </div>
 
 <!-- ── Estado de carga / error global ────────────────────────────────── -->
@@ -122,7 +134,7 @@
           </div>
           <div class="carrito-item-info">
             <div class="carrito-item-nombre">{{ item.nombre }}</div>
-            <div class="carrito-item-detalle" style="color: var(--primary-main); font-size: 0.8rem; margin-bottom: 2px;" *ngIf="item.nombreUbicacion">
+            <div class="carrito-item-detalle" style="color: var(--brand-deep); font-size: 0.8rem; margin-bottom: 2px;" *ngIf="item.nombreUbicacion">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
@@ -296,7 +308,7 @@
 
         <div class="form-row" *ngIf="localesSoloCaja.length > 1">
           <label>Caja de Cobro (Local)</label>
-          <select [(ngModel)]="cajaSeleccionadaId" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
+          <select [(ngModel)]="cajaSeleccionadaId" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-default); border-radius: 8px;">
             <option *ngFor="let c of localesSoloCaja" [value]="c.id_sede">{{ c.nombre }}</option>
           </select>
         </div>

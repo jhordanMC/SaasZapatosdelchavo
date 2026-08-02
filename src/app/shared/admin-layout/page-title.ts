@@ -13,8 +13,13 @@ import { Injectable, signal } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class PageTitleService {
   title = signal('Dashboard');
+  subtitle = signal('');
 
   setTitle(title: string): void {
     this.title.set(title);
+  }
+
+  setSubtitle(subtitle: string): void {
+    this.subtitle.set(subtitle);
   }
 }

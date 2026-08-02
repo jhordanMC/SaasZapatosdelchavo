@@ -1,68 +1,182 @@
 <!-- Sidebar y topbar ahora viven en AdminLayoutComponent (shared/admin-layout). -->
-<div class="page-toolbar">
-  <p class="page-subtitle">Historial de actividad (auditoría) por empresa.</p>
-</div>
-
-<div class="filters-bar">
-  <select class="filter-select" [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="aplicarCambio()">
-    <option *ngFor="let empresa of empresas()" [value]="empresa.id_empresa">{{ empresa.nombre }}</option>
-  </select>
-
-  <div class="search-box">
-    <input type="text" placeholder="Acción (ej. login, categoria_creada)..." [(ngModel)]="accion" (keydown.enter)="aplicarCambio()" />
-  </div>
-
-  <div class="search-box">
-    <input type="text" placeholder="Tabla afectada (ej. productos)..." [(ngModel)]="tablaAfectada" (keydown.enter)="aplicarCambio()" />
-  </div>
-
-  <div class="date-field">
-    <span>Desde</span>
-    <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="aplicarCambio()" />
-  </div>
-  <div class="date-field">
-    <span>Hasta</span>
-    <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="aplicarCambio()" />
-  </div>
-
-  <button class="btn-primary" (click)="aplicarCambio()">Filtrar</button>
-  <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
-</div>
-
 <div class="content">
-  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
 
-  <div class="table-card">
-    <div class="table-header">
-      <div>
-        <h2>Actividad</h2>
-        <p>Página {{ pagina + 1 }} · {{ registros().length }} registros en esta página</p>
+  <!-- ═══════════════ KPIs ═══════════════ -->
+  <div class="kpi-hero-grid">
+    <div class="kpi-hero-card">
+      <div class="kpi-hero-top">
+        <div class="kpi-hero-icono kpi-hero-icono-verde">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="kpi-hero-spark">
+          <span class="kpi-hero-spark-bar" *ngFor="let v of sparklinePuntos()" [style.height.%]="Math.max(10, (v / sparklineMax()) * 100)"></span>
+        </div>
       </div>
-      <select class="filter-select filter-select-sm" [(ngModel)]="tamanoPagina" (ngModelChange)="aplicarCambio()">
-        <option *ngFor="let tamano of tamanosPagina" [ngValue]="tamano">{{ tamano }} por página</option>
+      <div class="kpi-hero-valor">{{ totalRegistros() }}</div>
+      <div class="kpi-hero-label">Eventos totales (con estos filtros)</div>
+    </div>
+
+    <div class="kpi-hero-card">
+      <div class="kpi-hero-top">
+        <div class="kpi-hero-icono kpi-hero-icono-verde">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="kpi-hero-spark">
+          <span class="kpi-hero-spark-bar" *ngFor="let v of sparklinePuntos()" [style.height.%]="Math.max(10, (v / sparklineMax()) * 100)"></span>
+        </div>
+      </div>
+      <div class="kpi-hero-valor">{{ usuariosDistintos() }}</div>
+      <div class="kpi-hero-label">Usuarios distintos en esta página</div>
+    </div>
+
+    <div class="kpi-hero-card">
+      <div class="kpi-hero-top">
+        <div class="kpi-hero-icono kpi-hero-icono-ambar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="kpi-hero-spark">
+          <span class="kpi-hero-spark-bar" *ngFor="let v of sparklinePuntos()" [style.height.%]="Math.max(10, (v / sparklineMax()) * 100)"></span>
+        </div>
+      </div>
+      <div class="kpi-hero-valor">{{ accionesDeSeguridad() }}</div>
+      <div class="kpi-hero-label">Acciones de seguridad en esta página (login / 2FA)</div>
+    </div>
+
+    <div class="kpi-hero-card">
+      <div class="kpi-hero-top">
+        <div class="kpi-hero-icono kpi-hero-icono-morado">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        </div>
+        <div class="kpi-hero-spark">
+          <span class="kpi-hero-spark-bar" *ngFor="let v of sparklinePuntos()" [style.height.%]="Math.max(10, (v / sparklineMax()) * 100)"></span>
+        </div>
+      </div>
+      <div class="kpi-hero-valor">{{ cambiosDeDatos() }}</div>
+      <div class="kpi-hero-label">Cambios de datos en esta página (crear/editar/eliminar)</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FILTROS ═══════════════ -->
+  <div class="filtros-card">
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/></svg>
+        Empresa
+      </label>
+      <select [(ngModel)]="empresaSeleccionadaId" (ngModelChange)="aplicarCambio()">
+        <option *ngFor="let empresa of empresas()" [value]="empresa.id_empresa">{{ empresa.nombre }}</option>
       </select>
     </div>
 
-    <div class="table-wrap" *ngIf="registros().length > 0">
-      <div class="table-row table-head">
-        <span>Fecha</span>
-        <span>Usuario</span>
-        <span>Acción</span>
-        <span>Detalle</span>
-        <span></span>
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+        Acción
+      </label>
+      <input type="text" placeholder="ej. login, categoria_creada..." [(ngModel)]="accion" (keydown.enter)="aplicarCambio()" />
+    </div>
+
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Tabla afectada
+      </label>
+      <input type="text" placeholder="ej. productos..." [(ngModel)]="tablaAfectada" (keydown.enter)="aplicarCambio()" />
+    </div>
+
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Desde
+      </label>
+      <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="aplicarCambio()" />
+    </div>
+
+    <div class="filtro-campo">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Hasta
+      </label>
+      <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="aplicarCambio()" />
+    </div>
+
+    <div class="filtro-acciones">
+      <button class="btn-filtrar" (click)="aplicarCambio()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtrar
+      </button>
+      <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
+    </div>
+  </div>
+
+  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+  <!-- ═══════════════ TIMELINE ═══════════════ -->
+  <div class="timeline-card">
+    <div class="timeline-header">
+      <div class="timeline-header-titulo">
+        <h2>Actividad reciente</h2>
+        <span class="badge-suave">{{ registros().length }} registro{{ registros().length !== 1 ? 's' : '' }}</span>
+      </div>
+      <button class="btn-exportar" (click)="exportarExcel()" [disabled]="registros().length === 0" title="Exporta los registros de esta página a Excel">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar
+      </button>
+    </div>
+
+    <div class="timeline" *ngIf="registros().length > 0">
+      <div class="timeline-row timeline-row-cabecera">
+        <div class="timeline-rail"></div>
+        <div class="timeline-celda">Fecha</div>
+        <div class="timeline-celda">Usuario</div>
+        <div class="timeline-celda">Acción</div>
+        <div class="timeline-celda">Detalle</div>
+        <div class="timeline-celda">IP / Ubicación</div>
+        <div class="timeline-celda timeline-celda-opciones">Opciones</div>
       </div>
 
-      <div class="table-row" *ngFor="let registro of registros()">
-        <span>{{ fechaHora(registro.creado_en) }}</span>
-        <div class="usuario-cell">
-          <div class="usuario-avatar"><span>{{ iniciales(registro.nombre_usuario) }}</span></div>
-          <span>{{ registro.nombre_usuario || 'Sistema' }}</span>
+      <div class="timeline-row" *ngFor="let registro of registros(); let last = last">
+        <div class="timeline-rail">
+          <span class="timeline-dot" [ngClass]="'timeline-dot-' + categoriaAccion(registro.accion)">
+            <ng-container [ngSwitch]="iconoAccion(registro.accion)">
+              <svg *ngSwitchCase="'login'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <svg *ngSwitchCase="'escudo'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+              <svg *ngSwitchCase="'mas'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <svg *ngSwitchCase="'lapiz'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              <svg *ngSwitchCase="'papelera'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <svg *ngSwitchDefault width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+            </ng-container>
+          </span>
+          <span class="timeline-linea" *ngIf="!last"></span>
         </div>
-        <span><span class="accion-pill">{{ registro.accion }}</span></span>
-        <span class="detalle-cell" [title]="detalleTexto(registro)">{{ detalleTexto(registro) }}</span>
-        <span>
-          <button class="btn-accion" (click)="abrirDetalle(registro)">Ver detalle</button>
-        </span>
+
+        <div class="timeline-celda timeline-fecha">{{ fechaHora(registro.creado_en) }}</div>
+
+        <div class="timeline-celda timeline-usuario">
+          <div class="timeline-avatar"><span>{{ iniciales(registro.nombre_usuario) }}</span></div>
+          <span class="timeline-usuario-nombre">{{ registro.nombre_usuario || 'Sistema' }}</span>
+        </div>
+
+        <div class="timeline-celda timeline-accion">
+          <span class="accion-badge" [ngClass]="'accion-badge-' + categoriaAccion(registro.accion)">{{ registro.accion }}</span>
+        </div>
+
+        <div class="timeline-celda timeline-detalle" [title]="detalleTexto(registro)">{{ detalleTexto(registro) }}</div>
+
+        <div class="timeline-celda timeline-ip">
+          <ng-container *ngIf="registro.ip_origen; else sinIp">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ registro.ip_origen }}
+          </ng-container>
+          <ng-template #sinIp>—</ng-template>
+        </div>
+
+        <div class="timeline-celda timeline-opciones">
+          <button class="btn-ver-detalle" (click)="abrirDetalle(registro)">
+            Ver detalle
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -70,11 +184,29 @@
     <p class="empty-state" *ngIf="!cargando() && registros().length === 0">No hay actividad registrada con estos filtros.</p>
 
     <div class="paginacion" *ngIf="!cargando() && registros().length > 0">
-      <button class="btn-clear" [disabled]="pagina === 0" (click)="paginaAnterior()">← Anterior</button>
-      <span class="paginacion-actual">Página {{ pagina + 1 }}</span>
-      <button class="btn-clear" [disabled]="!hayPaginaSiguiente()" (click)="paginaSiguiente()">Siguiente →</button>
+      <div class="paginacion-nav">
+        <button class="btn-pagina" [disabled]="pagina === 0" (click)="paginaAnterior()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <ng-container *ngFor="let p of paginasVisibles()">
+          <button
+            *ngIf="p !== '…'"
+            class="btn-pagina-numero"
+            [class.activa]="p === pagina + 1"
+            (click)="irAPagina($any(p))"
+          >{{ p }}</button>
+          <span *ngIf="p === '…'" class="paginacion-elipsis">…</span>
+        </ng-container>
+        <button class="btn-pagina" [disabled]="!hayPaginaSiguiente()" (click)="paginaSiguiente()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <select class="tamano-pagina-select" [(ngModel)]="tamanoPagina" (ngModelChange)="aplicarCambio()">
+        <option *ngFor="let tamano of tamanosPagina" [ngValue]="tamano">{{ tamano }} por página</option>
+      </select>
     </div>
   </div>
+
 </div>
 
 <!-- ══ MODAL: Ver detalle de un registro ══ -->
@@ -112,7 +244,7 @@
         </div>
         <div class="detalle-item">
           <span class="detalle-label">Acción</span>
-          <span class="accion-pill">{{ r.accion }}</span>
+          <span class="accion-badge" [ngClass]="'accion-badge-' + categoriaAccion(r.accion)">{{ r.accion }}</span>
         </div>
         <div class="detalle-item">
           <span class="detalle-label">Tabla afectada</span>

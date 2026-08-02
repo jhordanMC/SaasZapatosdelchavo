@@ -1,171 +1,285 @@
-<div class="page-toolbar">
-  <div>
-    <p class="page-title">{{ vista() === 'ventas' ? 'Historial de ventas' : 'Historial de devoluciones' }}</p>
-    <p class="page-subtitle">
-      {{ vista() === 'ventas' ? 'Todas las ventas registradas en Vilcas, con su detalle completo.' : 'Devoluciones procesadas sobre las ventas del tenant.' }}
-    </p>
-  </div>
-  <select
-    class="filter-select"
-    *ngIf="vista() === 'ventas'"
-    [ngModel]="filtroEstado"
-    (ngModelChange)="onFiltroEstadoChange($event)"
-  >
-    <option value="">Todos los estados</option>
-    <option value="pagada">Pagada</option>
-    <option value="pendiente">Pendiente</option>
-    <option value="anulada">Eliminada</option>
-    <option value="devuelta">Devuelta</option>
-  </select>
-  <select
-    class="filter-select"
-    *ngIf="vista() === 'devoluciones'"
-    [ngModel]="filtroEstadoDevolucion"
-    (ngModelChange)="onFiltroEstadoDevolucionChange($event)"
-  >
-    <option value="">Todos los estados</option>
-    <option value="procesada">Procesada</option>
-    <option value="rechazada">Eliminada</option>
-  </select>
-</div>
-
 <div class="content">
-  <div class="vista-toggle">
-    <button [class.activo]="vista() === 'ventas'" (click)="cambiarVista('ventas')">Ventas</button>
-    <button [class.activo]="vista() === 'devoluciones'" (click)="cambiarVista('devoluciones')">Devoluciones</button>
+
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.activo]="vista() === 'ventas'" (click)="cambiarVista('ventas')">Ventas</button>
+    <button class="tab-btn" [class.activo]="vista() === 'devoluciones'" (click)="cambiarVista('devoluciones')">Devoluciones</button>
   </div>
 
   <!-- ═══════════════ Vista: Ventas ═══════════════ -->
   <ng-container *ngIf="vista() === 'ventas'">
-    <div class="estado-carga" *ngIf="cargando()">
-      <span class="spinner"></span> Cargando historial…
+    <div class="filtros-card">
+      <div class="filtro-campo filtro-campo-buscar">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Cliente
+        </label>
+        <input type="text" placeholder="Buscar por cliente..." [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" />
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Vendedor
+        </label>
+        <select [ngModel]="filtroVendedor" (ngModelChange)="onFiltroVendedorChange($event)">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let v of vendedores()" [value]="v.id_usuario">{{ v.nombre_vendedor }}</option>
+        </select>
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Estado
+        </label>
+        <select [ngModel]="filtroEstado" (ngModelChange)="onFiltroEstadoChange($event)">
+          <option value="">Todos los estados</option>
+          <option value="pagada">Pagada</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="anulada">Eliminada</option>
+          <option value="devuelta">Devuelta</option>
+        </select>
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Desde
+        </label>
+        <input type="date" [ngModel]="fechaDesde" (ngModelChange)="fechaDesde = $event; onFiltroFechaChange()" [max]="fechaHasta || null" />
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Hasta
+        </label>
+        <input type="date" [ngModel]="fechaHasta" (ngModelChange)="fechaHasta = $event; onFiltroFechaChange()" [min]="fechaDesde || null" />
+      </div>
+
+      <div class="filtro-acciones">
+        <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
+      </div>
     </div>
 
-    <div class="estado-error" *ngIf="error()">{{ error() }}</div>
-
-    <div class="panel" *ngIf="!cargando() && !error()">
-      <table class="tabla" *ngIf="ventas().length > 0">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Vendedor</th>
-            <th>Cliente</th>
-            <th>Ítems</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let v of ventas()">
-            <td>{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ v.nombre_vendedor ?? '—' }}</td>
-            <td>{{ nombreCliente(v) }}</td>
-            <td>{{ v.cantidad_items }}</td>
-            <td>S/{{ v.total.toFixed(2) }}</td>
-            <td>
-              <span class="badge" [ngClass]="'badge-estado-' + v.estado">{{ etiquetaEstado(v.estado) }}</span>
-            </td>
-            <td class="tabla-acciones">
-              <button class="btn-secondary btn-sm" (click)="abrirDetalle(v)">Ver detalle</button>
-              <button
-                class="btn-icon-devolucion"
-                *ngIf="puedeDevolver() && v.estado === 'pagada'"
-                title="Registrar devolución"
-                (click)="abrirDevolucion(v)"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 14 4 9 9 4" /><path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-                </svg>
-              </button>
-              <button
-                class="btn-icon-danger"
-                *ngIf="puedeEliminar() && v.estado !== 'anulada'"
-                title="Eliminar venta"
-                (click)="abrirEliminar(v)"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p class="tabla-vacia" *ngIf="ventas().length === 0">Todavía no hay ventas registradas.</p>
-
-      <div class="cargando-mini" *ngIf="cargandoMas()">
-        <span class="spinner spinner-sm"></span> Cargando más ventas…
+    <div class="timeline-card">
+      <div class="timeline-header">
+        <div class="timeline-header-titulo">
+          <h2>Ventas registradas</h2>
+          <span class="badge-suave">{{ totalRegistros() }} {{ totalRegistros() === 1 ? 'venta' : 'ventas' }}</span>
+        </div>
+        <button class="btn-exportar" (click)="exportarExcel()" [disabled]="ventas().length === 0" title="Exporta los registros de esta página a Excel">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
       </div>
-      <button class="btn-secondary" *ngIf="hayMas() && !cargandoMas() && ventas().length > 0" (click)="cargarMas()">
-        Cargar más
-      </button>
+
+      <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+
+      <div class="timeline" *ngIf="ventas().length > 0">
+        <div class="timeline-row timeline-row-ventas timeline-row-cabecera">
+          <div class="timeline-celda">Fecha</div>
+          <div class="timeline-celda">Vendedor</div>
+          <div class="timeline-celda">Cliente</div>
+          <div class="timeline-celda">Ítems</div>
+          <div class="timeline-celda">Total</div>
+          <div class="timeline-celda">Estado</div>
+          <div class="timeline-celda timeline-celda-opciones">Opciones</div>
+        </div>
+
+        <div class="timeline-row timeline-row-ventas" *ngFor="let v of ventas()">
+          <div class="timeline-celda timeline-fecha">{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }}</div>
+          <div class="timeline-celda timeline-vendedor">{{ v.nombre_vendedor ?? '—' }}</div>
+          <div class="timeline-celda timeline-cliente">{{ nombreCliente(v) }}</div>
+          <div class="timeline-celda timeline-items">{{ v.cantidad_items }}</div>
+          <div class="timeline-celda timeline-total valor-monto">S/{{ v.total.toFixed(2) }}</div>
+          <div class="timeline-celda timeline-estado"><span class="status-pill" [ngClass]="'status-pill-' + v.estado">{{ etiquetaEstado(v.estado) }}</span></div>
+
+          <div class="timeline-celda timeline-opciones">
+            <button class="btn-ver-detalle" (click)="abrirDetalle(v)">Ver detalle</button>
+            <button
+              class="btn-icon-devolucion"
+              *ngIf="puedeDevolver() && v.estado === 'pagada'"
+              title="Registrar devolución"
+              (click)="abrirDevolucion(v)"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 14 4 9 9 4" /><path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+              </svg>
+            </button>
+            <button
+              class="btn-icon-danger"
+              *ngIf="puedeEliminar() && v.estado !== 'anulada'"
+              title="Eliminar venta"
+              (click)="abrirEliminar(v)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="empty-state" *ngIf="cargando()">Cargando historial…</p>
+      <p class="empty-state" *ngIf="!cargando() && ventas().length === 0">Todavía no hay ventas registradas.</p>
+
+      <div class="paginacion" *ngIf="!cargando() && ventas().length > 0">
+        <div class="paginacion-nav">
+          <button class="btn-pagina" [disabled]="pagina === 0" (click)="paginaAnterior()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <ng-container *ngFor="let p of paginasVisibles()">
+            <button
+              *ngIf="p !== '…'"
+              class="btn-pagina-numero"
+              [class.activa]="p === pagina + 1"
+              (click)="irAPagina($any(p))"
+            >{{ p }}</button>
+            <span *ngIf="p === '…'" class="paginacion-elipsis">…</span>
+          </ng-container>
+          <button class="btn-pagina" [disabled]="!hayPaginaSiguiente()" (click)="paginaSiguiente()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <select class="tamano-pagina-select" [(ngModel)]="tamanoPagina" (ngModelChange)="aplicarCambio()">
+          <option *ngFor="let tamano of tamanosPagina" [ngValue]="tamano">{{ tamano }} por página</option>
+        </select>
+      </div>
     </div>
   </ng-container>
 
   <!-- ═══════════════ Vista: Devoluciones ═══════════════ -->
   <ng-container *ngIf="vista() === 'devoluciones'">
-    <div class="estado-carga" *ngIf="cargandoDevoluciones()">
-      <span class="spinner"></span> Cargando devoluciones…
+    <div class="filtros-card">
+      <div class="filtro-campo filtro-campo-buscar">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Cliente
+        </label>
+        <input type="text" placeholder="Buscar por cliente..." [ngModel]="busquedaDevoluciones" (ngModelChange)="onBusquedaDevolucionesChange($event)" />
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Usuario
+        </label>
+        <select [ngModel]="filtroUsuarioDevolucion" (ngModelChange)="onFiltroUsuarioDevolucionChange($event)">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let u of usuariosDevolucion()" [value]="u.id_usuario">{{ u.nombre_usuario }}</option>
+        </select>
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Estado
+        </label>
+        <select [ngModel]="filtroEstadoDevolucion" (ngModelChange)="onFiltroEstadoDevolucionChange($event)">
+          <option value="">Todos los estados</option>
+          <option value="procesada">Procesada</option>
+          <option value="rechazada">Eliminada</option>
+        </select>
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Desde
+        </label>
+        <input type="date" [ngModel]="fechaDesdeDevoluciones" (ngModelChange)="fechaDesdeDevoluciones = $event; onFiltroFechaDevolucionesChange()" [max]="fechaHastaDevoluciones || null" />
+      </div>
+
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Hasta
+        </label>
+        <input type="date" [ngModel]="fechaHastaDevoluciones" (ngModelChange)="fechaHastaDevoluciones = $event; onFiltroFechaDevolucionesChange()" [min]="fechaDesdeDevoluciones || null" />
+      </div>
+
+      <div class="filtro-acciones">
+        <button class="btn-clear" *ngIf="hayFiltrosDevoluciones" (click)="limpiarFiltrosDevoluciones()">Limpiar</button>
+      </div>
     </div>
 
-    <div class="estado-error" *ngIf="errorDevoluciones()">{{ errorDevoluciones() }}</div>
-
-    <div class="panel" *ngIf="!cargandoDevoluciones() && !errorDevoluciones()">
-      <table class="tabla" *ngIf="devoluciones().length > 0">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Venta relacionada</th>
-            <th>Motivo</th>
-            <th>Usuario</th>
-            <th>Monto devuelto</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let d of devoluciones()">
-            <td>{{ d.creado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>Venta del {{ d.fecha_venta | date: 'dd/MM/yyyy' }} · S/{{ d.total_venta.toFixed(2) }}</td>
-            <td>{{ etiquetaMotivoDevolucion(d.motivo) }}</td>
-            <td>{{ d.nombre_usuario ?? '—' }}</td>
-            <td>−S/{{ d.total_devuelto.toFixed(2) }}</td>
-            <td>
-              <span class="badge" [ngClass]="'badge-estado-devolucion-' + d.estado">{{ etiquetaEstadoDevolucion(d.estado) }}</span>
-            </td>
-            <td class="tabla-acciones">
-              <button class="btn-secondary btn-sm" (click)="abrirDetalleDevolucion(d)">Ver detalle</button>
-              <button
-                class="btn-icon-danger"
-                *ngIf="puedeDevolver() && d.estado === 'procesada'"
-                title="Eliminar devolución"
-                (click)="abrirEliminarDevolucion(d)"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p class="tabla-vacia" *ngIf="devoluciones().length === 0">Todavía no hay devoluciones registradas.</p>
-
-      <div class="cargando-mini" *ngIf="cargandoMasDevoluciones()">
-        <span class="spinner spinner-sm"></span> Cargando más devoluciones…
+    <div class="timeline-card">
+      <div class="timeline-header">
+        <div class="timeline-header-titulo">
+          <h2>Devoluciones registradas</h2>
+          <span class="badge-suave">{{ totalRegistrosDevoluciones() }} {{ totalRegistrosDevoluciones() === 1 ? 'devolución' : 'devoluciones' }}</span>
+        </div>
+        <button class="btn-exportar" (click)="exportarExcelDevoluciones()" [disabled]="devoluciones().length === 0" title="Exporta los registros de esta página a Excel">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
       </div>
-      <button
-        class="btn-secondary"
-        *ngIf="hayMasDevoluciones() && !cargandoMasDevoluciones() && devoluciones().length > 0"
-        (click)="cargarMasDevoluciones()"
-      >
-        Cargar más
-      </button>
+
+      <p class="empty-state" *ngIf="errorDevoluciones()">{{ errorDevoluciones() }}</p>
+
+      <div class="timeline" *ngIf="devoluciones().length > 0">
+        <div class="timeline-row timeline-row-devoluciones timeline-row-cabecera">
+          <div class="timeline-celda">Fecha</div>
+          <div class="timeline-celda">Venta relacionada</div>
+          <div class="timeline-celda">Motivo</div>
+          <div class="timeline-celda">Usuario</div>
+          <div class="timeline-celda">Monto devuelto</div>
+          <div class="timeline-celda">Estado</div>
+          <div class="timeline-celda timeline-celda-opciones">Opciones</div>
+        </div>
+
+        <div class="timeline-row timeline-row-devoluciones" *ngFor="let d of devoluciones()">
+          <div class="timeline-celda timeline-fecha">{{ d.creado_en | date: 'dd/MM/yyyy HH:mm' }}</div>
+          <div class="timeline-celda timeline-detalle" [title]="'Venta del ' + (d.fecha_venta | date: 'dd/MM/yyyy') + ' · S/' + d.total_venta.toFixed(2)">Venta del {{ d.fecha_venta | date: 'dd/MM/yyyy' }} · S/{{ d.total_venta.toFixed(2) }}</div>
+          <div class="timeline-celda timeline-motivo">{{ etiquetaMotivoDevolucion(d.motivo) }}</div>
+          <div class="timeline-celda timeline-usuario-dev">{{ d.nombre_usuario ?? '—' }}</div>
+          <div class="timeline-celda timeline-total valor-monto">−S/{{ d.total_devuelto.toFixed(2) }}</div>
+          <div class="timeline-celda timeline-estado"><span class="status-pill" [ngClass]="'status-pill-devolucion-' + d.estado">{{ etiquetaEstadoDevolucion(d.estado) }}</span></div>
+
+          <div class="timeline-celda timeline-opciones">
+            <button class="btn-ver-detalle" (click)="abrirDetalleDevolucion(d)">Ver detalle</button>
+            <button
+              class="btn-icon-danger"
+              *ngIf="puedeDevolver() && d.estado === 'procesada'"
+              title="Eliminar devolución"
+              (click)="abrirEliminarDevolucion(d)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="empty-state" *ngIf="cargandoDevoluciones()">Cargando devoluciones…</p>
+      <p class="empty-state" *ngIf="!cargandoDevoluciones() && devoluciones().length === 0">Todavía no hay devoluciones registradas.</p>
+
+      <div class="paginacion" *ngIf="!cargandoDevoluciones() && devoluciones().length > 0">
+        <div class="paginacion-nav">
+          <button class="btn-pagina" [disabled]="paginaDevoluciones === 0" (click)="paginaAnteriorDevoluciones()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <ng-container *ngFor="let p of paginasVisiblesDevoluciones()">
+            <button
+              *ngIf="p !== '…'"
+              class="btn-pagina-numero"
+              [class.activa]="p === paginaDevoluciones + 1"
+              (click)="irAPaginaDevoluciones($any(p))"
+            >{{ p }}</button>
+            <span *ngIf="p === '…'" class="paginacion-elipsis">…</span>
+          </ng-container>
+          <button class="btn-pagina" [disabled]="!hayPaginaSiguienteDevoluciones()" (click)="paginaSiguienteDevoluciones()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <select class="tamano-pagina-select" [(ngModel)]="tamanoPaginaDevoluciones" (ngModelChange)="aplicarCambioDevoluciones()">
+          <option *ngFor="let tamano of tamanosPagina" [ngValue]="tamano">{{ tamano }} por página</option>
+        </select>
+      </div>
     </div>
   </ng-container>
 </div>
@@ -191,7 +305,7 @@
         </div>
         <div>
           <span class="detalle-cabecera-label">Estado</span>
-          <span class="badge" [ngClass]="'badge-estado-' + venta.estado">{{ etiquetaEstado(venta.estado) }}</span>
+          <span class="status-pill" [ngClass]="'status-pill-' + venta.estado">{{ etiquetaEstado(venta.estado) }}</span>
         </div>
       </div>
 
@@ -240,7 +354,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+      <button class="btn-clear" (click)="cerrarDetalle()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -255,7 +369,7 @@
         ¿Seguro que quieres eliminar la venta del {{ venta.creado_en | date: 'dd/MM/yyyy HH:mm' }} por S/{{ venta.total.toFixed(2) }}?
       </p>
 
-      <div class="form-row">
+      <div class="form-group">
         <label>¿Qué hacemos con el stock de los productos vendidos?</label>
         <div class="restaurar-stock-opciones">
           <label class="restaurar-stock-opcion">
@@ -273,7 +387,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" [disabled]="eliminando()" (click)="cerrarEliminar()">Cancelar</button>
+      <button class="btn-clear" [disabled]="eliminando()" (click)="cerrarEliminar()">Cancelar</button>
       <button class="btn-primary btn-peligro" [disabled]="eliminando()" (click)="confirmarEliminar()">
         <span class="spinner spinner-sm spinner-inline" *ngIf="eliminando()"></span>
         Eliminar venta
@@ -319,14 +433,14 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-group">
         <label>Motivo <span class="obligatorio">*</span></label>
-        <select class="filter-select devolucion-motivo-select" [ngModel]="motivoDevolucion" (ngModelChange)="motivoDevolucion = $event">
+        <select class="devolucion-motivo-select" [ngModel]="motivoDevolucion" (ngModelChange)="motivoDevolucion = $event">
           <option *ngFor="let m of motivosDevolucion" [value]="m.valor">{{ m.etiqueta }}</option>
         </select>
       </div>
 
-      <div class="form-row">
+      <div class="form-group">
         <label>Notas (opcional)</label>
         <textarea
           rows="2"
@@ -340,7 +454,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" [disabled]="registrandoDevolucion()" (click)="cerrarDevolucion()">Cancelar</button>
+      <button class="btn-clear" [disabled]="registrandoDevolucion()" (click)="cerrarDevolucion()">Cancelar</button>
       <button
         class="btn-primary"
         [disabled]="registrandoDevolucion() || cargandoVentaADevolver()"
@@ -374,7 +488,7 @@
         </div>
         <div>
           <span class="detalle-cabecera-label">Estado</span>
-          <span class="badge" [ngClass]="'badge-estado-devolucion-' + dev.estado">{{ etiquetaEstadoDevolucion(dev.estado) }}</span>
+          <span class="status-pill" [ngClass]="'status-pill-devolucion-' + dev.estado">{{ etiquetaEstadoDevolucion(dev.estado) }}</span>
         </div>
       </div>
 
@@ -408,7 +522,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarDetalleDevolucion()">Cerrar</button>
+      <button class="btn-clear" (click)="cerrarDetalleDevolucion()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -431,7 +545,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" [disabled]="eliminandoDevolucion()" (click)="cerrarEliminarDevolucion()">Cancelar</button>
+      <button class="btn-clear" [disabled]="eliminandoDevolucion()" (click)="cerrarEliminarDevolucion()">Cancelar</button>
       <button class="btn-primary btn-peligro" [disabled]="eliminandoDevolucion()" (click)="confirmarEliminarDevolucion()">
         <span class="spinner spinner-sm spinner-inline" *ngIf="eliminandoDevolucion()"></span>
         Eliminar devolución

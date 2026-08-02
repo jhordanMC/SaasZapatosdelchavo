@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
+import { ThemeService } from '../../core/theme.service';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
 import { SatisfaccionService } from '../../services/satisfaccion';
 import { environment } from '../../../environments/environment';
@@ -24,11 +25,13 @@ export class TopbarComponent implements OnInit {
     private router: Router,
     private anunciosService: AnunciosService,
     private satisfaccionService: SatisfaccionService,
+    public themeService: ThemeService,
   ) {}
 
   readonly apiUrl = environment.apiUrl;
 
   @Input() title = 'Dashboard';
+  @Input() subtitle = '';
   @Input() company = 'ALBA Corporation';
   @Input() avatarLabel = 'A';
   // Ruta relativa (/uploads/usuarios/...) o null si no tiene foto todavía
@@ -48,6 +51,20 @@ export class TopbarComponent implements OnInit {
   showAvatarFallback = false;
   showProfileModal = false;
   confirmandoCierre = false;
+
+  // ── Buscador (⌘K / Ctrl+K enfoca el campo) ──
+  // Solo enfoca el input por ahora — todavía no hay un endpoint de
+  // búsqueda global en el backend, así que no pretende devolver resultados.
+  @ViewChild('buscadorInput') buscadorInput?: ElementRef<HTMLInputElement>;
+  busqueda = '';
+
+  @HostListener('document:keydown', ['$event'])
+  manejarAtajoBusqueda(evento: KeyboardEvent): void {
+    const esAtajo = (evento.metaKey || evento.ctrlKey) && evento.key.toLowerCase() === 'k';
+    if (!esAtajo) return;
+    evento.preventDefault();
+    this.buscadorInput?.nativeElement.focus();
+  }
 
   // ── Foto de perfil (avatar) ────────────────────────────────────────
   subiendoAvatar = signal(false);

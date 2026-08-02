@@ -54,9 +54,16 @@ export class SidebarComponent {
 
   showLogoFallback = false;
   mobileOpen = false;
+  collapsed = false;
 
   /** Enlace del bloque "Powered by ALBA" del pie del sidebar. */
   readonly albaLinkedInUrl = 'https://www.linkedin.com/in/alba-ingenier%C3%ADa-de-desarrollo-42a3493ab/';
+
+  private readonly COLLAPSE_STORAGE_KEY = 'vilcas.sidebar.collapsed';
+
+  constructor() {
+    this.collapsed = localStorage.getItem(this.COLLAPSE_STORAGE_KEY) === '1';
+  }
 
   onLogoError(event: Event): void {
     this.showLogoFallback = true;
@@ -69,5 +76,10 @@ export class SidebarComponent {
 
   closeMobile(): void {
     this.mobileOpen = false;
+  }
+
+  toggleCollapse(): void {
+    this.collapsed = !this.collapsed;
+    localStorage.setItem(this.COLLAPSE_STORAGE_KEY, this.collapsed ? '1' : '0');
   }
 }

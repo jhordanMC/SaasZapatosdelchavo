@@ -1,26 +1,27 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService, FilaRotacion, ProductoRanking } from '../../../services/dashboard';
-import { FinanzasService, GastoRecurrenteRead, PuntoSemana, ResumenFinanciero } from '../../../services/finanzas';
+import { DashboardService, FilaRotacion, TopCategoria } from '../../../services/dashboard';
+import { FinanzasService, GastoRecurrenteRead, PuntoSemana, ResumenFinanciero, VentasPorMetodoPago } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
+import { MetodoPago } from '../../../services/ventas';
 
 /** Período del filtro único del dashboard — 'personalizado' deja que el usuario elija el rango a mano. */
 type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'anio' | 'personalizado';
+
+const ETIQUETAS_METODO_PAGO: Record<MetodoPago, string> = {
+  efectivo: 'Efectivo',
+  tarjeta: 'Tarjeta',
+  yape: 'Yape',
+  plin: 'Plin',
+  transferencia: 'Transferencia',
+  otro: 'Otro',
+};
 
 interface FilaGasto {
   tipo: string;
   montoMensual: number;
   pct: number;
-}
-
-/** Fila del "Top categorías" — se usa como el sustituto más cercano a "marca",
- * ya que el catálogo no tiene un campo de marca propiamente (solo categoría
- * y, a nivel de variante, modelo). */
-interface FilaCategoria {
-  nombre: string;
-  unidades: number;
-  ingresos: number;
 }
 
 interface PuntoEvolucion {
@@ -51,33 +52,26 @@ export class EmpresaDashboardComponent implements OnInit {
     private inventarioService: InventarioService
   ) {}
 
-  /** id_producto → nombre_categoria y costo_compra, para cruzar el ranking de ventas
-   * con la categoría (top "marcas") y calcular capital atrapado a costo real. */
-  private categoriaPorProducto = new Map<string, string>();
+  /** id_producto → costo_compra, para calcular capital atrapado a costo real. */
   private costoPorProducto = new Map<string, number>();
 
   ngOnInit(): void {
     this.dashboardService.cargarResumen();
     this.finanzasService.recargarTodo();
 
-    this.dashboardService.obtenerRotacionInventario(30, 40).subscribe((lista) => {
-      this.dashboardService.rotacionInventario.set(lista);
-      this.cargarTallasRotasDelMasVendido();
+    this.inventarioService.listarProductos({}, 0, 300).subscribe({
+      next: (pagina) => {
+        this.costoPorProducto.clear();
+        for (const p of pagina.items) {
+          this.costoPorProducto.set(p.id_producto, p.costo_compra);
+        }
+      },
+      error: (err) => console.error('No se pudo cargar el catálogo para cruzar costos.', err),
     });
 
-    this.inventarioService.listarProductos({}, 0, 300).subscribe((pagina) => {
-      this.categoriaPorProducto.clear();
-      this.costoPorProducto.clear();
-      for (const p of pagina.items) {
-        this.categoriaPorProducto.set(p.id_producto, p.nombre_categoria ?? 'Sin categoría');
-        this.costoPorProducto.set(p.id_producto, p.costo_compra);
-      }
-    });
-
-    this.dashboardService.obtenerRankingProductosAmpliado().subscribe((lista) => {
-      this.rankingAmpliado.set(lista);
-    });
-
+    // Rotación/ranking del período se piden una sola vez acá (cambiarPeriodo los
+    // recarga en cada cambio de filtro) — antes había una llamada extra sin
+    // desde/hasta que competía en una carrera con la del período real.
     this.cambiarPeriodo('dia');
   }
 
@@ -91,6 +85,27 @@ export class EmpresaDashboardComponent implements OnInit {
   avanceResumen = signal<ResumenFinanciero | null>(null);
   avanceCargando = signal(false);
   avanceError = signal<string | null>(null);
+
+  metodosPago = signal<VentasPorMetodoPago[]>([]);
+
+  etiquetaMetodoPago(metodo: MetodoPago): string {
+    return ETIQUETAS_METODO_PAGO[metodo] ?? metodo;
+  }
+
+  get totalMetodosPago(): number {
+    return this.metodosPago().reduce((acc, m) => acc + m.monto, 0);
+  }
+
+  /** Frase para las cards "Top" que dependen del período elegido arriba (Hoy/Esta semana/etc). */
+  get etiquetaPeriodoActual(): string {
+    switch (this.periodoAvance) {
+      case 'dia': return 'hoy';
+      case 'semana': return 'esta semana';
+      case 'mes': return 'este mes';
+      case 'anio': return 'este año';
+      default: return `del ${this.avanceDesde} al ${this.avanceHasta}`;
+    }
+  }
 
   /** El sistema todavía no distingue ventas al por menor de al por mayor
    * (no hay un campo "canal"/tipo de venta en el modelo de datos) — el
@@ -144,7 +159,8 @@ export class EmpresaDashboardComponent implements OnInit {
     }
     if (periodo !== 'personalizado') {
       this.cargarAvance();
-      this.cargarRankingProductos();
+      this.cargarTopCategorias();
+      this.cargarRotacion();
     }
   }
 
@@ -152,7 +168,8 @@ export class EmpresaDashboardComponent implements OnInit {
     if (!this.avanceDesde || !this.avanceHasta) return;
     if (this.avanceDesde > this.avanceHasta) return;
     this.cargarAvance();
-    this.cargarRankingProductos();
+    this.cargarTopCategorias();
+    this.cargarRotacion();
   }
 
   private cargarAvance(): void {
@@ -168,12 +185,34 @@ export class EmpresaDashboardComponent implements OnInit {
         this.avanceCargando.set(false);
       },
     });
+    this.finanzasService.obtenerVentasPorMetodoPago(this.avanceDesde, this.avanceHasta).subscribe({
+      next: (lista) => this.metodosPago.set(lista),
+      error: () => this.metodosPago.set([]),
+    });
   }
 
-  private cargarRankingProductos(): void {
-    this.dashboardService
-      .obtenerRankingProductosAmpliado(300, this.avanceDesde, this.avanceHasta)
-      .subscribe((lista) => this.rankingAmpliado.set(lista));
+  private cargarTopCategorias(): void {
+    this.cargandoTopCategorias.set(true);
+    this.dashboardService.obtenerTopCategorias(this.avanceDesde, this.avanceHasta, 5).subscribe({
+      next: (lista) => {
+        this.topCategorias.set(lista);
+        this.cargandoTopCategorias.set(false);
+      },
+      error: () => {
+        this.topCategorias.set([]);
+        this.cargandoTopCategorias.set(false);
+      },
+    });
+  }
+
+  private cargarRotacion(): void {
+    this.dashboardService.obtenerRotacionInventario(this.avanceDesde, this.avanceHasta, 40).subscribe({
+      next: (lista) => {
+        this.dashboardService.rotacionInventario.set(lista);
+        this.cargarTallasRotasDelMasVendido();
+      },
+      error: () => this.dashboardService.rotacionInventario.set([]),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -213,24 +252,12 @@ export class EmpresaDashboardComponent implements OnInit {
   // Producto más / menos vendido, top 5 y top de categorías
   // ═══════════════════════════════════════════════════════════
 
-  rankingAmpliado = signal<ProductoRanking[]>([]);
-
-  get topCategorias(): FilaCategoria[] {
-    const mapa = new Map<string, FilaCategoria>();
-    for (const p of this.rankingAmpliado()) {
-      const nombreCategoria = this.categoriaPorProducto.get(p.id_producto) ?? 'Sin categoría';
-      const fila = mapa.get(nombreCategoria) ?? { nombre: nombreCategoria, unidades: 0, ingresos: 0 };
-      fila.unidades += p.unidades;
-      fila.ingresos += p.ingresos;
-      mapa.set(nombreCategoria, fila);
-    }
-    return Array.from(mapa.values())
-      .sort((a, b) => b.ingresos - a.ingresos)
-      .slice(0, 5);
-  }
+  /** Categorías con más ingresos del período — agregado en SQL (ver DashboardService.top_categorias). */
+  topCategorias = signal<TopCategoria[]>([]);
+  cargandoTopCategorias = signal(false);
 
   get maxIngresosCategoria(): number {
-    return Math.max(1, ...this.topCategorias.map((c) => c.ingresos));
+    return Math.max(1, ...this.topCategorias().map((c) => c.ingresos));
   }
 
   // ═══════════════════════════════════════════════════════════

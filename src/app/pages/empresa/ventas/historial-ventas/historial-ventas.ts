@@ -3,10 +3,9 @@
  *
  * Tiene 2 vistas conmutables con un selector tipo pestaña (mismo patrón que
  * el interruptor "Ingresos completos/con margen" de Finanzas): "Ventas" y
- * "Devoluciones". Cada una es su propia tabla paginada con botón "Cargar
- * más" — igual criterio en las dos, y en general en todas las listas tipo
- * tabla de este sistema (a diferencia del scroll infinito con
- * IntersectionObserver que usa el catálogo del POS).
+ * "Devoluciones". Cada una es su propia tabla con paginación numerada real
+ * (mismo patrón que /admin/actividad: el backend expone COUNT(*) con los
+ * mismos filtros, así que no hace falta el truco de "cargar más").
  *
  * "Ver detalle" (de una venta o de una devolución) pide su propio GET al
  * abrir el modal — no viene precargado en la lista, para no traer todos
@@ -20,9 +19,12 @@
  * La edición de ventas queda para una próxima etapa (no hay botón/flujo de
  * editar todavía).
  */
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import * as XLSX from 'xlsx';
 import { ModalBrandHeaderComponent } from '../../../../shared/modal-brand-header/modal-brand-header';
 import { AuthService } from '../../../../core/auth';
 import { environment } from '../../../../../environments/environment';
@@ -35,8 +37,8 @@ import {
   FiltrosHistorialDevoluciones,
   FiltrosHistorialVentas,
   MotivoDevolucion,
-  TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES,
-  TAMANO_PAGINA_HISTORIAL_VENTAS,
+  UsuarioDevolucionHistorial,
+  VendedorHistorial,
   VentaListItem,
   VentaRead,
   VentasService,
@@ -80,7 +82,14 @@ type Vista = 'ventas' | 'devoluciones';
   styleUrls: ['./historial-ventas.css'],
 })
 export class HistorialVentasComponent implements OnInit {
-  constructor(private ventasService: VentasService, private authService: AuthService) {}
+  constructor(private ventasService: VentasService, private authService: AuthService) {
+    this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+      this.aplicarCambio();
+    });
+    this.busquedaDevolucionesSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+      this.aplicarCambioDevoluciones();
+    });
+  }
 
   // ── Selector de vista ────────────────────────────────────────────────────
   vista = signal<Vista>('ventas');
@@ -89,22 +98,53 @@ export class HistorialVentasComponent implements OnInit {
   // ── Listado de ventas ────────────────────────────────────────────────────
   ventas = signal<VentaListItem[]>([]);
   cargando = signal(true);
-  cargandoMas = signal(false);
-  hayMas = signal(true);
   error = signal<string | null>(null);
-  private offset = 0;
 
   filtroEstado: EstadoVenta | '' = '';
+  filtroVendedor: string | null = null;
+  busqueda = '';
+  fechaDesde = '';
+  fechaHasta = '';
+  private readonly busquedaSubject = new Subject<string>();
+
+  /** Vendedores con ventas registradas (no "usuarios con rol X"), para poblar el filtro. */
+  vendedores = signal<VendedorHistorial[]>([]);
+
+  // ── Paginación numerada (ventas) ─────────────────────────────────────────
+  readonly tamanosPagina = [10, 25, 50, 100];
+  tamanoPagina = 10;
+  pagina = 0;
+  totalRegistros = signal(0);
+  totalPaginas = computed(() => Math.max(1, Math.ceil(this.totalRegistros() / this.tamanoPagina)));
+  hayPaginaSiguiente = computed(() => this.pagina + 1 < this.totalPaginas());
+  paginasVisibles = computed<(number | '…')[]>(() => paginasVisibles(this.totalPaginas(), this.pagina));
 
   // ── Listado de devoluciones ──────────────────────────────────────────────
   devoluciones = signal<DevolucionListItem[]>([]);
   cargandoDevoluciones = signal(true);
-  cargandoMasDevoluciones = signal(false);
-  hayMasDevoluciones = signal(true);
   errorDevoluciones = signal<string | null>(null);
-  private offsetDevoluciones = 0;
 
   filtroEstadoDevolucion: EstadoDevolucion | '' = '';
+  filtroUsuarioDevolucion: string | null = null;
+  busquedaDevoluciones = '';
+  fechaDesdeDevoluciones = '';
+  fechaHastaDevoluciones = '';
+  private readonly busquedaDevolucionesSubject = new Subject<string>();
+
+  /** Usuarios que registraron devoluciones (no "usuarios con rol X"), para poblar el filtro. */
+  usuariosDevolucion = signal<UsuarioDevolucionHistorial[]>([]);
+
+  // ── Paginación numerada (devoluciones) ───────────────────────────────────
+  tamanoPaginaDevoluciones = 10;
+  paginaDevoluciones = 0;
+  totalRegistrosDevoluciones = signal(0);
+  totalPaginasDevoluciones = computed(() =>
+    Math.max(1, Math.ceil(this.totalRegistrosDevoluciones() / this.tamanoPaginaDevoluciones))
+  );
+  hayPaginaSiguienteDevoluciones = computed(() => this.paginaDevoluciones + 1 < this.totalPaginasDevoluciones());
+  paginasVisiblesDevoluciones = computed<(number | '…')[]>(() =>
+    paginasVisibles(this.totalPaginasDevoluciones(), this.paginaDevoluciones)
+  );
 
   // ── Modal de detalle de venta ────────────────────────────────────────────
   ventaDetalle = signal<VentaRead | null>(null);
@@ -144,7 +184,11 @@ export class HistorialVentasComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.cargarPrimeraPagina();
+    this.cargarVentas();
+    this.ventasService.listarVendedoresDeVentas().subscribe({
+      next: (vendedores) => this.vendedores.set(vendedores),
+      error: () => this.vendedores.set([]),
+    });
   }
 
   puedeEliminar(): boolean {
@@ -154,6 +198,38 @@ export class HistorialVentasComponent implements OnInit {
   /** Registrar/eliminar una devolución usa el mismo permiso que eliminar una venta (solo Dueño). */
   puedeDevolver(): boolean {
     return this.authService.tieneRol('dueño');
+  }
+
+  get hayFiltros(): boolean {
+    return !!this.filtroEstado || !!this.filtroVendedor || !!this.busqueda || !!this.fechaDesde || !!this.fechaHasta;
+  }
+
+  limpiarFiltros(): void {
+    this.filtroEstado = '';
+    this.filtroVendedor = null;
+    this.busqueda = '';
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.aplicarCambio();
+  }
+
+  get hayFiltrosDevoluciones(): boolean {
+    return (
+      !!this.filtroEstadoDevolucion ||
+      !!this.filtroUsuarioDevolucion ||
+      !!this.busquedaDevoluciones ||
+      !!this.fechaDesdeDevoluciones ||
+      !!this.fechaHastaDevoluciones
+    );
+  }
+
+  limpiarFiltrosDevoluciones(): void {
+    this.filtroEstadoDevolucion = '';
+    this.filtroUsuarioDevolucion = null;
+    this.busquedaDevoluciones = '';
+    this.fechaDesdeDevoluciones = '';
+    this.fechaHastaDevoluciones = '';
+    this.aplicarCambioDevoluciones();
   }
 
   nombreCliente(v: VentaListItem): string {
@@ -177,96 +253,198 @@ export class HistorialVentasComponent implements OnInit {
     return ETIQUETAS_ESTADO_DEVOLUCION[estado] ?? estado;
   }
 
+  fechaHora(iso: string): string {
+    return new Date(iso).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  iniciales(nombre: string | null): string {
+    if (!nombre) return '·';
+    const palabras = nombre.trim().split(/\s+/);
+    if (palabras.length === 1) return palabras[0].substring(0, 2).toUpperCase();
+    return (palabras[0][0] + palabras[1][0]).toUpperCase();
+  }
+
   // ── Selector de vista ────────────────────────────────────────────────────
 
   cambiarVista(vista: Vista): void {
     this.vista.set(vista);
     if (vista === 'devoluciones' && !this.devolucionesYaCargadas) {
       this.devolucionesYaCargadas = true;
-      this.cargarPrimeraPaginaDevoluciones();
+      this.cargarDevoluciones();
+      this.ventasService.listarUsuariosDeDevoluciones().subscribe({
+        next: (usuarios) => this.usuariosDevolucion.set(usuarios),
+        error: () => this.usuariosDevolucion.set([]),
+      });
     }
   }
 
-  // ── Ventas: carga / paginación ───────────────────────────────────────────
+  // ── Ventas: filtros / paginación ─────────────────────────────────────────
 
-  cargarPrimeraPagina(): void {
-    this.offset = 0;
-    this.hayMas.set(true);
-    this.cargando.set(true);
-    this.error.set(null);
-    this.cargarPagina(true);
-  }
-
-  cargarMas(): void {
-    if (this.cargandoMas() || !this.hayMas()) return;
-    this.cargandoMas.set(true);
-    this.cargarPagina(false);
+  /** Cualquier cambio de filtro o tamaño de página reinicia a la página 0. */
+  aplicarCambio(): void {
+    this.pagina = 0;
+    this.cargarVentas();
   }
 
   onFiltroEstadoChange(valor: EstadoVenta | ''): void {
     this.filtroEstado = valor;
-    this.cargarPrimeraPagina();
+    this.aplicarCambio();
   }
 
-  private cargarPagina(reiniciar: boolean): void {
-    const filtros: FiltrosHistorialVentas = this.filtroEstado ? { estado: this.filtroEstado } : {};
-    this.ventasService.listarVentas(filtros, this.offset, TAMANO_PAGINA_HISTORIAL_VENTAS).subscribe({
-      next: (pagina) => {
-        this.ventas.set(reiniciar ? pagina : [...this.ventas(), ...pagina]);
-        this.hayMas.set(pagina.length === TAMANO_PAGINA_HISTORIAL_VENTAS);
-        this.offset += pagina.length;
+  onFiltroVendedorChange(valor: string | null): void {
+    this.filtroVendedor = valor;
+    this.aplicarCambio();
+  }
+
+  /** Ligado al input de búsqueda: actualiza el texto y dispara el debounce. */
+  onBusquedaChange(valor: string): void {
+    this.busqueda = valor;
+    this.busquedaSubject.next(valor);
+  }
+
+  onFiltroFechaChange(): void {
+    this.aplicarCambio();
+  }
+
+  paginaAnterior(): void {
+    if (this.pagina === 0) return;
+    this.pagina -= 1;
+    this.cargarVentas();
+  }
+
+  paginaSiguiente(): void {
+    if (!this.hayPaginaSiguiente()) return;
+    this.pagina += 1;
+    this.cargarVentas();
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina === this.pagina + 1) return;
+    this.pagina = pagina - 1;
+    this.cargarVentas();
+  }
+
+  cargarVentas(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    const filtros: FiltrosHistorialVentas = {};
+    if (this.filtroEstado) filtros.estado = this.filtroEstado;
+    if (this.filtroVendedor) filtros.id_usuario = this.filtroVendedor;
+    if (this.busqueda.trim()) filtros.busqueda = this.busqueda.trim();
+    if (this.fechaDesde) filtros.desde = `${this.fechaDesde}T00:00:00`;
+    if (this.fechaHasta) filtros.hasta = `${this.fechaHasta}T23:59:59`;
+    this.ventasService.listarVentas(filtros, this.pagina * this.tamanoPagina, this.tamanoPagina).subscribe({
+      next: (lista) => {
+        this.totalRegistros.set(lista.total);
+        this.ventas.set(lista.items);
         this.cargando.set(false);
-        this.cargandoMas.set(false);
       },
       error: () => {
         this.error.set('No se pudo cargar el historial de ventas. Intenta de nuevo.');
         this.cargando.set(false);
-        this.cargandoMas.set(false);
       },
     });
   }
 
-  // ── Devoluciones: carga / paginación ─────────────────────────────────────
-
-  cargarPrimeraPaginaDevoluciones(): void {
-    this.offsetDevoluciones = 0;
-    this.hayMasDevoluciones.set(true);
-    this.cargandoDevoluciones.set(true);
-    this.errorDevoluciones.set(null);
-    this.cargarPaginaDevoluciones(true);
+  /** Exporta los registros de la página actual (lo único que hay cargado en memoria) a Excel. */
+  exportarExcel(): void {
+    const filas = this.ventas().map((v) => ({
+      Fecha: this.fechaHora(v.creado_en),
+      Vendedor: v.nombre_vendedor || '—',
+      Cliente: this.nombreCliente(v),
+      Ítems: v.cantidad_items,
+      Total: v.total,
+      Estado: this.etiquetaEstado(v.estado),
+    }));
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Ventas');
+    XLSX.writeFile(libro, `ventas-pagina-${this.pagina + 1}.xlsx`);
   }
 
-  cargarMasDevoluciones(): void {
-    if (this.cargandoMasDevoluciones() || !this.hayMasDevoluciones()) return;
-    this.cargandoMasDevoluciones.set(true);
-    this.cargarPaginaDevoluciones(false);
+  // ── Devoluciones: filtros / paginación ───────────────────────────────────
+
+  aplicarCambioDevoluciones(): void {
+    this.paginaDevoluciones = 0;
+    this.cargarDevoluciones();
   }
 
   onFiltroEstadoDevolucionChange(valor: EstadoDevolucion | ''): void {
     this.filtroEstadoDevolucion = valor;
-    this.cargarPrimeraPaginaDevoluciones();
+    this.aplicarCambioDevoluciones();
   }
 
-  private cargarPaginaDevoluciones(reiniciar: boolean): void {
-    const filtros: FiltrosHistorialDevoluciones = this.filtroEstadoDevolucion
-      ? { estado: this.filtroEstadoDevolucion }
-      : {};
+  onFiltroUsuarioDevolucionChange(valor: string | null): void {
+    this.filtroUsuarioDevolucion = valor;
+    this.aplicarCambioDevoluciones();
+  }
+
+  /** Ligado al input de búsqueda: actualiza el texto y dispara el debounce. */
+  onBusquedaDevolucionesChange(valor: string): void {
+    this.busquedaDevoluciones = valor;
+    this.busquedaDevolucionesSubject.next(valor);
+  }
+
+  onFiltroFechaDevolucionesChange(): void {
+    this.aplicarCambioDevoluciones();
+  }
+
+  paginaAnteriorDevoluciones(): void {
+    if (this.paginaDevoluciones === 0) return;
+    this.paginaDevoluciones -= 1;
+    this.cargarDevoluciones();
+  }
+
+  paginaSiguienteDevoluciones(): void {
+    if (!this.hayPaginaSiguienteDevoluciones()) return;
+    this.paginaDevoluciones += 1;
+    this.cargarDevoluciones();
+  }
+
+  irAPaginaDevoluciones(pagina: number): void {
+    if (pagina === this.paginaDevoluciones + 1) return;
+    this.paginaDevoluciones = pagina - 1;
+    this.cargarDevoluciones();
+  }
+
+  cargarDevoluciones(): void {
+    this.cargandoDevoluciones.set(true);
+    this.errorDevoluciones.set(null);
+    const filtros: FiltrosHistorialDevoluciones = {};
+    if (this.filtroEstadoDevolucion) filtros.estado = this.filtroEstadoDevolucion;
+    if (this.filtroUsuarioDevolucion) filtros.id_usuario = this.filtroUsuarioDevolucion;
+    if (this.busquedaDevoluciones.trim()) filtros.busqueda = this.busquedaDevoluciones.trim();
+    if (this.fechaDesdeDevoluciones) filtros.desde = `${this.fechaDesdeDevoluciones}T00:00:00`;
+    if (this.fechaHastaDevoluciones) filtros.hasta = `${this.fechaHastaDevoluciones}T23:59:59`;
     this.ventasService
-      .listarDevoluciones(filtros, this.offsetDevoluciones, TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES)
+      .listarDevoluciones(filtros, this.paginaDevoluciones * this.tamanoPaginaDevoluciones, this.tamanoPaginaDevoluciones)
       .subscribe({
-        next: (pagina) => {
-          this.devoluciones.set(reiniciar ? pagina : [...this.devoluciones(), ...pagina]);
-          this.hayMasDevoluciones.set(pagina.length === TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES);
-          this.offsetDevoluciones += pagina.length;
+        next: (lista) => {
+          this.totalRegistrosDevoluciones.set(lista.total);
+          this.devoluciones.set(lista.items);
           this.cargandoDevoluciones.set(false);
-          this.cargandoMasDevoluciones.set(false);
         },
         error: () => {
           this.errorDevoluciones.set('No se pudo cargar el historial de devoluciones. Intenta de nuevo.');
           this.cargandoDevoluciones.set(false);
-          this.cargandoMasDevoluciones.set(false);
         },
       });
+  }
+
+  /** Exporta las devoluciones de la página actual a Excel. */
+  exportarExcelDevoluciones(): void {
+    const filas = this.devoluciones().map((d) => ({
+      Fecha: this.fechaHora(d.creado_en),
+      'Venta relacionada': `Venta del ${new Date(d.fecha_venta).toLocaleDateString('es-PE')} · S/${d.total_venta.toFixed(2)}`,
+      Motivo: this.etiquetaMotivoDevolucion(d.motivo),
+      Usuario: d.nombre_usuario || '—',
+      'Monto devuelto': d.total_devuelto,
+      Estado: this.etiquetaEstadoDevolucion(d.estado),
+    }));
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Devoluciones');
+    XLSX.writeFile(libro, `devoluciones-pagina-${this.paginaDevoluciones + 1}.xlsx`);
   }
 
   // ── Detalle de venta ─────────────────────────────────────────────────────
@@ -343,7 +521,7 @@ export class HistorialVentasComponent implements OnInit {
         next: () => {
           this.eliminando.set(false);
           this.ventaAEliminar.set(null);
-          this.cargarPrimeraPagina();
+          this.cargarVentas();
         },
         error: (err) => {
           this.eliminando.set(false);
@@ -375,7 +553,7 @@ export class HistorialVentasComponent implements OnInit {
         next: () => {
           this.eliminandoDevolucion.set(false);
           this.devolucionAEliminar.set(null);
-          this.cargarPrimeraPaginaDevoluciones();
+          this.cargarDevoluciones();
         },
         error: (err) => {
           this.eliminandoDevolucion.set(false);
@@ -457,7 +635,7 @@ export class HistorialVentasComponent implements OnInit {
           this.registrandoDevolucion.set(false);
           this.ventaADevolver.set(null);
           this.lineasDevolucion = [];
-          this.cargarPrimeraPagina();
+          this.cargarVentas();
           this.devolucionesYaCargadas = false; // refresca la próxima vez que se abra la pestaña
           // Si el detalle de esta venta está abierto, refresca para ver el nuevo total.
           if (this.ventaDetalle()?.id_venta === venta.id_venta) {
@@ -470,4 +648,22 @@ export class HistorialVentasComponent implements OnInit {
         },
       });
   }
+}
+
+/** Números de página a mostrar, con "…" cuando hay demasiadas para listarlas todas (compartido ventas/devoluciones). */
+function paginasVisibles(total: number, paginaActualCero: number): (number | '…')[] {
+  const actual = paginaActualCero + 1; // 1-based para mostrar
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const paginas = new Set<number>([1, total, actual - 1, actual, actual + 1]);
+  const ordenadas = [...paginas].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+
+  const resultado: (number | '…')[] = [];
+  let anterior = 0;
+  for (const p of ordenadas) {
+    if (anterior && p - anterior > 1) resultado.push('…');
+    resultado.push(p);
+    anterior = p;
+  }
+  return resultado;
 }

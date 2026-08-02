@@ -70,6 +70,12 @@ export interface PuntoMes {
   ingresos: number;
 }
 
+export interface TopCategoria {
+  nombre: string;
+  unidades: number;
+  ingresos: number;
+}
+
 /**
  * Avance de ventas/ganancia/gastos por local, para un rango de fechas.
  *
@@ -137,16 +143,19 @@ export class DashboardService {
       .subscribe((lista) => this.productosSinVentas.set(lista));
   }
 
-  cargarRotacionInventario(dias = 30, limit = 20): void {
-    this.obtenerRotacionInventario(dias, limit).subscribe((lista) => this.rotacionInventario.set(lista));
+  cargarRotacionInventario(desde?: string, hasta?: string, limit = 20): void {
+    this.obtenerRotacionInventario(desde, hasta, limit).subscribe((lista) => this.rotacionInventario.set(lista));
   }
 
   /** Igual que cargarRotacionInventario, pero devuelve el Observable sin suscribirse,
    * para poder encadenar algo después de que lleguen los datos (ej. revisar tallas
    * del top vendido) sin disparar el HTTP request dos veces. Quien lo llama decide
-   * si también quiere guardar el resultado en `rotacionInventario`. */
-  obtenerRotacionInventario(dias = 30, limit = 20): Observable<FilaRotacion[]> {
-    const params = new HttpParams().set('dias', dias).set('limit', limit);
+   * si también quiere guardar el resultado en `rotacionInventario`. Sin desde/hasta,
+   * el backend usa su propio default (primer día del mes en curso → hoy). */
+  obtenerRotacionInventario(desde?: string, hasta?: string, limit = 20): Observable<FilaRotacion[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
     return this.http.get<FilaRotacion[]>(`${this.base}/rotacion-inventario`, { params });
   }
 
@@ -169,26 +178,12 @@ export class DashboardService {
       .subscribe((lista) => this.ingresosPorMes.set(lista));
   }
 
-  /**
-   * Ranking completo (o casi) de productos, para poder calcular en el
-   * frontend el "menos vendido (con ventas)" y el top de categorías —
-   * cosas que `cargarRankingProductos` (pensado para mostrar solo el
-   * top 10) no cubre. Mismo endpoint, solo que con un límite más alto.
-   */
-  /**
-   * Ranking de productos, opcionalmente acotado a un rango de fechas.
-   *
-   * OJO: no hay forma de confirmar desde el frontend si el backend YA
-   * soporta `desde`/`hasta` en este endpoint (no tengo acceso al código del
-   * backend). Si los ignora, este método simplemente devuelve el mismo
-   * ranking de siempre (últimos 30 días) sin importar el rango pedido —
-   * no falla, solo no filtra. Si el backend los soporta, funciona tal cual.
-   */
-  obtenerRankingProductosAmpliado(limit = 300, desde?: string, hasta?: string): Observable<ProductoRanking[]> {
+  /** Categorías con más ingresos en el período — agregado en SQL, no en el frontend. */
+  obtenerTopCategorias(desde?: string, hasta?: string, limit = 5): Observable<TopCategoria[]> {
     let params = new HttpParams().set('limit', limit);
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
-    return this.http.get<ProductoRanking[]>(`${this.base}/ranking-productos`, { params });
+    return this.http.get<TopCategoria[]>(`${this.base}/top-categorias`, { params });
   }
 
   /**

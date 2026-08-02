@@ -116,5 +116,6 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     let route = this.activatedRoute.snapshot;
     while (route.firstChild) route = route.firstChild;
     this.pageTitleService.setTitle((route.data['title'] as string) ?? 'Dashboard');
+    this.pageTitleService.setSubtitle((route.data['subtitle'] as string) ?? '');
   }
 }

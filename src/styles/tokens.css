@@ -1,0 +1,124 @@
+/*
+ * Design tokens — sistema claro premium de VILCAS.
+ * Panel de navegación (sidebar) verde oscuro en degradado; el resto de la
+ * app vive en un gris muy claro para que el contenido blanco (cards)
+ * resalte. Una sola fuente de verdad para color/forma/sombra/motion.
+ */
+
+:root {
+  /* ── Marca — verde principal ── */
+  --brand-primary: #9fe7b1;
+  --brand-primary-hover: #7fd89a;
+  --brand-primary-dark: #05833b; /* botones/acentos sólidos — verde oscuro real de marca */
+  --brand-gold: #da9e0b; /* highlight puntual, identidad histórica del logo */
+  --brand-wordmark: #024b40; /* verde EXACTO del logo/email — fijo, no sigue los ajustes de brand-deep */
+
+  /* Compatibilidad semántica interna (mismos nombres usados por los
+     componentes ya construidos: fills/glows usan brand-mint, texto/íconos
+     accesibles y botones sólidos usan brand-deep). */
+  --brand-mint: var(--brand-primary);
+  --brand-mint-dim: var(--brand-primary-hover);
+  --brand-deep: var(--brand-primary-dark);
+  --brand-deep-700: #046b31;
+  --brand-deep-800: #035228;
+
+  /* ── Semántico (badges: producto=azul, error=rojo, advertencia=naranja, éxito=verde) ── */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--bg-surface));
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 12%, var(--bg-surface));
+  --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--bg-surface));
+  --color-info-bg: color-mix(in srgb, var(--color-info) 12%, var(--bg-surface));
+
+  /* ── Superficies ── */
+  --bg-canvas: #f6f8f7; /* gris muy claro, no blanco — para que las cards blancas resalten */
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #eef5f0;
+  --bg-surface-raised: #ffffff;
+  --border-subtle: rgba(2, 75, 64, 0.08);
+  --border-default: rgba(2, 75, 64, 0.14);
+  --border-strong: rgba(100, 213, 156, 0.5);
+
+  /* ── Sidebar — paleta propia (panel verde oscuro, texto claro) ── */
+  --sb-bg-top: #5f9f72;
+  --sb-bg-bottom: #4e8260;
+  --sb-text: rgba(255, 255, 255, 0.94);
+  --sb-text-dim: rgba(255, 255, 255, 0.68);
+  --sb-text-faint: rgba(255, 255, 255, 0.46);
+  --sb-hover-bg: rgba(255, 255, 255, 0.1);
+  --sb-active-bg: rgba(255, 255, 255, 0.16);
+  --sb-active-text: var(--sb-text);
+  --sb-border: rgba(255, 255, 255, 0.14);
+  --sb-accent: var(--brand-primary); /* indicador lateral + glow, brilla sobre el verde oscuro */
+  --sb-active-glow: 0 0 0 1px rgba(159, 231, 177, 0.55), 0 8px 20px rgba(159, 231, 177, 0.28);
+
+  /* ── Texto (sobre fondos claros) ── */
+  --text-primary: #0b2e27;
+  --text-secondary: #4b5a63;
+  --text-tertiary: #7aaa95;
+  --text-on-mint: #04231c;
+  --text-on-brand-deep: #ffffff; /* texto sobre botones rellenos con brand-deep (más saturado que mint) */
+
+  /* ── Forma ── */
+  --radius-card: 20px;
+  --radius-input: 14px;
+  --radius-button: 14px;
+  --radius-pill: 999px;
+
+  /* ── Sombra (muy suave, teñida de verde) ── */
+  --shadow-sm: 0 2px 8px rgba(2, 75, 64, 0.06);
+  --shadow-md: 0 10px 28px rgba(2, 75, 64, 0.1);
+  --shadow-lg: 0 24px 60px rgba(2, 75, 64, 0.14);
+  --shadow-glow-mint: 0 0 0 1px rgba(100, 213, 156, 0.4), 0 8px 20px rgba(100, 213, 156, 0.2);
+
+  /* ── Espaciado de referencia (según brief: mucho aire) ── */
+  --space-page: 32px;
+  --space-card: 28px;
+  --space-sidebar: 24px;
+
+  /* ── Motion ── */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease-standard: cubic-bezier(0.22, 0.8, 0.35, 1);
+
+  /* ── Tipografía — Inter, pesos 500/600/700 como base de UI ── */
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', Tahoma, sans-serif;
+}
+
+/*
+ * Modo oscuro — activado por ThemeService (data-theme="dark" en <html>).
+ * Solo redefine superficies/texto/sombra; marca, sidebar y forma quedan
+ * igual en ambos temas (por eso el sistema de tokens paga: no hay que
+ * tocar los ~15 archivos de componente, solo estas variables).
+ */
+:root[data-theme='dark'] {
+  --bg-canvas: #0a0e0d;
+  --bg-surface: #121614;
+  --bg-surface-hover: #181d1b;
+  --bg-surface-raised: #1d2321;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(100, 213, 156, 0.35);
+
+  --text-primary: #f3f6f5;
+  --text-secondary: #a6b3af;
+  --text-tertiary: #6e7a76;
+
+  /* brand-deep/wordmark son verde OSCURO pensado para leerse sobre
+     blanco — sobre el canvas casi negro del modo oscuro se pierden, así
+     que acá se vuelven el verde claro (ya de por sí legible en dark). El
+     texto que va ENCIMA de un botón brand-deep tiene que oscurecerse a
+     la par, si no pierde contraste con el fondo ahora claro. */
+  --brand-deep: var(--brand-primary);
+  --brand-deep-700: var(--brand-primary-hover);
+  --brand-deep-800: var(--brand-primary-hover);
+  --brand-wordmark: var(--brand-primary);
+  --text-on-brand-deep: var(--text-on-mint);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-glow-mint: 0 0 0 1px rgba(100, 213, 156, 0.4), 0 8px 20px rgba(100, 213, 156, 0.22);
+}

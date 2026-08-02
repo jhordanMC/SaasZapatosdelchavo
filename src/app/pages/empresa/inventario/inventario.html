@@ -1,38 +1,42 @@
-<!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
-<div class="page-toolbar">
-  <div>
-    <p class="page-subtitle">Digitaliza tu inventario físico por producto, talla y sexo.</p>
-  </div>
-  <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo producto</button>
-</div>
-
 <!-- ── Filtros ─────────────────────────────────────────────────────────── -->
-<div class="filters-bar">
-  <div class="search-box">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
+<div class="filtros-card">
+  <div class="filtro-campo filtro-campo-buscar">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Producto
+    </label>
     <input type="text" placeholder="Buscar producto..." [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" />
   </div>
 
-  <!-- Filtro por categoría (opciones cargadas desde el backend) -->
-  <select class="filter-select" [ngModel]="filtroIdCategoria" (ngModelChange)="onFiltroCategoriaChange($event)">
-    <option [ngValue]="null">Categoría: Todas</option>
-    <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
-  </select>
+  <div class="filtro-campo">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Categoría
+    </label>
+    <select [ngModel]="filtroIdCategoria" (ngModelChange)="onFiltroCategoriaChange($event)">
+      <option [ngValue]="null">Todas</option>
+      <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
+    </select>
+  </div>
 
-  <!-- Filtro por sexo (valores del backend) -->
-  <select class="filter-select" [ngModel]="filtroSexo" (ngModelChange)="onFiltroSexoChange($event)">
-    <option [ngValue]="null">Sexo: Todos</option>
-    <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
-  </select>
+  <div class="filtro-campo">
+    <label>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Sexo
+    </label>
+    <select [ngModel]="filtroSexo" (ngModelChange)="onFiltroSexoChange($event)">
+      <option [ngValue]="null">Todos</option>
+      <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
+    </select>
+  </div>
 
-  <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-    Limpiar
-  </button>
+  <div class="filtro-acciones">
+    <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
+    <button class="btn-primary" (click)="abrirModalNuevo()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo producto
+    </button>
+  </div>
 </div>
 
 <!-- ── Estado de carga / error global ────────────────────────────────── -->

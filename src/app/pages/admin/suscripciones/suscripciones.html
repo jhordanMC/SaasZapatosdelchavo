@@ -1,26 +1,24 @@
-<!-- Sidebar y topbar viven en AdminLayoutComponent. -->
-<div class="page-toolbar">
-  <div>
-    <p class="page-subtitle">Catálogo de planes, suscripciones y pagos de las empresas-cliente.</p>
-  </div>
-  <button class="btn-primary" *ngIf="tabActiva === 'planes'" (click)="abrirModalNuevoPlan()">+ Nuevo plan</button>
-</div>
-
-<div class="tabs-bar">
-  <button class="tab-btn" [class.activo]="tabActiva === 'planes'" (click)="cambiarTab('planes')">Planes</button>
-  <button class="tab-btn" [class.activo]="tabActiva === 'suscripciones'" (click)="cambiarTab('suscripciones')">Suscripciones</button>
-</div>
-
+<!-- Sidebar y topbar viven en AdminLayoutComponent; título/subtítulo salen de la ruta. -->
 <div class="content">
+
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.activo]="tabActiva === 'planes'" (click)="cambiarTab('planes')">Planes</button>
+    <button class="tab-btn" [class.activo]="tabActiva === 'suscripciones'" (click)="cambiarTab('suscripciones')">Suscripciones</button>
+  </div>
+
   <p class="empty-state" *ngIf="error()">{{ error() }}</p>
 
   <!-- ══════════════ TAB: PLANES (catálogo global) ══════════════ -->
-  <div class="table-card" *ngIf="tabActiva === 'planes'">
-    <div class="table-header">
+  <div class="data-table-card" *ngIf="tabActiva === 'planes'">
+    <div class="data-table-header">
       <div>
         <h2>Catálogo de planes</h2>
         <p>{{ planes().length }} {{ planes().length === 1 ? 'plan registrado' : 'planes registrados' }}</p>
       </div>
+      <button class="btn-primary" (click)="abrirModalNuevoPlan()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo plan
+      </button>
     </div>
 
     <div class="table-wrap" *ngIf="planes().length > 0">
@@ -57,52 +55,66 @@
 
   <!-- ══════════════ TAB: SUSCRIPCIONES (por empresa) ══════════════ -->
   <ng-container *ngIf="tabActiva === 'suscripciones'">
-    <div class="filters-bar">
-      <div class="search-box">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+
+    <div class="kpi-hero-grid">
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-verde">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div class="kpi-hero-valor">{{ totalSuscripciones }}</div>
+        <div class="kpi-hero-label">Total suscripciones</div>
+      </div>
+
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-verde">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="kpi-hero-valor">{{ totalActivas }}</div>
+        <div class="kpi-hero-label">Activas</div>
+      </div>
+
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-ambar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="kpi-hero-valor">{{ totalVencidasOCanceladas }}</div>
+        <div class="kpi-hero-label">Vencidas / Canceladas</div>
+      </div>
+    </div>
+
+    <div class="filtros-card">
+      <div class="filtro-campo filtro-campo-buscar">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Empresa
+        </label>
         <input type="text" placeholder="Buscar por empresa..." [(ngModel)]="busqueda" />
       </div>
 
-      <select class="filter-select" [(ngModel)]="filtroEstado">
-        <option value="Todos">Estado: Todos</option>
-        <option value="trial">Periodo de prueba</option>
-        <option value="activa">Activa</option>
-        <option value="vencida">Vencida</option>
-        <option value="cancelada">Cancelada</option>
-      </select>
-
-      <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-        Limpiar
-      </button>
-    </div>
-
-    <div class="summary-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Total suscripciones</div>
-        <div class="kpi-value">{{ totalSuscripciones }}</div>
+      <div class="filtro-campo">
+        <label>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Estado
+        </label>
+        <select [(ngModel)]="filtroEstado">
+          <option value="Todos">Todos</option>
+          <option value="trial">Periodo de prueba</option>
+          <option value="activa">Activa</option>
+          <option value="vencida">Vencida</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Activas</div>
-        <div class="kpi-value">{{ totalActivas }}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Vencidas / Canceladas</div>
-        <div class="kpi-value">{{ totalVencidasOCanceladas }}</div>
+
+      <div class="filtro-acciones">
+        <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
       </div>
     </div>
 
-    <div class="table-card">
-      <div class="table-header">
+    <div class="data-table-card">
+      <div class="data-table-header">
         <div>
           <h2>Suscripciones</h2>
-          <p>{{ suscripcionesFiltradas.length }} resultados encontrados</p>
+          <p>{{ suscripcionesFiltradas.length }} resultado{{ suscripcionesFiltradas.length !== 1 ? 's' : '' }}</p>
         </div>
       </div>
 

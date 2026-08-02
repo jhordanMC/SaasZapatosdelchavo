@@ -1,11 +1,4 @@
 <!-- Sidebar y topbar viven en AdminLayoutComponent. -->
-<div class="page-toolbar">
-  <div>
-    <p class="page-subtitle">Anuncios y encuestas globales, visibles para todos los usuarios vía la campana del topbar.</p>
-  </div>
-  <button class="btn-primary" (click)="abrirModalNuevo()">+ Nuevo anuncio</button>
-</div>
-
 <div class="content">
   <p class="empty-state" *ngIf="error()">{{ error() }}</p>
 
@@ -13,8 +6,12 @@
     <div class="table-header">
       <div>
         <h2>Anuncios y encuestas</h2>
-        <p>{{ anuncios().length }} {{ anuncios().length === 1 ? 'anuncio publicado' : 'anuncios publicados' }}</p>
+        <p>{{ anuncios().length }} {{ anuncios().length === 1 ? 'anuncio publicado' : 'anuncios publicados' }} · visibles para todos los usuarios vía la campana del topbar</p>
       </div>
+      <button class="btn-primary" (click)="abrirModalNuevo()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo anuncio
+      </button>
     </div>
 
     <div class="anuncios-grid" *ngIf="anuncios().length > 0">

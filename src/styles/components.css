@@ -1,0 +1,247 @@
+/*
+ * Primitivos de diseño reutilizables. Clases aditivas: el markup/CSS
+ * existente sigue funcionando sin adoptarlas; se usan en páginas nuevas o
+ * tocadas durante el rediseño.
+ */
+
+/* ── Botones ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition: transform var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--brand-deep);
+  color: var(--text-on-brand-deep);
+}
+.btn-primary:hover {
+  background: var(--brand-deep-700);
+  box-shadow: var(--shadow-glow-mint);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+.btn-ghost:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+.card--interactive:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+.badge-mint {
+  background: color-mix(in srgb, var(--brand-mint) 16%, var(--bg-surface));
+  color: var(--brand-deep);
+  border-color: transparent;
+}
+.badge-gold {
+  background: color-mix(in srgb, var(--brand-gold) 16%, var(--bg-surface));
+  color: var(--brand-gold);
+  border-color: transparent;
+}
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-color: transparent;
+}
+.badge-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-color: transparent;
+}
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-color: transparent;
+}
+
+/* ── Inputs ── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-input);
+  outline: none;
+  transition: border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+.input:focus {
+  border-color: var(--brand-mint);
+  box-shadow: var(--shadow-glow-mint);
+}
+
+/* ── Modal (overlay + card + botón cerrar + header de marca) ──
+   Único origen de verdad para el "shell" que repiten todos los modales
+   de la app (Ver detalle, Ver perfil, Ver anuncios, editar empresa,
+   editar anuncio, etc.). Cada página solo agrega el contenido interno
+   (.modal-body / .profile-modal-body / lo que sea) y, si necesita un
+   ancho distinto, sobreescribe .modal-card { max-width: … } en su propio
+   CSS de componente — al estar scoped por Angular, esa regla gana sin
+   pelear con esta. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: modalOverlayIn 0.2s ease both;
+}
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-surface-raised);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  animation: modalCardIn 0.25s ease both;
+}
+.modal-card-wide {
+  max-width: 640px;
+}
+@keyframes modalCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-standard);
+}
+.modal-close:hover {
+  background: var(--bg-surface-hover);
+}
+
+.modal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px 6px;
+  text-align: center;
+}
+.modal-brand-logo {
+  width: 60px;
+  height: auto;
+  margin-bottom: 10px;
+}
+.modal-brand-name {
+  display: inline-flex;
+  gap: 2px;
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.modal-brand-name .dk { color: var(--brand-wordmark); }
+.modal-brand-name .gd { color: var(--brand-gold); }
+
+.modal-header { padding: 18px 24px 4px; }
+.modal-header h2 { margin: 0; font-size: 18px; color: var(--brand-deep); font-weight: 700; }
+
+/* ── Animación de entrada ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-up {
+  animation: fadeInUp var(--duration-slow, 320ms) var(--ease-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    animation: none;
+  }
+  .card--interactive:hover {
+    transform: none;
+  }
+  .btn-primary:hover {
+    transform: none;
+  }
+}

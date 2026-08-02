@@ -1,9 +1,8 @@
-<div class="page-toolbar">
-  <div>
-    <p class="page-title">{{ modoEdicion ? 'Editar proforma' : 'Nueva proforma' }}</p>
-    <p class="page-subtitle">Arma la cotización con los productos, el cliente y las condiciones de venta.</p>
-  </div>
-  <a class="btn-secondary" routerLink="/empresa/ventas/proformas">Volver al listado</a>
+<div class="editor-toolbar">
+  <a class="btn-volver" routerLink="/empresa/ventas/proformas">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver al listado
+  </a>
 </div>
 
 <!-- ═══════════════ Paso: formulario ═══════════════ -->
@@ -11,10 +10,11 @@
 
   <!-- ── Columna izquierda: catálogo ─────────────────────────────────────── -->
   <div class="columna-catalogo">
-    <div class="search-box">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
+    <div class="filtro-campo filtro-campo-buscar">
+      <label>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Producto
+      </label>
       <input type="text" placeholder="Buscar producto para cotizar" [ngModel]="busquedaCatalogo" (ngModelChange)="onBusquedaCatalogoChange($event)" />
     </div>
 
@@ -38,7 +38,7 @@
     <div class="cargando-mini" *ngIf="cargandoMasCatalogo()">
       <span class="spinner spinner-sm"></span> Cargando más productos…
     </div>
-    <button class="btn-secondary" *ngIf="hayMasCatalogo() && !cargandoMasCatalogo() && productos().length > 0" (click)="cargarMasCatalogo()">
+    <button class="btn-clear" *ngIf="hayMasCatalogo() && !cargandoMasCatalogo() && productos().length > 0" (click)="cargarMasCatalogo()">
       Cargar más productos
     </button>
   </div>
@@ -160,17 +160,17 @@
     <p class="exito-subtitulo">Cliente: {{ p.cliente.nombre }} · Total S/{{ total.toFixed(2) }}</p>
 
     <div class="exito-acciones">
-      <button class="btn-secondary" (click)="imprimirSinImagenes()">
+      <button class="btn-clear" (click)="imprimirSinImagenes()">
         Imprimir sin imágenes
       </button>
-      <button class="btn-secondary" [disabled]="generandoPdf()" (click)="imprimirConImagenes()">
+      <button class="btn-clear" [disabled]="generandoPdf()" (click)="imprimirConImagenes()">
         <span class="spinner spinner-sm spinner-inline" *ngIf="generandoPdf()"></span>
         Imprimir con imágenes
       </button>
     </div>
 
     <div class="exito-acciones exito-acciones-secundarias">
-      <button class="btn-secondary" (click)="seguirEditando()">Seguir editando</button>
+      <button class="btn-clear" (click)="seguirEditando()">Seguir editando</button>
       <button class="btn-primary" (click)="volverAlListado()">Volver al listado</button>
     </div>
   </div>
@@ -203,7 +203,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarAgregarProducto()">Cancelar</button>
+      <button class="btn-clear" (click)="cerrarAgregarProducto()">Cancelar</button>
       <button class="btn-primary" (click)="confirmarAgregarProducto()">Agregar a la cotización</button>
     </div>
   </div>

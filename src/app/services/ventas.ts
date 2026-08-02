@@ -166,6 +166,20 @@ export type EstadoVenta = 'pendiente' | 'pagada' | 'anulada' | 'devuelta';
 
 export interface FiltrosHistorialVentas {
   estado?: EstadoVenta;
+  /** Filtrar por vendedor (id_usuario de la venta). */
+  id_usuario?: string;
+  /** Buscar por nombre/razón social del cliente. */
+  busqueda?: string;
+  /** ISO 8601. */
+  desde?: string;
+  /** ISO 8601. */
+  hasta?: string;
+}
+
+/** Vendedor distinto encontrado en el historial de ventas — no es "usuarios con rol vendedor/dueño". */
+export interface VendedorHistorial {
+  id_usuario: string;
+  nombre_vendedor: string;
 }
 
 export interface EliminarVentaRequest {
@@ -231,6 +245,30 @@ export interface DevolucionListItem {
 
 export interface FiltrosHistorialDevoluciones {
   estado?: EstadoDevolucion;
+  /** Filtrar por usuario que registró la devolución. */
+  id_usuario?: string;
+  /** Buscar por nombre/razón social del cliente de la venta original. */
+  busqueda?: string;
+  /** ISO 8601. */
+  desde?: string;
+  /** ISO 8601. */
+  hasta?: string;
+}
+
+/** Usuario distinto que registró una devolución — no es "usuarios con rol X". */
+export interface UsuarioDevolucionHistorial {
+  id_usuario: string;
+  nombre_usuario: string;
+}
+
+export interface ListaVentas {
+  total: number;
+  items: VentaListItem[];
+}
+
+export interface ListaDevoluciones {
+  total: number;
+  items: DevolucionListItem[];
 }
 
 // ---------------------------------------------------------------------------
@@ -315,19 +353,24 @@ export class VentasService {
 
   // ── Historial de ventas ──────────────────────────────────────────────────
 
-  /**
-   * Página del historial de ventas del tenant, más reciente primero.
-   * Sin envoltorio hay_mas/siguiente_offset: el llamador compara
-   * `resultado.length < limit` para saber si ya no hay más páginas.
-   */
+  /** Página del historial de ventas del tenant, más reciente primero — con total real (COUNT) para paginación numerada. */
   listarVentas(
     filtros: FiltrosHistorialVentas = {},
     offset = 0,
     limit = TAMANO_PAGINA_HISTORIAL_VENTAS
-  ): Observable<VentaListItem[]> {
+  ): Observable<ListaVentas> {
     let params = new HttpParams().set('limit', limit).set('offset', offset);
     if (filtros.estado) params = params.set('estado', filtros.estado);
-    return this.http.get<VentaListItem[]>(`${this.base}`, { params });
+    if (filtros.id_usuario) params = params.set('id_usuario', filtros.id_usuario);
+    if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
+    if (filtros.desde) params = params.set('desde', filtros.desde);
+    if (filtros.hasta) params = params.set('hasta', filtros.hasta);
+    return this.http.get<ListaVentas>(`${this.base}`, { params });
+  }
+
+  /** Vendedores distintos con ventas registradas — para poblar el filtro del historial (todos los roles). */
+  listarVendedoresDeVentas(): Observable<VendedorHistorial[]> {
+    return this.http.get<VendedorHistorial[]>(`${this.base}/vendedores`);
   }
 
   /** Detalle completo de una venta: ítems (con imagen/talla/precio/descuento) + pagos. */
@@ -358,15 +401,24 @@ export class VentasService {
     return this.http.get<DevolucionRead[]>(`${this.base}/${idVenta}/devoluciones`);
   }
 
-  /** Página del historial de devoluciones del tenant (todas las ventas), más reciente primero. */
+  /** Página del historial de devoluciones del tenant (todas las ventas), más reciente primero — con total real (COUNT). */
   listarDevoluciones(
     filtros: FiltrosHistorialDevoluciones = {},
     offset = 0,
     limit = TAMANO_PAGINA_HISTORIAL_DEVOLUCIONES
-  ): Observable<DevolucionListItem[]> {
+  ): Observable<ListaDevoluciones> {
     let params = new HttpParams().set('limit', limit).set('offset', offset);
     if (filtros.estado) params = params.set('estado', filtros.estado);
-    return this.http.get<DevolucionListItem[]>(`${this.base}/devoluciones`, { params });
+    if (filtros.id_usuario) params = params.set('id_usuario', filtros.id_usuario);
+    if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
+    if (filtros.desde) params = params.set('desde', filtros.desde);
+    if (filtros.hasta) params = params.set('hasta', filtros.hasta);
+    return this.http.get<ListaDevoluciones>(`${this.base}/devoluciones`, { params });
+  }
+
+  /** Usuarios distintos que registraron devoluciones — para poblar el filtro del historial. */
+  listarUsuariosDeDevoluciones(): Observable<UsuarioDevolucionHistorial[]> {
+    return this.http.get<UsuarioDevolucionHistorial[]>(`${this.base}/devoluciones/usuarios`);
   }
 
   /** Detalle completo (con líneas) de una devolución puntual. */

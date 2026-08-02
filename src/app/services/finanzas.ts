@@ -11,6 +11,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { MetodoPago } from './ventas';
 
 export type Frecuencia = 'diario' | 'semanal' | 'mensual';
 
@@ -75,6 +76,12 @@ export interface GastosOperativosPaginados {
 export interface PuntoSemana {
   etiqueta: string;
   total: number;
+}
+
+export interface VentasPorMetodoPago {
+  metodo: MetodoPago;
+  cantidad: number;
+  monto: number;
 }
 
 export interface ResumenFinanciero {
@@ -160,6 +167,12 @@ export class FinanzasService {
     this.http
       .get<PuntoSemana[]>(`${this.base}/ingresos-por-semana`, { params })
       .subscribe((puntos) => this.ingresosPorSemana.set(puntos));
+  }
+
+  /** Ventas agrupadas por método de pago en el período (mismo desde/hasta que el resto del dashboard). */
+  obtenerVentasPorMetodoPago(desde: string, hasta: string): Observable<VentasPorMetodoPago[]> {
+    const params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    return this.http.get<VentasPorMetodoPago[]>(`${this.base}/ventas-por-metodo-pago`, { params });
   }
 
   // ── Gastos recurrentes ──────────────────────────────────────────────────
