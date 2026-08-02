@@ -122,6 +122,19 @@
             <span class="profile-menu-chevron">›</span>
           </button>
 
+          <button class="profile-menu-item" (click)="abrirVistaPerfil('cuentas')">
+            <span class="profile-menu-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"/>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                <polyline points="7 23 3 19 7 15"/>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+              </svg>
+            </span>
+            <span class="profile-menu-label">Cambiar de cuenta</span>
+            <span class="profile-menu-chevron">›</span>
+          </button>
+
           <button class="profile-menu-item" (click)="abrirVistaPerfil('calificar')">
             <span class="profile-menu-icon">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -280,16 +293,31 @@
         <div class="profile-subview-body" *ngIf="pasoCambioPassword === 'codigo'">
           <p class="profile-subview-desc">Ingresa el código de 6 dígitos que enviamos a {{ userEmail }}.</p>
 
-          <div class="profile-field">
-            <label class="profile-field-label">Código de verificación</label>
-            <input type="text" inputmode="numeric" maxlength="6" class="profile-field-input profile-codigo-input" placeholder="000000" [(ngModel)]="codigoCambioPassword" />
+          <div class="otp-row" [class.shake]="shakeCodigoPassword">
+            <div class="otp-box" *ngFor="let d of codigoPasswordDigitos; let i = index; trackBy: trackByIndicePassword" [class.filled]="codigoPasswordDigitos[i] !== ''">
+              <div class="otp-fill"></div>
+              <input
+                #casillaPassword
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="1"
+                [disabled]="verificandoCodigoPassword"
+                (input)="onInputDigitoPassword(i, $event)"
+                (keydown)="onKeydownPassword(i, $event)"
+                (paste)="onPastePassword($event)"
+              />
+            </div>
+          </div>
+          <div class="otp-underline">
+            <div class="otp-underline-fill" [style.width.%]="(codigoPasswordDigitosLlenos / 6) * 100"></div>
           </div>
 
           <p class="profile-error-msg" *ngIf="errorCodigoPassword">{{ errorCodigoPassword }}</p>
 
           <button
             class="profile-btn-primary"
-            [disabled]="!codigoCambioPassword || verificandoCodigoPassword"
+            [disabled]="codigoPasswordDigitosLlenos !== 6 || verificandoCodigoPassword"
             (click)="confirmarCambioPassword()"
           >
             {{ verificandoCodigoPassword ? 'Verificando…' : 'Verificar y cambiar' }}
@@ -303,6 +331,132 @@
             </svg>
           </div>
           <p class="profile-subview-exito-texto">Tu contraseña se actualizó correctamente.</p>
+        </div>
+      </ng-container>
+
+      <!-- ══ VISTA: CAMBIAR DE CUENTA ══ -->
+      <ng-container *ngIf="vistaPerfil === 'cuentas'">
+
+        <!-- Paso 1: cuentas guardadas en este dispositivo -->
+        <ng-container *ngIf="vistaCuentas === 'lista'">
+          <div class="profile-subview-body">
+            <p class="profile-subview-desc">Cuentas guardadas en este dispositivo — cambia sin volver a loguearte.</p>
+            <ng-container *ngIf="errorCambioCuenta">
+              <p class="profile-error-msg">{{ errorCambioCuenta }}</p>
+              <button
+                *ngIf="cuentaConError as cuenta"
+                class="profile-btn-secondary"
+                (click)="reautenticarCuenta(cuenta)"
+              >
+                Volver a iniciar sesión con {{ cuenta.correo }}
+              </button>
+            </ng-container>
+          </div>
+
+          <div class="profile-menu-list cuentas-lista">
+            <div
+              class="cuenta-row"
+              *ngFor="let cuenta of cuentasGuardadas()"
+              [class.cuenta-row-activa]="esCuentaActiva(cuenta)"
+              (click)="activarCuenta(cuenta)"
+            >
+              <span class="cuenta-avatar">
+                <img *ngIf="avatarSrcPara(cuenta.avatarUrl) as src" [src]="src" alt="" />
+                <span *ngIf="!avatarSrcPara(cuenta.avatarUrl)">{{ cuenta.nombre.charAt(0) }}</span>
+              </span>
+              <span class="cuenta-info">
+                <span class="cuenta-nombre">{{ cuenta.nombre }}</span>
+                <span class="cuenta-empresa">{{ cuenta.nombreEmpresa }}</span>
+              </span>
+              <span class="spinner spinner-sm" *ngIf="idCuentaActivando === cuenta.idUsuario"></span>
+              <span class="topbar-badge cuenta-badge-activa" *ngIf="esCuentaActiva(cuenta) && idCuentaActivando !== cuenta.idUsuario">Activa</span>
+              <button
+                class="cuenta-eliminar-btn"
+                *ngIf="!esCuentaActiva(cuenta) && idCuentaActivando !== cuenta.idUsuario"
+                (click)="eliminarCuentaGuardada(cuenta, $event)"
+                aria-label="Olvidar esta cuenta"
+                title="Olvidar esta cuenta"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <button class="profile-menu-item" (click)="mostrarFormularioAgregarCuenta()">
+              <span class="profile-menu-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </span>
+              <span class="profile-menu-label">Agregar otra cuenta</span>
+              <span class="profile-menu-chevron">›</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Paso 2: credenciales de la cuenta nueva -->
+        <div class="profile-subview-body" *ngIf="vistaCuentas === 'agregar-credenciales'">
+          <p class="profile-subview-desc">
+            {{ nuevaCuentaEmailBloqueado ? 'Ingresa la contraseña para volver a activar esta cuenta.' : 'Inicia sesión con la otra cuenta — tu sesión actual se queda guardada.' }}
+          </p>
+
+          <div class="profile-field">
+            <label class="profile-field-label">Correo electrónico</label>
+            <input type="email" class="profile-field-input" placeholder="correo@ejemplo.com" [(ngModel)]="nuevaCuentaEmail" [readonly]="nuevaCuentaEmailBloqueado" [class.profile-field-input-bloqueado]="nuevaCuentaEmailBloqueado" />
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Contraseña</label>
+            <input type="password" class="profile-field-input" placeholder="Contraseña" [(ngModel)]="nuevaCuentaPassword" />
+          </div>
+
+          <p class="profile-error-msg" *ngIf="nuevaCuentaError">{{ nuevaCuentaError }}</p>
+
+          <button
+            class="profile-btn-primary"
+            [disabled]="!nuevaCuentaEmail || !nuevaCuentaPassword || nuevaCuentaCargando"
+            (click)="enviarCredencialesNuevaCuenta()"
+          >
+            {{ nuevaCuentaCargando ? 'Enviando…' : 'Continuar' }}
+          </button>
+          <button class="profile-btn-secondary" (click)="cancelarAgregarCuenta()">Cancelar</button>
+        </div>
+
+        <!-- Paso 3: código 2FA de la cuenta nueva -->
+        <div class="profile-subview-body" *ngIf="vistaCuentas === 'agregar-codigo'">
+          <p class="profile-subview-desc">Ingresa el código de 6 dígitos que enviamos a {{ nuevaCuentaEmail }}.</p>
+
+          <div class="otp-row" [class.shake]="shakeCodigoCuenta">
+            <div class="otp-box" *ngFor="let d of nuevaCuentaDigitos; let i = index; trackBy: trackByIndiceCuenta" [class.filled]="nuevaCuentaDigitos[i] !== ''">
+              <div class="otp-fill"></div>
+              <input
+                #casillaCuenta
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="1"
+                [disabled]="nuevaCuentaCargando"
+                (input)="onInputDigitoCuenta(i, $event)"
+                (keydown)="onKeydownCuenta(i, $event)"
+                (paste)="onPasteCuenta($event)"
+              />
+            </div>
+          </div>
+          <div class="otp-underline">
+            <div class="otp-underline-fill" [style.width.%]="(nuevaCuentaDigitosLlenos / 6) * 100"></div>
+          </div>
+          <p class="profile-subview-desc profile-codigo-temporizador">Vence en {{ nuevaCuentaSegundosRestantes }}s</p>
+
+          <p class="profile-error-msg" *ngIf="nuevaCuentaError">{{ nuevaCuentaError }}</p>
+
+          <button
+            class="profile-btn-primary"
+            [disabled]="nuevaCuentaDigitosLlenos !== 6 || nuevaCuentaCargando"
+            (click)="verificarCodigoNuevaCuenta()"
+          >
+            {{ nuevaCuentaCargando ? 'Verificando…' : 'Verificar y agregar' }}
+          </button>
+          <button class="profile-btn-secondary" (click)="cancelarAgregarCuenta()">Cancelar</button>
         </div>
       </ng-container>
 

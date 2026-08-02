@@ -1,16 +1,20 @@
-import { Component, ElementRef, HostListener, Input, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
+import { CuentaGuardada } from '../../core/cuentas-guardadas.service';
 import { ThemeService } from '../../core/theme.service';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
 import { SatisfaccionService } from '../../services/satisfaccion';
 import { environment } from '../../../environments/environment';
 
-/** Las 4 secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
-export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password';
+/** Las secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
+export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password' | 'cuentas';
+
+/** 'lista' = ver/alternar cuentas guardadas; las otras 2 son el mini-login para sumar una nueva. */
+type PasoCuentas = 'lista' | 'agregar-credenciales' | 'agregar-codigo';
 
 @Component({
   selector: 'app-topbar',
@@ -19,7 +23,7 @@ export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password';
   templateUrl: './topbar.html',
   styleUrls: ['./topbar.css'],
 })
-export class TopbarComponent implements OnInit {
+export class TopbarComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -123,6 +127,7 @@ export class TopbarComponent implements OnInit {
     this.vistaPerfil = 'menu';
     this.resetCalificar();
     this.resetCambioPassword();
+    this.resetCuentas();
   }
 
   abrirVistaPerfil(vista: VistaPerfil): void {
@@ -131,6 +136,7 @@ export class TopbarComponent implements OnInit {
 
   volverAlMenuPerfil(): void {
     this.vistaPerfil = 'menu';
+    this.resetCuentas();
   }
 
   tituloVistaPerfil(): string {
@@ -143,6 +149,8 @@ export class TopbarComponent implements OnInit {
         return 'Acerca de VILCAS';
       case 'password':
         return 'Cambio de contraseña';
+      case 'cuentas':
+        return 'Cambiar de cuenta';
       default:
         return '';
     }
@@ -162,6 +170,251 @@ export class TopbarComponent implements OnInit {
     this.vistaPerfil = 'menu';
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  // ── "Cambiar de cuenta" — alternar entre sesiones guardadas en este
+  //    dispositivo sin volver a loguearse, o sumar una cuenta nueva sin
+  //    perder la actual (ver AuthService.cambiarDeCuenta/cuentasGuardadas). ──
+  vistaCuentas: PasoCuentas = 'lista';
+  idCuentaActivando: string | null = null;
+  errorCambioCuenta = '';
+  /** La cuenta cuyo cambio falló — permite ofrecer "Volver a iniciar sesión" ya con su correo. */
+  cuentaConError: CuentaGuardada | null = null;
+
+  nuevaCuentaEmail = '';
+  nuevaCuentaPassword = '';
+  nuevaCuentaCargando = false;
+  nuevaCuentaError = '';
+  nuevaCuentaSegundosRestantes = 0;
+  /** true cuando el correo viene precargado de una reautenticación (no de "Agregar otra cuenta") — no tiene sentido dejarlo editable ahí. */
+  nuevaCuentaEmailBloqueado = false;
+  private intervaloNuevaCuenta: ReturnType<typeof setInterval> | null = null;
+
+  // ── Código de 6 dígitos: mismo patrón de casillas que verificar-2fa.ts,
+  //    reutilizado acá para que se vea y se sienta igual dentro del modal. ──
+  @ViewChildren('casillaCuenta') casillasCuentaRef?: QueryList<ElementRef<HTMLInputElement>>;
+  nuevaCuentaDigitos: string[] = ['', '', '', '', '', ''];
+  shakeCodigoCuenta = false;
+  private shakeCodigoCuentaTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  get nuevaCuentaDigitosLlenos(): number {
+    return this.nuevaCuentaDigitos.filter((d) => d !== '').length;
+  }
+
+  trackByIndiceCuenta(indice: number): number {
+    return indice;
+  }
+
+  private enfocarCasillaCuenta(indice: number): void {
+    this.casillasCuentaRef?.get(indice)?.nativeElement.focus();
+  }
+
+  private limpiarCasillasCuenta(): void {
+    this.nuevaCuentaDigitos = ['', '', '', '', '', ''];
+    this.casillasCuentaRef?.forEach((ref) => (ref.nativeElement.value = ''));
+    this.enfocarCasillaCuenta(0);
+  }
+
+  private shakeCuenta(): void {
+    this.shakeCodigoCuenta = false;
+    if (this.shakeCodigoCuentaTimeout) clearTimeout(this.shakeCodigoCuentaTimeout);
+    setTimeout(() => (this.shakeCodigoCuenta = true), 0);
+    this.shakeCodigoCuentaTimeout = setTimeout(() => (this.shakeCodigoCuenta = false), 320);
+  }
+
+  onInputDigitoCuenta(indice: number, evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const valor = input.value.replace(/[^0-9]/g, '').slice(-1);
+    this.nuevaCuentaDigitos[indice] = valor;
+    input.value = valor;
+
+    if (valor && indice < 5) {
+      this.enfocarCasillaCuenta(indice + 1);
+    }
+
+    if (this.nuevaCuentaDigitos.every((d) => d !== '')) {
+      this.verificarCodigoNuevaCuenta();
+    }
+  }
+
+  onKeydownCuenta(indice: number, evento: KeyboardEvent): void {
+    if (evento.key === 'Backspace' && !this.nuevaCuentaDigitos[indice] && indice > 0) {
+      this.enfocarCasillaCuenta(indice - 1);
+    } else if (evento.key === 'ArrowLeft' && indice > 0) {
+      this.enfocarCasillaCuenta(indice - 1);
+    } else if (evento.key === 'ArrowRight' && indice < 5) {
+      this.enfocarCasillaCuenta(indice + 1);
+    }
+  }
+
+  onPasteCuenta(evento: ClipboardEvent): void {
+    const soloDigitos = (evento.clipboardData?.getData('text') ?? '').replace(/[^0-9]/g, '').slice(0, 6);
+    if (!soloDigitos) return;
+    evento.preventDefault();
+
+    for (let i = 0; i < 6; i++) {
+      this.nuevaCuentaDigitos[i] = soloDigitos[i] ?? '';
+      const input = this.casillasCuentaRef?.get(i)?.nativeElement;
+      if (input) input.value = this.nuevaCuentaDigitos[i];
+    }
+    this.enfocarCasillaCuenta(Math.min(soloDigitos.length, 5));
+
+    if (this.nuevaCuentaDigitos.every((d) => d !== '')) {
+      this.verificarCodigoNuevaCuenta();
+    }
+  }
+
+  cuentasGuardadas(): CuentaGuardada[] {
+    return this.authService.cuentasGuardadas();
+  }
+
+  esCuentaActiva(cuenta: CuentaGuardada): boolean {
+    return cuenta.idUsuario === this.authService.usuarioActual()?.idUsuario;
+  }
+
+  avatarSrcPara(url: string | null): string | null {
+    return url ? `${this.apiUrl}${url}` : null;
+  }
+
+  activarCuenta(cuenta: CuentaGuardada): void {
+    if (this.esCuentaActiva(cuenta) || this.idCuentaActivando) return;
+    this.idCuentaActivando = cuenta.idUsuario;
+    this.errorCambioCuenta = '';
+    this.cuentaConError = null;
+
+    this.authService.cambiarDeCuenta(cuenta.idUsuario).subscribe({
+      next: (usuario) => {
+        // Reload duro a propósito: algunos componentes (ej. sidebar del
+        // layout de empresa) capturan datos derivados del rol una sola vez
+        // en su constructor — solo un reload garantiza que TODO el shell
+        // (no solo los signals) refleje la cuenta nueva de una.
+        window.location.href = this.authService.rutaHomeParaRol(usuario.rol);
+      },
+      error: () => {
+        this.idCuentaActivando = null;
+        this.errorCambioCuenta = `Tu sesión guardada de ${cuenta.correo} venció.`;
+        this.cuentaConError = cuenta;
+      },
+    });
+  }
+
+  /** Desde el error de un cambio fallido: reabre el login con el correo ya puesto, solo falta la contraseña. */
+  reautenticarCuenta(cuenta: CuentaGuardada): void {
+    this.errorCambioCuenta = '';
+    this.cuentaConError = null;
+    this.vistaCuentas = 'agregar-credenciales';
+    this.nuevaCuentaEmail = cuenta.correo;
+    this.nuevaCuentaEmailBloqueado = true;
+    this.nuevaCuentaPassword = '';
+    this.nuevaCuentaError = '';
+  }
+
+  eliminarCuentaGuardada(cuenta: CuentaGuardada, evento: Event): void {
+    evento.stopPropagation();
+    if (this.cuentaConError?.idUsuario === cuenta.idUsuario) {
+      this.errorCambioCuenta = '';
+      this.cuentaConError = null;
+    }
+    this.authService.eliminarCuentaGuardada(cuenta.idUsuario);
+  }
+
+  mostrarFormularioAgregarCuenta(): void {
+    this.vistaCuentas = 'agregar-credenciales';
+    this.errorCambioCuenta = '';
+    this.cuentaConError = null;
+    this.nuevaCuentaEmailBloqueado = false;
+  }
+
+  cancelarAgregarCuenta(): void {
+    this.authService.limpiarLoginPendiente();
+    this.detenerIntervaloNuevaCuenta();
+    this.vistaCuentas = 'lista';
+    this.nuevaCuentaEmail = '';
+    this.nuevaCuentaPassword = '';
+    this.nuevaCuentaDigitos = ['', '', '', '', '', ''];
+    this.nuevaCuentaError = '';
+    this.nuevaCuentaEmailBloqueado = false;
+  }
+
+  enviarCredencialesNuevaCuenta(): void {
+    if (this.nuevaCuentaCargando || !this.nuevaCuentaEmail || !this.nuevaCuentaPassword) return;
+    this.nuevaCuentaCargando = true;
+    this.nuevaCuentaError = '';
+
+    this.authService.login(this.nuevaCuentaEmail, this.nuevaCuentaPassword).subscribe({
+      next: (pendiente) => {
+        this.nuevaCuentaCargando = false;
+        this.vistaCuentas = 'agregar-codigo';
+        this.nuevaCuentaDigitos = ['', '', '', '', '', ''];
+        this.nuevaCuentaSegundosRestantes = pendiente.expira_en_segundos;
+        setTimeout(() => this.enfocarCasillaCuenta(0), 150);
+        this.detenerIntervaloNuevaCuenta();
+        this.intervaloNuevaCuenta = setInterval(() => {
+          this.nuevaCuentaSegundosRestantes--;
+          if (this.nuevaCuentaSegundosRestantes <= 0) {
+            this.detenerIntervaloNuevaCuenta();
+            this.nuevaCuentaError = 'El código venció. Vuelve a intentar.';
+            this.vistaCuentas = 'agregar-credenciales';
+          }
+        }, 1000);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.nuevaCuentaCargando = false;
+        this.nuevaCuentaError =
+          error.status === 401 ? 'Correo o contraseña incorrectos.' : 'No se pudo iniciar sesión. Intenta de nuevo.';
+      },
+    });
+  }
+
+  verificarCodigoNuevaCuenta(): void {
+    const codigo = this.nuevaCuentaDigitos.join('');
+    if (this.nuevaCuentaCargando || codigo.length !== 6) return;
+    this.nuevaCuentaCargando = true;
+    this.nuevaCuentaError = '';
+
+    this.authService.verificar2fa(codigo).subscribe({
+      next: (usuario) => {
+        this.detenerIntervaloNuevaCuenta();
+        // Igual que activarCuenta(): reload duro para que todo el shell
+        // arranque limpio con la cuenta recién agregada.
+        window.location.href = this.authService.rutaHomeParaRol(usuario.rol);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.nuevaCuentaCargando = false;
+        if (error.status === 401) {
+          this.detenerIntervaloNuevaCuenta();
+          this.nuevaCuentaError = 'El código venció o hubo demasiados intentos. Vuelve a intentar.';
+          this.vistaCuentas = 'agregar-credenciales';
+          return;
+        }
+        this.nuevaCuentaError = 'Código incorrecto, intenta de nuevo.';
+        this.shakeCuenta();
+        this.limpiarCasillasCuenta();
+      },
+    });
+  }
+
+  private detenerIntervaloNuevaCuenta(): void {
+    if (this.intervaloNuevaCuenta) {
+      clearInterval(this.intervaloNuevaCuenta);
+      this.intervaloNuevaCuenta = null;
+    }
+  }
+
+  private resetCuentas(): void {
+    this.detenerIntervaloNuevaCuenta();
+    this.authService.limpiarLoginPendiente();
+    this.vistaCuentas = 'lista';
+    this.idCuentaActivando = null;
+    this.errorCambioCuenta = '';
+    this.cuentaConError = null;
+    this.nuevaCuentaEmail = '';
+    this.nuevaCuentaPassword = '';
+    this.nuevaCuentaDigitos = ['', '', '', '', '', ''];
+    this.nuevaCuentaCargando = false;
+    this.nuevaCuentaError = '';
+    this.nuevaCuentaEmailBloqueado = false;
+    if (this.shakeCodigoCuentaTimeout) clearTimeout(this.shakeCodigoCuentaTimeout);
   }
 
   // ── "Califícanos / ayúdanos con tu opinión" ────────────────────────
@@ -215,11 +468,83 @@ export class TopbarComponent implements OnInit {
   passwordActual = '';
   passwordNueva = '';
   passwordConfirmar = '';
-  codigoCambioPassword = '';
   enviandoCambioPassword = false;
   verificandoCodigoPassword = false;
   errorCambioPassword = '';
   errorCodigoPassword = '';
+
+  // Mismas casillas de 6 dígitos que en "Agregar otra cuenta" (ver arriba) — un solo patrón reusado en los 2 lugares del modal que piden un código de email.
+  @ViewChildren('casillaPassword') casillasPasswordRef?: QueryList<ElementRef<HTMLInputElement>>;
+  codigoPasswordDigitos: string[] = ['', '', '', '', '', ''];
+  shakeCodigoPassword = false;
+  private shakeCodigoPasswordTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  get codigoPasswordDigitosLlenos(): number {
+    return this.codigoPasswordDigitos.filter((d) => d !== '').length;
+  }
+
+  trackByIndicePassword(indice: number): number {
+    return indice;
+  }
+
+  private enfocarCasillaPassword(indice: number): void {
+    this.casillasPasswordRef?.get(indice)?.nativeElement.focus();
+  }
+
+  private limpiarCasillasPassword(): void {
+    this.codigoPasswordDigitos = ['', '', '', '', '', ''];
+    this.casillasPasswordRef?.forEach((ref) => (ref.nativeElement.value = ''));
+    this.enfocarCasillaPassword(0);
+  }
+
+  private shakePassword(): void {
+    this.shakeCodigoPassword = false;
+    if (this.shakeCodigoPasswordTimeout) clearTimeout(this.shakeCodigoPasswordTimeout);
+    setTimeout(() => (this.shakeCodigoPassword = true), 0);
+    this.shakeCodigoPasswordTimeout = setTimeout(() => (this.shakeCodigoPassword = false), 320);
+  }
+
+  onInputDigitoPassword(indice: number, evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const valor = input.value.replace(/[^0-9]/g, '').slice(-1);
+    this.codigoPasswordDigitos[indice] = valor;
+    input.value = valor;
+
+    if (valor && indice < 5) {
+      this.enfocarCasillaPassword(indice + 1);
+    }
+
+    if (this.codigoPasswordDigitos.every((d) => d !== '')) {
+      this.confirmarCambioPassword();
+    }
+  }
+
+  onKeydownPassword(indice: number, evento: KeyboardEvent): void {
+    if (evento.key === 'Backspace' && !this.codigoPasswordDigitos[indice] && indice > 0) {
+      this.enfocarCasillaPassword(indice - 1);
+    } else if (evento.key === 'ArrowLeft' && indice > 0) {
+      this.enfocarCasillaPassword(indice - 1);
+    } else if (evento.key === 'ArrowRight' && indice < 5) {
+      this.enfocarCasillaPassword(indice + 1);
+    }
+  }
+
+  onPastePassword(evento: ClipboardEvent): void {
+    const soloDigitos = (evento.clipboardData?.getData('text') ?? '').replace(/[^0-9]/g, '').slice(0, 6);
+    if (!soloDigitos) return;
+    evento.preventDefault();
+
+    for (let i = 0; i < 6; i++) {
+      this.codigoPasswordDigitos[i] = soloDigitos[i] ?? '';
+      const input = this.casillasPasswordRef?.get(i)?.nativeElement;
+      if (input) input.value = this.codigoPasswordDigitos[i];
+    }
+    this.enfocarCasillaPassword(Math.min(soloDigitos.length, 5));
+
+    if (this.codigoPasswordDigitos.every((d) => d !== '')) {
+      this.confirmarCambioPassword();
+    }
+  }
 
   get passwordNuevaValida(): boolean {
     return (
@@ -237,6 +562,8 @@ export class TopbarComponent implements OnInit {
       next: () => {
         this.enviandoCambioPassword = false;
         this.pasoCambioPassword = 'codigo';
+        this.codigoPasswordDigitos = ['', '', '', '', '', ''];
+        setTimeout(() => this.enfocarCasillaPassword(0), 150);
       },
       error: (error: HttpErrorResponse) => {
         this.enviandoCambioPassword = false;
@@ -252,10 +579,11 @@ export class TopbarComponent implements OnInit {
   }
 
   confirmarCambioPassword(): void {
-    if (!this.codigoCambioPassword || this.verificandoCodigoPassword) return;
+    const codigo = this.codigoPasswordDigitos.join('');
+    if (codigo.length !== 6 || this.verificandoCodigoPassword) return;
     this.verificandoCodigoPassword = true;
     this.errorCodigoPassword = '';
-    this.authService.confirmarCambioPassword(this.codigoCambioPassword).subscribe({
+    this.authService.confirmarCambioPassword(codigo).subscribe({
       next: () => {
         this.verificandoCodigoPassword = false;
         this.pasoCambioPassword = 'exito';
@@ -264,9 +592,11 @@ export class TopbarComponent implements OnInit {
         this.verificandoCodigoPassword = false;
         if (error.status === 401) {
           this.errorCodigoPassword = 'Código vencido o demasiados intentos. Vuelve a solicitar el cambio.';
-        } else {
-          this.errorCodigoPassword = 'Código incorrecto. Verifica e intenta de nuevo.';
+          return;
         }
+        this.errorCodigoPassword = 'Código incorrecto. Verifica e intenta de nuevo.';
+        this.shakePassword();
+        this.limpiarCasillasPassword();
       },
     });
   }
@@ -276,11 +606,12 @@ export class TopbarComponent implements OnInit {
     this.passwordActual = '';
     this.passwordNueva = '';
     this.passwordConfirmar = '';
-    this.codigoCambioPassword = '';
+    this.codigoPasswordDigitos = ['', '', '', '', '', ''];
     this.enviandoCambioPassword = false;
     this.verificandoCodigoPassword = false;
     this.errorCambioPassword = '';
     this.errorCodigoPassword = '';
+    if (this.shakeCodigoPasswordTimeout) clearTimeout(this.shakeCodigoPasswordTimeout);
   }
 
   // ════════════════════════════════════════════════════════
@@ -295,6 +626,12 @@ export class TopbarComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarAnuncios();
+  }
+
+  ngOnDestroy(): void {
+    this.detenerIntervaloNuevaCuenta();
+    if (this.shakeCodigoCuentaTimeout) clearTimeout(this.shakeCodigoCuentaTimeout);
+    if (this.shakeCodigoPasswordTimeout) clearTimeout(this.shakeCodigoPasswordTimeout);
   }
 
   private cargarAnuncios(): void {

@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { SesionExpiradaService } from './sesion-expirada.service';
+import { OMITIR_EXPIRACION_GLOBAL, SesionExpiradaService } from './sesion-expirada.service';
 import { TokenStore } from './token-store';
 
 const RUTAS_SIN_TOKEN = [
@@ -30,7 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return tokenStore.refrescar().pipe(
         switchMap((nuevoAccessToken) => {
           if (!nuevoAccessToken) {
-            sesionExpirada.marcarExpirada();
+            if (!req.context.get(OMITIR_EXPIRACION_GLOBAL)) {
+              sesionExpirada.marcarExpirada();
+            }
             return throwError(() => error);
           }
           const reintento = req.clone({ setHeaders: { Authorization: `Bearer ${nuevoAccessToken}` } });

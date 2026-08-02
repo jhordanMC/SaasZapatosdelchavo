@@ -1,8 +1,10 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable, ReplaySubject, catchError, forkJoin, map, of, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ClaveVista, RolUsuario, mapearRol } from '../services/usuarios';
+import { CuentaGuardada, CuentasGuardadasService } from './cuentas-guardadas.service';
+import { OMITIR_EXPIRACION_GLOBAL } from './sesion-expirada.service';
 import { TokenResponse, TokenStore } from './token-store';
 
 export interface SesionUsuario {
@@ -62,7 +64,11 @@ export class AuthService {
 
   usuarioActual = this.sesion.asReadonly();
 
-  constructor(private http: HttpClient, private tokenStore: TokenStore) {
+  constructor(
+    private http: HttpClient,
+    private tokenStore: TokenStore,
+    private cuentasGuardadasService: CuentasGuardadasService,
+  ) {
     if (this.tokenStore.accessToken()) {
       this.cargarPerfilYPermisos().subscribe({
         next: () => this.finalizarInicializacion(),
@@ -85,10 +91,12 @@ export class AuthService {
     return this.inicializacion$.pipe(take(1));
   }
 
-  private cargarPerfilYPermisos(): Observable<SesionUsuario> {
+  private cargarPerfilYPermisos(opciones?: { omitirExpiracionGlobal?: boolean }): Observable<SesionUsuario> {
+    const context = new HttpContext().set(OMITIR_EXPIRACION_GLOBAL, opciones?.omitirExpiracionGlobal ?? false);
+
     return forkJoin({
-      perfil: this.http.get<MiPerfilResponse>(`${this.apiUrl}/iam/mi-perfil`),
-      permisos: this.http.get<string[]>(`${this.apiUrl}/iam/mis-permisos`),
+      perfil: this.http.get<MiPerfilResponse>(`${this.apiUrl}/iam/mi-perfil`, { context }),
+      permisos: this.http.get<string[]>(`${this.apiUrl}/iam/mis-permisos`, { context }),
       // Tolerante a fallos a propósito: si este endpoint falla (ej. la
       // tabla usuarios_vistas_deshabilitadas todavía no existe en la BD),
       // no debe tumbar la carga de sesión entera — se asume "sin vistas
@@ -96,7 +104,7 @@ export class AuthService {
       // vistasDeshabilitadas (todo lo que no está en la lista se entiende
       // habilitado).
       vistasDeshabilitadas: this.http
-        .get<ClaveVista[]>(`${this.apiUrl}/iam/mis-vistas-deshabilitadas`)
+        .get<ClaveVista[]>(`${this.apiUrl}/iam/mis-vistas-deshabilitadas`, { context })
         .pipe(catchError(() => of([] as ClaveVista[]))),
     }).pipe(
       map(({ perfil, vistasDeshabilitadas }) => {
@@ -113,6 +121,26 @@ export class AuthService {
           vistasDeshabilitadas,
         };
         this.sesion.set(usuario);
+
+        // Mantiene el selector de cuentas ("Cambiar de cuenta") sincronizado
+        // solo — este método corre en todo camino que confirma una sesión
+        // válida (F5, login, cambio de cuenta), así que no hace falta
+        // repetir este upsert en cada punto de entrada.
+        const accessToken = this.tokenStore.accessToken();
+        const refreshToken = this.tokenStore.refreshToken;
+        if (accessToken && refreshToken) {
+          this.cuentasGuardadasService.upsert({
+            idUsuario: usuario.idUsuario,
+            nombre: usuario.nombre,
+            correo: usuario.correo,
+            nombreEmpresa: usuario.nombreEmpresa,
+            avatarUrl: usuario.avatarUrl,
+            rol: usuario.rol,
+            accessToken,
+            refreshToken,
+          });
+        }
+
         return usuario;
       }),
     );
@@ -212,8 +240,61 @@ export class AuthService {
     );
   }
 
+  /** Cuentas guardadas en este dispositivo (incluye la activa) — para el selector "Cambiar de cuenta". */
+  cuentasGuardadas(): CuentaGuardada[] {
+    return this.cuentasGuardadasService.cuentas();
+  }
+
+  /**
+   * Activa una cuenta ya guardada sin pasar por login/2FA de nuevo. Si sus
+   * tokens ya no sirven (vencidos/revocados), revierte a los tokens de la
+   * cuenta que estaba activa — un cambio fallido nunca debe dejar al
+   * usuario deslogueado de la cuenta que sí tenía abierta.
+   */
+  cambiarDeCuenta(idUsuario: string): Observable<SesionUsuario> {
+    const destino = this.cuentasGuardadasService.obtener(idUsuario);
+    if (!destino) {
+      return throwError(() => new Error('Esa cuenta ya no está guardada en este dispositivo.'));
+    }
+
+    const accessAnterior = this.tokenStore.accessToken();
+    const refreshAnterior = this.tokenStore.refreshToken;
+
+    this.tokenStore.guardar({
+      access_token: destino.accessToken,
+      refresh_token: destino.refreshToken,
+      token_type: 'bearer',
+    });
+
+    return this.cargarPerfilYPermisos({ omitirExpiracionGlobal: true }).pipe(
+      catchError((error) => {
+        if (accessAnterior && refreshAnterior) {
+          this.tokenStore.guardar({
+            access_token: accessAnterior,
+            refresh_token: refreshAnterior,
+            token_type: 'bearer',
+          });
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  /** No permite borrar la cuenta activa — para eso ya existe "Cerrar sesión". */
+  eliminarCuentaGuardada(idUsuario: string): void {
+    if (idUsuario === this.sesion()?.idUsuario) return;
+    this.cuentasGuardadasService.eliminar(idUsuario);
+  }
+
   logout(): void {
     const refreshToken = this.tokenStore.refreshToken;
+    // A diferencia de un cambio de cuenta (que la deja guardada para volver
+    // rápido), "Cerrar sesión" es una salida explícita — se olvida acá
+    // también, si no quedaría un fantasma en el selector de cuentas cuyo
+    // token el backend ya invalidó (ver POST /iam/auth/logout abajo).
+    const idUsuarioSaliente = this.sesion()?.idUsuario;
+    if (idUsuarioSaliente) this.cuentasGuardadasService.eliminar(idUsuarioSaliente);
+
     this.tokenStore.limpiar();
     this.sesion.set(null);
     if (refreshToken) {
