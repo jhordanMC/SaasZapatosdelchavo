@@ -19,7 +19,10 @@ export interface AsistenteRespuesta {
   herramientas: string[];
 }
 
+export type ContextoCirobot = 'empresa' | 'admin';
+
 export interface CirobotCallbacks {
+  contexto: ContextoCirobot;
   onEnviarMensaje: (texto: string) => Promise<AsistenteRespuesta>;
   onNavegar: (vista: string) => void;
 }

@@ -2,6 +2,7 @@ import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild } from '@ang
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../core/auth';
 import { AsistenteRespuesta, AsistenteService } from '../../services/asistente';
 
 /**
@@ -43,11 +44,21 @@ const VISTA_A_RUTA: Record<string, string> = {
 export class CirobotComponent implements AfterViewInit, OnDestroy {
   @ViewChild('host', { static: true }) hostRef!: ElementRef<HTMLDivElement>;
 
-  constructor(private asistenteService: AsistenteService, private router: Router) {}
+  constructor(
+    private asistenteService: AsistenteService,
+    private router: Router,
+    private authService: AuthService,
+  ) {}
 
   async ngAfterViewInit(): Promise<void> {
     const { mountCirobot } = await import('../../cirobotwc/cirobot-wrapper');
+    // Mismo criterio que el backend (router.py: id_empresa === EMPRESA_ALBA_ID),
+    // pero del lado Angular ya viene resuelto en el rol — evita duplicar esa
+    // constante acá. Sirve para que la UI (chips iniciales, etc.) no le
+    // ofrezca a un admin acciones que el backend igual le va a rechazar.
+    const contexto = this.authService.tieneRol('admin') ? 'admin' : 'empresa';
     await mountCirobot(this.hostRef.nativeElement, {
+      contexto,
       onEnviarMensaje: (texto: string) => this.enviarMensaje(texto),
       onNavegar: (vista: string) => this.navegar(vista),
     });

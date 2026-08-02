@@ -13,7 +13,11 @@ interface Mensaje {
 
 type ModoVentana = 'flotante' | 'fullscreen';
 
-const CHIPS_INICIALES = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos'];
+// Distintos según contexto — un admin no tiene tools de inventario/KPIs/tickets
+// (ver ChatbotService._tool_servers_para en el backend), así que ofrecerle esos
+// chips sería un callejón sin salida: Gemini respondería "no tengo acceso".
+const CHIPS_INICIALES_EMPRESA = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos'];
+const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard'];
 
 /**
  * Ventana de chat de Cirobot. Mensajes tipo ChatGPT/Claude (burbuja verde
@@ -85,6 +89,7 @@ export function ChatPanel({
   }
 
   const huboConversacion = mensajes.length > 0;
+  const chipsIniciales = callbacks.contexto === 'admin' ? CHIPS_INICIALES_ADMIN : CHIPS_INICIALES_EMPRESA;
   const estadoTexto = cargando
     ? 'Analizando empresa…'
     : proveedorActual
@@ -166,7 +171,7 @@ export function ChatPanel({
 
           {!huboConversacion && !cargando && (
             <div className="cbot-chips">
-              {CHIPS_INICIALES.map((s) => (
+              {chipsIniciales.map((s) => (
                 <button key={s} className="cbot-chip" onClick={() => enviar(s)}>
                   {s}
                 </button>
