@@ -41,9 +41,9 @@
   --border-default: rgba(2, 75, 64, 0.14);
   --border-strong: rgba(100, 213, 156, 0.5);
 
-  /* ── Sidebar — paleta propia (panel verde oscuro, texto claro) ── */
-  --sb-bg-top: #5f9f72;
-  --sb-bg-bottom: #4e8260;
+  /* ── Sidebar — paleta propia (panel oscuro, texto claro) ── */
+  --sb-bg-top: #0f2b23;
+  --sb-bg-bottom: #081310;
   --sb-text: rgba(255, 255, 255, 0.94);
   --sb-text-dim: rgba(255, 255, 255, 0.68);
   --sb-text-faint: rgba(255, 255, 255, 0.46);
