@@ -27,7 +27,8 @@ export interface SidebarItem {
     | 'actividad'
     | 'suscripciones'
     | 'anuncios'
-    | 'integraciones';
+    | 'integraciones'
+    | 'tickets';
   exact?: boolean;
 }
 

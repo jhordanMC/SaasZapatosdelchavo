@@ -5,6 +5,7 @@ import { Subscription, filter } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
 import { MarketplaceAlertaToastComponent } from '../marketplace-alerta-toast/marketplace-alerta-toast';
+import { CirobotComponent } from '../cirobot/cirobot';
 import { PageTitleService } from '../admin-layout/page-title';
 import { AuthService } from '../../core/auth';
 import { I18nService } from '../../core/i18n.service';
@@ -14,7 +15,7 @@ import { MarketplaceRealtimeService } from '../../services/marketplace-realtime'
 @Component({
   selector: 'app-empresa-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, MarketplaceAlertaToastComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, MarketplaceAlertaToastComponent, CirobotComponent],
   templateUrl: './empresa-layout.html',
   styleUrls: ['./empresa-layout.css'],
 })

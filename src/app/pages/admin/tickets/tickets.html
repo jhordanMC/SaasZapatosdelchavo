@@ -1,0 +1,97 @@
+<div class="content">
+
+  <!-- ═══════════════ FILTRO POR ESTADO ═══════════════ -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.activo]="filtroEstado === null" (click)="filtrarPor(null)">Todos</button>
+    <button
+      class="tab-btn"
+      *ngFor="let e of ESTADOS"
+      [class.activo]="filtroEstado === e"
+      (click)="filtrarPor(e)"
+    >{{ ETIQUETAS_ESTADO[e] }}</button>
+  </div>
+
+  <!-- ═══════════════ TABLA ═══════════════ -->
+  <div class="data-table-card">
+    <div class="estado-carga" *ngIf="cargando">
+      <span class="spinner"></span> Cargando tickets…
+    </div>
+    <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+    <div class="table-wrap" *ngIf="!cargando && tickets.length > 0">
+      <div class="table-head">
+        <span>Asunto</span>
+        <span>Empresa</span>
+        <span>Categoría</span>
+        <span>Prioridad</span>
+        <span>Estado</span>
+        <span>Fecha</span>
+      </div>
+      <div class="table-row" *ngFor="let t of tickets" (click)="abrirTicket(t)">
+        <span class="celda-asunto">{{ t.asunto }}</span>
+        <span>{{ t.nombre_empresa ?? '—' }}</span>
+        <span class="celda-categoria">{{ t.categoria }}</span>
+        <span class="celda-prioridad" [ngClass]="'prioridad-' + t.prioridad">{{ t.prioridad }}</span>
+        <span class="status-pill" [ngClass]="'estado-' + t.estado">{{ ETIQUETAS_ESTADO[t.estado] }}</span>
+        <span>{{ t.creado_en | date: 'dd/MM/yy HH:mm' }}</span>
+      </div>
+    </div>
+
+    <p class="tabla-vacia" *ngIf="!cargando && tickets.length === 0">No hay tickets con este filtro.</p>
+  </div>
+
+  <!-- ═══════════════ MODAL DETALLE ═══════════════ -->
+  <div class="modal-overlay" *ngIf="ticketSeleccionado || cargandoDetalle" (click)="cerrarDetalle()">
+    <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="cerrarDetalle()" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="estado-carga" *ngIf="cargandoDetalle">
+        <span class="spinner"></span> Cargando…
+      </div>
+
+      <ng-container *ngIf="ticketSeleccionado as t">
+        <div class="ticket-detalle-header">
+          <h2>{{ t.asunto }}</h2>
+          <span class="ticket-detalle-meta">
+            {{ t.nombre_empresa }} · reportado por {{ t.nombre_usuario_reporta }} · {{ t.creado_en | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+
+        <p class="ticket-descripcion">{{ t.descripcion }}</p>
+
+        <div class="ticket-controles">
+          <div class="filtro-campo">
+            <label>Estado</label>
+            <select [ngModel]="t.estado" (ngModelChange)="cambiarEstado($event)" [disabled]="guardandoEstado">
+              <option *ngFor="let e of ESTADOS" [value]="e">{{ ETIQUETAS_ESTADO[e] }}</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label>Asignado a</label>
+            <input type="text" placeholder="Nombre del responsable" [(ngModel)]="asignadoInput" (blur)="guardarAsignacion()" [disabled]="guardandoAsignacion" />
+          </div>
+        </div>
+
+        <div class="ticket-hilo">
+          <div class="ticket-mensaje" *ngFor="let m of t.mensajes" [ngClass]="'autor-' + m.autor_tipo">
+            <span class="ticket-mensaje-autor">{{ nombreAutor(m) }}</span>
+            <p class="ticket-mensaje-texto">{{ m.contenido }}</p>
+            <span class="ticket-mensaje-fecha">{{ m.creado_en | date: 'dd/MM HH:mm' }}</span>
+          </div>
+          <p class="tabla-vacia" *ngIf="t.mensajes.length === 0">Todavía no hay respuestas en este ticket.</p>
+        </div>
+
+        <div class="ticket-responder">
+          <textarea rows="2" placeholder="Responder al ticket…" [(ngModel)]="nuevoMensaje" [disabled]="enviandoMensaje"></textarea>
+          <button class="btn-primary" [disabled]="!nuevoMensaje.trim() || enviandoMensaje" (click)="enviarMensaje()">
+            {{ enviandoMensaje ? 'Enviando…' : 'Responder' }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

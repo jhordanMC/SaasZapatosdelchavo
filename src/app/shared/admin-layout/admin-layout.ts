@@ -4,6 +4,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/ro
 import { Subscription, filter } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar';
 import { TopbarComponent } from '../topbar/topbar';
+import { CirobotComponent } from '../cirobot/cirobot';
 import { PageTitleService } from './page-title';
 import { AuthService } from '../../core/auth';
 import { ClaveVista } from '../../services/usuarios';
@@ -20,7 +21,7 @@ import { ClaveVista } from '../../services/usuarios';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, CirobotComponent],
   templateUrl: './admin-layout.html',
   styleUrls: ['./admin-layout.css'],
 })
@@ -63,6 +64,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       if (puedeVer('anuncios')) {
         base.push({ label: 'Anuncios', route: '/admin/anuncios', icon: 'anuncios' });
       }
+      // Centro de Soporte (tickets de Cirobot) — visible para todo el
+      // staff de ALBA, sin gate de vistaGuard: el layout admin ya exige
+      // roleGuard('admin'), no hace falta un permiso más fino todavía.
+      base.push({ label: 'Centro de Soporte', route: '/admin/tickets', icon: 'tickets' });
       base.push({ label: 'Reportes', href: '#', icon: 'reportes' });
       base.push({ label: 'Configuración', href: '#', icon: 'config' });
       return base;

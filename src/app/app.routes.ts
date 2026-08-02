@@ -9,6 +9,7 @@ import { EmpresaDetalleComponent } from './pages/admin/empresa-detalle/empresa-d
 import { Suscripciones } from './pages/admin/suscripciones/suscripciones';
 import { ActividadComponent } from './pages/admin/actividad/actividad';
 import { Anuncios } from './pages/admin/anuncios/anuncios';
+import { TicketsAdminComponent } from './pages/admin/tickets/tickets';
 import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
@@ -75,6 +76,12 @@ export const routes: Routes = [
         component: Anuncios,
         data: { title: 'Anuncios', subtitle: 'Anuncios y encuestas para las empresas' },
         canActivate: [vistaGuard('anuncios')],
+      },
+      {
+        path: 'tickets',
+        component: TicketsAdminComponent,
+        data: { title: 'Centro de Soporte', subtitle: 'Tickets reportados por las empresas, incluidos los de Cirobot' },
+        // Sin vistaGuard a propósito: roleGuard('admin') del layout ya alcanza (ver admin-layout.ts).
       },
     ],
   },

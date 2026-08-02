@@ -18,6 +18,8 @@
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "chart.js": "^4.5.1",
@@ -27,6 +29,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "rxjs": "~7.8.0",
+    "three": "^0.184.0",
     "tslib": "^2.3.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
     "zone.js": "^0.16.2"
