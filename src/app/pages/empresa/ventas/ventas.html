@@ -211,6 +211,16 @@
     >
       Completar venta · S/{{ totalCarrito.toFixed(2) }}
     </button>
+
+    <button
+      class="btn-devoluciones"
+      (click)="abrirBuscadorDevolucion()"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 10h10a4 4 0 0 1 4 4v1"/><polyline points="7 6 3 10 7 14"/>
+      </svg>
+      Devoluciones
+    </button>
   </div>
 </div>
 
@@ -491,5 +501,187 @@
       </div>
     </ng-container>
 
+  </div>
+</div>
+
+
+<!-- ═══════════════ Toast: devolución registrada ═══════════════ -->
+<div class="toast-devolucion-ok" *ngIf="devolucionRegistradaOk()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+  Devolución registrada correctamente.
+</div>
+
+<!-- ═══════════════ Modal: buscar venta a devolver ═══════════════ -->
+<div class="modal-overlay" *ngIf="showBuscadorDevolucion" (click)="cerrarBuscadorDevolucion()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Devoluciones — buscar venta" (cerrar)="cerrarBuscadorDevolucion()"></app-modal-brand-header>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Folio, cliente o vendedor</label>
+        <input
+          type="text"
+          placeholder="Busca la venta a devolver…"
+          [ngModel]="busquedaDevolucionVenta"
+          (ngModelChange)="buscarVentaADevolver($event)"
+        />
+      </div>
+      <div class="cambio-resultados" *ngIf="buscandoDevolucionVenta()">
+        <span class="spinner spinner-sm"></span> Buscando…
+      </div>
+      <div class="cambio-resultados" *ngIf="!buscandoDevolucionVenta() && busquedaDevolucionVenta && resultadosDevolucionVenta().length === 0">
+        No se encontraron ventas pagadas con ese criterio.
+      </div>
+      <div class="devolucion-resultado-venta" *ngFor="let v of resultadosDevolucionVenta()" (click)="elegirVentaADevolver(v)">
+        <div class="devolucion-resultado-venta-info">
+          <span class="devolucion-resultado-venta-total">S/{{ v.total.toFixed(2) }}</span>
+          <span class="devolucion-resultado-venta-meta">
+            {{ v.nombre_cliente ?? 'Cliente genérico' }} · {{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }} · {{ v.cantidad_items }} ítem(s)
+          </span>
+        </div>
+        <span class="devolucion-resultado-venta-flecha">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Modal: registrar devolución (desde Ventas) ═══════════════ -->
+<div class="modal-overlay" *ngIf="ventaADevolver || cargandoVentaADevolver()" (click)="cerrarDevolucionPOS()">
+  <div class="modal-card modal-detalle" (click)="$event.stopPropagation()">
+    <app-modal-brand-header subtitle="Registrar devolución" (cerrar)="cerrarDevolucionPOS()"></app-modal-brand-header>
+
+    <div class="modal-body" *ngIf="cargandoVentaADevolver()">
+      <div class="estado-carga"><span class="spinner"></span> Cargando venta…</div>
+    </div>
+
+    <div class="modal-body" *ngIf="ventaADevolver as venta">
+      <button type="button" class="btn-volver-devolucion" (click)="volverABuscadorDevolucion()">‹ Elegir otra venta</button>
+
+      <p class="detalle-subtitulo">¿Qué se devuelve?</p>
+      <div class="devolucion-lineas">
+        <div class="devolucion-linea" *ngFor="let l of lineasDevolucion">
+          <div class="devolucion-linea-info">
+            <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
+            <span class="devolucion-linea-meta">
+              Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
+            </span>
+          </div>
+          <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
+            <input
+              type="number"
+              class="devolucion-linea-cantidad"
+              min="0"
+              [max]="l.disponible"
+              [ngModel]="l.cantidad"
+              (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
+            />
+            <label class="restaurar-stock-opcion devolucion-linea-checkbox" *ngIf="l.cantidad > 0">
+              <input type="checkbox" [ngModel]="l.restaurarStock" (ngModelChange)="l.restaurarStock = $event" />
+              Vuelve al stock
+            </label>
+          </div>
+          <span class="devolucion-linea-sin-disponible" *ngIf="l.disponible === 0">Ya devuelta por completo</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Proveedor de estos productos (opcional)</label>
+        <input
+          type="text"
+          list="lista-proveedores-sugeridos-pos"
+          placeholder="Nombre del proveedor"
+          [ngModel]="idProveedorDevolucion"
+          (ngModelChange)="idProveedorDevolucion = $event"
+        />
+        <datalist id="lista-proveedores-sugeridos-pos">
+          <option *ngFor="let p of proveedoresSugeridosDevolucion()" [value]="p"></option>
+        </datalist>
+      </div>
+
+      <div class="form-row">
+        <label>Motivo <span class="obligatorio">*</span></label>
+        <select [ngModel]="motivoDevolucion" (ngModelChange)="motivoDevolucion = $event">
+          <option *ngFor="let m of motivosDevolucion" [value]="m.valor">{{ m.etiqueta }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Notas (opcional)</label>
+        <textarea rows="2" placeholder="Detalle adicional" [ngModel]="notasDevolucion" (ngModelChange)="notasDevolucion = $event"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label>Forma de reembolso <span class="obligatorio">*</span></label>
+        <div class="metodo-pago-grid">
+          <button
+            type="button"
+            class="metodo-btn"
+            *ngFor="let m of metodosReembolso"
+            [class.active]="metodoReembolsoDevolucion === m.valor"
+            (click)="metodoReembolsoDevolucion = m.valor"
+          >
+            {{ m.etiqueta }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Evidencias (fotos, opcional)</label>
+        <div class="foto-venta-box">
+          <input type="file" accept="image/*" capture="environment" (change)="onFotoEvidenciaDevolucionSeleccionada($event)" id="evidenciaPOSInput" class="foto-venta-input" />
+          <label for="evidenciaPOSInput" class="btn-secondary foto-venta-label">Agregar foto de evidencia</label>
+        </div>
+        <p class="error-text" *ngIf="errorEvidenciaDevolucion">{{ errorEvidenciaDevolucion }}</p>
+        <div class="evidencias-grid" *ngIf="evidenciasDevolucion.length > 0">
+          <div class="evidencia-thumb" *ngFor="let ev of evidenciasDevolucion; let i = index">
+            <img [src]="ev" alt="Evidencia" />
+            <button type="button" class="btn-icon-danger" (click)="quitarEvidenciaDevolucion(i)">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" *ngIf="metodoReembolsoDevolucion === 'cambio_producto'">
+        <label>Buscar producto de cambio</label>
+        <input type="text" placeholder="Nombre del producto…" [ngModel]="busquedaProductoCambio" (ngModelChange)="buscarProductoCambio($event)" />
+        <div class="cambio-resultados" *ngIf="buscandoProductoCambio()"><span class="spinner spinner-sm"></span> Buscando…</div>
+        <div class="cambio-resultados" *ngIf="!buscandoProductoCambio() && resultadosProductoCambio().length > 0">
+          <div class="cambio-resultado-item" *ngFor="let p of resultadosProductoCambio()">
+            <span class="cambio-resultado-nombre">{{ p.nombre }} · S/{{ p.precio_venta.toFixed(2) }}</span>
+            <div class="cambio-resultado-variantes">
+              <button type="button" class="chip-variante" *ngFor="let v of p.variantes" [disabled]="v.stock_disponible === 0" (click)="agregarProductoCambio(p, v)">
+                {{ v.talla ?? v.sku }} ({{ v.stock_disponible }})
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="cambio-elegidos" *ngIf="productosCambio.length > 0">
+          <div class="cambio-elegido-item" *ngFor="let c of productosCambio">
+            <span>{{ c.nombre }} × {{ c.cantidad }}</span>
+            <span>S/{{ (c.precio_unitario * c.cantidad).toFixed(2) }}</span>
+            <button type="button" class="btn-icon-danger" (click)="quitarProductoCambio(c.id_variante)">✕</button>
+          </div>
+        </div>
+        <div class="cambio-resumen" *ngIf="productosCambio.length > 0">
+          <span>Valor devuelto: S/{{ totalDevolucionCalculado.toFixed(2) }}</span>
+          <span>Valor de cambio: S/{{ totalProductosCambio.toFixed(2) }}</span>
+          <span [class.ajuste-positivo]="diferenciaCambio > 0" [class.ajuste-negativo]="diferenciaCambio < 0">
+            <ng-container *ngIf="diferenciaCambio > 0">Cliente paga diferencia: S/{{ diferenciaCambio.toFixed(2) }}</ng-container>
+            <ng-container *ngIf="diferenciaCambio < 0">Se le devuelve diferencia: S/{{ (-diferenciaCambio).toFixed(2) }}</ng-container>
+            <ng-container *ngIf="diferenciaCambio === 0">Cambio exacto, sin diferencia.</ng-container>
+          </span>
+        </div>
+      </div>
+
+      <p class="error-text" *ngIf="errorDevolucion()">{{ errorDevolucion() }}</p>
+    </div>
+
+    <div class="modal-footer" *ngIf="ventaADevolver">
+      <button class="btn-clear" [disabled]="registrandoDevolucion()" (click)="cerrarDevolucionPOS()">Cancelar</button>
+      <button class="btn-primary" [disabled]="registrandoDevolucion() || cargandoVentaADevolver()" (click)="confirmarDevolucionPOS()">
+        <span class="spinner spinner-sm spinner-inline" *ngIf="registrandoDevolucion()"></span>
+        Registrar devolución
+      </button>
+    </div>
   </div>
 </div>

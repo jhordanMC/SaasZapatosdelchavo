@@ -29,11 +29,18 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { environment } from '../../../../environments/environment';
 import { SexoProducto } from '../../../services/inventario';
+import { ComprasService } from '../../../services/compras';
 import {
+  DetalleVentaRead,
+  ETIQUETAS_METODO_REEMBOLSO,
   FiltrosPOS,
+  ItemCambioProducto,
   ItemCarrito,
+  MetodoReembolso,
+  MotivoDevolucion,
   SedePOSRead,
   VentaCreate,
+  VentaListItem,
   VentaRead,
   MetodoPago,
   PagoCreate,
@@ -55,11 +62,17 @@ type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
   styleUrls: ['./ventas.css'],
 })
 export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
-  constructor(public ventasService: VentasService) {
+  constructor(public ventasService: VentasService, private comprasService: ComprasService) {
     // Debounce de 300ms: espera a que el usuario deje de teclear antes de
     // pedir la página 1 al backend con el nuevo texto de búsqueda.
     this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
       this.cargarPrimeraPaginaProductosPOS();
+    });
+    this.busquedaDevolucionVentaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((texto) => {
+      this.ejecutarBusquedaVentaADevolver(texto);
+    });
+    this.busquedaProductoCambioSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((texto) => {
+      this.ejecutarBusquedaProductoCambio(texto);
     });
   }
 
@@ -799,5 +812,290 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fotoVentaUrl = null;
     this.errorFoto = '';
     this.confirmando = false;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Devoluciones — accesible desde el botón "Devoluciones" del POS.
+  //
+  // Flujo: 1) buscar la venta (folio/cliente) → 2) elegir líneas y cantidad
+  // → 3) motivo + proveedor + evidencias → 4) forma de reembolso (si es
+  // cambio de producto, elegir el/los reemplazo(s) del mismo catálogo POS).
+  // Reutiliza los mismos endpoints que el flujo de Historial de Ventas.
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ── Paso 1: buscar la venta a devolver ───────────────────────────────────
+  showBuscadorDevolucion = false;
+  busquedaDevolucionVenta = '';
+  private readonly busquedaDevolucionVentaSubject = new Subject<string>();
+  resultadosDevolucionVenta = signal<VentaListItem[]>([]);
+  buscandoDevolucionVenta = signal(false);
+
+  abrirBuscadorDevolucion(): void {
+    this.showBuscadorDevolucion = true;
+    this.busquedaDevolucionVenta = '';
+    this.resultadosDevolucionVenta.set([]);
+    this.ventaADevolver = null;
+  }
+
+  cerrarBuscadorDevolucion(): void {
+    this.showBuscadorDevolucion = false;
+  }
+
+  buscarVentaADevolver(valor: string): void {
+    this.busquedaDevolucionVenta = valor;
+    this.busquedaDevolucionVentaSubject.next(valor);
+  }
+
+  private ejecutarBusquedaVentaADevolver(texto: string): void {
+    if (!texto.trim()) {
+      this.resultadosDevolucionVenta.set([]);
+      return;
+    }
+    this.buscandoDevolucionVenta.set(true);
+    this.ventasService.listarVentas({ estado: 'pagada', busqueda: texto.trim() }, 0, 15).subscribe({
+      next: (lista) => {
+        this.resultadosDevolucionVenta.set(lista.items);
+        this.buscandoDevolucionVenta.set(false);
+      },
+      error: () => {
+        this.resultadosDevolucionVenta.set([]);
+        this.buscandoDevolucionVenta.set(false);
+      },
+    });
+  }
+
+  // ── Paso 2: elegir la venta → editar líneas + resto del formulario ───────
+  ventaADevolver: VentaRead | null = null;
+  cargandoVentaADevolver = signal(false);
+  lineasDevolucion: {
+    detalle: DetalleVentaRead;
+    disponible: number;
+    cantidad: number;
+    restaurarStock: boolean;
+  }[] = [];
+
+  motivoDevolucion: MotivoDevolucion = 'producto_defectuoso';
+  readonly motivosDevolucion: { valor: MotivoDevolucion; etiqueta: string }[] = [
+    { valor: 'producto_defectuoso', etiqueta: 'Producto defectuoso' },
+    { valor: 'talla_incorrecta', etiqueta: 'Talla incorrecta' },
+    { valor: 'arrepentimiento', etiqueta: 'Arrepentimiento del cliente' },
+    { valor: 'otro', etiqueta: 'Otro' },
+  ];
+  notasDevolucion = '';
+  idProveedorDevolucion: string | null = null;
+  proveedoresSugeridosDevolucion = signal<string[]>([]);
+
+  metodoReembolsoDevolucion: MetodoReembolso = 'efectivo';
+  readonly metodosReembolso: { valor: MetodoReembolso; etiqueta: string }[] = [
+    { valor: 'efectivo', etiqueta: ETIQUETAS_METODO_REEMBOLSO.efectivo },
+    { valor: 'yape', etiqueta: ETIQUETAS_METODO_REEMBOLSO.yape },
+    { valor: 'plin', etiqueta: ETIQUETAS_METODO_REEMBOLSO.plin },
+    { valor: 'cambio_producto', etiqueta: ETIQUETAS_METODO_REEMBOLSO.cambio_producto },
+  ];
+
+  evidenciasDevolucion: string[] = [];
+  errorEvidenciaDevolucion = '';
+
+  busquedaProductoCambio = '';
+  private readonly busquedaProductoCambioSubject = new Subject<string>();
+  resultadosProductoCambio = signal<ProductoPOSRead[]>([]);
+  buscandoProductoCambio = signal(false);
+  productosCambio: ItemCambioProducto[] = [];
+
+  registrandoDevolucion = signal(false);
+  errorDevolucion = signal<string | null>(null);
+  devolucionRegistradaOk = signal(false);
+
+  elegirVentaADevolver(item: VentaListItem): void {
+    this.showBuscadorDevolucion = false;
+    this.cargandoVentaADevolver.set(true);
+    this.lineasDevolucion = [];
+    this.motivoDevolucion = 'producto_defectuoso';
+    this.notasDevolucion = '';
+    this.idProveedorDevolucion = null;
+    this.metodoReembolsoDevolucion = 'efectivo';
+    this.evidenciasDevolucion = [];
+    this.errorEvidenciaDevolucion = '';
+    this.productosCambio = [];
+    this.busquedaProductoCambio = '';
+    this.resultadosProductoCambio.set([]);
+    this.errorDevolucion.set(null);
+
+    this.proveedoresSugeridosDevolucion.set(
+      Array.from(new Set(this.comprasService.obtenerResumenProveedores().map((p) => p.proveedor)))
+    );
+
+    this.ventasService.obtenerVenta(item.id_venta).subscribe({
+      next: (venta) => {
+        this.ventaADevolver = venta;
+        this.lineasDevolucion = venta.detalles.map((detalle) => ({
+          detalle,
+          disponible: detalle.cantidad - detalle.cantidad_devuelta,
+          cantidad: 0,
+          restaurarStock: true,
+        }));
+        this.cargandoVentaADevolver.set(false);
+      },
+      error: () => {
+        this.errorDevolucion.set('No se pudo cargar la venta seleccionada.');
+        this.cargandoVentaADevolver.set(false);
+      },
+    });
+  }
+
+  volverABuscadorDevolucion(): void {
+    this.ventaADevolver = null;
+    this.showBuscadorDevolucion = true;
+  }
+
+  cerrarDevolucionPOS(): void {
+    if (this.registrandoDevolucion()) return;
+    this.showBuscadorDevolucion = false;
+    this.ventaADevolver = null;
+    this.lineasDevolucion = [];
+    this.productosCambio = [];
+    this.evidenciasDevolucion = [];
+  }
+
+  cambiarCantidadDevolucion(linea: (typeof this.lineasDevolucion)[number], valor: number): void {
+    linea.cantidad = Math.max(0, Math.min(valor || 0, linea.disponible));
+  }
+
+  /** Suma de lo marcado a devolver en las líneas (S/), antes de restar el producto de cambio. */
+  get totalDevolucionCalculado(): number {
+    return this.lineasDevolucion.reduce((acc, l) => {
+      if (l.cantidad <= 0) return acc;
+      const precioUnit = l.detalle.subtotal / Math.max(1, l.detalle.cantidad);
+      return acc + precioUnit * l.cantidad;
+    }, 0);
+  }
+
+  get totalProductosCambio(): number {
+    return this.productosCambio.reduce((acc, p) => acc + p.precio_unitario * p.cantidad, 0);
+  }
+
+  get diferenciaCambio(): number {
+    return this.totalDevolucionCalculado - this.totalProductosCambio;
+  }
+
+  onFotoEvidenciaDevolucionSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) return;
+    this.errorEvidenciaDevolucion = '';
+    if (!archivo.type.startsWith('image/')) {
+      this.errorEvidenciaDevolucion = 'El archivo debe ser una imagen (foto).';
+      input.value = '';
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => {
+      this.evidenciasDevolucion = [...this.evidenciasDevolucion, lector.result as string];
+    };
+    lector.onerror = () => (this.errorEvidenciaDevolucion = 'No se pudo leer la imagen. Intenta nuevamente.');
+    lector.readAsDataURL(archivo);
+    input.value = '';
+  }
+
+  quitarEvidenciaDevolucion(index: number): void {
+    this.evidenciasDevolucion = this.evidenciasDevolucion.filter((_, i) => i !== index);
+  }
+
+  buscarProductoCambio(valor: string): void {
+    this.busquedaProductoCambio = valor;
+    this.busquedaProductoCambioSubject.next(valor);
+  }
+
+  private ejecutarBusquedaProductoCambio(texto: string): void {
+    if (!texto.trim()) {
+      this.resultadosProductoCambio.set([]);
+      return;
+    }
+    this.buscandoProductoCambio.set(true);
+    this.ventasService.listarProductosPOS(null, { busqueda: texto.trim() }, 0, 10).subscribe({
+      next: (resp) => {
+        this.resultadosProductoCambio.set(resp.items);
+        this.buscandoProductoCambio.set(false);
+      },
+      error: () => {
+        this.resultadosProductoCambio.set([]);
+        this.buscandoProductoCambio.set(false);
+      },
+    });
+  }
+
+  agregarProductoCambio(p: ProductoPOSRead, variante: VariantePOSRead): void {
+    const existente = this.productosCambio.find((i) => i.id_variante === variante.id_variante);
+    if (existente) {
+      existente.cantidad += 1;
+      return;
+    }
+    this.productosCambio.push({
+      id_variante: variante.id_variante,
+      nombre: `${p.nombre}${variante.talla ? ` (talla ${variante.talla})` : ''}`,
+      talla: variante.talla,
+      cantidad: 1,
+      precio_unitario: p.precio_venta,
+      id_ubicacion_origen: variante.id_ubicacion_origen ?? '',
+    });
+  }
+
+  quitarProductoCambio(idVariante: string): void {
+    this.productosCambio = this.productosCambio.filter((i) => i.id_variante !== idVariante);
+  }
+
+  confirmarDevolucionPOS(): void {
+    const venta = this.ventaADevolver;
+    if (!venta) return;
+
+    const items = this.lineasDevolucion
+      .filter((l) => l.cantidad > 0)
+      .map((l) => ({
+        id_detalle_venta: l.detalle.id_detalle_venta,
+        cantidad: l.cantidad,
+        restaurar_stock: l.restaurarStock,
+        id_proveedor: this.idProveedorDevolucion,
+      }));
+
+    if (items.length === 0) {
+      this.errorDevolucion.set('Indica al menos una cantidad a devolver en alguna línea.');
+      return;
+    }
+
+    if (this.metodoReembolsoDevolucion === 'cambio_producto' && this.productosCambio.length === 0) {
+      this.errorDevolucion.set('Elige al menos un producto de cambio, o cambia la forma de reembolso.');
+      return;
+    }
+
+    this.registrandoDevolucion.set(true);
+    this.errorDevolucion.set(null);
+    this.ventasService
+      .registrarDevolucion(venta.id_venta, {
+        motivo: this.motivoDevolucion,
+        notas: this.notasDevolucion.trim() || null,
+        items,
+        metodo_reembolso: this.metodoReembolsoDevolucion,
+        evidencias: this.evidenciasDevolucion,
+        ...(this.metodoReembolsoDevolucion === 'cambio_producto'
+          ? { productos_cambio: this.productosCambio, monto_efectivo_ajuste: this.diferenciaCambio }
+          : {}),
+      })
+      .subscribe({
+        next: () => {
+          this.registrandoDevolucion.set(false);
+          this.ventaADevolver = null;
+          this.lineasDevolucion = [];
+          this.productosCambio = [];
+          this.evidenciasDevolucion = [];
+          this.devolucionRegistradaOk.set(true);
+          setTimeout(() => this.devolucionRegistradaOk.set(false), 3500);
+          // Refresca el catálogo por si la devolución restauró stock visible.
+          this.cargarPrimeraPaginaProductosPOS();
+        },
+        error: (err) => {
+          this.registrandoDevolucion.set(false);
+          this.errorDevolucion.set(err?.error?.detail ?? 'No se pudo registrar la devolución.');
+        },
+      });
   }
 }

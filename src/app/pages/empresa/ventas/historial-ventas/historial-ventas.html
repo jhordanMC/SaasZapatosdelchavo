@@ -224,6 +224,8 @@
           <div class="timeline-celda">Fecha</div>
           <div class="timeline-celda">Venta relacionada</div>
           <div class="timeline-celda">Motivo</div>
+          <div class="timeline-celda">Proveedor</div>
+          <div class="timeline-celda">Tipo</div>
           <div class="timeline-celda">Usuario</div>
           <div class="timeline-celda">Monto devuelto</div>
           <div class="timeline-celda">Estado</div>
@@ -234,6 +236,8 @@
           <div class="timeline-celda timeline-fecha">{{ d.creado_en | date: 'dd/MM/yyyy HH:mm' }}</div>
           <div class="timeline-celda timeline-detalle" [title]="'Venta del ' + (d.fecha_venta | date: 'dd/MM/yyyy') + ' · S/' + d.total_venta.toFixed(2)">Venta del {{ d.fecha_venta | date: 'dd/MM/yyyy' }} · S/{{ d.total_venta.toFixed(2) }}</div>
           <div class="timeline-celda timeline-motivo">{{ etiquetaMotivoDevolucion(d.motivo) }}</div>
+          <div class="timeline-celda timeline-proveedor">{{ d.nombre_proveedor ?? '—' }}</div>
+          <div class="timeline-celda timeline-tipo">{{ etiquetaTipoDevolucion(d) }}</div>
           <div class="timeline-celda timeline-usuario-dev">{{ d.nombre_usuario ?? '—' }}</div>
           <div class="timeline-celda timeline-total valor-monto">−S/{{ d.total_devuelto.toFixed(2) }}</div>
           <div class="timeline-celda timeline-estado"><span class="status-pill" [ngClass]="'status-pill-devolucion-' + d.estado">{{ etiquetaEstadoDevolucion(d.estado) }}</span></div>
@@ -408,33 +412,59 @@
     <div class="modal-body" *ngIf="ventaADevolver() as venta">
       <p class="detalle-subtitulo">¿Qué se devuelve?</p>
       <div class="devolucion-lineas">
-        <div class="devolucion-linea" *ngFor="let l of lineasDevolucion">
-          <div class="devolucion-linea-info">
-            <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
-            <span class="devolucion-linea-meta">
-              Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
-            </span>
+        <div class="devolucion-linea devolucion-linea-col" *ngFor="let l of lineasDevolucion">
+          <div class="devolucion-linea-fila-top">
+            <div class="devolucion-linea-info">
+              <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
+              <span class="devolucion-linea-meta">
+                Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
+              </span>
+            </div>
+            <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
+              <input
+                type="number"
+                class="devolucion-linea-cantidad"
+                min="0"
+                [max]="l.disponible"
+                [ngModel]="l.cantidad"
+                (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
+              />
+              <label class="restaurar-stock-opcion devolucion-linea-checkbox" *ngIf="l.cantidad > 0">
+                <input type="checkbox" [ngModel]="l.restaurarStock" (ngModelChange)="l.restaurarStock = $event" />
+                Vuelve al stock
+              </label>
+            </div>
+            <span class="devolucion-linea-sin-disponible" *ngIf="l.disponible === 0">Ya devuelta por completo</span>
           </div>
-          <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
-            <input
-              type="number"
-              class="devolucion-linea-cantidad"
-              min="0"
-              [max]="l.disponible"
-              [ngModel]="l.cantidad"
-              (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
-            />
-            <label class="restaurar-stock-opcion devolucion-linea-checkbox" *ngIf="l.cantidad > 0">
-              <input type="checkbox" [ngModel]="l.restaurarStock" (ngModelChange)="l.restaurarStock = $event" />
-              Vuelve al stock
-            </label>
+
+          <!-- Proveedor y motivo puntual — solo si esta línea sí se está devolviendo -->
+          <div class="devolucion-linea-fila-detalle" *ngIf="l.cantidad > 0">
+            <div class="devolucion-linea-detalle-campo">
+              <label>Proveedor de este producto</label>
+              <input
+                type="text"
+                list="lista-proveedores-sugeridos"
+                placeholder="Nombre del proveedor (opcional)"
+                [ngModel]="l.idProveedor"
+                (ngModelChange)="l.idProveedor = $event"
+              />
+            </div>
+            <div class="devolucion-linea-detalle-campo">
+              <label>Motivo de esta línea</label>
+              <select [ngModel]="l.motivoLinea" (ngModelChange)="l.motivoLinea = $event">
+                <option [ngValue]="null">Usar el motivo general</option>
+                <option *ngFor="let m of motivosDevolucion" [value]="m.valor">{{ m.etiqueta }}</option>
+              </select>
+            </div>
           </div>
-          <span class="devolucion-linea-sin-disponible" *ngIf="l.disponible === 0">Ya devuelta por completo</span>
         </div>
       </div>
+      <datalist id="lista-proveedores-sugeridos">
+        <option *ngFor="let p of proveedoresSugeridos()" [value]="p"></option>
+      </datalist>
 
       <div class="form-group">
-        <label>Motivo <span class="obligatorio">*</span></label>
+        <label>Motivo general <span class="obligatorio">*</span></label>
         <select class="devolucion-motivo-select" [ngModel]="motivoDevolucion" (ngModelChange)="motivoDevolucion = $event">
           <option *ngFor="let m of motivosDevolucion" [value]="m.valor">{{ m.etiqueta }}</option>
         </select>
@@ -448,6 +478,100 @@
           [ngModel]="notasDevolucion"
           (ngModelChange)="notasDevolucion = $event"
         ></textarea>
+      </div>
+
+      <!-- ═══════ Forma de reembolso ═══════ -->
+      <div class="form-group">
+        <label>Forma de reembolso <span class="obligatorio">*</span></label>
+        <div class="metodo-pago-grid">
+          <button
+            type="button"
+            class="metodo-btn"
+            *ngFor="let m of metodosReembolso"
+            [class.active]="metodoReembolso === m.valor"
+            (click)="metodoReembolso = m.valor"
+          >
+            {{ m.etiqueta }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════ Evidencias (fotos) ═══════ -->
+      <div class="form-group">
+        <label>Evidencias (fotos, opcional)</label>
+        <div class="foto-venta-box">
+          <input type="file" accept="image/*" capture="environment" (change)="onFotoEvidenciaSeleccionada($event)" id="evidenciaInput" class="foto-venta-input" />
+          <label for="evidenciaInput" class="btn-secondary foto-venta-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Agregar foto de evidencia
+          </label>
+        </div>
+        <p class="error-text" *ngIf="errorEvidencia">{{ errorEvidencia }}</p>
+        <div class="evidencias-grid" *ngIf="evidencias.length > 0">
+          <div class="evidencia-thumb" *ngFor="let ev of evidencias; let i = index">
+            <img [src]="ev" alt="Evidencia de la devolución" />
+            <button type="button" class="btn-icon-danger" (click)="quitarEvidencia(i)">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ Cambio de producto ═══════ -->
+      <div class="form-group" *ngIf="metodoReembolso === 'cambio_producto'">
+        <label>Buscar producto de cambio</label>
+        <input
+          type="text"
+          placeholder="Nombre del producto…"
+          [ngModel]="busquedaProductoCambio"
+          (ngModelChange)="buscarProductoCambio($event)"
+        />
+        <div class="cambio-resultados" *ngIf="buscandoProductoCambio()">
+          <span class="spinner spinner-sm"></span> Buscando…
+        </div>
+        <div class="cambio-resultados" *ngIf="!buscandoProductoCambio() && resultadosProductoCambio().length > 0">
+          <div class="cambio-resultado-item" *ngFor="let p of resultadosProductoCambio()">
+            <span class="cambio-resultado-nombre">{{ p.nombre }} · S/{{ p.precio_venta.toFixed(2) }}</span>
+            <div class="cambio-resultado-variantes">
+              <button
+                type="button"
+                class="chip-variante"
+                *ngFor="let v of p.variantes"
+                [disabled]="v.stock_disponible === 0"
+                (click)="agregarProductoCambio(p, v)"
+              >
+                {{ v.talla ?? v.sku }} ({{ v.stock_disponible }})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cambio-elegidos" *ngIf="productosCambio.length > 0">
+          <div class="cambio-elegido-item" *ngFor="let c of productosCambio">
+            <span>{{ c.nombre }} × {{ c.cantidad }}</span>
+            <span>S/{{ (c.precio_unitario * c.cantidad).toFixed(2) }}</span>
+            <button type="button" class="btn-icon-danger" (click)="quitarProductoCambio(c.id_variante)">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="cambio-resumen" *ngIf="productosCambio.length > 0">
+          <span>Valor devuelto: S/{{ totalDevolucionCalculado.toFixed(2) }}</span>
+          <span>Valor de cambio: S/{{ totalProductosCambio.toFixed(2) }}</span>
+          <span [class.ajuste-positivo]="diferenciaCambio > 0" [class.ajuste-negativo]="diferenciaCambio < 0">
+            <ng-container *ngIf="diferenciaCambio > 0">Cliente paga diferencia: S/{{ diferenciaCambio.toFixed(2) }}</ng-container>
+            <ng-container *ngIf="diferenciaCambio < 0">Se le devuelve diferencia: S/{{ (-diferenciaCambio).toFixed(2) }}</ng-container>
+            <ng-container *ngIf="diferenciaCambio === 0">Cambio exacto, sin diferencia.</ng-container>
+          </span>
+        </div>
       </div>
 
       <p class="error-text" *ngIf="errorDevolucion()">{{ errorDevolucion() }}</p>

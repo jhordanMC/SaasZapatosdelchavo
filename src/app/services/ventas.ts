@@ -193,17 +193,72 @@ export interface EliminarVentaRequest {
 export type MotivoDevolucion = 'producto_defectuoso' | 'talla_incorrecta' | 'arrepentimiento' | 'otro';
 export type EstadoDevolucion = 'pendiente' | 'procesada' | 'rechazada';
 
+/**
+ * Cómo se le devuelve el dinero/valor al cliente.
+ * - efectivo / yape / plin: se le entrega el monto por ese medio.
+ * - cambio_producto: no sale plata, se lleva otro(s) producto(s) del catálogo
+ *   (mismo valor, mayor o menor — ver `monto_efectivo_ajuste`).
+ *
+ * NOTA PARA BACKEND: campo nuevo `metodo_reembolso` en la tabla de
+ * devoluciones (mismo dominio que MetodoPago pero sin 'tarjeta'/'transferencia',
+ * ya que una devolución no revierte un cobro con tarjeta, se paga aparte).
+ */
+export type MetodoReembolso = 'efectivo' | 'yape' | 'plin' | 'cambio_producto';
+
+/**
+ * Tipo de devolución — se calcula en el frontend a partir de lo registrado,
+ * no es un campo que el usuario elige directamente:
+ * - 'total': se devolvieron todas las unidades de todas las líneas de la venta.
+ * - 'cambio_producto': el reembolso fue 100% con producto(s) de reemplazo.
+ * - 'cambio_con_ajuste': cambio de producto + diferencia en efectivo/yape/plin.
+ * - 'parcial': cualquier otro caso (se devolvió solo una parte de la venta en dinero).
+ */
+export type TipoDevolucion = 'parcial' | 'total' | 'cambio_producto' | 'cambio_con_ajuste';
+
 export interface ItemDevolucionRequest {
   id_detalle_venta: string;
   cantidad: number;
   /** true (default) = esa cantidad vuelve al stock. false = se dio de baja (dañada/perdida). Es por línea. */
   restaurar_stock: boolean;
+  /**
+   * Proveedor al que corresponde este producto — para poder medir tasa de
+   * devolución por proveedor en el dashboard. Texto libre (mismo dominio que
+   * CompraRead.proveedor); null/omitido si no se conoce.
+   */
+  id_proveedor?: string | null;
+  /** Motivo puntual de esta línea, si es distinto al motivo general de la devolución. */
+  motivo_linea?: MotivoDevolucion | null;
+}
+
+/** Producto de reemplazo elegido cuando el reembolso es por cambio de producto. */
+export interface ItemCambioProducto {
+  id_variante: string;
+  nombre: string;
+  talla: string | null;
+  cantidad: number;
+  precio_unitario: number;
+  id_ubicacion_origen: string;
 }
 
 export interface DevolucionRequest {
   motivo: MotivoDevolucion;
   notas?: string | null;
   items: ItemDevolucionRequest[];
+  /** Forma en la que se le devuelve el valor al cliente. */
+  metodo_reembolso: MetodoReembolso;
+  /**
+   * Fotos de evidencia (producto defectuoso, etiqueta, etc.) como data URL
+   * base64 — mismo patrón que la foto de comprobante del checkout de venta.
+   */
+  evidencias?: string[];
+  /** Solo si metodo_reembolso === 'cambio_producto': producto(s) que se lleva el cliente. */
+  productos_cambio?: ItemCambioProducto[];
+  /**
+   * Solo relevante junto con productos_cambio: diferencia en efectivo/yape/plin
+   * entre lo devuelto y el valor del producto de cambio.
+   * Positivo = el cliente paga esa diferencia. Negativo = se le devuelve esa diferencia.
+   */
+  monto_efectivo_ajuste?: number;
 }
 
 export interface DetalleDevolucionRead {
@@ -215,6 +270,8 @@ export interface DetalleDevolucionRead {
   cantidad: number;
   restaurar_stock: boolean;
   monto_devuelto: number;
+  id_proveedor: string | null;
+  motivo_linea: MotivoDevolucion | null;
 }
 
 export interface DevolucionRead {
@@ -228,6 +285,10 @@ export interface DevolucionRead {
   estado: EstadoDevolucion;
   detalles: DetalleDevolucionRead[];
   creado_en: string;
+  metodo_reembolso: MetodoReembolso;
+  evidencias: string[];
+  productos_cambio: ItemCambioProducto[];
+  monto_efectivo_ajuste: number;
 }
 
 /** Versión resumida (sin líneas) para la tabla de Historial de devoluciones. */
@@ -241,7 +302,33 @@ export interface DevolucionListItem {
   total_devuelto: number;
   estado: EstadoDevolucion;
   creado_en: string;
+  metodo_reembolso: MetodoReembolso;
+  /** Proveedor predominante de la devolución (el de mayor monto en sus líneas), para la columna del historial. */
+  nombre_proveedor: string | null;
 }
+
+/** Deriva el tipo de devolución a partir de lo registrado — usado en historial y dashboard. */
+export function tipoDevolucion(d: Pick<DevolucionListItem, 'metodo_reembolso' | 'total_venta' | 'total_devuelto'>): TipoDevolucion {
+  if (d.metodo_reembolso === 'cambio_producto') {
+    return 'cambio_producto';
+  }
+  if (d.total_devuelto >= d.total_venta) return 'total';
+  return 'parcial';
+}
+
+export const ETIQUETAS_TIPO_DEVOLUCION: Record<TipoDevolucion, string> = {
+  parcial: 'Devolución parcial',
+  total: 'Devolución total',
+  cambio_producto: 'Cambio de producto',
+  cambio_con_ajuste: 'Cambio + ajuste en efectivo',
+};
+
+export const ETIQUETAS_METODO_REEMBOLSO: Record<MetodoReembolso, string> = {
+  efectivo: 'Efectivo',
+  yape: 'Yape',
+  plin: 'Plin',
+  cambio_producto: 'Cambio de producto',
+};
 
 export interface FiltrosHistorialDevoluciones {
   estado?: EstadoDevolucion;
@@ -259,6 +346,16 @@ export interface FiltrosHistorialDevoluciones {
 export interface UsuarioDevolucionHistorial {
   id_usuario: string;
   nombre_usuario: string;
+}
+
+/** Resultado agregado para la mini-tarjeta de devoluciones del Dashboard. */
+export interface ResumenDevolucionesDashboard {
+  cantidadDevoluciones: number;
+  unidadesDevueltas: number;
+  porProveedor: { proveedor: string; cantidad: number }[];
+  porTipo: Record<TipoDevolucion, number>;
+  /** Suma de lo que sí salió como plata real (excluye cambios de producto puros). */
+  impactoGanancia: number;
 }
 
 export interface ListaVentas {
@@ -431,6 +528,54 @@ export class VentasService {
     return this.http.post<MensajeResponse>(`${this.base}/devoluciones/${idDevolucion}/eliminar`, {});
   }
 
+  /**
+   * Resumen de devoluciones de un rango de fechas para la mini-tarjeta del
+   * Dashboard: cuántas unidades se devolvieron, agrupadas por proveedor y
+   * por tipo (parcial/total/cambio), y cuánto de eso impacta la ganancia
+   * del período (solo cuenta como salida de dinero real — un cambio de
+   * producto sin ajuste en efectivo no saca plata de caja).
+   *
+   * Trae TODAS las devoluciones 'procesada' del rango (sin paginar, tamaño
+   * de página grande) porque es para agregación, no para listar en tabla.
+   */
+  resumenDevolucionesDashboard(desde: string, hasta: string): Observable<ResumenDevolucionesDashboard> {
+    return new Observable((observer) => {
+      this.listarDevoluciones({ estado: 'procesada', desde, hasta }, 0, 1000).subscribe({
+        next: (lista) => {
+          const items = lista.items;
+          const porProveedor = new Map<string, number>();
+          const porTipo: Record<TipoDevolucion, number> = { parcial: 0, total: 0, cambio_producto: 0, cambio_con_ajuste: 0 };
+          let impactoGanancia = 0;
+          let unidadesDevueltas = 0;
+
+          for (const d of items) {
+            const tipo = tipoDevolucion(d);
+            porTipo[tipo] += 1;
+            const prov = d.nombre_proveedor || 'Sin proveedor';
+            porProveedor.set(prov, (porProveedor.get(prov) ?? 0) + 1);
+            // Salida de dinero real: todo lo que no fue 100% cambio de producto.
+            if (d.metodo_reembolso !== 'cambio_producto') {
+              impactoGanancia += d.total_devuelto;
+            }
+          }
+          unidadesDevueltas = items.length;
+
+          observer.next({
+            cantidadDevoluciones: items.length,
+            unidadesDevueltas,
+            porProveedor: Array.from(porProveedor.entries())
+              .map(([proveedor, cantidad]) => ({ proveedor, cantidad }))
+              .sort((a, b) => b.cantidad - a.cantidad),
+            porTipo,
+            impactoGanancia,
+          });
+          observer.complete();
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
   // ── Gestión del carrito (local) ──────────────────────────────────────────
 
   agregarAlCarrito(item: ItemCarrito): void {
@@ -508,7 +653,7 @@ export class VentasService {
   }
 
   // ── Mocks para Dashboard y Analítica (Temporal) ──────────────────────────
-  // Estos métodos restauran la compilación para los componentes que aún 
+  // Estos métodos restauran la compilación para los componentes que aún
   // no han sido migrados a llamadas HTTP.
 
   historial(): any[] {
@@ -539,4 +684,3 @@ export class VentasService {
     ];
   }
 }
-

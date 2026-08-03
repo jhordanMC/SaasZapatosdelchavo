@@ -805,3 +805,122 @@
     transition: none;
   }
 }
+
+/* ═══════════════ Devoluciones (accesible desde el POS) ═══════════════ */
+.btn-devoluciones {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-default);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-devoluciones:hover { background: var(--bg-surface); border-color: var(--brand-deep); }
+
+.modal-detalle { width: 480px; max-height: 88vh; display: flex; flex-direction: column; }
+.modal-detalle .modal-body { overflow-y: auto; }
+.detalle-subtitulo { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin: 4px 0 8px; }
+
+.devolucion-resultado-venta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.devolucion-resultado-venta:hover { border-color: var(--brand-deep); background: var(--bg-surface); }
+.devolucion-resultado-venta-info { display: flex; flex-direction: column; gap: 2px; }
+.devolucion-resultado-venta-total { font-size: 13px; font-weight: 700; }
+.devolucion-resultado-venta-meta { font-size: 11px; color: var(--text-tertiary); }
+.devolucion-resultado-venta-flecha { font-size: 18px; color: var(--text-tertiary); }
+
+.btn-volver-devolucion {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 10px;
+}
+
+.devolucion-lineas { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; margin-bottom: 12px; }
+.devolucion-linea {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+}
+.devolucion-linea-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.devolucion-linea-nombre { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.devolucion-linea-meta { font-size: 11px; color: var(--text-tertiary); }
+.devolucion-linea-controles { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.devolucion-linea-cantidad {
+  width: 56px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--border-default);
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+.devolucion-linea-checkbox { font-size: 11.5px; }
+.devolucion-linea-sin-disponible { font-size: 11.5px; color: var(--text-tertiary); font-style: italic; flex-shrink: 0; }
+.restaurar-stock-opcion { display: flex; align-items: center; gap: 4px; }
+
+/* Evidencias / cambio de producto — mismos nombres que en Historial de Ventas */
+.evidencias-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 8px; }
+.evidencia-thumb { position: relative; width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
+.evidencia-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.evidencia-thumb .btn-icon-danger { position: absolute; top: 4px; right: 4px; }
+
+.cambio-resultados { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; margin-top: 6px; font-size: 12px; color: var(--text-secondary); }
+.cambio-resultado-item { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-canvas); }
+.cambio-resultado-nombre { font-size: 12px; font-weight: 600; }
+.cambio-resultado-variantes { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-variante { padding: 4px 10px; border-radius: 999px; border: 1.5px solid var(--border-default); background: var(--bg-surface); font-size: 11px; font-weight: 600; cursor: pointer; }
+.chip-variante:disabled { opacity: 0.4; cursor: not-allowed; }
+.cambio-elegidos { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.cambio-elegido-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; background: var(--bg-surface); font-size: 12px; }
+.cambio-resumen { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--bg-surface); font-size: 12px; font-weight: 600; }
+.cambio-resumen .ajuste-positivo { color: var(--color-danger, #d33); }
+.cambio-resumen .ajuste-negativo { color: var(--color-success, #1a9c5a); }
+
+.toast-devolucion-ok {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--brand-deep);
+  color: var(--text-on-brand-deep);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 1000;
+  animation: selectPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 640px) {
+  .modal-card, .modal-detalle { width: 100%; max-width: 94vw; }
+}
