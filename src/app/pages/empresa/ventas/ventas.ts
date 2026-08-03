@@ -54,6 +54,16 @@ import {
 
 type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 
+/** Una línea de pago dentro del checkout mixto (varios métodos en una sola venta). */
+interface LineaPagoMixto {
+  metodo: MetodoPago;
+  monto: number;
+  /** Solo si metodo === 'efectivo': lo que el cliente entrega en físico (para calcular vuelto de esa línea). */
+  montoRecibido: number;
+  fotoUrl: string | null;
+  errorFoto: string;
+}
+
 @Component({
   selector: 'app-ventas',
   standalone: true,
@@ -142,6 +152,16 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   montoPagado = 0;
   fotoVentaUrl: string | null = null;
   errorFoto = '';
+
+  // ── Pago mixto (varios métodos en una sola venta) ────────────────────────
+  pagoMixto = false;
+  pagosDivididos: LineaPagoMixto[] = [];
+  readonly metodosPagoMixto: { valor: MetodoPago; etiqueta: string }[] = [
+    { valor: 'efectivo', etiqueta: 'Efectivo' },
+    { valor: 'yape', etiqueta: 'Yape' },
+    { valor: 'plin', etiqueta: 'Plin' },
+    { valor: 'transferencia', etiqueta: 'Transferencia' },
+  ];
   checkoutError = '';
   ventaConfirmada: VentaRead | null = null;
   confirmando = false;
@@ -723,6 +743,109 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.max(0, this.montoPagado - this.totalCarrito);
   }
 
+  // ── Pago mixto (varios métodos en una sola venta) ────────────────────────
+  // Ej: S/1000 en efectivo + S/500 en Yape para completar una venta de S/1500.
+  // El backend ya soporta un arreglo de pagos por venta (VentaCreate.pagos);
+  // esto solo activa esa capacidad desde la UI, con su propia validación.
+
+  activarPagoMixto(): void {
+    this.pagoMixto = true;
+    // Arranca con una sola línea prellenada por el total, para que el
+    // usuario solo tenga que ajustar montos y agregar la(s) línea(s) que falten.
+    this.pagosDivididos = [
+      { metodo: 'efectivo', monto: this.totalCarrito, montoRecibido: this.totalCarrito, fotoUrl: null, errorFoto: '' },
+    ];
+    this.checkoutError = '';
+  }
+
+  desactivarPagoMixto(): void {
+    this.pagoMixto = false;
+    this.pagosDivididos = [];
+    this.checkoutError = '';
+  }
+
+  agregarLineaPago(): void {
+    const usados = new Set(this.pagosDivididos.map((l) => l.metodo));
+    const siguienteMetodo = this.metodosPagoMixto.find((m) => !usados.has(m.valor))?.valor ?? 'efectivo';
+    this.pagosDivididos.push({
+      metodo: siguienteMetodo,
+      monto: Math.max(0, this.saldoPendientePagoMixto),
+      montoRecibido: Math.max(0, this.saldoPendientePagoMixto),
+      fotoUrl: null,
+      errorFoto: '',
+    });
+  }
+
+  quitarLineaPago(index: number): void {
+    this.pagosDivididos.splice(index, 1);
+  }
+
+  cambiarMetodoLinea(linea: LineaPagoMixto, metodo: MetodoPago): void {
+    linea.metodo = metodo;
+    linea.errorFoto = '';
+    if (metodo !== 'efectivo') linea.fotoUrl = null;
+  }
+
+  actualizarMontoLinea(linea: LineaPagoMixto, valor: number): void {
+    linea.monto = Math.max(0, valor || 0);
+    if (linea.metodo === 'efectivo' && linea.montoRecibido < linea.monto) {
+      linea.montoRecibido = linea.monto;
+    }
+  }
+
+  vueltoLinea(linea: LineaPagoMixto): number {
+    if (linea.metodo !== 'efectivo') return 0;
+    return Math.max(0, linea.montoRecibido - linea.monto);
+  }
+
+  requiereFotoLinea(linea: LineaPagoMixto): boolean {
+    return requiereComprobante(linea.metodo);
+  }
+
+  onFotoLineaSeleccionada(linea: LineaPagoMixto, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) return;
+    linea.errorFoto = '';
+    if (!archivo.type.startsWith('image/')) {
+      linea.errorFoto = 'El archivo debe ser una imagen (foto).';
+      input.value = '';
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => (linea.fotoUrl = lector.result as string);
+    lector.onerror = () => (linea.errorFoto = 'No se pudo leer la imagen. Intenta nuevamente.');
+    lector.readAsDataURL(archivo);
+    input.value = '';
+  }
+
+  quitarFotoLinea(linea: LineaPagoMixto): void {
+    linea.fotoUrl = null;
+  }
+
+  /** Suma de lo asignado en las líneas de pago mixto. */
+  get totalAsignadoPagoMixto(): number {
+    return this.pagosDivididos.reduce((acc, l) => acc + (l.monto || 0), 0);
+  }
+
+  /** Positivo = falta asignar; negativo = se pasó del total; 0 = cuadra exacto. */
+  get saldoPendientePagoMixto(): number {
+    return Math.round((this.totalCarrito - this.totalAsignadoPagoMixto) * 100) / 100;
+  }
+
+  get pagoMixtoCuadraExacto(): boolean {
+    return Math.abs(this.saldoPendientePagoMixto) < 0.005;
+  }
+
+  /** Válido para continuar: cuadra exacto, al menos 2 métodos distintos, montos > 0 y comprobantes donde corresponda. */
+  get pagoMixtoValido(): boolean {
+    if (this.pagosDivididos.length < 2) return false;
+    if (!this.pagoMixtoCuadraExacto) return false;
+    return this.pagosDivididos.every(
+      (l) => l.monto > 0 && (!this.requiereFotoLinea(l) || !!l.fotoUrl)
+    );
+  }
+
   abrirCheckout(): void {
     if (this.ventasService.carrito().length === 0) return;
     if (this.localesSoloCaja.length === 0) {
@@ -738,6 +861,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorFoto = '';
     this.fotoVentaUrl = null;
     this.ventaConfirmada = null;
+    this.pagoMixto = false;
+    this.pagosDivididos = [];
   }
 
   cerrarCheckout(): void {
@@ -748,6 +873,28 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   irAConfirmar(): void {
     this.checkoutError = '';
+
+    if (this.pagoMixto) {
+      if (this.pagosDivididos.length < 2) {
+        this.checkoutError = 'Agrega al menos 2 métodos de pago, o desactiva el pago dividido.';
+        return;
+      }
+      if (!this.pagoMixtoCuadraExacto) {
+        this.checkoutError =
+          this.saldoPendientePagoMixto > 0
+            ? `Falta asignar S/${this.saldoPendientePagoMixto.toFixed(2)} del total.`
+            : `Te pasaste por S/${Math.abs(this.saldoPendientePagoMixto).toFixed(2)}. Ajusta los montos.`;
+        return;
+      }
+      const lineaSinFoto = this.pagosDivididos.find((l) => this.requiereFotoLinea(l) && !l.fotoUrl);
+      if (lineaSinFoto) {
+        this.checkoutError = `Adjunta la foto del comprobante de ${lineaSinFoto.metodo}.`;
+        return;
+      }
+      this.pasoCheckout = 'confirmar';
+      return;
+    }
+
     if (this.metodoPago === 'efectivo' && this.montoPagado < this.totalCarrito) {
       this.checkoutError = 'El monto pagado es menor al total. Verifica el importe recibido.';
       return;
@@ -774,16 +921,24 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.checkoutError = '';
     this.confirmando = true;
 
-    // Construir payload de pago
-    const pago: PagoCreate = {
-      metodo: this.metodoPago,
-      monto: this.totalCarrito,
-      ...(this.metodoPago === 'efectivo'
-        ? { monto_recibido: this.montoPagado }
-        : {}),
-    };
+    // Construir payload de pago(s) — uno solo, o varios si es pago mixto.
+    const pagos: PagoCreate[] = this.pagoMixto
+      ? this.pagosDivididos.map((l) => ({
+          metodo: l.metodo,
+          monto: l.monto,
+          ...(l.metodo === 'efectivo' ? { monto_recibido: l.montoRecibido } : {}),
+          ...(l.fotoUrl ? { foto_comprobante: l.fotoUrl } : {}),
+        }))
+      : [
+          {
+            metodo: this.metodoPago,
+            monto: this.totalCarrito,
+            ...(this.metodoPago === 'efectivo' ? { monto_recibido: this.montoPagado } : {}),
+            ...(this.fotoVentaUrl ? { foto_comprobante: this.fotoVentaUrl } : {}),
+          },
+        ];
 
-    const payload = this.ventasService.buildVentaPayload(this.cajaSeleccionadaId, [pago]);
+    const payload = this.ventasService.buildVentaPayload(this.cajaSeleccionadaId, pagos);
 
     this.ventasService.confirmarVenta(payload).subscribe({
       next: (venta) => {
@@ -791,6 +946,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         this.pasoCheckout = 'exito';
         this.confirmando = false;
         this.fotoVentaUrl = null;
+        this.pagoMixto = false;
+        this.pagosDivididos = [];
         // Vaciar carrito tras venta exitosa
         this.ventasService.vaciarCarrito();
         // Refrescar catálogo para actualizar stock visible
@@ -812,6 +969,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fotoVentaUrl = null;
     this.errorFoto = '';
     this.confirmando = false;
+    this.pagoMixto = false;
+    this.pagosDivididos = [];
   }
 
   // ══════════════════════════════════════════════════════════════════════

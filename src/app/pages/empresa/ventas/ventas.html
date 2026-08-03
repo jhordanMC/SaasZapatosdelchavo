@@ -328,8 +328,17 @@
         </div>
 
         <div class="form-row">
-          <label>Método de pago</label>
-          <div class="metodo-pago-grid">
+          <div class="metodo-pago-header">
+            <label>Método de pago</label>
+            <button type="button" class="link-pago-mixto" *ngIf="!pagoMixto" (click)="activarPagoMixto()">
+              + Dividir en más de un método
+            </button>
+            <button type="button" class="link-pago-mixto" *ngIf="pagoMixto" (click)="desactivarPagoMixto()">
+              Usar un solo método
+            </button>
+          </div>
+
+          <div class="metodo-pago-grid" *ngIf="!pagoMixto">
             <button type="button" class="metodo-btn" [class.active]="metodoPago === 'efectivo'" (click)="metodoPago = 'efectivo'">
               <svg class="metodo-icono" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="6" width="20" height="12" rx="2"/>
@@ -368,7 +377,7 @@
         </div>
 
         <!-- Efectivo: monto recibido -->
-        <ng-container *ngIf="metodoPago === 'efectivo'">
+        <ng-container *ngIf="!pagoMixto && metodoPago === 'efectivo'">
           <div class="form-row">
             <label>Monto recibido del cliente (S/)</label>
             <input type="number" [(ngModel)]="montoPagado" min="0" />
@@ -380,7 +389,7 @@
         </ng-container>
 
         <!-- Foto de comprobante (obligatoria para Yape/Plin/Transferencia) -->
-        <div class="form-row" *ngIf="requiereFotoComprobante">
+        <div class="form-row" *ngIf="!pagoMixto && requiereFotoComprobante">
           <label>
             Foto de la {{ metodoPago === 'transferencia' ? 'transferencia' : 'transacción' }}
             <span class="obligatorio">*obligatorio</span>
@@ -405,13 +414,70 @@
           </div>
         </div>
 
+        <!-- ═══════ Pago mixto: varios métodos en una sola venta ═══════ -->
+        <div class="pago-mixto-bloque" *ngIf="pagoMixto">
+          <div class="pago-mixto-linea" *ngFor="let l of pagosDivididos; let i = index">
+            <div class="pago-mixto-linea-top">
+              <select class="pago-mixto-select" [ngModel]="l.metodo" (ngModelChange)="cambiarMetodoLinea(l, $event)">
+                <option *ngFor="let m of metodosPagoMixto" [value]="m.valor">{{ m.etiqueta }}</option>
+              </select>
+              <input
+                type="number"
+                class="pago-mixto-monto"
+                min="0"
+                placeholder="Monto S/"
+                [ngModel]="l.monto"
+                (ngModelChange)="actualizarMontoLinea(l, $event)"
+              />
+              <button type="button" class="btn-icon-danger" *ngIf="pagosDivididos.length > 1" (click)="quitarLineaPago(i)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Monto recibido / vuelto — solo para la línea en efectivo -->
+            <div class="pago-mixto-efectivo" *ngIf="l.metodo === 'efectivo'">
+              <label>Recibe del cliente (S/)</label>
+              <input type="number" min="0" [(ngModel)]="l.montoRecibido" />
+              <span class="pago-mixto-vuelto" *ngIf="vueltoLinea(l) > 0">Vuelto: S/{{ vueltoLinea(l).toFixed(2) }}</span>
+            </div>
+
+            <!-- Comprobante — obligatorio para yape/plin/transferencia -->
+            <div class="pago-mixto-comprobante" *ngIf="requiereFotoLinea(l)">
+              <div class="foto-venta-box" *ngIf="!l.fotoUrl">
+                <input type="file" accept="image/*" capture="environment" (change)="onFotoLineaSeleccionada(l, $event)" [id]="'fotoLineaInput' + i" class="foto-venta-input" />
+                <label [for]="'fotoLineaInput' + i" class="btn-secondary foto-venta-label">
+                  Foto del comprobante ({{ l.metodo }}) <span class="obligatorio">*</span>
+                </label>
+              </div>
+              <div class="foto-venta-preview foto-venta-preview-sm" *ngIf="l.fotoUrl">
+                <img [src]="l.fotoUrl" alt="Comprobante" />
+                <button type="button" class="btn-icon-danger" (click)="quitarFotoLinea(l)">✕</button>
+              </div>
+              <p class="error-text" *ngIf="l.errorFoto">{{ l.errorFoto }}</p>
+            </div>
+          </div>
+
+          <button type="button" class="btn-agregar-linea-pago" (click)="agregarLineaPago()">
+            + Agregar otro método de pago
+          </button>
+
+          <div class="pago-mixto-resumen" [class.cuadra]="pagoMixtoCuadraExacto" [class.no-cuadra]="!pagoMixtoCuadraExacto">
+            <span>Asignado: S/{{ totalAsignadoPagoMixto.toFixed(2) }} de S/{{ totalCarrito.toFixed(2) }}</span>
+            <span *ngIf="pagoMixtoCuadraExacto">✓ Cuadra exacto</span>
+            <span *ngIf="!pagoMixtoCuadraExacto && saldoPendientePagoMixto > 0">Falta S/{{ saldoPendientePagoMixto.toFixed(2) }}</span>
+            <span *ngIf="!pagoMixtoCuadraExacto && saldoPendientePagoMixto < 0">Sobra S/{{ (-saldoPendientePagoMixto).toFixed(2) }}</span>
+          </div>
+        </div>
+
         <p class="error-text" *ngIf="errorFoto">{{ errorFoto }}</p>
         <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
       </div>
 
       <div class="modal-footer">
         <button class="btn-secondary" (click)="cerrarCheckout()">Cancelar</button>
-        <button class="btn-primary" (click)="irAConfirmar()">Continuar</button>
+        <button class="btn-primary" [disabled]="pagoMixto && !pagoMixtoValido" (click)="irAConfirmar()">Continuar</button>
       </div>
     </ng-container>
 
@@ -440,22 +506,39 @@
         </div>
 
         <div class="confirmar-pago">
-          <div class="confirmar-pago-fila">
-            <span>Método de pago</span>
-            <strong>{{ metodoPago === 'efectivo' ? 'Efectivo' : metodoPago === 'yape' ? 'Yape' : metodoPago === 'plin' ? 'Plin' : metodoPago === 'tarjeta' ? 'Tarjeta' : 'Transferencia' }}</strong>
-          </div>
-          <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo'">
-            <span>Monto recibido</span>
-            <strong>S/{{ montoPagado.toFixed(2) }}</strong>
-          </div>
-          <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo' && vueltoEstimado > 0">
-            <span>Vuelto a entregar</span>
-            <strong>S/{{ vueltoEstimado.toFixed(2) }}</strong>
-          </div>
-          <div class="confirmar-pago-fila" *ngIf="fotoVentaUrl">
-            <span>Comprobante</span>
-            <img class="confirmar-comprobante-mini" [src]="fotoVentaUrl" alt="Comprobante de pago" />
-          </div>
+          <ng-container *ngIf="!pagoMixto">
+            <div class="confirmar-pago-fila">
+              <span>Método de pago</span>
+              <strong>{{ metodoPago === 'efectivo' ? 'Efectivo' : metodoPago === 'yape' ? 'Yape' : metodoPago === 'plin' ? 'Plin' : metodoPago === 'tarjeta' ? 'Tarjeta' : 'Transferencia' }}</strong>
+            </div>
+            <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo'">
+              <span>Monto recibido</span>
+              <strong>S/{{ montoPagado.toFixed(2) }}</strong>
+            </div>
+            <div class="confirmar-pago-fila" *ngIf="metodoPago === 'efectivo' && vueltoEstimado > 0">
+              <span>Vuelto a entregar</span>
+              <strong>S/{{ vueltoEstimado.toFixed(2) }}</strong>
+            </div>
+            <div class="confirmar-pago-fila" *ngIf="fotoVentaUrl">
+              <span>Comprobante</span>
+              <img class="confirmar-comprobante-mini" [src]="fotoVentaUrl" alt="Comprobante de pago" />
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="pagoMixto">
+            <div class="confirmar-pago-fila confirmar-pago-mixto-titulo">
+              <span>Pago dividido en {{ pagosDivididos.length }} métodos</span>
+            </div>
+            <div class="confirmar-pago-fila" *ngFor="let l of pagosDivididos">
+              <span>{{ l.metodo === 'efectivo' ? 'Efectivo' : l.metodo === 'yape' ? 'Yape' : l.metodo === 'plin' ? 'Plin' : 'Transferencia' }}</span>
+              <strong>S/{{ l.monto.toFixed(2) }}</strong>
+            </div>
+            <div class="confirmar-pago-fila" *ngFor="let l of pagosDivididos" [hidden]="l.metodo !== 'efectivo' || vueltoLinea(l) === 0">
+              <span>Vuelto ({{ l.metodo }})</span>
+              <strong>S/{{ vueltoLinea(l).toFixed(2) }}</strong>
+            </div>
+          </ng-container>
+
           <div class="confirmar-pago-fila" *ngIf="cajaSeleccionadaId">
             <span>Local (Caja)</span>
             <strong>{{ nombreCajaSeleccionada }}</strong>

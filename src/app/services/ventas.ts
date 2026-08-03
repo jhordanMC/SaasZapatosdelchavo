@@ -90,6 +90,14 @@ export interface PagoCreate {
   /** Solo efectivo: monto entregado por el cliente. */
   monto_recibido?: number | null;
   numero_operacion?: string | null;
+  /**
+   * Foto del comprobante de ESTE pago (yape/plin/transferencia), como data
+   * URL base64 — mismo patrón que las evidencias de devolución.
+   * NOTA PARA BACKEND: campo nuevo. En pago único, hoy el comprobante se
+   * capturaba en el formulario pero nunca se enviaba al backend — con esto
+   * queda corregido, y además soporta 1 comprobante por línea en pago mixto.
+   */
+  foto_comprobante?: string | null;
 }
 
 export interface VentaCreate {
