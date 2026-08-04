@@ -80,7 +80,7 @@ export const routes: Routes = [
       {
         path: 'tickets',
         component: TicketsAdminComponent,
-        data: { title: 'Centro de Soporte', subtitle: 'Tickets reportados por las empresas, incluidos los de Cirobot' },
+        data: { title: 'Tickets', subtitle: 'Tickets reportados por las empresas, incluidos los de Cirobot' },
         // Sin vistaGuard a propósito: roleGuard('admin') del layout ya alcanza (ver admin-layout.ts).
       },
     ],

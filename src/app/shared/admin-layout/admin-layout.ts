@@ -64,10 +64,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       if (puedeVer('anuncios')) {
         base.push({ label: 'Anuncios', route: '/admin/anuncios', icon: 'anuncios' });
       }
-      // Centro de Soporte (tickets de Cirobot) — visible para todo el
-      // staff de ALBA, sin gate de vistaGuard: el layout admin ya exige
-      // roleGuard('admin'), no hace falta un permiso más fino todavía.
-      base.push({ label: 'Centro de Soporte', route: '/admin/tickets', icon: 'tickets' });
+      // Tickets (Centro de Soporte / tickets de Cirobot) — visible para
+      // todo el staff de ALBA, sin gate de vistaGuard: el layout admin ya
+      // exige roleGuard('admin'), no hace falta un permiso más fino todavía.
+      base.push({ label: 'Tickets', route: '/admin/tickets', icon: 'tickets' });
       base.push({ label: 'Reportes', href: '#', icon: 'reportes' });
       base.push({ label: 'Configuración', href: '#', icon: 'config' });
       return base;

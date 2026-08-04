@@ -32,6 +32,7 @@ const VISTA_A_RUTA: Record<string, string> = {
   suscripciones: '/admin/suscripciones',
   actividad: '/admin/actividad',
   anuncios: '/admin/anuncios',
+  tickets: '/admin/tickets',
 };
 
 @Component({
