@@ -32,11 +32,8 @@ import { SexoProducto } from '../../../services/inventario';
 import { ComprasService } from '../../../services/compras';
 import {
   DetalleVentaRead,
-  ETIQUETAS_METODO_REEMBOLSO,
   FiltrosPOS,
-  ItemCambioProducto,
   ItemCarrito,
-  MetodoReembolso,
   MotivoDevolucion,
   SedePOSRead,
   VentaCreate,
@@ -80,9 +77,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.busquedaDevolucionVentaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((texto) => {
       this.ejecutarBusquedaVentaADevolver(texto);
-    });
-    this.busquedaProductoCambioSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((texto) => {
-      this.ejecutarBusquedaProductoCambio(texto);
     });
   }
 
@@ -1013,7 +1007,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.buscandoDevolucionVenta.set(true);
     this.ventasService.listarVentas({ estado: 'pagada', busqueda: texto.trim() }, 0, 15).subscribe({
       next: (lista) => {
-        this.resultadosDevolucionVenta.set(lista.items);
+        this.resultadosDevolucionVenta.set(lista);
         this.buscandoDevolucionVenta.set(false);
       },
       error: () => {
@@ -1041,25 +1035,11 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     { valor: 'otro', etiqueta: 'Otro' },
   ];
   notasDevolucion = '';
-  idProveedorDevolucion: string | null = null;
-  proveedoresSugeridosDevolucion = signal<string[]>([]);
-
-  metodoReembolsoDevolucion: MetodoReembolso = 'efectivo';
-  readonly metodosReembolso: { valor: MetodoReembolso; etiqueta: string }[] = [
-    { valor: 'efectivo', etiqueta: ETIQUETAS_METODO_REEMBOLSO.efectivo },
-    { valor: 'yape', etiqueta: ETIQUETAS_METODO_REEMBOLSO.yape },
-    { valor: 'plin', etiqueta: ETIQUETAS_METODO_REEMBOLSO.plin },
-    { valor: 'cambio_producto', etiqueta: ETIQUETAS_METODO_REEMBOLSO.cambio_producto },
-  ];
-
-  evidenciasDevolucion: string[] = [];
-  errorEvidenciaDevolucion = '';
 
   busquedaProductoCambio = '';
-  private readonly busquedaProductoCambioSubject = new Subject<string>();
   resultadosProductoCambio = signal<ProductoPOSRead[]>([]);
   buscandoProductoCambio = signal(false);
-  productosCambio: ItemCambioProducto[] = [];
+  productosCambio: { id_variante: string; nombre: string; talla: string | null; cantidad: number; precio_unitario: number; id_ubicacion_origen: string }[] = [];
 
   registrandoDevolucion = signal(false);
   errorDevolucion = signal<string | null>(null);
@@ -1071,18 +1051,11 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lineasDevolucion = [];
     this.motivoDevolucion = 'producto_defectuoso';
     this.notasDevolucion = '';
-    this.idProveedorDevolucion = null;
-    this.metodoReembolsoDevolucion = 'efectivo';
-    this.evidenciasDevolucion = [];
-    this.errorEvidenciaDevolucion = '';
     this.productosCambio = [];
     this.busquedaProductoCambio = '';
     this.resultadosProductoCambio.set([]);
     this.errorDevolucion.set(null);
 
-    this.proveedoresSugeridosDevolucion.set(
-      Array.from(new Set(this.comprasService.obtenerResumenProveedores().map((p) => p.proveedor)))
-    );
 
     this.ventasService.obtenerVenta(item.id_venta).subscribe({
       next: (venta) => {
@@ -1113,95 +1086,18 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventaADevolver = null;
     this.lineasDevolucion = [];
     this.productosCambio = [];
-    this.evidenciasDevolucion = [];
+    this.productosCambio = [];
+    this.busquedaProductoCambio = '';
+    this.resultadosProductoCambio.set([]);
   }
 
   cambiarCantidadDevolucion(linea: (typeof this.lineasDevolucion)[number], valor: number): void {
     linea.cantidad = Math.max(0, Math.min(valor || 0, linea.disponible));
   }
 
-  /** Suma de lo marcado a devolver en las líneas (S/), antes de restar el producto de cambio. */
-  get totalDevolucionCalculado(): number {
-    return this.lineasDevolucion.reduce((acc, l) => {
-      if (l.cantidad <= 0) return acc;
-      const precioUnit = l.detalle.subtotal / Math.max(1, l.detalle.cantidad);
-      return acc + precioUnit * l.cantidad;
-    }, 0);
-  }
 
-  get totalProductosCambio(): number {
-    return this.productosCambio.reduce((acc, p) => acc + p.precio_unitario * p.cantidad, 0);
-  }
 
-  get diferenciaCambio(): number {
-    return this.totalDevolucionCalculado - this.totalProductosCambio;
-  }
 
-  onFotoEvidenciaDevolucionSeleccionada(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    if (!archivo) return;
-    this.errorEvidenciaDevolucion = '';
-    if (!archivo.type.startsWith('image/')) {
-      this.errorEvidenciaDevolucion = 'El archivo debe ser una imagen (foto).';
-      input.value = '';
-      return;
-    }
-    const lector = new FileReader();
-    lector.onload = () => {
-      this.evidenciasDevolucion = [...this.evidenciasDevolucion, lector.result as string];
-    };
-    lector.onerror = () => (this.errorEvidenciaDevolucion = 'No se pudo leer la imagen. Intenta nuevamente.');
-    lector.readAsDataURL(archivo);
-    input.value = '';
-  }
-
-  quitarEvidenciaDevolucion(index: number): void {
-    this.evidenciasDevolucion = this.evidenciasDevolucion.filter((_, i) => i !== index);
-  }
-
-  buscarProductoCambio(valor: string): void {
-    this.busquedaProductoCambio = valor;
-    this.busquedaProductoCambioSubject.next(valor);
-  }
-
-  private ejecutarBusquedaProductoCambio(texto: string): void {
-    if (!texto.trim()) {
-      this.resultadosProductoCambio.set([]);
-      return;
-    }
-    this.buscandoProductoCambio.set(true);
-    this.ventasService.listarProductosPOS(null, { busqueda: texto.trim() }, 0, 10).subscribe({
-      next: (resp) => {
-        this.resultadosProductoCambio.set(resp.items);
-        this.buscandoProductoCambio.set(false);
-      },
-      error: () => {
-        this.resultadosProductoCambio.set([]);
-        this.buscandoProductoCambio.set(false);
-      },
-    });
-  }
-
-  agregarProductoCambio(p: ProductoPOSRead, variante: VariantePOSRead): void {
-    const existente = this.productosCambio.find((i) => i.id_variante === variante.id_variante);
-    if (existente) {
-      existente.cantidad += 1;
-      return;
-    }
-    this.productosCambio.push({
-      id_variante: variante.id_variante,
-      nombre: `${p.nombre}${variante.talla ? ` (talla ${variante.talla})` : ''}`,
-      talla: variante.talla,
-      cantidad: 1,
-      precio_unitario: p.precio_venta,
-      id_ubicacion_origen: variante.id_ubicacion_origen ?? '',
-    });
-  }
-
-  quitarProductoCambio(idVariante: string): void {
-    this.productosCambio = this.productosCambio.filter((i) => i.id_variante !== idVariante);
-  }
 
   confirmarDevolucionPOS(): void {
     const venta = this.ventaADevolver;
@@ -1213,16 +1109,10 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         id_detalle_venta: l.detalle.id_detalle_venta,
         cantidad: l.cantidad,
         restaurar_stock: l.restaurarStock,
-        id_proveedor: this.idProveedorDevolucion,
       }));
 
     if (items.length === 0) {
       this.errorDevolucion.set('Indica al menos una cantidad a devolver en alguna línea.');
-      return;
-    }
-
-    if (this.metodoReembolsoDevolucion === 'cambio_producto' && this.productosCambio.length === 0) {
-      this.errorDevolucion.set('Elige al menos un producto de cambio, o cambia la forma de reembolso.');
       return;
     }
 
@@ -1233,11 +1123,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         motivo: this.motivoDevolucion,
         notas: this.notasDevolucion.trim() || null,
         items,
-        metodo_reembolso: this.metodoReembolsoDevolucion,
-        evidencias: this.evidenciasDevolucion,
-        ...(this.metodoReembolsoDevolucion === 'cambio_producto'
-          ? { productos_cambio: this.productosCambio, monto_efectivo_ajuste: this.diferenciaCambio }
-          : {}),
       })
       .subscribe({
         next: () => {
@@ -1245,7 +1130,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ventaADevolver = null;
           this.lineasDevolucion = [];
           this.productosCambio = [];
-          this.evidenciasDevolucion = [];
+
           this.devolucionRegistradaOk.set(true);
           setTimeout(() => this.devolucionRegistradaOk.set(false), 3500);
           // Refresca el catálogo por si la devolución restauró stock visible.
