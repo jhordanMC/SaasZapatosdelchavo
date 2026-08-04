@@ -13,11 +13,11 @@ interface Mensaje {
 
 type ModoVentana = 'flotante' | 'fullscreen';
 
-// Distintos según contexto — un admin no tiene tools de inventario/KPIs/tickets
+// Distintos según contexto — un admin no tiene tools de inventario/KPIs/ventas
 // (ver ChatbotService._tool_servers_para en el backend), así que ofrecerle esos
 // chips sería un callejón sin salida: Gemini respondería "no tengo acceso".
 const CHIPS_INICIALES_EMPRESA = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos'];
-const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard'];
+const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard', 'Tickets'];
 
 /**
  * Ventana de chat de Cirobot. Mensajes tipo ChatGPT/Claude (burbuja verde

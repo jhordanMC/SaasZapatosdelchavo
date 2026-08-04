@@ -32,9 +32,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   // Reactivo: cada vista puntual puede estar deshabilitada para este
   // usuario (modal "Permisos de vista"), independiente de que ya tenga
   // el rol 'admin' — no tiene sentido listarla si el guard igual la va
-  // a bloquear. Reportes/Configuración quedan siempre visibles: son
-  // links muertos (href:'#', sin página real todavía), no hay nada que
-  // gatear.
+  // a bloquear. Configuración queda siempre visible: es un link muerto
+  // (href:'#', sin página real todavía), no hay nada que gatear.
   navItems;
 
   constructor(
@@ -68,7 +67,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       // todo el staff de ALBA, sin gate de vistaGuard: el layout admin ya
       // exige roleGuard('admin'), no hace falta un permiso más fino todavía.
       base.push({ label: 'Tickets', route: '/admin/tickets', icon: 'tickets' });
-      base.push({ label: 'Reportes', href: '#', icon: 'reportes' });
       base.push({ label: 'Configuración', href: '#', icon: 'config' });
       return base;
     });
