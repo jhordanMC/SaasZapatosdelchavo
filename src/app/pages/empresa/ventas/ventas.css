@@ -806,26 +806,6 @@
   }
 }
 
-/* ═══════════════ Devoluciones (accesible desde el POS) ═══════════════ */
-.btn-devoluciones {
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1.5px solid var(--border-default);
-  background: var(--bg-canvas);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.btn-devoluciones:hover { background: var(--bg-surface); border-color: var(--brand-deep); }
-
 .modal-detalle { width: 480px; max-height: 88vh; display: flex; flex-direction: column; }
 .modal-detalle .modal-body { overflow-y: auto; }
 .detalle-subtitulo { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin: 4px 0 8px; }

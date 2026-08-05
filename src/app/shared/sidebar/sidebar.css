@@ -80,7 +80,7 @@
 .collapse-toggle:hover {
   background: var(--sb-active-bg);
   color: var(--sb-accent);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--border-strong);
 }
 .collapse-toggle svg {
   transition: transform var(--duration-base) var(--ease-standard);
@@ -137,7 +137,7 @@
   color: var(--sb-active-text);
   font-weight: 700;
   box-shadow: var(--sb-active-glow);
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: var(--border-strong);
 }
 
 .nav-item.active::before {
@@ -267,14 +267,14 @@
 }
 
 .nav-item:hover .nav-icon {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-surface);
   border-color: var(--sb-border);
 }
 
 .nav-item.active .nav-icon {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--bg-surface);
   color: var(--sb-active-text);
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: var(--border-strong);
   box-shadow: none;
 }
 
