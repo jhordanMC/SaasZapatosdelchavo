@@ -41,18 +41,18 @@
   --border-default: rgba(2, 75, 64, 0.14);
   --border-strong: rgba(100, 213, 156, 0.5);
 
-  /* ── Sidebar — misma paleta blanca que el resto de la app ── */
-  --sb-bg-top: #ffffff;
-  --sb-bg-bottom: #ffffff;
-  --sb-text: var(--text-primary);
-  --sb-text-dim: var(--text-secondary);
-  --sb-text-faint: var(--text-tertiary);
-  --sb-hover-bg: var(--bg-surface-hover);
-  --sb-active-bg: color-mix(in srgb, var(--brand-primary) 22%, var(--bg-surface));
-  --sb-active-text: var(--brand-deep);
-  --sb-border: var(--border-default);
-  --sb-accent: var(--brand-deep); /* indicador lateral + glow, ahora sobre fondo claro */
-  --sb-active-glow: 0 0 0 1px rgba(2, 75, 64, 0.12), 0 8px 20px rgba(2, 75, 64, 0.08);
+  /* ── Sidebar — paleta propia (panel oscuro, texto claro) ── */
+  --sb-bg-top: #0f2b23;
+  --sb-bg-bottom: #081310;
+  --sb-text: rgba(255, 255, 255, 0.94);
+  --sb-text-dim: rgba(255, 255, 255, 0.68);
+  --sb-text-faint: rgba(255, 255, 255, 0.46);
+  --sb-hover-bg: rgba(255, 255, 255, 0.1);
+  --sb-active-bg: rgba(255, 255, 255, 0.16);
+  --sb-active-text: var(--sb-text);
+  --sb-border: rgba(255, 255, 255, 0.14);
+  --sb-accent: var(--brand-primary); /* indicador lateral + glow, brilla sobre el verde oscuro */
+  --sb-active-glow: 0 0 0 1px rgba(159, 231, 177, 0.55), 0 8px 20px rgba(159, 231, 177, 0.28);
 
   /* ── Texto (sobre fondos claros) ── */
   --text-primary: #0b2e27;
@@ -144,4 +144,3 @@
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
   --shadow-glow-mint: 0 0 0 1px rgba(100, 213, 156, 0.4), 0 8px 20px rgba(100, 213, 156, 0.22);
 }
-
