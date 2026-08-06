@@ -188,7 +188,13 @@ export function ChatPanel({
             </div>
           )}
 
-          <div className="cbot-input-area">
+          <form 
+            className="cbot-input-area"
+            onSubmit={(e) => {
+              e.preventDefault();
+              enviar(input);
+            }}
+          >
             <input
               ref={inputRef}
               className="cbot-input"
@@ -196,25 +202,22 @@ export function ChatPanel({
               value={input}
               disabled={cargando}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') enviar(input);
-              }}
             />
-            <button className="cbot-input-icon" disabled title="Adjuntar (próximamente)" aria-label="Adjuntar">
+            <button type="button" className="cbot-input-icon" disabled title="Adjuntar (próximamente)" aria-label="Adjuntar">
               <IconoAdjuntar />
             </button>
-            <button className="cbot-input-icon" disabled title="Micrófono (próximamente)" aria-label="Micrófono">
+            <button type="button" className="cbot-input-icon" disabled title="Micrófono (próximamente)" aria-label="Micrófono">
               <IconoMicrofono />
             </button>
             <button
+              type="submit"
               className="cbot-enviar"
               disabled={cargando || !input.trim()}
-              onClick={() => enviar(input)}
               aria-label="Enviar"
             >
               <IconoEnviar />
             </button>
-          </div>
+          </form>
         </div>
 
         {panelActual && (
