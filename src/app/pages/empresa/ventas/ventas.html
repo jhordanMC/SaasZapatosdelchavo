@@ -225,69 +225,76 @@
         <span class="foto-placeholder" *ngIf="!showVariantePicker.imagen_url">Sin foto</span>
       </div>
 
-      <!-- Tallas disponibles (Chips) -->
-      <div class="form-row tallas-disponibles-row">
-        <label>Tallas disponibles <span class="error-inline" *ngIf="errorTalla">- {{ errorTalla }}</span></label>
-        <div class="tallas-chips">
-          <button
-            type="button"
-            class="talla-chip"
-            *ngFor="let t of _opcionesTallaModal"
-            [class.active]="t.talla === tallaModalActiva"
-            (click)="alCambiarTallaModal(t.talla === tallaModalActiva ? null : t.talla)">
-            {{ t.label }}
-          </button>
-        </div>
+      <!-- Sin unidades disponibles -->
+      <div class="sin-stock-modal-msg" *ngIf="_opcionesTallaModal.length === 0">
+        No hay unidades disponibles por el momento.
       </div>
 
-      <div class="form-row form-row-2">
-        <div>
-          <label>Origen (Sede) <span class="error-inline" *ngIf="errorUbicacion">- {{ errorUbicacion }}</span></label>
-          <select [ngModel]="ubicacionModalActiva" (ngModelChange)="alCambiarUbicacionModal($event)">
-            <option [ngValue]="null">Seleccionar sede</option>
-            <option *ngFor="let u of _opcionesUbicacionModal" [value]="u.id">
-              {{ u.label }}
-            </option>
-          </select>
+      <ng-container *ngIf="_opcionesTallaModal.length > 0">
+        <!-- Tallas disponibles (Chips) -->
+        <div class="form-row tallas-disponibles-row">
+          <label>Tallas disponibles <span class="error-inline" *ngIf="errorTalla">- {{ errorTalla }}</span></label>
+          <div class="tallas-chips">
+            <button
+              type="button"
+              class="talla-chip"
+              *ngFor="let t of _opcionesTallaModal"
+              [class.active]="t.talla === tallaModalActiva"
+              (click)="alCambiarTallaModal(t.talla === tallaModalActiva ? null : t.talla)">
+              {{ t.label }}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div class="form-row form-row-2">
-        <div>
-          <label>Cantidad <span class="error-inline" *ngIf="errorCantidad">- {{ errorCantidad }}</span></label>
-          <input
-            type="text"
-            inputmode="numeric"
-            class="qty-input-plano"
-            [class.pop]="qtyPulseModal"
-            [value]="cantidadSeleccionada"
-            (change)="onCantidadModalInput($any($event.target).value)"
-            (blur)="onCantidadModalInput($any($event.target).value)"
-          />
+        <div class="form-row form-row-2">
+          <div>
+            <label>Origen (Sede) <span class="error-inline" *ngIf="errorUbicacion">- {{ errorUbicacion }}</span></label>
+            <select [ngModel]="ubicacionModalActiva" (ngModelChange)="alCambiarUbicacionModal($event)">
+              <option [ngValue]="null">Seleccionar sede</option>
+              <option *ngFor="let u of _opcionesUbicacionModal" [value]="u.id">
+                {{ u.label }}
+              </option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label>Descuento (S/)</label>
-          <input type="number" [(ngModel)]="descuentoSeleccionado" min="0" />
-        </div>
-      </div>
 
-      <div class="form-row" *ngIf="descuentoSeleccionado > 0">
-        <label>¿Cómo se aplica el descuento?</label>
-        <div class="tipo-descuento-toggle">
-          <button type="button" [class.active]="tipoDescuentoSeleccionado === 'producto'" (click)="tipoDescuentoSeleccionado = 'producto'">Por producto (una vez)</button>
-          <button type="button" [class.active]="tipoDescuentoSeleccionado === 'unidad'" (click)="tipoDescuentoSeleccionado = 'unidad'">Por unidad (x cantidad)</button>
+        <div class="form-row form-row-2">
+          <div>
+            <label>Cantidad <span class="error-inline" *ngIf="errorCantidad">- {{ errorCantidad }}</span></label>
+            <input
+              type="text"
+              inputmode="numeric"
+              class="qty-input-plano"
+              [class.pop]="qtyPulseModal"
+              [value]="cantidadSeleccionada"
+              (change)="onCantidadModalInput($any($event.target).value)"
+              (blur)="onCantidadModalInput($any($event.target).value)"
+            />
+          </div>
+          <div>
+            <label>Descuento (S/)</label>
+            <input type="number" [(ngModel)]="descuentoSeleccionado" min="0" />
+          </div>
         </div>
-        <p class="hint-text">{{ textoDescripcionDescuento }}</p>
-      </div>
 
-      <div class="form-row subtotal-row">
-        <label>Total a pagar</label>
-        <p class="subtotal-precio">S/{{ subtotalModal.toFixed(2) }}</p>
-      </div>
+        <div class="form-row" *ngIf="descuentoSeleccionado > 0">
+          <label>¿Cómo se aplica el descuento?</label>
+          <div class="tipo-descuento-toggle">
+            <button type="button" [class.active]="tipoDescuentoSeleccionado === 'producto'" (click)="tipoDescuentoSeleccionado = 'producto'">Por producto (una vez)</button>
+            <button type="button" [class.active]="tipoDescuentoSeleccionado === 'unidad'" (click)="tipoDescuentoSeleccionado = 'unidad'">Por unidad (x cantidad)</button>
+          </div>
+          <p class="hint-text">{{ textoDescripcionDescuento }}</p>
+        </div>
+
+        <div class="form-row subtotal-row">
+          <label>Total a pagar</label>
+          <p class="subtotal-precio">S/{{ subtotalModal.toFixed(2) }}</p>
+        </div>
+      </ng-container>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarSelectorVariante()">Cancelar</button>
-      <button class="btn-primary" (click)="confirmarAgregado()">Agregar al carrito</button>
+      <button class="btn-primary" *ngIf="_opcionesTallaModal.length > 0" (click)="confirmarAgregado()">Agregar al carrito</button>
     </div>
   </div>
 </div>

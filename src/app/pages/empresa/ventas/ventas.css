@@ -133,6 +133,7 @@
 .venta-stock { color: var(--text-tertiary); }
 
 .sin-resultados { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 13px; }
+.sin-stock-modal-msg { text-align: center; padding: 24px 10px; color: var(--text-tertiary); font-size: 13.5px; background: var(--bg-canvas); border-radius: 10px; }
 
 .carrito-panel {
   width: 340px;
@@ -618,7 +619,7 @@
    RESPONSIVE
 ══════════════════════════════ */
 @media (max-width: 1024px) {
-  .ventas-layout { flex-direction: column-reverse; }
+  .ventas-layout { flex-direction: column; }
   .carrito-panel { width: 100%; position: static; max-height: none; }
   .carrito-lista { max-height: 280px; overflow-y: auto; }
 }
