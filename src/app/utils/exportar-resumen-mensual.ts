@@ -73,31 +73,61 @@ export function construirResumenMensual(
   desde: string,
   hasta: string,
   ventas: ResumenFinanciero,
-  compras: CompraRead[]
+  compras: CompraRead[] = []
 ): ResumenMensual {
-  const totalCompras = compras.reduce((acc, c) => acc + c.monto, 0);
+  const comprasSeguras = Array.isArray(compras) ? compras : [];
+  const totalCompras = comprasSeguras.reduce((acc, c) => acc + (c?.monto || 0), 0);
 
   const acumPorProveedor = new Map<string, number>();
-  for (const c of compras) {
-    acumPorProveedor.set(c.proveedor, (acumPorProveedor.get(c.proveedor) ?? 0) + c.monto);
+  for (const c of comprasSeguras) {
+    if (!c) continue;
+    const prov = c.proveedor || 'Sin proveedor';
+    acumPorProveedor.set(prov, (acumPorProveedor.get(prov) ?? 0) + (c.monto || 0));
   }
   const porProveedor = [...acumPorProveedor.entries()]
     .map(([proveedor, total]) => ({ proveedor, total }))
     .sort((a, b) => b.total - a.total);
+
+  const ventasSeguras = ventas || {
+    desde,
+    hasta,
+    ingresos_periodo: 0,
+    cantidad_ventas: 0,
+    ticket_promedio: 0,
+    gasto_operativo_periodo: 0,
+    margen_bruto_periodo: 0,
+    ingresos_con_costo_periodo: 0,
+    ganancia_neta_periodo: 0,
+    esta_generando_ganancia: false,
+    margen_promedio_pct: 0,
+    margen_basado_en_ventas_reales: false,
+    punto_equilibrio_periodo: null,
+    progreso_punto_equilibrio_pct: 0,
+    proyeccion_cierre_periodo: null,
+    crecimiento_vs_periodo_anterior_pct: 0,
+    producto_estrella: null,
+    producto_estrella_unidades: null,
+    producto_mas_rentable: null,
+    alertas_stock_bajo: 0,
+    recomendacion: '',
+  };
+
+  const ingresosVentas = ventasSeguras.ingresos_periodo || 0;
+  const gastoOperativo = ventasSeguras.gasto_operativo_periodo || 0;
 
   return {
     mes: mesISO,
     etiquetaMes: etiquetaMes(mesISO),
     desde,
     hasta,
-    ventas,
+    ventas: ventasSeguras,
     compras: {
       total: totalCompras,
-      cantidad: compras.length,
+      cantidad: comprasSeguras.length,
       porProveedor,
-      detalle: [...compras].sort((a, b) => (a.fecha < b.fecha ? 1 : -1)),
+      detalle: [...comprasSeguras].sort((a, b) => ((a?.fecha || '') < (b?.fecha || '') ? 1 : -1)),
     },
-    balanceNeto: ventas.ingresos_periodo - totalCompras - ventas.gasto_operativo_periodo,
+    balanceNeto: ingresosVentas - totalCompras - gastoOperativo,
   };
 }
 

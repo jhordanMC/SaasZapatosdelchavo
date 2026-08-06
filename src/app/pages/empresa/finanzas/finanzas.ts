@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, catchError, of } from 'rxjs';
 import {
   FinanzasService,
   Frecuencia,
@@ -11,6 +11,7 @@ import {
   TIPOS_GASTO_SUGERIDOS,
 } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
+import { ComprasService } from '../../../services/compras';
 import {
   ResumenMensual,
   construirResumenMensual,
@@ -42,7 +43,8 @@ type VistaIngresos = 'completos' | 'margen';
 export class FinanzasComponent implements OnInit {
   constructor(
     public finanzasService: FinanzasService,
-    private inventarioService: InventarioService
+    private inventarioService: InventarioService,
+    private comprasService: ComprasService
   ) {}
 
   tiposGastoSugeridos = TIPOS_GASTO_SUGERIDOS;
@@ -249,10 +251,41 @@ export class FinanzasComponent implements OnInit {
     const { desde, hasta } = rangoMes(this.mesSeleccionado);
 
     forkJoin({
-      ventas: this.finanzasService.obtenerResumenPeriodo(desde, hasta),
+      ventas: this.finanzasService.obtenerResumenPeriodo(desde, hasta).pipe(
+        catchError(() => {
+          const resActual = this.finanzasService.resumen();
+          const fallback: ResumenFinanciero = resActual ? { ...resActual, desde, hasta } : {
+            desde,
+            hasta,
+            ingresos_periodo: 0,
+            cantidad_ventas: 0,
+            ticket_promedio: 0,
+            gasto_operativo_periodo: 0,
+            margen_bruto_periodo: 0,
+            ingresos_con_costo_periodo: 0,
+            ganancia_neta_periodo: 0,
+            esta_generando_ganancia: false,
+            margen_promedio_pct: 0,
+            margen_basado_en_ventas_reales: false,
+            punto_equilibrio_periodo: null,
+            progreso_punto_equilibrio_pct: 0,
+            proyeccion_cierre_periodo: null,
+            crecimiento_vs_periodo_anterior_pct: 0,
+            producto_estrella: null,
+            producto_estrella_unidades: null,
+            producto_mas_rentable: null,
+            alertas_stock_bajo: 0,
+            recomendacion: '',
+          };
+          return of(fallback);
+        })
+      ),
+      compras: this.comprasService.listarComprasEnRango(desde, hasta).pipe(
+        catchError(() => of([]))
+      )
     }).subscribe({
-      next: ({ ventas }) => {
-        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, []);
+      next: ({ ventas, compras }) => {
+        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, compras || []);
         this.generandoResumenMensual = false;
       },
       error: () => {

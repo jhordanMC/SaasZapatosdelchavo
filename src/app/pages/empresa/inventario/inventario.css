@@ -85,8 +85,7 @@
 
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 236px);
-  justify-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 18px;
 }
 
@@ -133,18 +132,20 @@
 .producto-stock.stock-bajo { color: var(--color-error); font-weight: 600; }
 
 .producto-acciones {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 6px;
   margin-top: 4px;
 }
 .producto-acciones button {
-  padding: 7px 4px;
+  flex: 1;
+  padding: 8px 4px;
   font-size: 11px;
+  font-weight: 600;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .sin-resultados {
@@ -642,18 +643,35 @@
 @media (max-width: 768px) {
   .filtros-card { margin: 16px 16px 0; }
   .content { padding: 16px; }
-  .productos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .productos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .modal-card { width: 100%; max-width: 94vw; }
+  .variante-columnas { display: none; }
+  .variante-fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .variante-fila input, .variante-fila select {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 110px;
+  }
+  .variante-fila .btn-icon-danger {
+    margin-left: auto;
+  }
 }
 
 @media (max-width: 480px) {
-  .productos-grid { grid-template-columns: repeat(2, 1fr); }
+  .productos-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .form-row-2, .form-row-3 { flex-direction: column; }
   .foto-y-basicos { flex-direction: column; }
   .foto-upload-wrap { width: 100%; }
   .foto-upload-compacta { width: 100%; height: 120px; }
-  .variante-columnas,
-  .variante-fila { grid-template-columns: 1fr 1fr; }
+  .variante-fila input, .variante-fila select { flex: 1 1 100%; }
   .modal-footer { flex-direction: column-reverse; }
   .modal-footer button { width: 100%; }
 }

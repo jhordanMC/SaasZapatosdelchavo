@@ -135,7 +135,7 @@
 .sin-resultados { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 13px; }
 
 .carrito-panel {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -145,7 +145,12 @@
   flex-direction: column;
   gap: 14px;
   height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  position: sticky;
+  top: 16px;
   box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
 }
 .carrito-panel-header { display: flex; align-items: center; gap: 8px; }
 .carrito-panel-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--brand-deep); letter-spacing: -0.01em; }
@@ -613,21 +618,21 @@
    RESPONSIVE
 ══════════════════════════════ */
 @media (max-width: 1024px) {
-  .ventas-layout { flex-direction: column; }
-  .carrito-panel { width: 100%; }
-  .carrito-lista { max-height: none; }
+  .ventas-layout { flex-direction: column-reverse; }
+  .carrito-panel { width: 100%; position: static; max-height: none; }
+  .carrito-lista { max-height: 280px; overflow-y: auto; }
 }
 
 @media (max-width: 768px) {
   .filtros-card { margin: 16px 16px 0; }
   .categorias-bar { padding: 12px 16px; }
   .ventas-layout { padding: 16px; gap: 16px; }
-  .ventas-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .ventas-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
   .modal-card, .modal-checkout { width: 100%; max-width: 94vw; }
 }
 
 @media (max-width: 480px) {
-  .ventas-grid { grid-template-columns: repeat(2, 1fr); }
+  .ventas-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .metodo-pago-grid { grid-template-columns: 1fr; }
   .form-row-2,
   .carrito-item-edicion .form-row-2 { flex-direction: column; }
