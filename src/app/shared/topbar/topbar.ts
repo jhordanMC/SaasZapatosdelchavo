@@ -615,7 +615,16 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   // ════════════════════════════════════════════════════════
-  // ── Campana: desplegable con títulos/vigencia → modal con el
+  // Accesibilidad: botón junto a la campana. Por ahora es un
+  // stub — enganchar aquí el panel real (tamaño de fuente,
+  // alto contraste, reducir movimiento, etc.) cuando esté listo.
+  // ════════════════════════════════════════════════════════
+  toggleAccesibilidad(): void {
+    // TODO: abrir panel/menú de opciones de accesibilidad
+  }
+
+  // ════════════════════════════════════════════════════════
+  // Campana: desplegable con títulos/vigencia → modal con el
   //    detalle del anuncio elegido (100% global, ver AnunciosService)
   // ════════════════════════════════════════════════════════
   anuncios: AnuncioParaUsuario[] = [];
