@@ -163,6 +163,7 @@ export class EmpresaDashboardComponent implements OnInit {
       this.cargarTopCategorias();
       this.cargarRotacion();
       this.cargarResumenDevoluciones();
+      this.cargarTopDevueltos();
     }
   }
 
@@ -173,6 +174,7 @@ export class EmpresaDashboardComponent implements OnInit {
     this.cargarTopCategorias();
     this.cargarRotacion();
     this.cargarResumenDevoluciones();
+    this.cargarTopDevueltos();
   }
 
   private cargarAvance(): void {
@@ -212,7 +214,6 @@ export class EmpresaDashboardComponent implements OnInit {
     this.dashboardService.obtenerRotacionInventario(this.avanceDesde, this.avanceHasta, 40).subscribe({
       next: (lista) => {
         this.dashboardService.rotacionInventario.set(lista);
-        this.cargarTallasRotasDelMasVendido();
       },
       error: () => this.dashboardService.rotacionInventario.set([]),
     });
@@ -303,42 +304,37 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   // ── Alerta verde: sugerencia de reabastecimiento ──
-  // Asume un tiempo de reposición de 15 días (ajustable) — el backend no
-  // tiene todavía un "lead time" configurable por proveedor.
 
-  private readonly DIAS_REPOSICION_ASUMIDOS = 15;
-
-  get sugerenciaReabastecimiento(): { producto: FilaRotacion; pares: number } | null {
-    const candidatos = this.analisisRotacion
-      .filter((f) => (f.estado === 'saludable' || f.estado === 'lenta') && f.dias_para_agotar !== null && f.dias_para_agotar <= 10)
-      .sort((a, b) => (a.dias_para_agotar ?? 0) - (b.dias_para_agotar ?? 0));
-    const producto = candidatos[0];
-    if (!producto) return null;
-    const pares = Math.max(1, Math.ceil(producto.velocidad_diaria * this.DIAS_REPOSICION_ASUMIDOS));
-    return { producto, pares };
+  get sugerenciaReabastecimiento(): FilaRotacion[] {
+    return this.analisisRotacion
+      .filter((f) => f.stock_actual < 10)
+      .sort((a, b) => a.stock_actual - b.stock_actual)
+      .slice(0, 3);
   }
 
-  // ── Alerta roja: tallas rotas del producto más vendido (datos reales, cruzando catálogo) ──
+  // ── Alerta roja: Productos más devueltos (Riesgo de venta perdida) ──
 
-  tallasRotas = signal<TallaRota[]>([]);
-  productoTopNombre = signal<string | null>(null);
+  topDevueltos = signal<import('../../../services/dashboard').ProductoDevuelto[]>([]);
+  cargandoTopDevueltos = signal(false);
 
-  private cargarTallasRotasDelMasVendido(): void {
-    const top = this.top5MasVendidos[0];
-    if (!top) {
-      this.tallasRotas.set([]);
-      this.productoTopNombre.set(null);
-      return;
-    }
-    this.productoTopNombre.set(top.nombre);
-    this.inventarioService.obtenerProducto(top.id_producto).subscribe((detalle) => {
-      const rotas: TallaRota[] = [];
-      for (const variante of detalle.variantes) {
-        if (!variante.esta_activo || !variante.talla) continue;
-        const stockTotal = variante.stock.reduce((acc, s) => acc + s.cantidad, 0);
-        if (stockTotal === 0) rotas.push({ producto: top.nombre, talla: variante.talla });
-      }
-      this.tallasRotas.set(rotas);
+  private cargarTopDevueltos(): void {
+    this.cargandoTopDevueltos.set(true);
+    // Para que sirva como alerta útil, miramos los últimos 30 días en lugar de solo el día de hoy
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    const desde = this.formatearISO(hace30Dias);
+    const hasta = this.formatearISO(hoy);
+
+    this.dashboardService.obtenerTopProductosDevueltos(desde, hasta, 3).subscribe({
+      next: (lista) => {
+        this.topDevueltos.set(lista);
+        this.cargandoTopDevueltos.set(false);
+      },
+      error: () => {
+        this.topDevueltos.set([]);
+        this.cargandoTopDevueltos.set(false);
+      },
     });
   }
 

@@ -545,7 +545,7 @@
 
 .variante-columnas {
   display: grid;
-  grid-template-columns: 0.8fr 0.8fr 0.9fr 1.3fr 32px;
+  grid-template-columns: 0.7fr 0.7fr 0.9fr 1fr 0.9fr 1.2fr 32px;
   gap: 8px;
   padding: 0 2px;
 }
@@ -559,7 +559,7 @@
 
 .variante-fila {
   display: grid;
-  grid-template-columns: 0.8fr 0.8fr 0.9fr 1.3fr 32px;
+  grid-template-columns: 0.7fr 0.7fr 0.9fr 1fr 0.9fr 1.2fr 32px;
   gap: 8px;
   align-items: center;
 }

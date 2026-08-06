@@ -198,19 +198,20 @@
     <div class="alerta alerta-roja">
       <div class="alerta-head">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 22h20L12 2Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Riesgo de venta perdida</span>
+        <span>Productos más devueltos</span>
       </div>
-      <div class="alerta-cuerpo" *ngIf="productoTopNombre() as nombre; else cargandoTallas">
-        <ng-container *ngIf="tallasRotas().length > 0; else sinTallasRotas">
-          Tu producto más vendido, <strong>{{ nombre }}</strong>, se quedó sin stock en talla(s)
-          <strong>{{ tallasRotas().length === 1 ? tallasRotas()[0].talla : (tallasRotas().length + ' distintas') }}</strong>.
-          Repón antes de perder más ventas.
+      <div class="alerta-cuerpo" *ngIf="!cargandoTopDevueltos(); else cargandoTopDevueltosTpl">
+        <ng-container *ngIf="topDevueltos().length > 0; else sinProductosDevueltos">
+          Estos fueron los productos con más devoluciones:
+          <span *ngFor="let p of topDevueltos(); let i = index">
+            <strong>{{ p.nombre }}</strong> ({{ p.cantidad }})<span *ngIf="i < topDevueltos().length - 1">, </span>
+          </span>.
         </ng-container>
-        <ng-template #sinTallasRotas>
-          Tu producto más vendido (<strong>{{ nombre }}</strong>) tiene stock en todas sus tallas activas. Sin alertas por ahora.
+        <ng-template #sinProductosDevueltos>
+          Sin productos devueltos. ¡Excelente calidad!
         </ng-template>
       </div>
-      <ng-template #cargandoTallas><div class="alerta-cuerpo">Calculando…</div></ng-template>
+      <ng-template #cargandoTopDevueltosTpl><div class="alerta-cuerpo">Calculando…</div></ng-template>
     </div>
 
     <div class="alerta alerta-ambar">
@@ -231,12 +232,16 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.2 1 2.05V17h6v-2.25c0-.85.4-1.64 1-2.05A7 7 0 0 0 12 2Z"/></svg>
         <span>Sugerencia de reabastecimiento</span>
       </div>
-      <div class="alerta-cuerpo" *ngIf="sugerenciaReabastecimiento as s; else sinSugerencia">
-        Pide <strong>{{ s.pares }} pares</strong> de <strong>{{ s.producto.nombre }}</strong> —
-        se te agotaría en ~{{ s.producto.dias_para_agotar!.toFixed(0) }} días al ritmo actual.
-        <span class="alerta-nota">(asume ~15 días para que te llegue el pedido)</span>
+      <div class="alerta-cuerpo" *ngIf="sugerenciaReabastecimiento.length > 0; else sinSugerencia">
+        El/los producto(s)
+        <span *ngFor="let p of sugerenciaReabastecimiento; let i = index">
+          <span *ngIf="i > 0 && i < sugerenciaReabastecimiento.length - 1">, </span>
+          <span *ngIf="i > 0 && i === sugerenciaReabastecimiento.length - 1"> y </span>
+          <strong>{{ p.nombre }}</strong>
+        </span>
+        tiene{{ sugerenciaReabastecimiento.length > 1 ? 'n' : '' }} menos de 10 unidades en el inventario.
       </div>
-      <ng-template #sinSugerencia><div class="alerta-cuerpo">Ningún producto está por quebrar stock pronto.</div></ng-template>
+      <ng-template #sinSugerencia><div class="alerta-cuerpo">Ningún producto tiene poco stock por ahora.</div></ng-template>
     </div>
   </div>
 

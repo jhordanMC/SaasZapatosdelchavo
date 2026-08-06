@@ -69,7 +69,8 @@ export interface VarianteRead {
   talla: string | null;
   color: string | null;
   modelo: string | null;
-  sku: string;
+  sku: string | null;
+  codigo_barras?: string | null;
   esta_activo: boolean;
   stock: StockVarianteRead[];
 }
@@ -80,6 +81,8 @@ export interface ProductoListItem {
   nombre: string;
   id_categoria: string | null;
   nombre_categoria: string | null;
+  id_proveedor?: string | null;
+  nombre_proveedor?: string | null;
   sexo: SexoProducto | null;
   precio_venta: number;
   costo_compra: number;
@@ -109,12 +112,51 @@ export interface ProductosPaginados {
 }
 
 // ---------------------------------------------------------------------------
+// Proveedores
+// ---------------------------------------------------------------------------
+
+export interface ProveedorRead {
+  id_proveedor: string;
+  id_empresa: string;
+  razon_social: string;
+  ruc: string | null;
+  contacto_nombre: string | null;
+  telefono: string | null;
+  email: string | null;
+  direccion: string | null;
+  esta_activo: boolean;
+  creado_en: string;
+  actualizado_en: string;
+}
+
+export interface ProveedorCreateInput {
+  razon_social: string;
+  ruc?: string | null;
+  contacto_nombre?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+}
+
+export interface ProveedorUpdateInput {
+  razon_social?: string | null;
+  ruc?: string | null;
+  contacto_nombre?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  esta_activo?: boolean | null;
+}
+
+// ---------------------------------------------------------------------------
 // Payloads de escritura — espejean los schemas *Create y *Update del backend
 // ---------------------------------------------------------------------------
 
 export interface VarianteStockInput {
   talla: string;
   cantidad: number;
+  sku?: string | null;
+  codigo_barras?: string | null;
   id_local?: string | null;
   id_almacen?: string | null;
 }
@@ -122,6 +164,7 @@ export interface VarianteStockInput {
 export interface ProductoCreateInput {
   nombre: string;
   id_categoria: string | null;
+  id_proveedor?: string | null;
   sexo: SexoProducto | null;
   costo_compra: number;
   precio_venta: number;
@@ -132,6 +175,7 @@ export interface ProductoCreateInput {
 export interface ProductoUpdateInput {
   nombre?: string;
   id_categoria?: string | null;
+  id_proveedor?: string | null;
   sexo?: SexoProducto | null;
   costo_compra?: number;
   precio_venta?: number;
@@ -207,6 +251,24 @@ export class InventarioService {
 
   eliminarCategoria(idCategoria: string): Observable<MensajeResponse> {
     return this.http.delete<MensajeResponse>(`${this.base}/categorias/${idCategoria}`);
+  }
+
+  // ── Proveedores ─────────────────────────────────────────────────────────
+
+  listarProveedores(): Observable<ProveedorRead[]> {
+    return this.http.get<ProveedorRead[]>(`${this.base}/proveedores`);
+  }
+
+  crearProveedor(datos: ProveedorCreateInput): Observable<ProveedorRead> {
+    return this.http.post<ProveedorRead>(`${this.base}/proveedores`, datos);
+  }
+
+  actualizarProveedor(idProveedor: string, datos: ProveedorUpdateInput): Observable<ProveedorRead> {
+    return this.http.patch<ProveedorRead>(`${this.base}/proveedores/${idProveedor}`, datos);
+  }
+
+  eliminarProveedor(idProveedor: string): Observable<MensajeResponse> {
+    return this.http.delete<MensajeResponse>(`${this.base}/proveedores/${idProveedor}`);
   }
 
   // ── Locales ─────────────────────────────────────────────────────────────

@@ -59,6 +59,11 @@ export interface TallaStock {
   stock: number;
 }
 
+export interface ProductoDevuelto {
+  nombre: string;
+  cantidad: number;
+}
+
 export interface VentasPorDiaSemana {
   dia_semana: string;
   ingresos: number;
@@ -176,6 +181,18 @@ export class DashboardService {
     this.http
       .get<PuntoMes[]>(`${this.base}/ingresos-por-mes`, { params })
       .subscribe((lista) => this.ingresosPorMes.set(lista));
+  }
+
+  obtenerIngresosPorMes(meses = 6): Observable<PuntoMes[]> {
+    let params = new HttpParams().set('meses', meses);
+    return this.http.get<PuntoMes[]>(`${this.base}/ingresos-por-mes`, { params });
+  }
+
+  obtenerTopProductosDevueltos(desde?: string, hasta?: string, limit = 3): Observable<ProductoDevuelto[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<ProductoDevuelto[]>(`${this.base}/top-productos-devueltos`, { params });
   }
 
   /** Categorías con más ingresos en el período — agregado en SQL, no en el frontend. */

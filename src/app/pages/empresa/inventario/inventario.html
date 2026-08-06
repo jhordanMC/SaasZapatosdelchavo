@@ -65,6 +65,10 @@
         <div class="producto-tags">
           <span class="tag" *ngIf="p.nombre_categoria">{{ p.nombre_categoria }}</span>
           <span class="tag tag-sexo" *ngIf="p.sexo">{{ sexoLabel(p.sexo) }}</span>
+          <span class="tag tag-proveedor" *ngIf="p.nombre_proveedor" title="Proveedor">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px"><path d="M20 16V7a2 2 0 00-2-2H6a2 2 0 00-2 2v9m16 0H4m16 0l1.28 2.55a1 1 0 01-.9 1.45H3.62a1 1 0 01-.9-1.45L4 16"/></svg>
+            {{ p.nombre_proveedor }}
+          </span>
         </div>
         <div class="producto-precios">
           <span class="precio-venta">S/{{ p.precio_venta }}</span>
@@ -171,6 +175,31 @@
                 <option *ngFor="let s of sexosDisponibles" [value]="s.valor">{{ s.label }}</option>
               </select>
             </div>
+            
+            <!-- Proveedor -->
+            <div class="form-row">
+              <label>Proveedor <span class="opcional">(Opcional)</span></label>
+              <div class="select-con-add">
+                <select [(ngModel)]="form.id_proveedor">
+                  <option [ngValue]="null">Sin proveedor</option>
+                  <option *ngFor="let p of proveedores()" [value]="p.id_proveedor">
+                    {{ p.razon_social }}
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="btn-add-categoria"
+                  [class.active]="mostrarNuevoProveedor"
+                  (click)="mostrarNuevoProveedor ? cancelarNuevoProveedor() : abrirNuevoProveedor()"
+                  title="Crear nuevo proveedor"
+                  aria-label="Crear nuevo proveedor"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -231,6 +260,25 @@
             No hay categorías que coincidan con la búsqueda.
           </div>
         </div>
+      </div>
+
+      <!-- Panel: crear proveedor rápido -->
+      <div class="nueva-categoria-panel" *ngIf="mostrarNuevoProveedor">
+        <label>Nuevo proveedor</label>
+        <div class="categoria-input-row">
+          <input
+            type="text"
+            placeholder="Nombre de la empresa o proveedor…"
+            [(ngModel)]="nuevoProveedorNombre"
+            (keydown.enter)="guardarNuevoProveedor()"
+          />
+          <button type="button" class="btn-primary btn-crear-categoria" (click)="guardarNuevoProveedor()" [disabled]="creandoProveedor()">
+            <span *ngIf="!creandoProveedor()">Crear</span>
+            <span *ngIf="creandoProveedor()">Creando…</span>
+          </button>
+        </div>
+
+        <div class="categoria-error" *ngIf="errorProveedor()">{{ errorProveedor() }}</div>
       </div>
 
       <!-- Precios + margen de ganancia (calculado, solo informativo) -->
@@ -346,6 +394,8 @@
       <div class="variante-columnas" *ngIf="form.variantes.length > 0">
         <span>Talla</span>
         <span>Stock</span>
+        <span>SKU</span>
+        <span>Cód. Barras (Opc)</span>
         <span>Tipo</span>
         <span>Almacén / Local</span>
         <span></span>
@@ -362,6 +412,8 @@
           (ngModelChange)="onCantidadVarianteChange(i, $event)"
           aria-label="Stock"
         />
+        <input type="text" placeholder="Ej: SKU-39" [(ngModel)]="v.sku" aria-label="SKU" />
+        <input type="text" placeholder="Ej: 12345678" [(ngModel)]="v.codigo_barras" aria-label="Código de Barras" />
 
         <!-- Paso 1: elegir el tipo (Almacén o Local) -->
         <select [ngModel]="v.tipoUbicacion" (ngModelChange)="onTipoUbicacionChange(i, $event)" aria-label="Tipo de ubicación">

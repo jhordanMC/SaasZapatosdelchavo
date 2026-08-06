@@ -108,6 +108,18 @@ export interface ResumenFinanciero {
   recomendacion: string;
 }
 
+export interface StatsProveedor {
+  id_proveedor: string;
+  nombre: string;
+  total_productos: number;
+  unidades_vendidas: number;
+  inversion_estimada: number;
+}
+
+export interface StatsProveedoresResponse {
+  proveedores: StatsProveedor[];
+}
+
 export interface MensajeResponse {
   mensaje: string;
 }
@@ -173,6 +185,10 @@ export class FinanzasService {
   obtenerVentasPorMetodoPago(desde: string, hasta: string): Observable<VentasPorMetodoPago[]> {
     const params = new HttpParams().set('desde', desde).set('hasta', hasta);
     return this.http.get<VentasPorMetodoPago[]>(`${this.base}/ventas-por-metodo-pago`, { params });
+  }
+
+  obtenerStatsProveedores(): Observable<StatsProveedoresResponse> {
+    return this.http.get<StatsProveedoresResponse>(`${this.base}/proveedores-stats`);
   }
 
   // ── Gastos recurrentes ──────────────────────────────────────────────────

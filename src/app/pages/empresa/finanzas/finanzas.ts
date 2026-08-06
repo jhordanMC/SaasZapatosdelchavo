@@ -11,7 +11,6 @@ import {
   TIPOS_GASTO_SUGERIDOS,
 } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
-import { ComprasService, CompraCreate } from '../../../services/compras';
 import {
   ResumenMensual,
   construirResumenMensual,
@@ -43,8 +42,7 @@ type VistaIngresos = 'completos' | 'margen';
 export class FinanzasComponent implements OnInit {
   constructor(
     public finanzasService: FinanzasService,
-    private inventarioService: InventarioService,
-    public comprasService: ComprasService
+    private inventarioService: InventarioService
   ) {}
 
   tiposGastoSugeridos = TIPOS_GASTO_SUGERIDOS;
@@ -52,16 +50,13 @@ export class FinanzasComponent implements OnInit {
 
   mostrarModalRecurrente = false;
   mostrarModalUnico = false;
-  mostrarModalCompra = false;
   guardandoRecurrente = false;
   guardandoUnico = false;
-  guardandoCompra = false;
   eliminandoId = signal<string | null>(null);
-  gastoAEliminar: { id: string, tipo: 'recurrente' | 'unico' | 'compra' } | null = null;
+  gastoAEliminar: { id: string, tipo: 'recurrente' | 'unico' } | null = null;
 
   formRecurrente: GastoRecurrenteCreate = this.formRecurrenteVacio();
   formUnico: GastoOperativoCreate = this.formUnicoVacio();
-  formCompra: CompraCreate = this.formCompraVacio();
 
   readonly vistaIngresos = signal<VistaIngresos>('completos');
 
@@ -111,7 +106,9 @@ export class FinanzasComponent implements OnInit {
     this.inventarioService.listarProductos({}, 0, 10, 'margen_desc').subscribe((pagina) => {
       this.productosRentabilidad = pagina.items;
     });
-    this.comprasService.cargarCompras();
+    this.finanzasService.obtenerStatsProveedores().subscribe((res) => {
+      this.proveedoresStats = res.proveedores;
+    });
   }
 
   get resumen() {
@@ -159,7 +156,7 @@ export class FinanzasComponent implements OnInit {
     });
   }
 
-  abrirModalEliminar(id: string, tipo: 'recurrente' | 'unico' | 'compra'): void {
+  abrirModalEliminar(id: string, tipo: 'recurrente' | 'unico'): void {
     this.gastoAEliminar = { id, tipo };
   }
 
@@ -176,19 +173,13 @@ export class FinanzasComponent implements OnInit {
     const request$ =
       tipo === 'recurrente'
         ? this.finanzasService.eliminarGastoRecurrente(id)
-        : tipo === 'unico'
-        ? this.finanzasService.eliminarGastoOperativo(id)
-        : this.comprasService.eliminarCompra(id);
+        : this.finanzasService.eliminarGastoOperativo(id);
 
     request$.subscribe({
       next: () => {
         this.eliminandoId.set(null);
         this.gastoAEliminar = null;
-        if (tipo === 'compra') {
-          this.comprasService.cargarCompras();
-        } else {
-          this.finanzasService.recargarTodo();
-        }
+        this.finanzasService.recargarTodo();
       },
       error: () => this.eliminandoId.set(null)
     });
@@ -232,71 +223,16 @@ export class FinanzasComponent implements OnInit {
     this.finanzasService.cargarGastosOperativos(this.finanzasService.gastosOperativos().length);
   }
 
-  // ── Compras a proveedores y métricas de devoluciones ───────────────────────
+  // ── Proveedores (KPIs reales) ───────────────────────────────────────────────
 
-  get resumenProveedores() {
-    return this.comprasService.obtenerResumenProveedores();
-  }
-
-  get totalesProveedores() {
-    return this.comprasService.obtenerTotalesProveedores();
-  }
+  proveedoresStats: any[] = []; // Se carga en ngOnInit desde el backend
 
   get maxUnidadesVendidasProveedor(): number {
-    const resumen = this.resumenProveedores;
-    return Math.max(1, ...resumen.map((p) => p.unidadesVendidas));
+    return Math.max(1, ...this.proveedoresStats.map((p) => p.unidades_vendidas));
   }
 
   alturaBarraVendidas(unidades: number): number {
     return Math.round((unidades / this.maxUnidadesVendidasProveedor) * 100);
-  }
-
-  alturaBarraDevoluciones(devoluciones: number, unidadesVendidas: number): number {
-    if (unidadesVendidas === 0) return 0;
-    // Escalar altura de devoluciones proporcional a las ventas para comparación visual limpia
-    return Math.max(8, Math.round((devoluciones / this.maxUnidadesVendidasProveedor) * 100 * 3));
-  }
-
-  private formCompraVacio(): CompraCreate {
-    return {
-      proveedor: '',
-      concepto: '',
-      monto: 0,
-      cantidad_items: null,
-      unidades_vendidas: null,
-      cantidad_devoluciones: null,
-      fecha: hoyISO()
-    };
-  }
-
-  abrirModalCompra(): void {
-    this.formCompra = this.formCompraVacio();
-    this.mostrarModalCompra = true;
-  }
-
-  cerrarModalCompra(): void {
-    this.mostrarModalCompra = false;
-  }
-
-  guardarCompra(): void {
-    if (!this.formCompra.proveedor.trim() || !this.formCompra.concepto.trim() || this.formCompra.monto <= 0) {
-      return;
-    }
-    this.guardandoCompra = true;
-    this.comprasService.crearCompra(this.formCompra).subscribe({
-      next: () => {
-        this.mostrarModalCompra = false;
-        this.guardandoCompra = false;
-        this.comprasService.cargarCompras();
-      },
-      error: () => {
-        this.guardandoCompra = false;
-      }
-    });
-  }
-
-  cargarMasCompras(): void {
-    this.comprasService.cargarCompras(this.comprasService.compras().length);
   }
 
   // ── Resumen mensual de compras y ventas (descargable) ───────────────────
@@ -314,10 +250,9 @@ export class FinanzasComponent implements OnInit {
 
     forkJoin({
       ventas: this.finanzasService.obtenerResumenPeriodo(desde, hasta),
-      compras: this.comprasService.listarComprasEnRango(desde, hasta),
     }).subscribe({
-      next: ({ ventas, compras }) => {
-        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, compras);
+      next: ({ ventas }) => {
+        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, []);
         this.generandoResumenMensual = false;
       },
       error: () => {

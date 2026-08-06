@@ -36,8 +36,12 @@ import {
   ProductoListItem,
   ProductoRead,
   ProductosPaginados,
+  ProveedorCreateInput,
+  ProveedorRead,
   SexoProducto,
   VarianteStockInput,
+  ProductoCreateInput,
+  ProductoUpdateInput
 } from '../../../services/inventario';
 
 // ---------------------------------------------------------------------------
@@ -49,6 +53,8 @@ interface VarianteFormItem {
   // Texto plano tal cual lo digita el usuario (sin flechas de subir/bajar,
   // sin arrancar en "0"). Se convierte a número recién al guardar.
   cantidad: string;
+  sku: string | null;
+  codigo_barras: string | null;
   ubicacion: string;
   // Filtro de UI: qué lista mostrar en el segundo select ('almacen' | 'local' | '').
   // No se envía al backend, solo decide qué opciones ve el usuario.
@@ -58,6 +64,7 @@ interface VarianteFormItem {
 interface ProductoForm {
   nombre: string;
   id_categoria: string | null;
+  id_proveedor: string | null;
   sexo: SexoProducto | null;
   // Texto plano (ver VarianteFormItem.cantidad) — se parsean a número al guardar.
   costoCompra: string;
@@ -107,6 +114,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Estado de datos ────────────────────────────────────────────────────
   productos = signal<ProductoListItem[]>([]);
   categorias = signal<CategoriaRead[]>([]);
+  proveedores = signal<ProveedorRead[]>([]);
   locales = signal<LocalRead[]>([]);
   almacenesReales = signal<AlmacenRead[]>([]);
 
@@ -160,6 +168,13 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   creandoCategoria = signal(false);
   errorCategoria = signal<string | null>(null);
 
+  // ── Creador rápido de proveedor (dentro del modal de producto) ──────────
+  mostrarNuevoProveedor = false;
+  busquedaProveedor = '';
+  nuevoProveedorNombre = '';
+  creandoProveedor = signal(false);
+  errorProveedor = signal<string | null>(null);
+
   // ── Gestión de Almacenes ─────────────────────────────────────────────────
   mostrarGestionAlmacenes = false;
   busquedaAlmacenReal = '';
@@ -195,15 +210,17 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.inventarioService.listarCategorias().subscribe({
       next: (cats) => {
         if (cats.length === 0) {
-          // Empresa nueva sin categorías todavía: precarga las más comunes
-          // del mercado peruano de calzado, para que el inventario se pueda
-          // llenar de una vez sin tener que crear cada categoría a mano.
           this.sembrarCategoriasPredeterminadas();
         } else {
           this.categorias.set(cats);
         }
       },
       error: () => { /* no-fatal, los selects quedarán vacíos */ },
+    });
+
+    this.inventarioService.listarProveedores().subscribe({
+      next: (provs) => this.proveedores.set(provs),
+      error: () => { /* no-fatal */ },
     });
 
     this.inventarioService.listarLocales().subscribe({
@@ -297,6 +314,48 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  // ── Creador de Proveedores ───────────────────────────────────────────────
+
+  get proveedoresFiltrados(): ProveedorRead[] {
+    const q = this.busquedaProveedor.toLowerCase();
+    return this.proveedores().filter((p) => p.razon_social.toLowerCase().includes(q));
+  }
+
+  abrirNuevoProveedor(): void {
+    this.nuevoProveedorNombre = this.busquedaProveedor;
+    this.mostrarNuevoProveedor = true;
+    this.errorProveedor.set(null);
+  }
+
+  cancelarNuevoProveedor(): void {
+    this.mostrarNuevoProveedor = false;
+    this.nuevoProveedorNombre = '';
+    this.errorProveedor.set(null);
+  }
+
+  guardarNuevoProveedor(): void {
+    const razonSocial = this.nuevoProveedorNombre.trim();
+    if (!razonSocial) return;
+
+    this.creandoProveedor.set(true);
+    this.errorProveedor.set(null);
+
+    this.inventarioService.crearProveedor({ razon_social: razonSocial }).subscribe({
+      next: (prov) => {
+        this.proveedores.update((lista) => [...lista, prov].sort((a, b) => a.razon_social.localeCompare(b.razon_social)));
+        this.form.id_proveedor = prov.id_proveedor;
+        this.mostrarNuevoProveedor = false;
+        this.nuevoProveedorNombre = '';
+        this.busquedaProveedor = '';
+        this.creandoProveedor.set(false);
+      },
+      error: () => {
+        this.errorProveedor.set('No se pudo crear el proveedor.');
+        this.creandoProveedor.set(false);
+      },
+    });
+  }
+
   private recargarProductos(): void {
     this.cargarPrimeraPaginaProductos();
   }
@@ -346,11 +405,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return {
       nombre: '',
       id_categoria: null,
+      id_proveedor: null,
       sexo: null,
       costoCompra: '',
       precioVenta: '',
       fotoUrl: null,
-      variantes: [{ talla: '', cantidad: '', ubicacion: '', tipoUbicacion: '' }],
+      variantes: [
+        { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: '', tipoUbicacion: '' },
+      ],
     };
   }
 
@@ -447,14 +509,17 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return {
       nombre: detalle.nombre,
       id_categoria: detalle.id_categoria,
+      id_proveedor: detalle.id_proveedor ?? null,
       sexo: detalle.sexo,
       costoCompra: String(detalle.costo_compra ?? ''),
       precioVenta: String(detalle.precio_venta ?? ''),
       fotoUrl: copiarFoto ? detalle.imagen_url : null,
       variantes: detalle.variantes.flatMap((v) =>
         v.stock.map((s) => ({
-            talla: v.talla ?? '',
-            cantidad: String(s.cantidad ?? ''),
+            talla: v.talla || '',
+            cantidad: String(s.cantidad),
+            sku: v.sku || null,
+            codigo_barras: v.codigo_barras || null,
             ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
             tipoUbicacion: s.id_local ? 'local' as const : (s.id_almacen ? 'almacen' as const : '' as const),
           }))
@@ -477,6 +542,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     const f = this.form;
     if (f.nombre.trim() !== '') return true;
     if (f.id_categoria) return true;
+    if (f.id_proveedor) return true;
     if (f.sexo) return true;
     if (f.costoCompra.trim() !== '') return true;
     if (f.precioVenta.trim() !== '') return true;
@@ -520,7 +586,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     const primerUbicacion = hayLocales
       ? `local:${this.locales()[0].id_local}`
       : (hayAlmacenes ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
-    this.form.variantes.push({ talla: '', cantidad: '', ubicacion: primerUbicacion, tipoUbicacion: tipo });
+    this.form.variantes.push({ talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: primerUbicacion, tipoUbicacion: tipo });
   }
 
   /** Al cambiar el tipo (Almacén/Local) se limpia la ubicación elegida, para que
@@ -685,9 +751,12 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter((v) => v.talla.trim() && v.ubicacion)
       .map((v) => {
         const [tipo, id] = v.ubicacion.split(':');
+        const cantidadNum = parseInt(v.cantidad, 10) || 0;
         return {
           talla: v.talla.trim(),
-          cantidad: parseInt(v.cantidad, 10) || 0,
+          cantidad: cantidadNum,
+          sku: v.sku?.trim() || null,
+          codigo_barras: v.codigo_barras?.trim() || null,
           id_local: tipo === 'local' ? id : null,
           id_almacen: tipo === 'almacen' ? id : null,
         };
@@ -698,16 +767,18 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.editandoId) {
       // Actualización
+      const payload: ProductoUpdateInput = {
+        nombre: this.form.nombre.trim(),
+        id_categoria: this.form.id_categoria,
+        id_proveedor: this.form.id_proveedor,
+        sexo: this.form.sexo,
+        costo_compra: costoCompra,
+        precio_venta: precioVenta,
+        imagen_url: this.form.fotoUrl,
+        variantes,
+      };
       this.inventarioService
-        .actualizarProducto(this.editandoId, {
-          nombre: this.form.nombre,
-          id_categoria: this.form.id_categoria,
-          sexo: this.form.sexo,
-          costo_compra: costoCompra,
-          precio_venta: precioVenta,
-          imagen_url: this.form.fotoUrl,
-          variantes,
-        })
+        .actualizarProducto(this.editandoId, payload)
         .subscribe({
           next: () => {
             this.guardando.set(false);
@@ -723,16 +794,18 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     } else {
       // Creación
+      const payload: ProductoCreateInput = {
+        nombre: this.form.nombre.trim(),
+        id_categoria: this.form.id_categoria,
+        id_proveedor: this.form.id_proveedor,
+        sexo: this.form.sexo,
+        costo_compra: costoCompra,
+        precio_venta: precioVenta,
+        imagen_url: this.form.fotoUrl,
+        variantes,
+      };
       this.inventarioService
-        .crearProducto({
-          nombre: this.form.nombre,
-          id_categoria: this.form.id_categoria,
-          sexo: this.form.sexo,
-          costo_compra: costoCompra,
-          precio_venta: precioVenta,
-          imagen_url: this.form.fotoUrl,
-          variantes,
-        })
+        .crearProducto(payload)
         .subscribe({
           next: () => {
             this.guardando.set(false);
