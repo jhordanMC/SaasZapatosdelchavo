@@ -615,12 +615,12 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   // ════════════════════════════════════════════════════════
-  // Accesibilidad: botón junto a la campana. Por ahora es un
-  // stub — enganchar aquí el panel real (tamaño de fuente,
-  // alto contraste, reducir movimiento, etc.) cuando esté listo.
+  // Accesibilidad: botón junto a la campana. El widget (accesibilidad.js /
+  // accesibilidad-responsive.js) ya no muestra su propio botón flotante:
+  // se abre/cierra únicamente desde acá vía window.AccessibilityWidget.
   // ════════════════════════════════════════════════════════
   toggleAccesibilidad(): void {
-    // TODO: abrir panel/menú de opciones de accesibilidad
+    (window as any).AccessibilityWidget?.toggle?.();
   }
 
   // ════════════════════════════════════════════════════════

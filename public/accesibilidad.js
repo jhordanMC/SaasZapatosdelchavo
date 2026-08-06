@@ -1,6 +1,9 @@
 (function(){
   if(window.AccessibilityWidget) return;
   const LS_POS='acc_fab_pos_summas_v1';
+  /* Referencias a openPanel/closePanel (definidas dentro de buildUI) para
+     poder abrir/cerrar el panel desde afuera — ej. el botón del navbar. */
+  let externalOpenPanel=null, externalClosePanel=null;
 
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -861,9 +864,10 @@ function render2020(){
       document.body.appendChild(w);
     }
 
-    /* FAB */
+    /* FAB — oculto: el widget ahora se abre solo desde el botón de accesibilidad del navbar (ver window.AccessibilityWidget.open()) */
     const fab=document.createElement('button');fab.id='accFab';fab.setAttribute('aria-label','Abrir menú de accesibilidad');
     fab.innerHTML=`<img id="accFabLogo" src="/vilcas.png" alt="VILCAS" onerror="this.style.display='none';document.getElementById('accFabIcon').style.display='block'"><span id="accFabIcon" aria-hidden="true" style="font-size:20px;color:#fff;display:none;"><i class="fas fa-universal-access"></i></span>`;
+    fab.style.display='none';
     document.body.appendChild(fab);
     initDraggableFab(fab);
 
@@ -1157,6 +1161,9 @@ window.addEventListener('touchend',function(){
       overlay.classList.remove('open');panel.classList.remove('open');
       panel.addEventListener('transitionend',()=>{if(!panel.classList.contains('open')) panel.style.display='none';},{once:true});
     };
+    /* Se guardan en el scope externo del IIFE para poder abrirlo/cerrarlo
+       desde afuera (botón del navbar) sin depender del FAB oculto. */
+    externalOpenPanel=openPanel;externalClosePanel=closePanel;
 
     let swY=0,swStarted=false;
     panel.addEventListener('touchstart',e=>{const body=panel.querySelector('.ap-body');if(body&&body.scrollTop>0) return;swY=e.touches[0].clientY;swStarted=true;},{passive:true});
@@ -1276,7 +1283,13 @@ $('#ttsStop').addEventListener('click',ttsStop);
     window.AccessibilityWidget._settings=settings;
   }
 
-  window.AccessibilityWidget={init(){buildUI()},_settings:settings};
+  window.AccessibilityWidget={
+    init(){buildUI()},
+    open(){if(!$('#accPanel')) buildUI();externalOpenPanel&&externalOpenPanel();},
+    close(){externalClosePanel&&externalClosePanel();},
+    toggle(){const p=$('#accPanel');(p&&p.classList.contains('open'))?this.close():this.open();},
+    _settings:settings,
+  };
   if(document.readyState!=='loading') window.AccessibilityWidget.init();
   else document.addEventListener('DOMContentLoaded',()=>window.AccessibilityWidget.init());
 })();
