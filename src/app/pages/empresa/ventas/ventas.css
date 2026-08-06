@@ -7,51 +7,13 @@
   background: var(--bg-canvas);
 }
 
-.filtros-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
-  padding: 18px var(--space-card);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 14px;
-  margin: var(--space-page) var(--space-page) 0;
-}
+/* Base de .filtros-card / .filtro-campo / .filtro-acciones vive en
+   src/styles/components.css (compartida por todas las vistas). Aquí solo
+   el margen propio de esta página, ya que Ventas no usa un wrapper .content
+   con padding como otras pantallas. */
+.filtros-card { margin: var(--space-page) var(--space-page) 0; }
 
-.filtro-campo { display: flex; flex-direction: column; gap: 6px; flex: 1 1 160px; min-width: 0; }
-.filtro-campo-buscar { flex: 2 1 220px; }
-.filtro-campo label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-tertiary);
-}
-.filtro-campo select,
-.filtro-campo input {
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-sans);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-input);
-  background: var(--bg-canvas);
-  color: var(--text-primary);
-  outline: none;
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
-}
-.filtro-campo input { cursor: text; }
-.filtro-campo select:focus,
-.filtro-campo input:focus { border-color: var(--brand-mint); box-shadow: var(--shadow-glow-mint); }
-
-.filtro-acciones { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto; }
-
-.sexo-toggle { display: flex; gap: 6px; }
+.sexo-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
 .sexo-toggle button {
   padding: 10px 14px;
   font-size: 12px;
@@ -657,9 +619,7 @@
 }
 
 @media (max-width: 768px) {
-  .filtros-card { flex-direction: column; align-items: stretch; margin: 16px 16px 0; padding: 16px; }
-  .filtro-acciones { margin-left: 0; }
-  .sexo-toggle { flex-wrap: wrap; }
+  .filtros-card { margin: 16px 16px 0; }
   .categorias-bar { padding: 12px 16px; }
   .ventas-layout { padding: 16px; gap: 16px; }
   .ventas-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
@@ -709,8 +669,6 @@
   font-size: 12px;
   color: var(--text-secondary);
 }
-
-.local-select { max-width: 200px; }
 
 .local-badge {
   font-size: 13px;

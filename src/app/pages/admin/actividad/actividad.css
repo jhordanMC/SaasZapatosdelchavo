@@ -60,48 +60,8 @@
 /* ══════════════════════════════
    Filtros
 ══════════════════════════════ */
-.filtros-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
-  padding: 18px var(--space-card);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 14px;
-}
-
-.filtro-campo { display: flex; flex-direction: column; gap: 6px; flex: 1 1 160px; min-width: 0; }
-.filtro-campo label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-tertiary);
-}
-.filtro-campo select,
-.filtro-campo input {
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-sans);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-input);
-  background: var(--bg-canvas);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
-}
-.filtro-campo select:focus,
-.filtro-campo input:focus {
-  border-color: var(--brand-mint);
-  box-shadow: var(--shadow-glow-mint);
-}
-
-.filtro-acciones { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Base de .filtros-card / .filtro-campo / .filtro-acciones vive en
+   src/styles/components.css (compartida por todas las vistas). */
 
 .btn-filtrar {
   display: inline-flex;
@@ -462,7 +422,6 @@
 @media (max-width: 768px) {
   .content { padding: 16px 16px 32px; }
   .kpi-hero-grid { grid-template-columns: 1fr; }
-  .filtros-card { flex-direction: column; align-items: stretch; }
   .filtro-acciones { justify-content: stretch; }
   .filtro-acciones .btn-filtrar,
   .filtro-acciones .btn-clear { flex: 1; justify-content: center; }
