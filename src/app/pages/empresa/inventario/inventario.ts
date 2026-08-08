@@ -773,8 +773,56 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         };
       });
 
+    // ── Validaciones de negocio en el frontend (respuesta inmediata sin round-trip) ──
+
+    // 1. Variantes con combinación (talla + ubicación) duplicada
+    const ubicacionesVistas = new Set<string>();
+    for (const v of variantes) {
+      const clave = `${v.talla.toLowerCase()}|${v.id_local ?? ''}|${v.id_almacen ?? ''}`;
+      if (ubicacionesVistas.has(clave)) {
+        const ubicacionStr = v.id_local ? 'el mismo local' : 'el mismo almacén';
+        this.guardando.set(false);
+        this.errorModal.set(
+          `La talla "${v.talla}" aparece más de una vez para ${ubicacionStr}.`
+        );
+        return;
+      }
+      ubicacionesVistas.add(clave);
+    }
+
+    // 2. SKU duplicado dentro del formulario
+    const skusVistos = new Set<string>();
+    for (const v of variantes) {
+      if (v.sku) {
+        if (skusVistos.has(v.sku)) {
+          this.guardando.set(false);
+          this.errorModal.set(
+            `El SKU "${v.sku}" aparece más de una vez.`
+          );
+          return;
+        }
+        skusVistos.add(v.sku);
+      }
+    }
+
+    // 3. Código de barras duplicado dentro del formulario
+    const barcodesVistos = new Set<string>();
+    for (const v of variantes) {
+      if (v.codigo_barras) {
+        if (barcodesVistos.has(v.codigo_barras)) {
+          this.guardando.set(false);
+          this.errorModal.set(
+            `El código de barras "${v.codigo_barras}" aparece más de una vez.`
+          );
+          return;
+        }
+        barcodesVistos.add(v.codigo_barras);
+      }
+    }
+
     const costoCompra = parseFloat(this.form.costoCompra) || 0;
     const precioVenta = parseFloat(this.form.precioVenta) || 0;
+
 
     if (this.editandoId) {
       // Actualización
