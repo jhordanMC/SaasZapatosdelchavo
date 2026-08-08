@@ -131,6 +131,11 @@ export function construirResumenMensual(
   };
 }
 
+export interface OpcionesBrandingReporte {
+  nombreEmpresa?: string | null;
+  clienteFotoUrl?: string | null;
+}
+
 // ---------------------------------------------------------------------------
 async function imagenADataUrl(url: string): Promise<string | null> {
   try {
@@ -148,46 +153,75 @@ async function imagenADataUrl(url: string): Promise<string | null> {
   }
 }
 
+function formatoDesdeDataUrl(dataUrl: string): string {
+  const match = /^data:image\/(\w+);/.exec(dataUrl);
+  const ext = (match?.[1] ?? 'jpeg').toUpperCase();
+  return ext === 'JPG' ? 'JPEG' : ext;
+}
+
 // ---------------------------------------------------------------------------
 // PDF
 // ---------------------------------------------------------------------------
 
-export async function exportarResumenMensualPDF(r: ResumenMensual): Promise<void> {
+export async function exportarResumenMensualPDF(
+  r: ResumenMensual,
+  opciones?: OpcionesBrandingReporte
+): Promise<void> {
   const doc = new jsPDF();
   const margenIzq = 14;
   let y = 14;
 
+  const clienteFotoDataUrl = opciones?.clienteFotoUrl ? await imagenADataUrl(opciones.clienteFotoUrl) : null;
   const logoVilcasDataUrl = await imagenADataUrl('/vilcas.png');
   const logoAlbaDataUrl = await imagenADataUrl('/Logoalbasinfondo.png');
 
-  // Cabecera institucional VILCAS
+  // Cabecera institucional
   doc.setFillColor(2, 75, 64); // #024b40
-  doc.rect(0, 0, 210, 32, 'F');
+  doc.rect(0, 0, 210, 36, 'F');
 
-  if (logoVilcasDataUrl) {
+  let posXTexto = margenIzq;
+
+  // Foto de la marca / perfil del CLIENTE (GRANDE)
+  if (clienteFotoDataUrl) {
     try {
-      doc.addImage(logoVilcasDataUrl, 'PNG', margenIzq, 6, 20, 20);
+      doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), margenIzq, 6, 24, 24);
+      posXTexto = margenIzq + 28;
     } catch {
-      // Ignorar si no carga
+      posXTexto = margenIzq;
     }
   }
 
-  const posXTexto = logoVilcasDataUrl ? margenIzq + 24 : margenIzq;
-  doc.setFontSize(18);
+  // Nombre de la marca del CLIENTE en grande
+  const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
+  doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.text('VILCAS', posXTexto, 16);
+  doc.text(nombreEmpresa, posXTexto, 16);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(190, 225, 215);
   doc.text('Resumen mensual de compras y ventas', posXTexto, 24);
 
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text(`${r.etiquetaMes}  ·  ${r.desde} al ${r.hasta}`, 196, 18, { align: 'right' });
+  // Logo de VILCAS (PEQUEÑO) en la esquina superior derecha
+  if (logoVilcasDataUrl) {
+    try {
+      doc.addImage(logoVilcasDataUrl, 'PNG', 186, 6, 10, 10);
+    } catch {
+      // Ignorar si no carga
+    }
+  }
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(200, 230, 220);
+  doc.text('Plataforma VILCAS', 184, 12, { align: 'right' });
 
-  y = 42;
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(255, 255, 255);
+  doc.text(`${r.etiquetaMes}  ·  ${r.desde} al ${r.hasta}`, 196, 28, { align: 'right' });
+
+  y = 46;
 
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
@@ -292,61 +326,54 @@ export async function exportarResumenMensualPDF(r: ResumenMensual): Promise<void
 // Excel
 // ---------------------------------------------------------------------------
 
-export function exportarResumenMensualExcel(r: ResumenMensual): void {
+export function exportarResumenMensualExcel(
+  r: ResumenMensual,
+  opciones?: OpcionesBrandingReporte
+): void {
   const libro = XLSX.utils.book_new();
-
+  const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
   const albaLink = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
 
   const filasResumen = [
-    ['VILCAS - Sistema de Gestión'],
-    ['Resumen mensual de compras y ventas'],
-    [r.etiquetaMes, `del ${r.desde} al ${r.hasta}`],
+    [`EMPRESA: ${nombreEmpresa}`],
+    ['REPORTES VILCAS - RESUMEN MENSUAL DE COMPRAS Y VENTAS'],
+    [`Período: ${r.etiquetaMes} (del ${r.desde} al ${r.hasta})`],
     [],
-    ['Ventas', ''],
+    ['RESUMEN DE VENTAS', 'MONTO / CANTIDAD'],
     ['Ingresos del mes', r.ventas.ingresos_periodo],
     ['Cantidad de ventas', r.ventas.cantidad_ventas],
     ['Ticket promedio', r.ventas.ticket_promedio],
     ['Margen bruto del mes', r.ventas.margen_bruto_periodo],
     [],
-    ['Compras', ''],
+    ['RESUMEN DE COMPRAS', 'MONTO / CANTIDAD'],
     ['Total comprado', r.compras.total],
     ['Cantidad de compras', r.compras.cantidad],
     ['Gasto operativo del mes', r.ventas.gasto_operativo_periodo],
     [],
-    ['Balance neto (ventas - compras - gasto operativo)', r.balanceNeto],
+    ['BALANCE NETO DEL MES (Ventas − Compras − Gastos)', r.balanceNeto],
     [],
-    ['Powered by ALBA - Engineering & Development'],
+    ['Powered by ALBA · Engineering & Development'],
     [albaLink],
   ];
   const hojaResumen = XLSX.utils.aoa_to_sheet(filasResumen);
-  hojaResumen['!cols'] = [{ wch: 45 }, { wch: 24 }];
+  hojaResumen['!cols'] = [{ wch: 48 }, { wch: 24 }];
   XLSX.utils.book_append_sheet(libro, hojaResumen, 'Resumen');
 
-  if (r.compras.porProveedor.length > 0) {
-    const filasProveedor = [
-      ['VILCAS - Compras por proveedor'],
-      ['Proveedor', 'Total comprado'],
-      ...r.compras.porProveedor.map((p) => [p.proveedor, p.total]),
+  if (r.compras.detalle.length > 0) {
+    const filasDetalle = [
+      [`EMPRESA: ${nombreEmpresa} - DETALLE DE COMPRAS`],
+      [`Período: ${r.etiquetaMes}`],
       [],
-      ['Powered by ALBA - Engineering & Development'],
+      ['Fecha', 'Proveedor', 'Concepto', 'Cantidad de ítems', 'Monto (S/)', 'Notas'],
+      ...r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, c.cantidad_items ?? '', c.monto, c.notas ?? '']),
+      [],
+      ['Powered by ALBA · Engineering & Development'],
       [albaLink],
     ];
-    const hojaProveedor = XLSX.utils.aoa_to_sheet(filasProveedor);
-    hojaProveedor['!cols'] = [{ wch: 35 }, { wch: 18 }];
-    XLSX.utils.book_append_sheet(libro, hojaProveedor, 'Por proveedor');
+    const hojaDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
+    hojaDetalle['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 32 }, { wch: 18 }, { wch: 16 }, { wch: 32 }];
+    XLSX.utils.book_append_sheet(libro, hojaDetalle, 'Detalle de compras');
   }
-
-  const filasDetalle = [
-    ['VILCAS - Detalle de compras'],
-    ['Fecha', 'Proveedor', 'Concepto', 'Cantidad de ítems', 'Monto', 'Notas'],
-    ...r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, c.cantidad_items ?? '', c.monto, c.notas ?? '']),
-    [],
-    ['Powered by ALBA - Engineering & Development'],
-    [albaLink],
-  ];
-  const hojaDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
-  hojaDetalle['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 30 }, { wch: 18 }, { wch: 14 }, { wch: 32 }];
-  XLSX.utils.book_append_sheet(libro, hojaDetalle, 'Detalle de compras');
 
   XLSX.writeFile(libro, nombreArchivo(r, 'xlsx'));
 }

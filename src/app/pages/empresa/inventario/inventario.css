@@ -247,6 +247,105 @@
   gap: 6px;
   flex-shrink: 0;
 }
+.foto-upload-box {
+  width: 170px;
+  padding: 12px;
+  border: 1.5px dashed var(--border-default);
+  border-radius: 14px;
+  background: var(--bg-canvas);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.foto-upload-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.foto-opciones-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.btn-foto-opcion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.btn-foto-camara {
+  background: var(--brand-deep);
+  color: white;
+  border: none;
+}
+.btn-foto-camara:hover {
+  background: var(--brand-deep-700);
+  transform: translateY(-1px);
+}
+.btn-foto-galeria {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+.btn-foto-galeria:hover {
+  background: var(--border-subtle);
+  transform: translateY(-1px);
+}
+
+.foto-upload-preview-card {
+  width: 170px;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+}
+.foto-upload-preview-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+.foto-preview-acciones {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: var(--bg-canvas);
+  border-top: 1px solid var(--border-subtle);
+}
+.btn-foto-mini {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.btn-foto-mini:hover {
+  background: var(--brand-deep);
+  color: white;
+  border-color: var(--brand-deep);
+}
+
 .foto-upload-compacta {
   width: 150px;
   height: 150px;

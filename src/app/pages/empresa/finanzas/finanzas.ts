@@ -21,6 +21,9 @@ import {
   rangoMes,
 } from '../../../utils/exportar-resumen-mensual';
 
+import { AuthService } from '../../../core/auth';
+import { environment } from '../../../../environments/environment';
+
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -44,7 +47,8 @@ export class FinanzasComponent implements OnInit {
   constructor(
     public finanzasService: FinanzasService,
     private inventarioService: InventarioService,
-    private comprasService: ComprasService
+    private comprasService: ComprasService,
+    private authService: AuthService
   ) {}
 
   tiposGastoSugeridos = TIPOS_GASTO_SUGERIDOS;
@@ -295,11 +299,19 @@ export class FinanzasComponent implements OnInit {
     });
   }
 
+  private opcionesBranding() {
+    const u = this.authService.usuarioActual();
+    return {
+      nombreEmpresa: u?.nombreEmpresa ?? null,
+      clienteFotoUrl: u?.avatarUrl ? `${environment.apiUrl}${u.avatarUrl}` : null,
+    };
+  }
+
   descargarResumenPDF(): void {
-    if (this.resumenMensual) exportarResumenMensualPDF(this.resumenMensual);
+    if (this.resumenMensual) exportarResumenMensualPDF(this.resumenMensual, this.opcionesBranding());
   }
 
   descargarResumenExcel(): void {
-    if (this.resumenMensual) exportarResumenMensualExcel(this.resumenMensual);
+    if (this.resumenMensual) exportarResumenMensualExcel(this.resumenMensual, this.opcionesBranding());
   }
 }
