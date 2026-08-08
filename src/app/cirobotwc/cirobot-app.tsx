@@ -45,8 +45,10 @@ export function CirobotApp({ callbacks }: { callbacks: CirobotCallbacks }) {
         />
       )}
 
-      <div className={`cbot-mascota-wrap ${abierto && !minimizado ? 'cbot-mascota-acercada' : ''}`}>
-        <Mascota3D />
+      <div className="cbot-mascota-wrap">
+        <div className={`cbot-mascota-visual ${abierto && !minimizado ? 'cbot-mascota-acercada' : ''}`}>
+          <Mascota3D />
+        </div>
         <div
           className="cbot-mascota-click"
           onClick={alClickearMascota}

@@ -59,11 +59,35 @@ export const CIROBOT_CSS = `
   width: 300px;
   height: 300px;
   pointer-events: none;
+}
+
+/* El "acercar" (scale+translate) del modelo cuando el chat está abierto
+   vive en este div INTERNO (no en .cbot-mascota-wrap) a propósito: un
+   transform en .cbot-mascota-wrap —que es position:fixed— lo convertiría
+   en el containing block de sus hijos position:fixed, incluido
+   .cbot-mascota-click, que dejaría de anclarse al viewport para anclarse
+   a esta caja y saltaría de lugar en cuanto se abre el chat (así se
+   descubrió el bug: el hotspot terminaba tapando el botón Enviar del
+   panel, en desktop y mobile por igual). Con el transform acá adentro,
+   .cbot-mascota-wrap nunca se transforma, así que .cbot-mascota-click
+   se queda siempre en el mismo sitio fijo respecto al viewport. */
+.cbot-mascota-visual {
+  width: 100%;
+  height: 100%;
   transition: transform 0.5s cubic-bezier(0.22,0.8,0.35,1);
 }
-.cbot-mascota-wrap.cbot-mascota-acercada {
+.cbot-mascota-visual.cbot-mascota-acercada {
   transform: scale(1.06) translate(-6px, -6px);
 }
+/* .cbot-mascota-click se queda en "position: fixed" (anclado siempre al
+   viewport). A propósito NO vive dentro del div que recibe el transform
+   (ver .cbot-mascota-visual más abajo) — si estuviera ahí adentro, el
+   transform del padre lo convertiría en su containing block y el hotspot
+   dejaría de anclarse al viewport para anclarse a esa caja transformada,
+   saltando de posición justo cuando el chat se abre (bug real que hubo:
+   el hotspot terminaba encima del botón Enviar del panel). Mismo motivo
+   por el que .cbot-mascota-visual (no .cbot-mascota-wrap) es quien lleva
+   la clase .cbot-mascota-acercada. */
 .cbot-mascota-click {
   position: fixed;
   bottom: 40px;
