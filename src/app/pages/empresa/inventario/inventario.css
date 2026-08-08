@@ -789,6 +789,16 @@
   .form-row-2, .form-row-3 { flex-direction: column; }
   .foto-y-basicos { flex-direction: column; }
   .foto-upload-wrap { width: 100%; }
+  /* La caja de "Foto del producto" y la vista previa tenían un ancho fijo
+     de 170px heredado del layout de escritorio: en móvil, con foto-y-basicos
+     apilado en columna, se quedaban chicas en vez de usar todo el ancho
+     disponible del modal. */
+  .foto-upload-box,
+  .foto-upload-preview-card {
+    width: 100%;
+  }
+  .foto-upload-preview-card img { height: 180px; }
+  .foto-opciones-grid { flex-direction: row; }
   .foto-upload-compacta { width: 100%; height: 120px; }
   .variante-fila .field-wrap { flex: 1 1 100%; }
   .modal-footer { flex-direction: column-reverse; gap: 8px; }

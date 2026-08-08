@@ -59,6 +59,7 @@
       <p class="section-label">Plataforma</p>
       <div class="kpi-grid">
         <div class="kpi-card">
+          <div class="card-help" tabindex="0" data-help="Cantidad de empresas con estado activo actualmente en la plataforma, sobre el total de empresas registradas." title="Empresas activas">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ empresasActivas }}</div>
@@ -74,6 +75,7 @@
         </div>
 
         <div class="kpi-card">
+          <div class="card-help" tabindex="0" data-help="Número total de usuarios con sesión habilitada en todas las empresas de la plataforma." title="Usuarios activos">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ usuariosActivos }}</div>
@@ -89,6 +91,7 @@
         </div>
 
         <div class="kpi-card accent">
+          <div class="card-help" tabindex="0" data-help="Suma de los ingresos por suscripción de todas las empresas facturados en el mes en curso." title="Ingresos este mes">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ fmtPEN(ingresosTotal) }}</div>
@@ -105,6 +108,7 @@
         </div>
 
         <div class="kpi-card">
+          <div class="card-help" tabindex="0" data-help="Promedio de las calificaciones de satisfacción dejadas por las empresas desde su perfil." title="Score global de satisfacción">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value" [class.kpi-value-texto]="scoreGlobal === null">{{ scoreGlobalTexto }}</div>
@@ -126,6 +130,7 @@
     <div>
       <div class="kpi-grid kpi-grid-2">
         <div class="kpi-card">
+          <div class="card-help" tabindex="0" data-help="Cantidad de planes de suscripción distintos que están contratados actualmente entre las empresas activas." title="Planes contratados">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ planesDistintosActivos }}</div>
@@ -141,6 +146,7 @@
         </div>
 
         <div class="kpi-card" [class.accent]="empresasEnRiesgo.length > 0">
+          <div class="card-help" tabindex="0" data-help="Empresas que están inactivas o cuyo score de satisfacción es menor al 70%, candidatas a soporte prioritario." title="Empresas en riesgo">?</div>
           <div class="kpi-top">
             <div>
               <div class="kpi-value">{{ empresasEnRiesgo.length }}</div>
@@ -165,6 +171,7 @@
     <!-- Realtime + Ingresos por empresa -->
     <div class="charts-row">
       <div class="chart-card">
+        <div class="card-help" tabindex="0" data-help="Muestra en vivo cuántos usuarios están conectados usando la plataforma en este momento." title="Actividad en tiempo real">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Actividad en tiempo real</div>
@@ -182,6 +189,7 @@
       </div>
 
       <div class="table-card">
+        <div class="card-help" tabindex="0" data-help="Desglose de los ingresos generados en el mes por cada empresa, ordenados de mayor a menor." title="Ingresos por empresa">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Ingresos por empresa</div>
@@ -223,6 +231,7 @@
     <!-- Distribución por sector y por plan -->
     <div class="charts-row">
       <div class="table-card">
+        <div class="card-help" tabindex="0" data-help="Compara qué sector aporta más ingresos a la plataforma, junto con la cantidad de empresas y su score promedio." title="Ingresos por sector">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Ingresos por sector</div>
@@ -244,6 +253,7 @@
       </div>
 
       <div class="table-card">
+        <div class="card-help" tabindex="0" data-help="Cuántas empresas tiene cada plan de suscripción y cuánto ingreso aporta cada uno a la plataforma." title="Distribución por plan">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Distribución por plan</div>
@@ -267,6 +277,7 @@
     <!-- Rankings: mejores ingresos / menor score -->
     <div class="charts-row">
       <div class="table-card">
+        <div class="card-help" tabindex="0" data-help="Las 5 empresas que más ingreso generan a la plataforma en el mes actual." title="Top 5 empresas por ingreso">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Top 5 empresas por ingreso</div>
@@ -285,6 +296,7 @@
       </div>
 
       <div class="table-card">
+        <div class="card-help" tabindex="0" data-help="Empresas ordenadas de menor a mayor score de satisfacción, buenas candidatas para recibir soporte o capacitación." title="Empresas con menor score">?</div>
         <div class="card-head">
           <div>
             <div class="card-title">Empresas con menor score</div>
@@ -306,6 +318,7 @@
 
     <!-- Evolución de altas de empresas -->
     <div class="table-card full">
+      <div class="card-help" tabindex="0" data-help="Cuántas empresas nuevas se registraron en la plataforma cada mes, durante los últimos 6 meses." title="Evolución de altas">?</div>
       <div class="card-head">
         <div>
           <div class="card-title">Evolución de altas de empresas</div>
@@ -323,6 +336,7 @@
 
     <!-- Tabla de empresas -->
     <div class="table-card full">
+      <div class="card-help" tabindex="0" data-help="Listado completo de empresas registradas en la plataforma, con sus datos principales y filtros de búsqueda." title="Empresas registradas">?</div>
       <div class="card-head">
         <div class="card-title">Empresas registradas</div>
         <span class="filter-count badge-count">{{ empresasFiltradas.length }} de {{ todasEmpresas.length }}</span>

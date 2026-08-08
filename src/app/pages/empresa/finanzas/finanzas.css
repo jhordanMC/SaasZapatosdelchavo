@@ -331,10 +331,22 @@
   padding: 10px 14px;
   font-size: 13.5px;
   font-weight: 600;
+  line-height: 1.4;
   color: var(--text-primary);
   background: var(--bg-surface);
+  min-width: 170px;
+  min-height: 40px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 .resumen-mensual-toolbar input[type="month"]:focus { outline: none; border-color: var(--brand-mint); }
+
+/* En pantallas muy angostas el input puede ocupar todo el ancho disponible
+   sin comprimirse (evita que el texto de la fecha se vea cortado). */
+@media (max-width: 480px) {
+  .resumen-mensual-toolbar { flex-direction: column; align-items: stretch; }
+  .resumen-mensual-toolbar input[type="month"] { width: 100%; min-width: 0; }
+}
 .resumen-mensual-descargas { display: flex; gap: 12px; margin-top: 20px; }
 .resumen-mensual-descargas .btn-clear {
   padding: 12px 20px;
@@ -636,4 +648,3 @@
   .modal-footer { flex-direction: column-reverse; }
   .modal-footer button { width: 100%; }
 }
-

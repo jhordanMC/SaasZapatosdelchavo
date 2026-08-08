@@ -2,12 +2,19 @@
  * Exportación del resumen mensual de compras y ventas a PDF y Excel.
  *
  * Todo se genera en el navegador (sin backend): jsPDF + jspdf-autotable
- * arman el PDF, y SheetJS (xlsx) arma el libro de Excel con dos hojas
- * (Resumen y Detalle de compras).
+ * arman el PDF, y ExcelJS arma el libro de Excel con dos hojas
+ * (Resumen y Detalle de compras), con estilos, colores, bordes y el
+ * logo de VILCAS incrustado.
+ *
+ * ExcelJS se importa de forma DIFERIDA (dynamic import) dentro de
+ * exportarResumenMensualExcel(), en vez de importarse arriba de forma
+ * estática. Así el bundle no lo incluye en la carga inicial de la app
+ * (~1MB+), sino que Angular lo separa en un chunk aparte que solo se
+ * descarga cuando el usuario efectivamente hace clic en "Descargar Excel".
  */
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import type ExcelJS from 'exceljs';
 import { ResumenFinanciero } from '../services/finanzas';
 import { CompraRead } from '../services/compras';
 
@@ -326,54 +333,207 @@ export async function exportarResumenMensualPDF(
 // Excel
 // ---------------------------------------------------------------------------
 
-export function exportarResumenMensualExcel(
+// Paleta institucional VILCAS (misma que el PDF).
+const VILCAS_VERDE = 'FF024B40';
+const VILCAS_VERDE_700 = 'FF013830';
+const VILCAS_TEXTO_CLARO = 'FFE6F3EF';
+const VILCAS_BORDE = 'FFD7E4E0';
+const VILCAS_POSITIVO = 'FF1D7A4C';
+const VILCAS_NEGATIVO = 'FFB23A3A';
+const FILA_ALTERNA = 'FFF3F8F6';
+
+const FORMATO_SOLES = '"S/" #,##0.00';
+
+/** Descarga el Blob del workbook generado por ExcelJS en el navegador. */
+function descargarWorkbook(buffer: ArrayBuffer, nombreArchivo: string): void {
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Cabecera institucional VILCAS: fondo verde + logo + nombre de empresa, en las columnas indicadas. */
+function dibujarCabeceraHoja(
+  hoja: ExcelJS.Worksheet,
+  logoId: number | null,
+  nombreEmpresa: string,
+  subtitulo: string,
+  ultimaColumnaLetra: string,
+): void {
+  hoja.mergeCells(`A1:${ultimaColumnaLetra}3`);
+  const celdaCabecera = hoja.getCell('A1');
+  celdaCabecera.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: VILCAS_VERDE } };
+  hoja.getRow(1).height = 24;
+  hoja.getRow(2).height = 20;
+  hoja.getRow(3).height = 18;
+
+  for (let f = 1; f <= 3; f++) {
+    for (let c = 1; c <= hoja.columnCount; c++) {
+      const celda = hoja.getRow(f).getCell(c);
+      celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: VILCAS_VERDE } };
+    }
+  }
+
+  const celdaNombre = hoja.getCell('B1');
+  celdaNombre.value = nombreEmpresa;
+  celdaNombre.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+  celdaNombre.alignment = { vertical: 'middle', horizontal: 'left' };
+
+  const celdaSub = hoja.getCell('B2');
+  celdaSub.value = subtitulo;
+  celdaSub.font = { name: 'Calibri', size: 10.5, color: { argb: VILCAS_TEXTO_CLARO } };
+  celdaSub.alignment = { vertical: 'middle', horizontal: 'left' };
+
+  const celdaMarca = hoja.getCell(`${ultimaColumnaLetra}2`);
+  celdaMarca.value = 'Plataforma VILCAS';
+  celdaMarca.font = { name: 'Calibri', size: 9, bold: true, color: { argb: VILCAS_TEXTO_CLARO } };
+  celdaMarca.alignment = { vertical: 'middle', horizontal: 'right' };
+
+  if (logoId !== null) {
+    hoja.addImage(logoId, {
+      tl: { col: 0.15, row: 0.15 },
+      ext: { width: 46, height: 46 },
+    });
+  }
+}
+
+function estiloEncabezadoSeccion(celda: ExcelJS.Cell): void {
+  celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: VILCAS_VERDE } };
+  celda.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+  celda.alignment = { vertical: 'middle', horizontal: 'left' };
+  celda.border = {
+    top: { style: 'thin', color: { argb: VILCAS_VERDE_700 } },
+    bottom: { style: 'thin', color: { argb: VILCAS_VERDE_700 } },
+  };
+}
+
+function estiloFilaDato(fila: ExcelJS.Row, colorFondo?: string): void {
+  fila.eachCell({ includeEmpty: true }, (celda) => {
+    celda.border = {
+      top: { style: 'thin', color: { argb: VILCAS_BORDE } },
+      bottom: { style: 'thin', color: { argb: VILCAS_BORDE } },
+      left: { style: 'thin', color: { argb: VILCAS_BORDE } },
+      right: { style: 'thin', color: { argb: VILCAS_BORDE } },
+    };
+    if (colorFondo) {
+      celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colorFondo } };
+    }
+  });
+}
+
+export async function exportarResumenMensualExcel(
   r: ResumenMensual,
   opciones?: OpcionesBrandingReporte
-): void {
-  const libro = XLSX.utils.book_new();
-  const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
-  const albaLink = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
+): Promise<void> {
+  // Import diferido: exceljs solo se descarga cuando el usuario pide el Excel.
+  const { default: ExcelJSRuntime } = await import('exceljs');
+  const libro = new ExcelJSRuntime.Workbook();
+  libro.creator = 'VILCAS';
+  libro.created = new Date();
 
-  const filasResumen = [
-    [`EMPRESA: ${nombreEmpresa}`],
-    ['REPORTES VILCAS - RESUMEN MENSUAL DE COMPRAS Y VENTAS'],
-    [`Período: ${r.etiquetaMes} (del ${r.desde} al ${r.hasta})`],
-    [],
-    ['RESUMEN DE VENTAS', 'MONTO / CANTIDAD'],
+  const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
+  const subtitulo = `Resumen mensual de compras y ventas · ${r.etiquetaMes} · del ${r.desde} al ${r.hasta}`;
+
+  const logoDataUrl = await imagenADataUrl('/vilcas.png');
+  const logoId = logoDataUrl
+    ? libro.addImage({ base64: logoDataUrl, extension: 'png' })
+    : null;
+
+  // ── Hoja 1: Resumen ────────────────────────────────────────────────
+  const hojaResumen = libro.addWorksheet('Resumen', {
+    views: [{ showGridLines: false }],
+  });
+  hojaResumen.columns = [
+    { key: 'a', width: 42 },
+    { key: 'b', width: 22 },
+  ];
+
+  dibujarCabeceraHoja(hojaResumen, logoId, nombreEmpresa, subtitulo, 'B');
+  hojaResumen.addRow([]);
+
+  const filaVentasTitulo = hojaResumen.addRow(['RESUMEN DE VENTAS', 'MONTO / CANTIDAD']);
+  filaVentasTitulo.eachCell((c) => estiloEncabezadoSeccion(c));
+
+  const datosVentas: [string, number | string][] = [
     ['Ingresos del mes', r.ventas.ingresos_periodo],
     ['Cantidad de ventas', r.ventas.cantidad_ventas],
     ['Ticket promedio', r.ventas.ticket_promedio],
     ['Margen bruto del mes', r.ventas.margen_bruto_periodo],
-    [],
-    ['RESUMEN DE COMPRAS', 'MONTO / CANTIDAD'],
+  ];
+  datosVentas.forEach(([label, valor], i) => {
+    const fila = hojaResumen.addRow([label, valor]);
+    if (label !== 'Cantidad de ventas') fila.getCell(2).numFmt = FORMATO_SOLES;
+    estiloFilaDato(fila, i % 2 === 0 ? FILA_ALTERNA : undefined);
+  });
+
+  hojaResumen.addRow([]);
+
+  const filaComprasTitulo = hojaResumen.addRow(['RESUMEN DE COMPRAS', 'MONTO / CANTIDAD']);
+  filaComprasTitulo.eachCell((c) => estiloEncabezadoSeccion(c));
+
+  const datosCompras: [string, number | string][] = [
     ['Total comprado', r.compras.total],
     ['Cantidad de compras', r.compras.cantidad],
     ['Gasto operativo del mes', r.ventas.gasto_operativo_periodo],
-    [],
-    ['BALANCE NETO DEL MES (Ventas − Compras − Gastos)', r.balanceNeto],
-    [],
-    ['Powered by ALBA · Engineering & Development'],
-    [albaLink],
   ];
-  const hojaResumen = XLSX.utils.aoa_to_sheet(filasResumen);
-  hojaResumen['!cols'] = [{ wch: 48 }, { wch: 24 }];
-  XLSX.utils.book_append_sheet(libro, hojaResumen, 'Resumen');
+  datosCompras.forEach(([label, valor], i) => {
+    const fila = hojaResumen.addRow([label, valor]);
+    if (label !== 'Cantidad de compras') fila.getCell(2).numFmt = FORMATO_SOLES;
+    estiloFilaDato(fila, i % 2 === 0 ? FILA_ALTERNA : undefined);
+  });
 
+  hojaResumen.addRow([]);
+
+  const filaBalance = hojaResumen.addRow(['BALANCE NETO DEL MES (Ventas − Compras − Gastos)', r.balanceNeto]);
+  filaBalance.font = { bold: true, size: 12 };
+  filaBalance.getCell(2).font = {
+    bold: true,
+    size: 12,
+    color: { argb: r.balanceNeto >= 0 ? VILCAS_POSITIVO : VILCAS_NEGATIVO },
+  };
+  filaBalance.getCell(2).numFmt = FORMATO_SOLES;
+  estiloFilaDato(filaBalance, 'FFEFF7F4');
+
+  // ── Hoja 2: Detalle de compras ─────────────────────────────────────
   if (r.compras.detalle.length > 0) {
-    const filasDetalle = [
-      [`EMPRESA: ${nombreEmpresa} - DETALLE DE COMPRAS`],
-      [`Período: ${r.etiquetaMes}`],
-      [],
-      ['Fecha', 'Proveedor', 'Concepto', 'Cantidad de ítems', 'Monto (S/)', 'Notas'],
-      ...r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, c.cantidad_items ?? '', c.monto, c.notas ?? '']),
-      [],
-      ['Powered by ALBA · Engineering & Development'],
-      [albaLink],
+    const hojaDetalle = libro.addWorksheet('Detalle de compras', {
+      views: [{ showGridLines: false }],
+    });
+    hojaDetalle.columns = [
+      { key: 'fecha', width: 14 },
+      { key: 'proveedor', width: 28 },
+      { key: 'concepto', width: 32 },
+      { key: 'cantidad', width: 18 },
+      { key: 'monto', width: 16 },
+      { key: 'notas', width: 32 },
     ];
-    const hojaDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
-    hojaDetalle['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 32 }, { wch: 18 }, { wch: 16 }, { wch: 32 }];
-    XLSX.utils.book_append_sheet(libro, hojaDetalle, 'Detalle de compras');
+
+    dibujarCabeceraHoja(
+      hojaDetalle,
+      logoId,
+      `${nombreEmpresa} · Detalle de compras`,
+      `Período: ${r.etiquetaMes}`,
+      'F',
+    );
+    hojaDetalle.addRow([]);
+
+    const filaCabecera = hojaDetalle.addRow(['Fecha', 'Proveedor', 'Concepto', 'Cantidad de ítems', 'Monto (S/)', 'Notas']);
+    filaCabecera.eachCell((c) => estiloEncabezadoSeccion(c));
+
+    r.compras.detalle.forEach((c, i) => {
+      const fila = hojaDetalle.addRow([c.fecha, c.proveedor, c.concepto, c.cantidad_items ?? '', c.monto, c.notas ?? '']);
+      fila.getCell(5).numFmt = FORMATO_SOLES;
+      estiloFilaDato(fila, i % 2 === 0 ? FILA_ALTERNA : undefined);
+    });
   }
 
-  XLSX.writeFile(libro, nombreArchivo(r, 'xlsx'));
+  const buffer = await libro.xlsx.writeBuffer();
+  descargarWorkbook(buffer as ArrayBuffer, nombreArchivo(r, 'xlsx'));
 }
