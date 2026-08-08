@@ -8,6 +8,7 @@ import { CuentaGuardada } from '../../core/cuentas-guardadas.service';
 import { ThemeService } from '../../core/theme.service';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
 import { SatisfaccionService } from '../../services/satisfaccion';
+import { esArchivoDeImagen } from '../../utils/validar-imagen';
 import { environment } from '../../../environments/environment';
 
 /** Las secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
@@ -85,7 +86,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     input.value = ''; // permite re-seleccionar el mismo archivo después de un error
     if (!archivo) return;
 
-    if (!archivo.type.startsWith('image/')) {
+    if (!esArchivoDeImagen(archivo)) {
       this.errorAvatar.set('El archivo debe ser una imagen (foto).');
       return;
     }

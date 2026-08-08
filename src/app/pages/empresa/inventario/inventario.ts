@@ -24,6 +24,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { esArchivoDeImagen, esPrevisualizableEnNavegador } from '../../../utils/validar-imagen';
 import {
   AlmacenCreateInput,
   AlmacenRead,
@@ -70,6 +71,8 @@ interface ProductoForm {
   costoCompra: string;
   precioVenta: string;
   fotoUrl: string | null;
+  /** false = el navegador no puede pintar una preview de este archivo (HEIC/DNG en la mayoría) — se muestra un placeholder en vez de <img>. */
+  fotoPrevisualizable: boolean;
   variantes: VarianteFormItem[];
 }
 
@@ -410,6 +413,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       costoCompra: '',
       precioVenta: '',
       fotoUrl: null,
+      fotoPrevisualizable: true,
       variantes: [
         { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: '', tipoUbicacion: '' },
       ],
@@ -514,6 +518,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       costoCompra: String(detalle.costo_compra ?? ''),
       precioVenta: String(detalle.precio_venta ?? ''),
       fotoUrl: copiarFoto ? detalle.imagen_url : null,
+      fotoPrevisualizable: true,
       variantes: detalle.variantes.flatMap((v) =>
         v.stock.map((s) => ({
             talla: v.talla || '',
@@ -698,8 +703,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    if (!esArchivoDeImagen(file)) {
+      this.errorModal.set('El archivo debe ser una imagen (foto).');
+      input.value = '';
+      return;
+    }
 
     this.archivoFotoPendiente = file;
+    this.form.fotoPrevisualizable = esPrevisualizableEnNavegador(file);
     const reader = new FileReader();
     reader.onload = () => (this.form.fotoUrl = reader.result as string);
     reader.readAsDataURL(file);

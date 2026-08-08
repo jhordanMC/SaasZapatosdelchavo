@@ -392,7 +392,7 @@
             <span class="obligatorio">*obligatorio</span>
           </label>
           <div class="foto-venta-box" *ngIf="!fotoVentaUrl">
-            <input type="file" accept="image/*" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInput" class="foto-venta-input" />
+            <input type="file" accept="image/*,.heic,.heif,.dng" capture="environment" (change)="onFotoVentaSeleccionada($event)" id="fotoVentaInput" class="foto-venta-input" />
             <label for="fotoVentaInput" class="btn-secondary foto-venta-label">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -402,7 +402,14 @@
             </label>
           </div>
           <div class="foto-venta-preview" *ngIf="fotoVentaUrl">
-            <img [src]="fotoVentaUrl" alt="Foto del comprobante" />
+            <img *ngIf="fotoVentaPrevisualizable" [src]="fotoVentaUrl" alt="Foto del comprobante" />
+            <div class="foto-venta-sin-preview" *ngIf="!fotoVentaPrevisualizable">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Foto cargada (sin vista previa en este navegador)</span>
+            </div>
             <button type="button" class="btn-icon-danger" (click)="quitarFotoVenta()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -443,13 +450,16 @@
             <!-- Comprobante — obligatorio para yape/plin/transferencia -->
             <div class="pago-mixto-comprobante" *ngIf="requiereFotoLinea(l)">
               <div class="foto-venta-box" *ngIf="!l.fotoUrl">
-                <input type="file" accept="image/*" capture="environment" (change)="onFotoLineaSeleccionada(l, $event)" [id]="'fotoLineaInput' + i" class="foto-venta-input" />
+                <input type="file" accept="image/*,.heic,.heif,.dng" capture="environment" (change)="onFotoLineaSeleccionada(l, $event)" [id]="'fotoLineaInput' + i" class="foto-venta-input" />
                 <label [for]="'fotoLineaInput' + i" class="btn-secondary foto-venta-label">
                   Foto del comprobante ({{ l.metodo }}) <span class="obligatorio">*</span>
                 </label>
               </div>
               <div class="foto-venta-preview foto-venta-preview-sm" *ngIf="l.fotoUrl">
-                <img [src]="l.fotoUrl" alt="Comprobante" />
+                <img *ngIf="l.fotoPrevisualizable" [src]="l.fotoUrl" alt="Comprobante" />
+                <div class="foto-venta-sin-preview" *ngIf="!l.fotoPrevisualizable">
+                  <span>Foto cargada (sin vista previa)</span>
+                </div>
                 <button type="button" class="btn-icon-danger" (click)="quitarFotoLinea(l)">✕</button>
               </div>
               <p class="error-text" *ngIf="l.errorFoto">{{ l.errorFoto }}</p>

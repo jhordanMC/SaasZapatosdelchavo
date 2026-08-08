@@ -28,6 +28,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { environment } from '../../../../environments/environment';
+import { esArchivoDeImagen, esPrevisualizableEnNavegador } from '../../../utils/validar-imagen';
 import { SexoProducto } from '../../../services/inventario';
 import { ComprasService } from '../../../services/compras';
 import {
@@ -58,6 +59,8 @@ interface LineaPagoMixto {
   /** Solo si metodo === 'efectivo': lo que el cliente entrega en físico (para calcular vuelto de esa línea). */
   montoRecibido: number;
   fotoUrl: string | null;
+  /** false = el navegador no puede pintar una preview de este archivo (HEIC/DNG en la mayoría) — se muestra un placeholder en vez de <img>. */
+  fotoPrevisualizable: boolean;
   errorFoto: string;
 }
 
@@ -145,6 +148,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   metodoPago: MetodoPago = 'efectivo';
   montoPagado = 0;
   fotoVentaUrl: string | null = null;
+  /** false = el navegador no puede pintar una preview de este archivo (HEIC/DNG en la mayoría) — se muestra un placeholder en vez de <img>. */
+  fotoVentaPrevisualizable = true;
   errorFoto = '';
 
   // ── Pago mixto (varios métodos en una sola venta) ────────────────────────
@@ -710,11 +715,12 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     const archivo = input.files?.[0];
     if (!archivo) return;
     this.errorFoto = '';
-    if (!archivo.type.startsWith('image/')) {
+    if (!esArchivoDeImagen(archivo)) {
       this.errorFoto = 'El archivo debe ser una imagen (foto).';
       input.value = '';
       return;
     }
+    this.fotoVentaPrevisualizable = esPrevisualizableEnNavegador(archivo);
     const lector = new FileReader();
     lector.onload = () => (this.fotoVentaUrl = lector.result as string);
     lector.onerror = () => (this.errorFoto = 'No se pudo leer la imagen. Intenta nuevamente.');
@@ -724,6 +730,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quitarFotoVenta(): void {
     this.fotoVentaUrl = null;
+    this.fotoVentaPrevisualizable = true;
   }
 
   // ── Checkout ─────────────────────────────────────────────────────────────
@@ -747,7 +754,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     // Arranca con una sola línea prellenada por el total, para que el
     // usuario solo tenga que ajustar montos y agregar la(s) línea(s) que falten.
     this.pagosDivididos = [
-      { metodo: 'efectivo', monto: this.totalCarrito, montoRecibido: this.totalCarrito, fotoUrl: null, errorFoto: '' },
+      { metodo: 'efectivo', monto: this.totalCarrito, montoRecibido: this.totalCarrito, fotoUrl: null, fotoPrevisualizable: true, errorFoto: '' },
     ];
     this.checkoutError = '';
   }
@@ -766,6 +773,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       monto: Math.max(0, this.saldoPendientePagoMixto),
       montoRecibido: Math.max(0, this.saldoPendientePagoMixto),
       fotoUrl: null,
+      fotoPrevisualizable: true,
       errorFoto: '',
     });
   }
@@ -801,11 +809,12 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     const archivo = input.files?.[0];
     if (!archivo) return;
     linea.errorFoto = '';
-    if (!archivo.type.startsWith('image/')) {
+    if (!esArchivoDeImagen(archivo)) {
       linea.errorFoto = 'El archivo debe ser una imagen (foto).';
       input.value = '';
       return;
     }
+    linea.fotoPrevisualizable = esPrevisualizableEnNavegador(archivo);
     const lector = new FileReader();
     lector.onload = () => (linea.fotoUrl = lector.result as string);
     lector.onerror = () => (linea.errorFoto = 'No se pudo leer la imagen. Intenta nuevamente.');
@@ -815,6 +824,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quitarFotoLinea(linea: LineaPagoMixto): void {
     linea.fotoUrl = null;
+    linea.fotoPrevisualizable = true;
   }
 
   /** Suma de lo asignado en las líneas de pago mixto. */

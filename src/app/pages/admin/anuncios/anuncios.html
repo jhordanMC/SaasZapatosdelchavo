@@ -101,7 +101,7 @@
         <div class="imagen-picker" *ngIf="!imagenPreviewSrc">
           <label class="btn-agregar-imagen">
             {{ subiendoImagen ? 'Subiendo…' : '+ Elegir imagen' }}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onSeleccionarImagen($event)" [disabled]="subiendoImagen" hidden />
+            <input type="file" accept="image/*,.heic,.heif,.dng" (change)="onSeleccionarImagen($event)" [disabled]="subiendoImagen" hidden />
           </label>
         </div>
         <div class="imagen-preview" *ngIf="imagenPreviewSrc as src">

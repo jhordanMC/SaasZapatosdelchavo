@@ -119,7 +119,7 @@
             <span class="profile-avatar-overlay profile-avatar-overlay-activo" *ngIf="subiendoAvatar()">
               <span class="spinner spinner-sm"></span>
             </span>
-            <input type="file" accept="image/*" (change)="onAvatarSeleccionado($event)" [disabled]="subiendoAvatar()" hidden />
+            <input type="file" accept="image/*,.heic,.heif,.dng" (change)="onAvatarSeleccionado($event)" [disabled]="subiendoAvatar()" hidden />
           </label>
           <div class="profile-name">{{ userName }}</div>
           <div class="profile-role">{{ userRole }}</div>

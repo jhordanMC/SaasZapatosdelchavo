@@ -130,9 +130,10 @@
         <!-- Foto (opcional) — se sube al backend recién al guardar el producto -->
         <div class="foto-upload-wrap">
           <label class="foto-upload foto-upload-compacta">
-            <img *ngIf="form.fotoUrl" [src]="imagenSrc(form.fotoUrl)" alt="Vista previa" />
+            <img *ngIf="form.fotoUrl && form.fotoPrevisualizable" [src]="imagenSrc(form.fotoUrl)" alt="Vista previa" />
+            <span class="foto-upload-sin-preview" *ngIf="form.fotoUrl && !form.fotoPrevisualizable">Foto cargada<br />(sin vista previa)</span>
             <span *ngIf="!form.fotoUrl">Tomar / subir foto</span>
-            <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)" hidden />
+            <input type="file" accept="image/*,.heic,.heif,.dng" (change)="onFotoSeleccionada($event)" hidden />
           </label>
         </div>
 
