@@ -4,6 +4,8 @@ const ETIQUETAS_HERRAMIENTA: Record<string, string> = {
   consultar_stock: 'Stock consultado',
   consultar_kpis: 'KPIs analizados',
   consultar_kpis_plataforma: 'Indicadores de la plataforma analizados',
+  consultar_detalle_planes: 'Planes consultados',
+  consultar_usuarios_en_linea: 'Usuarios en línea consultados',
   crear_ticket: 'Ticket creado',
   consultar_mis_tickets: 'Tickets consultados',
 };
