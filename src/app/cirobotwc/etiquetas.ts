@@ -3,6 +3,7 @@ const ETIQUETAS_HERRAMIENTA: Record<string, string> = {
   consultar_inventario: 'Inventario consultado',
   consultar_stock: 'Stock consultado',
   consultar_kpis: 'KPIs analizados',
+  consultar_kpis_plataforma: 'Indicadores de la plataforma analizados',
   crear_ticket: 'Ticket creado',
   consultar_mis_tickets: 'Tickets consultados',
 };

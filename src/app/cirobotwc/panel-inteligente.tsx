@@ -21,7 +21,29 @@ const ETIQUETAS_KPI: Record<string, string> = {
   margen_neto_pct: 'Margen neto',
   valor_inventario_costo: 'Valor de inventario',
   productos_en_riesgo_merma: 'Productos en riesgo',
+  // Claves admin (ver mcp/analitica_admin.py) — mismos KPIs que las
+  // tarjetas del Dashboard admin.
+  empresas_activas: 'Empresas activas',
+  empresas_registradas_total: 'Empresas registradas',
+  usuarios_activos: 'Usuarios activos',
+  usuarios_retirados: 'Usuarios retirados',
+  ingresos_mes: 'Ingresos este mes',
+  empresas_nuevas_mes: 'Empresas nuevas este mes',
+  planes_contratados: 'Planes contratados',
+  empresas_en_riesgo: 'Empresas en riesgo',
 };
+
+// Claves admin que son conteos simples, NO montos en soles (ver
+// formatearValorKpi) — mismo criterio que cantidad_ventas/productos_en_riesgo_merma.
+const _CLAVES_CONTEO_ADMIN = new Set([
+  'empresas_activas',
+  'empresas_registradas_total',
+  'usuarios_activos',
+  'usuarios_retirados',
+  'empresas_nuevas_mes',
+  'planes_contratados',
+  'empresas_en_riesgo',
+]);
 
 // Único delta REAL disponible hoy en el backend (ver mcp/analitica.py) —
 // ingresos de esta semana vs. la semana pasada. No se inventa ningún
@@ -32,7 +54,9 @@ const CLAVE_DELTA_INGRESOS = 'crecimiento_semanal_pct';
 function formatearValorKpi(clave: string, valor: unknown): string {
   if (typeof valor !== 'number') return String(valor);
   if (clave.endsWith('_pct')) return `${valor.toFixed(1)}%`;
-  if (clave === 'cantidad_ventas' || clave === 'productos_en_riesgo_merma') return String(valor);
+  if (clave === 'cantidad_ventas' || clave === 'productos_en_riesgo_merma' || _CLAVES_CONTEO_ADMIN.has(clave)) {
+    return String(valor);
+  }
   return `S/ ${valor.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 

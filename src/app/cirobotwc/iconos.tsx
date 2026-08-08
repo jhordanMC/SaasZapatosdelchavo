@@ -152,6 +152,33 @@ export function IconoAlerta({ size = 18, className }: Props) {
   );
 }
 
+export function IconoEmpresas({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M6 22V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v18" />
+      <path d="M17 8h3a1 1 0 0 1 1 1v13" />
+      <path d="M2 22h20" />
+      <path d="M9 6h1" />
+      <path d="M9 10h1" />
+      <path d="M9 14h1" />
+      <path d="M14 6h1" />
+      <path d="M14 10h1" />
+      <path d="M14 14h1" />
+    </svg>
+  );
+}
+
+export function IconoUsuarios({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
 export function IconoGrafico({ size = 18, className }: Props) {
   return (
     <svg {...base(size)} className={className}>
@@ -183,4 +210,13 @@ export const ICONO_POR_KPI: Record<string, (props: Props) => ReactElement> = {
   margen_neto_pct: IconoMargen,
   valor_inventario_costo: IconoInventario,
   productos_en_riesgo_merma: IconoAlerta,
+  // Claves admin (ver mcp/analitica_admin.py)
+  empresas_activas: IconoEmpresas,
+  empresas_registradas_total: IconoEmpresas,
+  usuarios_activos: IconoUsuarios,
+  usuarios_retirados: IconoUsuarios,
+  ingresos_mes: IconoIngresos,
+  empresas_nuevas_mes: IconoEmpresas,
+  planes_contratados: IconoTicket,
+  empresas_en_riesgo: IconoAlerta,
 };
