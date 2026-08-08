@@ -23,6 +23,15 @@
           </div>
         </div>
         <button class="btn-accion" (click)="abrirModalEditarEmpresa()">Editar empresa</button>
+        <button
+          class="btn-toggle-estado"
+          [class.reactivar]="empresaActual.estado !== 'activa'"
+          [disabled]="cambiandoEstadoEmpresa()"
+          (click)="toggleActivaEmpresa()"
+        >
+          {{ cambiandoEstadoEmpresa() ? 'Actualizando…' : (empresaActual.estado === 'activa' ? 'Desactivar empresa' : 'Reactivar empresa') }}
+        </button>
+        <button class="btn-eliminar" (click)="abrirModalEliminarEmpresa()">Eliminar empresa</button>
       </div>
 
       <div class="empresa-summary-metrics">
@@ -340,7 +349,65 @@
   </div>
 </div>
 
+<!-- ══ MODAL: Eliminar empresa (PERMANENTE, irreversible) ══ -->
+<div class="modal-overlay" *ngIf="modalEliminarEmpresaAbierto" (click)="cerrarModalEliminarEmpresa()">
+  <div class="modal-card modal-card-confirmacion" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalEliminarEmpresa()" aria-label="Cerrar" [disabled]="eliminandoEmpresaEnCurso()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="confirmacion-icono confirmacion-icono-peligro">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirmacion-titulo">¿Eliminar esta empresa?</h2>
+    <p class="confirmacion-desc" *ngIf="empresa() as empresaAEliminar">
+      Esta acción borra <strong>{{ empresaAEliminar.nombre }}</strong> y TODO lo relacionado —
+      usuarios, locales, productos, ventas, comprobantes y auditorías — de forma permanente.
+      No se puede deshacer.
+    </p>
+    <div class="form-group" style="width: 100%; text-align: left;" *ngIf="empresa() as empresaAEliminar">
+      <label for="inputConfirmarEliminarEmpresa">
+        Escribe <strong>{{ empresaAEliminar.slug }}</strong> para confirmar
+      </label>
+      <input
+        id="inputConfirmarEliminarEmpresa"
+        type="text"
+        class="form-input"
+        autocomplete="off"
+        [(ngModel)]="confirmacionEliminarEmpresa"
+        [disabled]="eliminandoEmpresaEnCurso()"
+      />
+    </div>
+    <div class="modal-actions modal-actions-split">
+      <button class="btn-clear" [disabled]="eliminandoEmpresaEnCurso()" (click)="cerrarModalEliminarEmpresa()">Cancelar</button>
+      <button
+        class="btn-eliminar btn-eliminar-full"
+        [disabled]="!confirmacionEliminarEmpresaValida || eliminandoEmpresaEnCurso()"
+        (click)="confirmarEliminarEmpresa()"
+      >
+        {{ eliminandoEmpresaEnCurso() ? 'Eliminando…' : 'Sí, eliminar permanentemente' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Pantalla de carga a pantalla completa: cubre todo mientras la
+     cascada + limpieza de imágenes está en curso en el backend. Sin
+     cierre — no hay forma de cancelar una vez que el DELETE ya salió. ══ -->
+<div class="overlay-carga-total" *ngIf="eliminandoEmpresaEnCurso()">
+  <span class="spinner spinner-lg"></span>
+  <p>Eliminando empresa y todos sus datos…</p>
+  <p class="overlay-carga-sub">Esto puede tardar unos segundos. No cierres esta ventana.</p>
+</div>
+
 <!-- ══ MODAL: Nuevo local ══ -->
+
 <div class="modal-overlay" *ngIf="modalNuevoLocalAbierto" (click)="cerrarModalNuevoLocal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <button class="modal-close" (click)="cerrarModalNuevoLocal()" aria-label="Cerrar">

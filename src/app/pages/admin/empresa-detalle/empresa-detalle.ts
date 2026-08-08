@@ -204,6 +204,71 @@ export class EmpresaDetalleComponent implements OnInit {
       });
   }
 
+  // ── Desactivar / reactivar empresa (toggle rápido, sin abrir el modal
+  // completo de edición) ──────────────────────────────────
+  cambiandoEstadoEmpresa = signal(false);
+
+  toggleActivaEmpresa(): void {
+    const actual = this.empresa();
+    if (!actual || this.cambiandoEstadoEmpresa()) return;
+    const nuevoEstado: EstadoEmpresa = actual.estado === 'activa' ? 'suspendida' : 'activa';
+
+    this.cambiandoEstadoEmpresa.set(true);
+    this.empresasService.actualizarEmpresa(this.idEmpresa, { estado: nuevoEstado }).subscribe({
+      next: (actualizada) => {
+        this.cambiandoEstadoEmpresa.set(false);
+        this.empresa.set(actualizada);
+      },
+      error: () => {
+        this.cambiandoEstadoEmpresa.set(false);
+        this.error.set('No se pudo cambiar el estado de la empresa.');
+      },
+    });
+  }
+
+  // ── Modal "Eliminar empresa" (PERMANENTE, cascada, irreversible) ──
+  // Requiere escribir el slug exacto para habilitar el botón — mismo
+  // criterio que usan GitHub/otros paneles para borrados destructivos de
+  // alto impacto (acá se lleva usuarios, ventas, comprobantes, todo).
+  modalEliminarEmpresaAbierto = false;
+  confirmacionEliminarEmpresa = '';
+  // Pantalla de carga a pantalla completa: la cascada + limpieza de
+  // imágenes puede tardar, y no queremos que el staff piense que no hizo
+  // nada y reintente el borrado mientras la transacción sigue corriendo.
+  eliminandoEmpresaEnCurso = signal(false);
+
+  abrirModalEliminarEmpresa(): void {
+    this.confirmacionEliminarEmpresa = '';
+    this.modalEliminarEmpresaAbierto = true;
+  }
+
+  cerrarModalEliminarEmpresa(): void {
+    if (this.eliminandoEmpresaEnCurso()) return;
+    this.modalEliminarEmpresaAbierto = false;
+    this.confirmacionEliminarEmpresa = '';
+  }
+
+  get confirmacionEliminarEmpresaValida(): boolean {
+    return this.confirmacionEliminarEmpresa.trim() === (this.empresa()?.slug ?? '');
+  }
+
+  confirmarEliminarEmpresa(): void {
+    if (!this.confirmacionEliminarEmpresaValida || this.eliminandoEmpresaEnCurso()) return;
+
+    this.eliminandoEmpresaEnCurso.set(true);
+    this.empresasService.eliminarEmpresa(this.idEmpresa).subscribe({
+      next: () => {
+        this.eliminandoEmpresaEnCurso.set(false);
+        this.modalEliminarEmpresaAbierto = false;
+        this.router.navigate(['/admin/empresas']);
+      },
+      error: () => {
+        this.eliminandoEmpresaEnCurso.set(false);
+        this.error.set('No se pudo eliminar la empresa.');
+      },
+    });
+  }
+
   private cargarLocales(): void {
     this.empresasService.listarLocales(this.idEmpresa).subscribe({
       next: (locales) => {

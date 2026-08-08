@@ -86,6 +86,13 @@ export class EmpresasService {
     return this.http.put<Empresa>(`${this.apiUrl}/empresas/${idEmpresa}`, datos);
   }
 
+  /** Borrado PERMANENTE en cascada (usuarios, locales, productos, ventas,
+   * comprobantes, auditorías, etc.). Irreversible — ver confirmación en
+   * empresa-detalle.ts antes de llamar esto. */
+  eliminarEmpresa(idEmpresa: string): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/empresas/${idEmpresa}`);
+  }
+
   // ── Sectores (catálogo global) ──────────────────────────
   listarSectores(incluirInactivos = false): Observable<Sector[]> {
     return this.http.get<Sector[]>(`${this.apiUrl}/empresas/sectores`, {
