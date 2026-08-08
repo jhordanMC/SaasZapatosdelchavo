@@ -30,6 +30,24 @@ export const CIROBOT_CSS = `
   z-index: 9999;
 }
 
+/* Cirobot vive por encima de todo (z-index:9999) para poder flotar sobre
+   la app, pero eso mismo tapaba los botones de los modals (Guardar/
+   Cancelar, Enviar del propio chat en mobile), que usan z-index 1000-3000.
+   Mientras haya un .modal-overlay abierto en cualquier parte de la app
+   (ver MutationObserver en cirobot-wrapper.ts), se oculta TODO Cirobot
+   —mascota y chat, si el usuario lo tenía abierto— para no competir por
+   el touch del usuario con el modal. Se restaura solo al cerrar el modal.
+
+   Solo aplica en mobile (mismo breakpoint que el resto del archivo): en
+   desktop el hotspot vive en una esquina fija chica (bottom:40px/right:50px)
+   que en la práctica no se cruza con los footers de los modals, así que
+   ahí no hace falta ocultar nada. */
+@media (max-width: 768px) {
+  body.cbot-oculto-por-modal .cbot-raiz {
+    display: none;
+  }
+}
+
 /* Medidas EXACTAS de C:\Users\JHORDAN\Downloads\headBot.js (#headbot-canvas /
    #headbot-clickarea) — calibradas a mano contra este mismo modelo
    (cabezareconstruida.glb = cirobot.glb), incluidos los breakpoints por
