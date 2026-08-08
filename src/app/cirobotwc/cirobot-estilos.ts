@@ -33,17 +33,29 @@ export const CIROBOT_CSS = `
 /* Cirobot vive por encima de todo (z-index:9999) para poder flotar sobre
    la app, pero eso mismo tapaba los botones de los modals (Guardar/
    Cancelar, Enviar del propio chat en mobile), que usan z-index 1000-3000.
-   Mientras haya un .modal-overlay abierto en cualquier parte de la app
-   (ver MutationObserver en cirobot-wrapper.ts), se oculta TODO Cirobot
-   —mascota y chat, si el usuario lo tenía abierto— para no competir por
-   el touch del usuario con el modal. Se restaura solo al cerrar el modal.
+   Mientras exista algún .modal-overlay abierto en la página, se oculta
+   TODO Cirobot —mascota y chat, si el usuario lo tenía abierto— para no
+   competir por el touch del usuario con el modal. Se restaura solo al
+   cerrar el modal (al desaparecer el .modal-overlay del DOM).
+
+   A PROPÓSITO resuelto con :has() y nada de JS/MutationObserver: una
+   primera versión usaba un MutationObserver sobre <body> para togglear
+   una clase, pero el proyecto corre con Zone.js clásico (angular.json),
+   que parchea MutationObserver — cada mutación del DOM disparaba un
+   ciclo completo de change detection de Angular. Al hacer F5, Angular
+   arma TODO el layout de una sola vez (cientos de nodos entrando casi
+   juntos) y eso se retroalimentaba en cascada justo en el momento más
+   pesado del primer render, congelando la página entera. :has() hace
+   exactamente lo mismo (reacciona a que aparezca/desaparezca
+   .modal-overlay en el documento) pero lo resuelve el motor CSS del
+   navegador — sin JS, sin Zone.js, sin observers, sin ese riesgo.
 
    Solo aplica en mobile (mismo breakpoint que el resto del archivo): en
    desktop el hotspot vive en una esquina fija chica (bottom:40px/right:50px)
    que en la práctica no se cruza con los footers de los modals, así que
    ahí no hace falta ocultar nada. */
 @media (max-width: 768px) {
-  body.cbot-oculto-por-modal .cbot-raiz {
+  body:has(.modal-overlay) .cbot-raiz {
     display: none;
   }
 }
