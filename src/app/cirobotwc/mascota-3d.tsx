@@ -80,7 +80,14 @@ export function Mascota3D() {
     <Canvas
       camera={{ position: [0, 0, 2], fov: 50 }}
       gl={{ alpha: true, antialias: true }}
-      style={{ background: 'transparent', width: '100%', height: '100%' }}
+      // pointer-events: none a propósito — el <canvas> que crea r3f no
+      // hereda el pointer-events:none de .cbot-mascota-wrap (maneja sus
+      // propios eventos para el raycasting), así que sin esto se queda
+      // encima del botón Enviar del chat (la caja de 300x300 del wrap
+      // llega hasta ahí) y le roba el click aunque sea invisible. El
+      // único punto clickeable de la mascota sigue siendo
+      // .cbot-mascota-click, que ya tiene su propio pointer-events:auto.
+      style={{ background: 'transparent', width: '100%', height: '100%', pointerEvents: 'none' }}
     >
       <ambientLight intensity={3} />
       <directionalLight position={[5, 5, 5]} intensity={6} color="#ffffff" />
