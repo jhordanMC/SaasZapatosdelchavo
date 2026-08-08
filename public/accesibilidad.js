@@ -12,7 +12,7 @@
   /* ─────────────────────────────────────────────
      POWERED BY — edita el link aquí
   ───────────────────────────────────────────── */
-  const POWERED_BY_LINK = 'https://www.linkedin.com/in/alba-ingenier%C3%ADa-de-desarrollo-42a3493ab/'; // ← pon el link de Alba aquí
+  const POWERED_BY_LINK = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android'; // ← pon el link de Alba aquí
 
   /* ─────────────────────────────────────────────
      TRADUCCIONES

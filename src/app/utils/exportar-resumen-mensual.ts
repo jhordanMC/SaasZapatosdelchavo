@@ -132,26 +132,66 @@ export function construirResumenMensual(
 }
 
 // ---------------------------------------------------------------------------
+async function imagenADataUrl(url: string): Promise<string | null> {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(lector.result as string);
+      lector.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      lector.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // PDF
 // ---------------------------------------------------------------------------
 
-export function exportarResumenMensualPDF(r: ResumenMensual): void {
+export async function exportarResumenMensualPDF(r: ResumenMensual): Promise<void> {
   const doc = new jsPDF();
   const margenIzq = 14;
-  let y = 18;
+  let y = 14;
 
-  doc.setFontSize(16);
-  doc.setTextColor(2, 75, 64); // #024b40
-  doc.text('Resumen mensual de compras y ventas', margenIzq, y);
+  const logoVilcasDataUrl = await imagenADataUrl('/vilcas.png');
+  const logoAlbaDataUrl = await imagenADataUrl('/Logoalbasinfondo.png');
 
-  y += 7;
-  doc.setFontSize(11);
-  doc.setTextColor(90, 138, 120); // #5a8a78
-  doc.text(`${r.etiquetaMes}  ·  del ${r.desde} al ${r.hasta}`, margenIzq, y);
+  // Cabecera institucional VILCAS
+  doc.setFillColor(2, 75, 64); // #024b40
+  doc.rect(0, 0, 210, 32, 'F');
 
-  y += 10;
-  doc.setFontSize(12);
-  doc.setTextColor(31, 64, 52); // #1f4034
+  if (logoVilcasDataUrl) {
+    try {
+      doc.addImage(logoVilcasDataUrl, 'PNG', margenIzq, 6, 20, 20);
+    } catch {
+      // Ignorar si no carga
+    }
+  }
+
+  const posXTexto = logoVilcasDataUrl ? margenIzq + 24 : margenIzq;
+  doc.setFontSize(18);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VILCAS', posXTexto, 16);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(190, 225, 215);
+  doc.text('Resumen mensual de compras y ventas', posXTexto, 24);
+
+  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`${r.etiquetaMes}  ·  ${r.desde} al ${r.hasta}`, 196, 18, { align: 'right' });
+
+  y = 42;
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
   doc.text('Ventas', margenIzq, y);
   y += 2;
 
@@ -159,7 +199,7 @@ export function exportarResumenMensualPDF(r: ResumenMensual): void {
     startY: y + 2,
     theme: 'grid',
     styles: { fontSize: 9.5, textColor: [31, 64, 52] },
-    headStyles: { fillColor: [2, 75, 64], textColor: 255 },
+    headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
     head: [['Indicador', 'Valor']],
     body: [
       ['Ingresos del mes', moneda(r.ventas.ingresos_periodo)],
@@ -171,14 +211,16 @@ export function exportarResumenMensualPDF(r: ResumenMensual): void {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   y = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(12);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
   doc.text('Compras', margenIzq, y);
 
   autoTable(doc, {
     startY: y + 2,
     theme: 'grid',
     styles: { fontSize: 9.5, textColor: [31, 64, 52] },
-    headStyles: { fillColor: [2, 75, 64], textColor: 255 },
+    headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
     head: [['Indicador', 'Valor']],
     body: [
       ['Total comprado', moneda(r.compras.total)],
@@ -190,6 +232,8 @@ export function exportarResumenMensualPDF(r: ResumenMensual): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   y = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(31, 64, 52);
   doc.text('Balance neto del mes (ventas − compras − gasto operativo)', margenIzq, y);
   y += 8;
   doc.setFontSize(14);
@@ -198,18 +242,47 @@ export function exportarResumenMensualPDF(r: ResumenMensual): void {
 
   if (r.compras.detalle.length > 0) {
     y += 10;
-    doc.setFontSize(12);
-    doc.setTextColor(31, 64, 52);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(2, 75, 64);
     doc.text('Detalle de compras del mes', margenIzq, y);
 
     autoTable(doc, {
       startY: y + 2,
       theme: 'striped',
       styles: { fontSize: 8.5, textColor: [31, 64, 52] },
-      headStyles: { fillColor: [2, 75, 64], textColor: 255 },
+      headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
       head: [['Fecha', 'Proveedor', 'Concepto', 'Monto']],
       body: r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, moneda(c.monto)]),
     });
+  }
+
+  // Pie de página - Powered by ALBA
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  const albaLink = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
+
+  for (let page = 1; page <= totalPages; page++) {
+    doc.setPage(page);
+    doc.setDrawColor(220, 230, 225);
+    doc.line(margenIzq, 280, 196, 280);
+
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(110, 130, 120);
+    doc.text('Powered by ALBA · Engineering & Development', margenIzq, 286);
+
+    doc.setTextColor(2, 75, 64);
+    doc.setFont('helvetica', 'bold');
+    doc.textWithLink('Ver perfil de ALBA', 196, 286, { url: albaLink, align: 'right' });
+
+    if (logoAlbaDataUrl) {
+      try {
+        doc.addImage(logoAlbaDataUrl, 'PNG', margenIzq + 68, 282, 10, 5);
+      } catch {
+        // Ignorar si falla
+      }
+    }
   }
 
   doc.save(nombreArchivo(r, 'pdf'));
@@ -222,7 +295,10 @@ export function exportarResumenMensualPDF(r: ResumenMensual): void {
 export function exportarResumenMensualExcel(r: ResumenMensual): void {
   const libro = XLSX.utils.book_new();
 
+  const albaLink = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
+
   const filasResumen = [
+    ['VILCAS - Sistema de Gestión'],
     ['Resumen mensual de compras y ventas'],
     [r.etiquetaMes, `del ${r.desde} al ${r.hasta}`],
     [],
@@ -238,27 +314,38 @@ export function exportarResumenMensualExcel(r: ResumenMensual): void {
     ['Gasto operativo del mes', r.ventas.gasto_operativo_periodo],
     [],
     ['Balance neto (ventas - compras - gasto operativo)', r.balanceNeto],
+    [],
+    ['Powered by ALBA - Engineering & Development'],
+    [albaLink],
   ];
   const hojaResumen = XLSX.utils.aoa_to_sheet(filasResumen);
-  hojaResumen['!cols'] = [{ wch: 42 }, { wch: 20 }];
+  hojaResumen['!cols'] = [{ wch: 45 }, { wch: 24 }];
   XLSX.utils.book_append_sheet(libro, hojaResumen, 'Resumen');
 
   if (r.compras.porProveedor.length > 0) {
     const filasProveedor = [
+      ['VILCAS - Compras por proveedor'],
       ['Proveedor', 'Total comprado'],
       ...r.compras.porProveedor.map((p) => [p.proveedor, p.total]),
+      [],
+      ['Powered by ALBA - Engineering & Development'],
+      [albaLink],
     ];
     const hojaProveedor = XLSX.utils.aoa_to_sheet(filasProveedor);
-    hojaProveedor['!cols'] = [{ wch: 30 }, { wch: 16 }];
+    hojaProveedor['!cols'] = [{ wch: 35 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(libro, hojaProveedor, 'Por proveedor');
   }
 
   const filasDetalle = [
+    ['VILCAS - Detalle de compras'],
     ['Fecha', 'Proveedor', 'Concepto', 'Cantidad de ítems', 'Monto', 'Notas'],
     ...r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, c.cantidad_items ?? '', c.monto, c.notas ?? '']),
+    [],
+    ['Powered by ALBA - Engineering & Development'],
+    [albaLink],
   ];
   const hojaDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
-  hojaDetalle['!cols'] = [{ wch: 12 }, { wch: 24 }, { wch: 28 }, { wch: 16 }, { wch: 12 }, { wch: 30 }];
+  hojaDetalle['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 30 }, { wch: 18 }, { wch: 14 }, { wch: 32 }];
   XLSX.utils.book_append_sheet(libro, hojaDetalle, 'Detalle de compras');
 
   XLSX.writeFile(libro, nombreArchivo(r, 'xlsx'));

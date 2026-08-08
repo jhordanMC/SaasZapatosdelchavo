@@ -962,3 +962,25 @@
   .pago-mixto-linea-top { flex-wrap: wrap; }
   .pago-mixto-monto { width: 100%; }
 }
+
+@media (max-width: 480px) {
+  .modal-overlay { padding: 10px; }
+  .modal-checkout { width: 100%; max-width: 100%; max-height: 92vh; border-radius: 18px; }
+  .metodo-pago-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .metodo-pago-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .metodo-btn { padding: 10px 6px; font-size: 12px; gap: 5px; }
+  .pago-mixto-linea-top { flex-wrap: wrap; gap: 6px; }
+  .pago-mixto-select { width: 100%; flex: 1 1 100%; }
+  .pago-mixto-monto { width: 100%; flex: 1 1 100%; text-align: left; }
+  .pago-mixto-efectivo { flex-direction: column; align-items: stretch; gap: 4px; }
+  .pago-mixto-efectivo label { font-size: 11.5px; }
+  .pago-mixto-efectivo input { width: 100%; }
+  .pago-mixto-vuelto { align-self: flex-start; font-size: 12px; margin-top: 2px; }
+  .btn-agregar-linea-pago { width: 100%; text-align: center; }
+  .resumen-top { font-size: 13px; padding: 10px 12px; }
+  .confirmar-producto-item { align-items: flex-start; }
+  .confirmar-pago-fila { font-size: 11.5px; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .confirmar-pago-fila strong { align-self: flex-start; font-size: 12px; }
+  .modal-footer { flex-direction: column-reverse; gap: 8px; }
+  .modal-footer button { width: 100%; padding: 12px; font-size: 13px; }
+}

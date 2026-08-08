@@ -58,7 +58,7 @@ export class SidebarComponent {
   collapsed = false;
 
   /** Enlace del bloque "Powered by ALBA" del pie del sidebar. */
-  readonly albaLinkedInUrl = 'https://www.linkedin.com/in/alba-ingenier%C3%ADa-de-desarrollo-42a3493ab/';
+  readonly albaLinkedInUrl = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
 
   private readonly COLLAPSE_STORAGE_KEY = 'vilcas.sidebar.collapsed';
 

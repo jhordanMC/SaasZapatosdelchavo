@@ -290,6 +290,7 @@
             type="text"
             inputmode="decimal"
             class="no-spinner"
+            placeholder="Costo S/ 0.00"
             [ngModel]="form.costoCompra"
             (ngModelChange)="onCostoCompraChange($event)"
           />
@@ -300,6 +301,7 @@
             type="text"
             inputmode="decimal"
             class="no-spinner"
+            placeholder="Precio S/ 0.00"
             [ngModel]="form.precioVenta"
             (ngModelChange)="onPrecioVentaChange($event)"
           />
@@ -403,48 +405,66 @@
       </div>
 
       <div class="variante-fila" *ngFor="let v of form.variantes; let i = index">
-        <input type="text" placeholder="Ej: 39" [(ngModel)]="v.talla" aria-label="Talla" />
-        <input
-          type="text"
-          inputmode="numeric"
-          class="no-spinner"
-          placeholder="Ej: 10"
-          [ngModel]="v.cantidad"
-          (ngModelChange)="onCantidadVarianteChange(i, $event)"
-          aria-label="Stock"
-        />
-        <input type="text" placeholder="Ej: SKU-39" [(ngModel)]="v.sku" aria-label="SKU" />
-        <input type="text" placeholder="Ej: 12345678" [(ngModel)]="v.codigo_barras" aria-label="Código de Barras" />
+        <div class="field-wrap field-talla">
+          <span class="mobile-field-label">Talla</span>
+          <input type="text" placeholder="Talla (Ej: 39)" [(ngModel)]="v.talla" aria-label="Talla" />
+        </div>
+        <div class="field-wrap field-stock">
+          <span class="mobile-field-label">Stock</span>
+          <input
+            type="text"
+            inputmode="numeric"
+            class="no-spinner"
+            placeholder="Stock (Ej: 10)"
+            [ngModel]="v.cantidad"
+            (ngModelChange)="onCantidadVarianteChange(i, $event)"
+            aria-label="Stock"
+          />
+        </div>
+        <div class="field-wrap field-sku">
+          <span class="mobile-field-label">SKU</span>
+          <input type="text" placeholder="SKU (Ej: ZAP-39)" [(ngModel)]="v.sku" aria-label="SKU" />
+        </div>
+        <div class="field-wrap field-cod-barras">
+          <span class="mobile-field-label">Cód. Barras</span>
+          <input type="text" placeholder="Cód. Barras (Ej: 775123456789)" [(ngModel)]="v.codigo_barras" aria-label="Código de Barras" />
+        </div>
 
         <!-- Paso 1: elegir el tipo (Almacén o Local) -->
-        <select [ngModel]="v.tipoUbicacion" (ngModelChange)="onTipoUbicacionChange(i, $event)" aria-label="Tipo de ubicación">
-          <option value="">Tipo…</option>
-          <option value="almacen">Almacén</option>
-          <option value="local">Local</option>
-        </select>
+        <div class="field-wrap field-tipo">
+          <span class="mobile-field-label">Tipo</span>
+          <select [ngModel]="v.tipoUbicacion" (ngModelChange)="onTipoUbicacionChange(i, $event)" aria-label="Tipo de ubicación">
+            <option value="">Tipo…</option>
+            <option value="almacen">Almacén</option>
+            <option value="local">Local</option>
+          </select>
+        </div>
 
         <!-- Paso 2: según el tipo elegido, solo muestra almacenes o solo locales -->
-        <select
-          *ngIf="v.tipoUbicacion === 'almacen'"
-          [(ngModel)]="v.ubicacion"
-          aria-label="Almacén"
-        >
-          <option value="">Seleccionar almacén</option>
-          <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
-        </select>
+        <div class="field-wrap field-ubicacion">
+          <span class="mobile-field-label">Ubicación</span>
+          <select
+            *ngIf="v.tipoUbicacion === 'almacen'"
+            [(ngModel)]="v.ubicacion"
+            aria-label="Almacén"
+          >
+            <option value="">Seleccionar almacén</option>
+            <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
+          </select>
 
-        <select
-          *ngIf="v.tipoUbicacion === 'local'"
-          [(ngModel)]="v.ubicacion"
-          aria-label="Local"
-        >
-          <option value="">Seleccionar local</option>
-          <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
-        </select>
+          <select
+            *ngIf="v.tipoUbicacion === 'local'"
+            [(ngModel)]="v.ubicacion"
+            aria-label="Local"
+          >
+            <option value="">Seleccionar local</option>
+            <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
+          </select>
 
-        <select *ngIf="!v.tipoUbicacion" disabled aria-label="Almacén o local">
-          <option value="">Elige un tipo primero</option>
-        </select>
+          <select *ngIf="!v.tipoUbicacion" disabled aria-label="Almacén o local">
+            <option value="">Elige un tipo primero</option>
+          </select>
+        </div>
 
         <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">

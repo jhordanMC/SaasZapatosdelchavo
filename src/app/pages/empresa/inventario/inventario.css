@@ -132,20 +132,22 @@
 .producto-stock.stock-bajo { color: var(--color-error); font-weight: 600; }
 
 .producto-acciones {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 .producto-acciones button {
-  flex: 1;
-  padding: 8px 4px;
-  font-size: 11px;
+  padding: 8px 10px;
+  font-size: 12px;
   font-weight: 600;
   min-width: 0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: center;
+  border-radius: 8px;
+}
+.producto-acciones .btn-danger {
+  grid-column: 1 / -1;
 }
 
 .sin-resultados {
@@ -637,6 +639,9 @@
 .modal-brand-top-name .dk { color: var(--brand-deep); }
 .modal-brand-top-name .gd { color: var(--brand-gold); }
 
+.mobile-field-label { display: none; }
+.field-wrap { display: flex; flex-direction: column; width: 100%; }
+
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
@@ -646,33 +651,48 @@
   .productos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .modal-card { width: 100%; max-width: 94vw; }
   .variante-columnas { display: none; }
+  .mobile-field-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
+  }
   .variante-fila {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 8px;
     padding: 12px;
     background: var(--bg-canvas);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
-  .variante-fila input, .variante-fila select {
+  .variante-fila .field-wrap {
     flex: 1 1 calc(50% - 6px);
     min-width: 110px;
   }
+  .variante-fila input, .variante-fila select {
+    width: 100%;
+  }
   .variante-fila .btn-icon-danger {
     margin-left: auto;
+    align-self: flex-end;
   }
 }
 
 @media (max-width: 480px) {
   .productos-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .producto-acciones { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .producto-acciones button { padding: 7px 6px; font-size: 11.5px; }
   .form-row-2, .form-row-3 { flex-direction: column; }
   .foto-y-basicos { flex-direction: column; }
   .foto-upload-wrap { width: 100%; }
   .foto-upload-compacta { width: 100%; height: 120px; }
-  .variante-fila input, .variante-fila select { flex: 1 1 100%; }
-  .modal-footer { flex-direction: column-reverse; }
+  .variante-fila .field-wrap { flex: 1 1 100%; }
+  .modal-footer { flex-direction: column-reverse; gap: 8px; }
   .modal-footer button { width: 100%; }
 }
 

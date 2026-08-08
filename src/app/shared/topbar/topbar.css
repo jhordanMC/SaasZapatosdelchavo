@@ -1245,6 +1245,67 @@
   .topbar-avatar { width: 36px; height: 36px; }
 }
 
+@media (max-width: 576px) {
+  .notif-dropdown {
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .anuncios-modal-card {
+    width: 100%;
+    max-width: 94vw;
+    max-height: 88vh;
+    border-radius: 18px;
+    overflow-y: auto;
+  }
+
+  .anuncios-modal-titulo {
+    font-size: 15px;
+    padding: 0 16px;
+    word-break: break-word;
+  }
+
+  .anuncios-modal-lista {
+    padding: 10px 14px 4px;
+    max-height: 60vh;
+  }
+
+  .anuncio-item-imagen {
+    width: 100%;
+    height: auto;
+    max-height: 160px;
+    object-fit: contain;
+    background: var(--bg-canvas);
+    border-radius: 10px;
+  }
+
+  .anuncio-item-mensaje {
+    font-size: 12.5px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .estrellas-picker .estrella-btn {
+    font-size: 26px;
+  }
+
+  .anuncio-opcion-btn {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .anuncio-ya-votaste {
+    font-size: 12px;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 420px) {
   .topbar { padding: 10px 12px 10px 60px; }
   .topbar-right { gap: 8px; }
