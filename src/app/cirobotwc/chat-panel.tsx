@@ -48,7 +48,7 @@ export function ChatPanel({
   const [cargando, setCargando] = useState(false);
   const [sugerencias, setSugerencias] = useState<string[]>([]);
   const [panelActual, setPanelActual] = useState<PanelInteligenteTipo | null>(null);
-  const [proveedorActual, setProveedorActual] = useState<'gemini' | 'grok' | null>(null);
+  const [proveedorActual, setProveedorActual] = useState<'gemini' | 'groq' | 'grok' | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
