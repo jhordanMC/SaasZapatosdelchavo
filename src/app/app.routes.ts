@@ -13,6 +13,7 @@ import { TicketsAdminComponent } from './pages/admin/tickets/tickets';
 import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
+import { CatalogoComponent } from './pages/empresa/catalogo/catalogo';
 import { VentasComponent } from './pages/empresa/ventas/ventas';
 import { HistorialVentasComponent } from './pages/empresa/ventas/historial-ventas/historial-ventas';
 import { ProformasComponent } from './pages/empresa/ventas/proformas/proformas';
@@ -103,6 +104,12 @@ export const routes: Routes = [
         component: InventarioComponent,
         data: { title: 'Inventario', subtitle: 'Productos, tallas y stock por local' },
         canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('inventario')],
+      },
+      {
+        path: 'catalogo',
+        component: CatalogoComponent,
+        data: { title: 'Catálogos', subtitle: 'Crea y comparte catálogos de productos con tus clientes' },
+        canActivate: [roleGuard('dueño'), vistaGuard('catalogo')],
       },
       {
         path: 'ventas',

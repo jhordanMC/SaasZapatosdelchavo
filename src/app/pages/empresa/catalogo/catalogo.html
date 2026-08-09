@@ -1,0 +1,230 @@
+<div class="catalogo-page" (click)="cerrarMenus()">
+
+  <!-- ── Tabs + búsqueda + acción principal ──────────────────────────────── -->
+  <div class="toolbar-card card">
+    <div class="tabs">
+      <button
+        *ngFor="let tab of tabs"
+        class="tab-btn"
+        [class.tab-btn-activo]="tabActiva() === tab.clave"
+        (click)="seleccionarTab(tab.clave)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <div class="toolbar-derecha" *ngIf="tabActiva() === 'mis-catalogos'">
+      <label class="campo-buscar">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar catálogo..." [ngModel]="busqueda()" (ngModelChange)="onBusquedaChange($event)" (click)="$event.stopPropagation()" />
+      </label>
+      <button class="btn btn-primary" (click)="abrirModalCrear(); $event.stopPropagation()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo catálogo
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Vista: Mis Catálogos ────────────────────────────────────────────── -->
+  <ng-container *ngIf="tabActiva() === 'mis-catalogos'">
+
+    <!-- KPIs -->
+    <div class="kpi-fila-4">
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-verde">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <span class="kpi-hero-valor">{{ catalogosPublicados() }}</span>
+        <span class="kpi-hero-label">Catálogos publicados</span>
+        <span class="kpi-hero-nota">Activos</span>
+      </div>
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-dorado">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <span class="kpi-hero-valor">{{ visitasTotales() | number }}</span>
+        <span class="kpi-hero-label">Visitas totales</span>
+        <span class="kpi-hero-nota">Este mes</span>
+      </div>
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-rojo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <span class="kpi-hero-valor">{{ productosMostrados() | number }}</span>
+        <span class="kpi-hero-label">Productos mostrados</span>
+        <span class="kpi-hero-nota">En catálogos</span>
+      </div>
+      <div class="kpi-hero-card">
+        <div class="kpi-hero-icono kpi-hero-icono-ambar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <span class="kpi-hero-valor">{{ enlacesActivos() }}</span>
+        <span class="kpi-hero-label">Enlaces compartidos</span>
+        <span class="kpi-hero-nota">Activos</span>
+      </div>
+    </div>
+
+    <!-- Contenido principal: lista + panel de creación -->
+    <div class="contenido-grid">
+
+      <!-- Catálogos recientes -->
+      <div class="card lista-card">
+        <div class="lista-card-header">
+          <h2>Catálogos recientes</h2>
+        </div>
+
+        <div class="tabla-wrap" *ngIf="catalogosFiltrados().length > 0; else sinCatalogos">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Catálogo</th>
+                <th>Diseño</th>
+                <th>Productos</th>
+                <th>Visitas</th>
+                <th>Enlace</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of catalogosFiltrados()">
+                <td>
+                  <div class="celda-catalogo">
+                    <span class="miniatura" [style.background]="c.colorDiseno"></span>
+                    <div>
+                      <div class="celda-nombre">{{ c.nombre }}</div>
+                      <div class="celda-fecha">Actualizado {{ c.actualizado }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="miniatura miniatura-diseno" [style.background]="c.colorDiseno"></span>
+                </td>
+                <td>{{ c.productos }}</td>
+                <td>{{ c.visitas }}</td>
+                <td>
+                  <button class="enlace-btn" (click)="copiarEnlace(c); $event.stopPropagation()" [title]="'https://' + c.enlace">
+                    {{ c.enlace }}
+                    <svg *ngIf="enlaceCopiado() !== c.id" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <svg *ngIf="enlaceCopiado() === c.id" class="icono-check" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-success]="c.estado === 'publicado'" [class.badge-warning]="c.estado === 'borrador'">
+                    {{ estadoLabel(c.estado) }}
+                  </span>
+                </td>
+                <td class="celda-acciones">
+                  <div class="acciones-wrap" (click)="$event.stopPropagation()">
+                    <button class="icon-btn" title="Ver catálogo">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="icon-btn" title="Copiar enlace" (click)="copiarEnlace(c)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                    <div class="menu-contenedor">
+                      <button class="icon-btn" title="Más acciones" (click)="toggleMenu(c.id)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                      </button>
+                      <div class="menu-flotante" *ngIf="menuAbierto() === c.id">
+                        <button class="menu-item">Editar</button>
+                        <button class="menu-item">Duplicar</button>
+                        <button class="menu-item menu-item-peligro" (click)="eliminarCatalogo(c)">Eliminar</button>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #sinCatalogos>
+          <div class="estado-vacio">
+            <p>No encontramos catálogos con ese nombre.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Panel lateral: crear + plantillas + tip -->
+      <div class="panel-lateral">
+        <div class="card crear-card">
+          <h3>Crear nuevo catálogo</h3>
+          <p class="crear-subtitulo">Elige cómo deseas crear tu catálogo</p>
+
+          <button class="opcion-crear" (click)="abrirModalCrear('ia')">
+            <span class="opcion-icono opcion-icono-ia">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.9 5.8L20 10l-6.1 2.2L12 18l-1.9-5.8L4 10l6.1-2.2L12 2z"/></svg>
+            </span>
+            <span class="opcion-texto">
+              <span class="opcion-titulo">Diseño con IA</span>
+              <span class="opcion-descripcion">Sube una imagen y la IA generará un diseño para tu catálogo</span>
+            </span>
+          </button>
+
+          <button class="opcion-crear" (click)="abrirModalCrear('plantilla')">
+            <span class="opcion-icono opcion-icono-manual">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+            </span>
+            <span class="opcion-texto">
+              <span class="opcion-titulo">Desde cero</span>
+              <span class="opcion-descripcion">Elige una plantilla y personaliza tu catálogo</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="card plantillas-card">
+          <div class="plantillas-header">
+            <h3>Plantillas populares</h3>
+          </div>
+          <div class="plantillas-grid">
+            <button class="plantilla-item" *ngFor="let p of plantillas()" [title]="p.nombre">
+              <span class="plantilla-miniatura" [style.background]="p.colorDiseno"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card tip-card">
+          <div class="tip-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+            Tip del día
+          </div>
+          <p>Comparte tu catálogo en redes sociales para llegar a más clientes.</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Vistas placeholder de los otros tabs ────────────────────────────── -->
+  <div class="card estado-vacio-tab" *ngIf="tabActiva() === 'diseños-guardados'">
+    <p>Todavía no guardaste ningún diseño.</p>
+  </div>
+  <div class="card estado-vacio-tab" *ngIf="tabActiva() === 'preferencias'">
+    <p>Las preferencias de catálogo estarán disponibles próximamente.</p>
+  </div>
+</div>
+
+<!-- ── Modal: crear catálogo (placeholder hasta conectar backend) ────────── -->
+<div class="modal-overlay" *ngIf="modalCrearAbierto()" (click)="cerrarModalCrear()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalCrear()" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-header">
+      <h2>{{ metodoCreacion() === 'ia' ? 'Diseño con IA' : 'Nuevo catálogo' }}</h2>
+    </div>
+    <div class="modal-body">
+      <p *ngIf="metodoCreacion() === 'ia'">
+        Sube una imagen de tus productos y la IA generará un diseño de catálogo listo para publicar.
+      </p>
+      <p *ngIf="metodoCreacion() !== 'ia'">
+        Elige una plantilla y personaliza colores, fuentes y layout para armar tu catálogo.
+      </p>
+      <p class="modal-nota">Este flujo se conectará al backend en el siguiente paso.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-ghost" (click)="cerrarModalCrear()">Cancelar</button>
+        <button class="btn btn-primary" (click)="cerrarModalCrear()">Continuar</button>
+      </div>
+    </div>
+  </div>
+</div>

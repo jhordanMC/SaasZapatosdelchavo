@@ -16,6 +16,7 @@ const DICT: Record<AppLang, Record<string, string>> = {
     // Sidebar / navegación
     'NAV.DASHBOARD': 'Dashboard',
     'NAV.INVENTARIO': 'Inventario',
+    'NAV.CATALOGO': 'Catálogos',
     'NAV.VENTAS': 'Ventas',
     'NAV.VENTAS_HISTORIAL': 'Ver Historial',
     'NAV.VENTAS_PROFORMAS': 'Proformas',
@@ -83,6 +84,7 @@ const DICT: Record<AppLang, Record<string, string>> = {
   en: {
     'NAV.DASHBOARD': 'Dashboard',
     'NAV.INVENTARIO': 'Inventory',
+    'NAV.CATALOGO': 'Catalogs',
     'NAV.VENTAS': 'Sales',
     'NAV.VENTAS_HISTORIAL': 'View History',
     'NAV.VENTAS_PROFORMAS': 'Quotes',
@@ -148,6 +150,7 @@ const DICT: Record<AppLang, Record<string, string>> = {
   qu: {
     'NAV.DASHBOARD': 'Dashboard',
     'NAV.INVENTARIO': 'Qhatuna waqaychana',
+    'NAV.CATALOGO': 'Katalogokuna',
     'NAV.VENTAS': 'Rantikuykuna',
     'NAV.VENTAS_HISTORIAL': 'Historial rikuy',
     'NAV.VENTAS_PROFORMAS': 'Proformas',

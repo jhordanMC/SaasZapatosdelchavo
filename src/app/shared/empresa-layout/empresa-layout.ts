@@ -55,6 +55,9 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
       if (puedeVer('inventario')) {
         base.push({ label: this.i18n.t('NAV.INVENTARIO'), route: '/empresa/inventario', icon: 'inventario' });
       }
+      if (esDueño && puedeVer('catalogo')) {
+        base.push({ label: this.i18n.t('NAV.CATALOGO'), route: '/empresa/catalogo', icon: 'catalogo' });
+      }
       if (puedeVer('ventas')) {
         base.push({
           label: this.i18n.t('NAV.VENTAS'),

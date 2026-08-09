@@ -21,6 +21,7 @@ export interface SidebarItem {
     | 'reportes'
     | 'config'
     | 'inventario'
+    | 'catalogo'
     | 'ventas'
     | 'finanzas'
     | 'analitica'

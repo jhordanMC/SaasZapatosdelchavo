@@ -62,6 +62,7 @@ export interface UsuariosActivosPorEmpresa {
 export type ClaveVista =
   | 'dashboard'
   | 'inventario'
+  | 'catalogo'
   | 'ventas'
   | 'finanzas'
   | 'analitica'
@@ -92,6 +93,7 @@ export const VISTAS_POR_ROL: Record<RolUsuario, PermisoVista[]> = {
   dueño: [
     { clave: 'dashboard', etiqueta: 'Dashboard' },
     { clave: 'inventario', etiqueta: 'Inventario' },
+    { clave: 'catalogo', etiqueta: 'Catálogos' },
     { clave: 'ventas', etiqueta: 'Ventas' },
     { clave: 'finanzas', etiqueta: 'Finanzas' },
     { clave: 'integraciones', etiqueta: 'Integraciones' },
