@@ -114,8 +114,28 @@ export class EmpresaDashboardComponent implements OnInit {
    * todavía. Necesitaría un campo nuevo en Venta + este endpoint filtrando por él. */
   canal: 'todos' | 'menor' | 'mayor' = 'todos';
 
+  /** Zona horaria del negocio (Perú, UTC-5 fijo, sin horario de verano).
+   * Debe coincidir con TZ_NEGOCIO en app/core/tiempo.py del backend —
+   * si no, el "hoy" del dashboard puede desalinearse con el "hoy" que
+   * usa el backend para sus propios reportes (Dashboard/Finanzas). */
+  private static readonly TZ_NEGOCIO = 'America/Lima';
+
+  /** "Ahora", pero con año/mes/día correspondientes a la hora de Lima,
+   * sin importar la timezone configurada en el dispositivo del usuario. */
+  private ahoraEnLima(): Date {
+    const partes = new Intl.DateTimeFormat('en-CA', {
+      timeZone: EmpresaDashboardComponent.TZ_NEGOCIO,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+
+    const obtener = (tipo: string) => partes.find((p) => p.type === tipo)!.value;
+    return new Date(Number(obtener('year')), Number(obtener('month')) - 1, Number(obtener('day')));
+  }
+
   private hoyISO(): string {
-    return this.formatearISO(new Date());
+    return this.formatearISO(this.ahoraEnLima());
   }
 
   private formatearISO(fecha: Date): string {
@@ -125,7 +145,7 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   private lunesDeEstaSemanaISO(): string {
-    const hoy = new Date();
+    const hoy = this.ahoraEnLima();
     const diaSemana = hoy.getDay();
     const diasDesdeElLunes = diaSemana === 0 ? 6 : diaSemana - 1;
     const lunes = new Date(hoy);
@@ -134,12 +154,12 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   private primerDiaDeEsteMesISO(): string {
-    const hoy = new Date();
+    const hoy = this.ahoraEnLima();
     return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
   }
 
   private primerDiaDeEsteAnioISO(): string {
-    const hoy = new Date();
+    const hoy = this.ahoraEnLima();
     return this.formatearISO(new Date(hoy.getFullYear(), 0, 1));
   }
 
@@ -320,8 +340,8 @@ export class EmpresaDashboardComponent implements OnInit {
   private cargarTopDevueltos(): void {
     this.cargandoTopDevueltos.set(true);
     // Para que sirva como alerta útil, miramos los últimos 30 días en lugar de solo el día de hoy
-    const hoy = new Date();
-    const hace30Dias = new Date();
+    const hoy = this.ahoraEnLima();
+    const hace30Dias = new Date(hoy);
     hace30Dias.setDate(hoy.getDate() - 30);
     const desde = this.formatearISO(hace30Dias);
     const hasta = this.formatearISO(hoy);
