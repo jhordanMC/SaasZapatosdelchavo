@@ -1,4 +1,4 @@
-<div class="catalogo-page" (click)="cerrarMenus()">
+<div class="content" (click)="cerrarMenus()">
 
   <!-- ── Tabs + búsqueda + acción principal ──────────────────────────────── -->
   <div class="toolbar-card card">
@@ -97,19 +97,19 @@
                     </div>
                   </div>
                 </td>
-                <td>
+                <td data-label="Diseño">
                   <span class="miniatura miniatura-diseno" [style.background]="c.colorDiseno"></span>
                 </td>
-                <td>{{ c.productos }}</td>
-                <td>{{ c.visitas }}</td>
-                <td>
+                <td data-label="Productos">{{ c.productos }}</td>
+                <td data-label="Visitas">{{ c.visitas }}</td>
+                <td data-label="Enlace">
                   <button class="enlace-btn" (click)="copiarEnlace(c); $event.stopPropagation()" [title]="'https://' + c.enlace">
                     {{ c.enlace }}
                     <svg *ngIf="enlaceCopiado() !== c.id" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     <svg *ngIf="enlaceCopiado() === c.id" class="icono-check" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </button>
                 </td>
-                <td>
+                <td data-label="Estado">
                   <span class="badge" [class.badge-success]="c.estado === 'publicado'" [class.badge-warning]="c.estado === 'borrador'">
                     {{ estadoLabel(c.estado) }}
                   </span>

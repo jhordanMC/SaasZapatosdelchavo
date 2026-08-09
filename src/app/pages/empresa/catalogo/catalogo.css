@@ -1,5 +1,17 @@
-/* ── Layout general ─────────────────────────────────────────────────────── */
-.catalogo-page {
+/* ── Layout general (mismo patrón que Dashboard/Inventario: :host hace de
+   contenedor con scroll propio, .content trae el padding responsive de
+   var(--space-page) que ya se reduce solo en tablet/móvil vía tokens.css) ── */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--bg-canvas);
+}
+
+.content {
+  padding: var(--space-page) var(--space-page) 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -142,7 +154,7 @@
 .enlace-btn:hover { text-decoration: underline; }
 .icono-check { color: var(--color-success); }
 
-.celda-acciones { text-align: right; }
+.celda-acciones { text-align: right; white-space: nowrap; }
 .acciones-wrap { display: inline-flex; align-items: center; gap: 4px; position: relative; }
 
 .icon-btn {
@@ -265,14 +277,96 @@
 .modal-nota { font-size: 11.5px; color: var(--text-tertiary); font-style: italic; }
 .modal-acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
-@media (max-width: 960px) {
+/* ── Responsive ──────────────────────────────────────────────────────────
+   Mismos cortes que el resto de /empresa (1024 → el sidebar pasa a
+   off-canvas y el contenido gana todo el ancho; 768 → tablet/móvil grande;
+   480 → celular). */
+
+/* Laptop chico / tablet horizontal: el panel lateral (320px fijos) ya no
+   entra cómodo al lado de la tabla — se apila debajo. */
+@media (max-width: 1024px) {
   .contenido-grid { grid-template-columns: 1fr; }
-  .kpi-fila-4 { grid-template-columns: repeat(2, 1fr); }
+  .panel-lateral { flex-direction: row; flex-wrap: wrap; }
+  .crear-card, .plantillas-card, .tip-card { flex: 1 1 260px; }
 }
-@media (max-width: 560px) {
-  .kpi-fila-4 { grid-template-columns: 1fr; }
-  .toolbar-card { flex-direction: column; align-items: stretch; }
+
+/* Tablet / celular grande */
+@media (max-width: 768px) {
+  .kpi-fila-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .toolbar-card { padding: 12px; }
+  .tabs { width: 100%; overflow-x: auto; }
+  .toolbar-derecha { width: 100%; }
+  .campo-buscar { flex: 1 1 auto; min-width: 0; }
+  .panel-lateral { flex-direction: column; }
+  .crear-card, .plantillas-card, .tip-card { flex: 1 1 auto; }
+}
+
+/* Celular */
+@media (max-width: 480px) {
+  .content { gap: 16px; }
+  .kpi-fila-4 { grid-template-columns: 1fr; gap: 10px; }
+  .kpi-hero-card { padding: 14px; }
+
+  .toolbar-card { flex-direction: column; align-items: stretch; padding: 12px; }
+  .tabs { gap: 2px; }
+  .tab-btn { flex: 1 1 auto; text-align: center; padding: 8px 6px; font-size: 12.5px; }
   .toolbar-derecha { flex-direction: column; align-items: stretch; }
   .campo-buscar { min-width: 0; }
+  .toolbar-derecha .btn-primary { width: 100%; }
+
+  .lista-card { padding: 14px; }
+
+  /* La tabla se convierte en una pila de tarjetas — mismo patrón visual
+     que .variante-fila en Inventario (borde suave + bg-canvas + radius
+     14px), en vez de forzar un scroll horizontal de 5 columnas en 320px. */
+  .tabla-wrap { overflow-x: visible; }
+  .tabla, .tabla thead, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
+  .tabla thead { display: none; }
+  .tabla tbody tr {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .tabla tbody tr:last-child { margin-bottom: 0; }
+  .tabla td { border-bottom: none; padding: 0; white-space: normal; }
+
+  /* Celda "Catálogo" (miniatura + nombre + fecha) hace de encabezado de la tarjeta. */
+  .tabla td:first-child { margin-bottom: 10px; }
+  .tabla td[data-label='Diseño'] { display: none; } /* redundante: el color ya se ve en la miniatura del encabezado */
+
+  /* Productos / Visitas / Enlace / Estado: fila "etiqueta — valor". */
+  .tabla td[data-label]:not([data-label='Diseño']) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .tabla td[data-label]::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+  .tabla td[data-label='Enlace'] .enlace-btn { justify-content: flex-end; text-align: right; }
+
+  .celda-acciones {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+    text-align: right;
+  }
+  .acciones-wrap { justify-content: flex-end; width: 100%; }
+
+  .crear-card, .plantillas-card, .tip-card { padding: 14px; }
+
+  .modal-body { padding: 4px 18px 18px; }
+  .modal-acciones { flex-direction: column-reverse; }
+  .modal-acciones .btn { width: 100%; }
 }
