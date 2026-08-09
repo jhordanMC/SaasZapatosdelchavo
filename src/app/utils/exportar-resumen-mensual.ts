@@ -47,7 +47,8 @@ function nombreArchivo(r: ResumenMensual, extension: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers de mes (todo en hora local, formato "YYYY-MM" para el <input type="month">)
+// Helpers de mes (fijos a hora de Lima, no a la timezone del dispositivo,
+// formato "YYYY-MM" para el <input type="month">)
 // ---------------------------------------------------------------------------
 
 const MESES_ES = [
@@ -55,9 +56,35 @@ const MESES_ES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
+/** Zona horaria del negocio (Perú, UTC-5 fijo, sin horario de verano).
+ * Debe coincidir con TZ_NEGOCIO en app/core/tiempo.py del backend —
+ * si no, "el mes actual" acá puede desalinearse con lo que el backend
+ * considera "hoy" para sus propios reportes. */
+const TZ_NEGOCIO = 'America/Lima';
+
+/** "Ahora", pero con año/mes/día correspondientes a la hora de Lima,
+ * sin importar la timezone configurada en el dispositivo del usuario. */
+function ahoraEnLima(): { anio: number; mes: number; dia: number } {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ_NEGOCIO,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+
+  const obtener = (tipo: string) => Number(partes.find((p) => p.type === tipo)!.value);
+  return { anio: obtener('year'), mes: obtener('month'), dia: obtener('day') };
+}
+
 export function mesActualISO(): string {
-  const hoy = new Date();
-  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+  const { anio, mes } = ahoraEnLima();
+  return `${anio}-${String(mes).padStart(2, '0')}`;
+}
+
+/** "YYYY-MM-DD" de hoy en hora de Lima. */
+export function hoyISO(): string {
+  const { anio, mes, dia } = ahoraEnLima();
+  return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 }
 
 /** A partir de "2026-07" devuelve el primer y último día de ese mes (YYYY-MM-DD). */

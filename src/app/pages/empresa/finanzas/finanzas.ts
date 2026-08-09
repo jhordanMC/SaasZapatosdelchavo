@@ -17,16 +17,13 @@ import {
   construirResumenMensual,
   exportarResumenMensualExcel,
   exportarResumenMensualPDF,
+  hoyISO,
   mesActualISO,
   rangoMes,
 } from '../../../utils/exportar-resumen-mensual';
 
 import { AuthService } from '../../../core/auth';
 import { environment } from '../../../../environments/environment';
-
-function hoyISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /**
  * "completos": ingresos brutos de las ventas, sin descontar el costo de la

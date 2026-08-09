@@ -13,6 +13,7 @@ import {
   SuscripcionListItem,
   SuscripcionUpdateInput,
 } from '../../../services/suscripciones';
+import { hoyISO } from '../../../core/fecha-negocio';
 
 type TabSuscripciones = 'planes' | 'suscripciones';
 
@@ -331,7 +332,7 @@ export class Suscripciones implements OnInit {
   guardandoPago = false;
 
   private formularioPagoVacio(): NuevoPagoForm {
-    return { monto: 0, estado: 'pagado', fechaPago: new Date().toISOString().slice(0, 10), numeroComprobante: '' };
+    return { monto: 0, estado: 'pagado', fechaPago: hoyISO(), numeroComprobante: '' };
   }
 
   abrirModalPagos(s: SuscripcionListItem): void {
