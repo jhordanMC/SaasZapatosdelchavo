@@ -15,7 +15,8 @@ export function etiquetaHerramienta(nombre: string): string {
   return ETIQUETAS_HERRAMIENTA[nombre] ?? nombre.replace(/_/g, ' ');
 }
 
-export const ETIQUETA_PROVEEDOR: Record<'gemini' | 'grok', string> = {
+export const ETIQUETA_PROVEEDOR: Record<'gemini' | 'groq' | 'grok', string> = {
   gemini: 'Conectado a Gemini',
+  groq: 'Conectado a Groq',
   grok: 'Conectado a Grok',
 };

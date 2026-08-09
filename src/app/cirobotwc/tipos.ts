@@ -15,7 +15,7 @@ export interface AsistenteRespuesta {
   accion: AccionAsistente | null;
   panel: PanelInteligente | null;
   sugerencias: string[];
-  proveedor: 'gemini' | 'grok' | null;
+  proveedor: 'gemini' | 'groq' | 'grok' | null;
   herramientas: string[];
 }
 
