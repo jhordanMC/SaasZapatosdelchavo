@@ -128,9 +128,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Edición de ítem en carrito ───────────────────────────────────────────
   editandoVarianteId: string | null = null;
-  edicionCantidad = 1;
-  edicionDescuento = 0;
-  edicionTipoDescuento: TipoDescuento = 'producto';
 
   // ── Checkout ─────────────────────────────────────────────────────────────
   pasoCheckout: PasoCheckout = 'formulario';
@@ -169,8 +166,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   justAddedProductoId: string | null = null;
   badgeBump = false;
   removingVarianteId: string | null = null;
-  qtyPulseModal = false;
-  qtyPulseEdicion = false;
   totalPulse = false;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -356,6 +351,21 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     return total;
   }
 
+  stockEnCarrito(p: ProductoPOSRead): number {
+    const idSede = this.sedeFiltro() ? this.sedeFiltro()!.id_sede : null;
+    let total = 0;
+    for (const item of this.ventasService.carrito()) {
+      if (item.productoId === p.id_producto) {
+        if (idSede) {
+          if (item.idUbicacionOrigen === idSede) total += item.cantidad;
+        } else {
+          total += item.cantidad;
+        }
+      }
+    }
+    return total;
+  }
+
   /** Arma la URL absoluta de una foto de producto (imagen_url guarda solo la ruta relativa). */
   imagenSrc(imagenUrl: string | null): string | null {
     return imagenUrl ? `${environment.apiUrl}${imagenUrl}` : null;
@@ -374,15 +384,15 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     let preUbi = globalSede;
 
     // Validar si los filtros globales tienen stock
-    if (preTalla && !p.variantes.some(v => v.talla === preTalla && v.stock_disponible > 0)) {
+    if (preTalla && !p.variantes.some(v => v.talla === preTalla && this.stockDisponibleReal(v) > 0)) {
         preTalla = null;
     }
-    if (preUbi && !p.variantes.some(v => v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
+    if (preUbi && !p.variantes.some(v => v.id_ubicacion_origen === preUbi && this.stockDisponibleReal(v) > 0)) {
         preUbi = null;
     }
 
     if (preTalla && preUbi) {
-       if (!p.variantes.some(v => v.talla === preTalla && v.id_ubicacion_origen === preUbi && v.stock_disponible > 0)) {
+       if (!p.variantes.some(v => v.talla === preTalla && v.id_ubicacion_origen === preUbi && this.stockDisponibleReal(v) > 0)) {
            preTalla = null;
        }
     }
@@ -402,6 +412,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cerrarSelectorVariante(): void {
     this.showVariantePicker = null;
+    this.editandoVarianteId = null;
   }
 
   get varianteSeleccionada(): VariantePOSRead | undefined {
@@ -414,6 +425,13 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   _opcionesTallaModal: { talla: string, label: string }[] = [];
   _opcionesUbicacionModal: { id: string, label: string }[] = [];
 
+  stockDisponibleReal(v: VariantePOSRead): number {
+    let enCarrito = 0;
+    const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === v.id_variante);
+    if (itemEnCarrito && this.editandoVarianteId !== v.id_variante) enCarrito = itemEnCarrito.cantidad;
+    return v.stock_disponible - enCarrito;
+  }
+
   actualizarOpcionesModal() {
     if (!this.showVariantePicker) {
       this._opcionesTallaModal = [];
@@ -423,9 +441,9 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let varsTalla = this.showVariantePicker.variantes;
     if (this.ubicacionModalActiva) {
-        varsTalla = varsTalla.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
+        varsTalla = varsTalla.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva && this.stockDisponibleReal(v) > 0);
     } else {
-        varsTalla = varsTalla.filter(v => v.stock_disponible > 0);
+        varsTalla = varsTalla.filter(v => this.stockDisponibleReal(v) > 0);
     }
     const set = new Set<string>();
     for (const v of varsTalla) {
@@ -438,9 +456,9 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let varsUbi = this.showVariantePicker.variantes;
     if (this.tallaModalActiva) {
-        varsUbi = varsUbi.filter(v => v.talla === this.tallaModalActiva && v.stock_disponible > 0);
+        varsUbi = varsUbi.filter(v => v.talla === this.tallaModalActiva && this.stockDisponibleReal(v) > 0);
     } else {
-        varsUbi = varsUbi.filter(v => v.stock_disponible > 0);
+        varsUbi = varsUbi.filter(v => this.stockDisponibleReal(v) > 0);
     }
     const map = new Map<string, string>();
     for (const v of varsUbi) {
@@ -457,12 +475,13 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tallaModalActiva = talla;
     this.errorTalla = null;
     if (talla && this.ubicacionModalActiva) {
-       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && v.stock_disponible > 0);
+       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && this.stockDisponibleReal(v) > 0);
        if (!isValid) {
            this.ubicacionModalActiva = null;
        }
     }
     this.actualizarOpcionesModal();
+    this.validarCantidadModal();
   }
 
   alCambiarUbicacionModal(idUbi: string | null) {
@@ -470,12 +489,13 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ubicacionModalActiva = idUbi;
     this.errorUbicacion = null;
     if (idUbi && this.tallaModalActiva) {
-       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && v.stock_disponible > 0);
+       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && this.stockDisponibleReal(v) > 0);
        if (!isValid) {
            this.tallaModalActiva = null;
        }
     }
     this.actualizarOpcionesModal();
+    this.validarCantidadModal();
   }
 
   get textoDescripcionDescuento(): string {
@@ -523,17 +543,19 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       this.errorUbicacion = 'Falta seleccionar sede';
       hasError = true;
     }
+    // Eliminamos el return temprano para que siga y valide la cantidad
+    const p = this.showVariantePicker;
+    if (!p) return;
+
+    this.validarCantidadModal();
+    if (this.errorCantidad) {
+      hasError = true;
+    }
 
     if (hasError) return;
 
-    const p = this.showVariantePicker;
     const variante = this.varianteSeleccionada;
-    if (!p || !variante) return;
-
-    if (this.cantidadSeleccionada > variante.stock_disponible) {
-      this.errorCantidad = `Solo hay ${variante.stock_disponible} unid. disp.`;
-      return;
-    }
+    if (!variante) return;
 
     let totalDescuento = this.descuentoSeleccionado;
     if (this.tipoDescuentoSeleccionado === 'unidad') {
@@ -557,7 +579,26 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       tipoDescuento: this.tipoDescuentoSeleccionado,
       idUbicacionOrigen: variante.id_ubicacion_origen,
       nombreUbicacion: variante.nombre_ubicacion ?? 'Sede',
+      stockMaximo: variante.stock_disponible,
     };
+
+    if (this.editandoVarianteId) {
+      if (this.editandoVarianteId === variante.id_variante) {
+        this.ventasService.editarItemCarrito(variante.id_variante, {
+          cantidad: this.cantidadSeleccionada,
+          descuentoMonto: this.descuentoSeleccionado,
+          tipoDescuento: this.tipoDescuentoSeleccionado
+        });
+      } else {
+        this.ventasService.quitarDelCarrito(this.editandoVarianteId);
+        this.ventasService.agregarAlCarrito(item);
+      }
+      this.editandoVarianteId = null;
+      this.showVariantePicker = null;
+      this.pulseTotal();
+      return;
+    }
+
     this.ventasService.agregarAlCarrito(item);
     this.showVariantePicker = null;
     this.dispararFeedbackAgregado(p.id_producto);
@@ -577,58 +618,76 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Edición inline de ítem en carrito ────────────────────────────────────
 
   iniciarEdicion(item: ItemCarrito): void {
+    const p = this.productos().find(x => x.id_producto === item.productoId);
+    if (!p) return;
+
     this.editandoVarianteId = item.varianteId;
-    this.edicionCantidad = item.cantidad;
-    this.edicionDescuento = item.descuentoMonto;
-    this.edicionTipoDescuento = item.tipoDescuento;
-  }
+    this.origenVueloEl = null;
+    
+    this.showVariantePicker = p;
+    this.tallaModalActiva = item.talla ?? null;
+    this.ubicacionModalActiva = item.idUbicacionOrigen ?? null;
+    
+    this.cantidadSeleccionada = item.cantidad;
+    this.descuentoSeleccionado = item.descuentoMonto;
+    this.tipoDescuentoSeleccionado = item.tipoDescuento;
+    
+    this.errorTalla = null;
+    this.errorUbicacion = null;
+    this.errorCantidad = null;
 
-  cancelarEdicion(): void {
-    this.editandoVarianteId = null;
-  }
-
-  guardarEdicion(item: ItemCarrito): void {
-    if (this.edicionCantidad < 1) return;
-    this.ventasService.editarItemCarrito(item.varianteId, {
-      cantidad: this.edicionCantidad,
-      descuentoMonto: this.edicionDescuento,
-      tipoDescuento: this.edicionTipoDescuento,
-    });
-    this.editandoVarianteId = null;
-    this.pulseTotal();
+    this.actualizarOpcionesModal();
+    this.validarCantidadModal();
   }
 
   // ── Cantidad: se escribe directamente como texto plano ──────────────────
 
-  /** Escribir la cantidad directamente como texto plano (ya no hay botones +/-). */
-  onCantidadModalInput(valor: string): void {
-    const max = this.varianteSeleccionada?.stock_disponible ?? 1;
-    let n = parseInt(valor, 10);
-    if (isNaN(n) || n < 1) n = 1;
-    if (n > max) n = max;
-    this.cantidadSeleccionada = n;
-    this.errorCantidad = null;
-    this.pulseQty('modal');
-  }
+  validarCantidadModal(): void {
+    const p = this.showVariantePicker;
+    if (!p) return;
 
-  onEdicionCantidadInput(valor: string): void {
-    let n = parseInt(valor, 10);
-    if (isNaN(n) || n < 1) n = 1;
-    this.edicionCantidad = n;
-    this.pulseQty('edicion');
-  }
-
-  private pulseQty(cual: 'modal' | 'edicion'): void {
-    if (cual === 'modal') {
-      this.qtyPulseModal = false;
-      setTimeout(() => (this.qtyPulseModal = true), 0);
-      setTimeout(() => (this.qtyPulseModal = false), 220);
+    let maxDisp = 0;
+    if (this.varianteSeleccionada) {
+      let enCarrito = 0;
+      const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === this.varianteSeleccionada!.id_variante);
+      if (itemEnCarrito && this.editandoVarianteId !== this.varianteSeleccionada!.id_variante) {
+        enCarrito = itemEnCarrito.cantidad;
+      }
+      maxDisp = this.varianteSeleccionada.stock_disponible - enCarrito;
     } else {
-      this.qtyPulseEdicion = false;
-      setTimeout(() => (this.qtyPulseEdicion = true), 0);
-      setTimeout(() => (this.qtyPulseEdicion = false), 220);
+      let variantesFiltradas = p.variantes;
+      
+      if (this.tallaModalActiva) {
+        variantesFiltradas = variantesFiltradas.filter(v => v.talla === this.tallaModalActiva);
+      }
+      if (this.ubicacionModalActiva) {
+        variantesFiltradas = variantesFiltradas.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva);
+      }
+
+      for (const v of variantesFiltradas) {
+        let enCarrito = 0;
+        const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === v.id_variante);
+        if (itemEnCarrito && this.editandoVarianteId !== v.id_variante) enCarrito = itemEnCarrito.cantidad;
+        maxDisp += Math.max(0, v.stock_disponible - enCarrito);
+      }
+    }
+
+    if (this.cantidadSeleccionada > maxDisp) {
+      this.cantidadSeleccionada = maxDisp;
+      this.errorCantidad = `Solo hay ${maxDisp} unid. disp.`;
+    } else {
+      this.errorCantidad = null;
     }
   }
+
+  /** Escribir la cantidad directamente como texto plano (ya no hay botones +/-). */
+  onCantidadModalInput(valor: string): void {
+    let n = parseInt(valor, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    this.cantidadSeleccionada = n;
+    this.errorCantidad = null;
+  }
+
 
   // ── Feedback visual: agregar al carrito / total ──────────────────────────
 

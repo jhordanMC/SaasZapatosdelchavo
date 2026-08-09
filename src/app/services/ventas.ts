@@ -291,6 +291,8 @@ export interface ItemCarrito {
   descuentoMonto: number;
   /** Si el descuento aplica por unidad (×cantidad) o al total de la línea. */
   tipoDescuento: TipoDescuento;
+  /** Stock máximo disponible. */
+  stockMaximo?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -463,11 +465,16 @@ export class VentasService {
       const existente = lista.find((i) => i.varianteId === item.varianteId);
       if (existente) {
         // Si ya está en el carrito, suma la cantidad
-        return lista.map((i) =>
-          i.varianteId === item.varianteId
-            ? { ...i, cantidad: i.cantidad + item.cantidad }
-            : i
-        );
+        return lista.map((i) => {
+          if (i.varianteId === item.varianteId) {
+            let sum = i.cantidad + item.cantidad;
+            if (i.stockMaximo !== undefined && sum > i.stockMaximo) {
+              sum = i.stockMaximo;
+            }
+            return { ...i, cantidad: sum };
+          }
+          return i;
+        });
       }
       return [...lista, item];
     });
@@ -482,7 +489,16 @@ export class VentasService {
     cambios: Partial<Pick<ItemCarrito, 'cantidad' | 'descuentoMonto' | 'tipoDescuento'>>
   ): void {
     this.carrito.update((lista) =>
-      lista.map((i) => (i.varianteId === varianteId ? { ...i, ...cambios } : i))
+      lista.map((i) => {
+        if (i.varianteId === varianteId) {
+          let nuevaCant = cambios.cantidad ?? i.cantidad;
+          if (i.stockMaximo !== undefined && nuevaCant > i.stockMaximo) {
+            nuevaCant = i.stockMaximo;
+          }
+          return { ...i, ...cambios, cantidad: nuevaCant };
+        }
+        return i;
+      })
     );
   }
 
