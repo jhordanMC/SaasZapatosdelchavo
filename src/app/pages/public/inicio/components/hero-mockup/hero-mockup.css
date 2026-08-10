@@ -29,6 +29,7 @@
 .hm-nav-item {
   font-size: 12px; font-weight: 600; color: var(--sb-text-dim);
   padding: 8px 10px; border-radius: 10px;
+  transition: background var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 .hm-nav-item.active {
   background: var(--sb-active-bg); color: var(--sb-active-text); box-shadow: var(--sb-active-glow);
@@ -51,6 +52,18 @@
 .hm-greeting { display: flex; flex-direction: column; gap: 2px; }
 .hm-greeting strong { font-size: 15px; color: var(--text-primary); }
 .hm-greeting span { font-size: 12px; color: var(--text-secondary); }
+
+/* ── Escena auto-play: el bloque completo se remonta en cada ciclo (ver
+   template), así este fade-in se re-dispara solo cada vez que cambia. ── */
+.hm-scene { display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; animation: hmSceneFade 420ms var(--ease-standard); }
+@keyframes hmSceneFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hm-scene-dots { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+.hm-scene-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-default); transition: background var(--duration-base) var(--ease-standard), width var(--duration-base) var(--ease-standard); }
+.hm-scene-dot.active { width: 18px; border-radius: var(--radius-pill); background: var(--brand-primary-dark); }
 
 .hm-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .hm-metric {

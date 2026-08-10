@@ -5,8 +5,8 @@
       <span>VILCAS</span>
     </div>
     <nav class="hm-nav">
-      @for (item of navItems; track item.label) {
-        <span class="hm-nav-item" [class.active]="item.active">{{ item.label }}</span>
+      @for (item of navList; track item) {
+        <span class="hm-nav-item" [class.active]="item === activeScene.navLabel">{{ item }}</span>
       }
     </nav>
   </aside>
@@ -22,43 +22,56 @@
       <span>Este es el resumen de tu negocio hoy.</span>
     </div>
 
-    <div class="hm-metrics">
-      @for (m of metrics; track m.label) {
-        <div class="hm-metric">
-          <span class="hm-metric-label">{{ m.label }}</span>
-          <span class="hm-metric-value" [class.danger]="m.danger">{{ m.value }}</span>
-          <span class="hm-metric-delta" [class.danger]="m.danger">{{ m.delta }}</span>
+    <!-- El @for con track activeIndex() fuerza a Angular a recrear todo este
+         bloque cada vez que cambia la escena, así el fade-in de la animación
+         CSS se re-dispara solo en cada ciclo del auto-play. -->
+    @for (scene of [activeScene]; track activeIndex()) {
+      <div class="hm-scene">
+        <div class="hm-metrics">
+          @for (m of scene.metrics; track m.label) {
+            <div class="hm-metric">
+              <span class="hm-metric-label">{{ m.label }}</span>
+              <span class="hm-metric-value" [class.danger]="m.danger">{{ m.value }}</span>
+              <span class="hm-metric-delta" [class.danger]="m.danger">{{ m.delta }}</span>
+            </div>
+          }
         </div>
+
+        <div class="hm-panels">
+          <div class="hm-chart-card">
+            <span class="hm-panel-title">{{ scene.panelTitle }}</span>
+            <svg class="hm-chart" viewBox="0 0 240 70" preserveAspectRatio="none">
+              <polyline [attr.points]="scene.chartPoints" fill="none" stroke-width="2.5" class="hm-chart-line" />
+            </svg>
+            <div class="hm-chart-axis">
+              @for (d of chartDays; track d) {
+                <span>{{ d }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="hm-top-card">
+            <span class="hm-panel-title">{{ scene.listTitle }}</span>
+            <ul class="hm-top-list">
+              @for (p of scene.topItems; track p.nombre) {
+                <li>
+                  <span class="hm-top-thumb"></span>
+                  <span class="hm-top-info">
+                    <strong>{{ p.nombre }}</strong>
+                    <small>{{ p.dato }}</small>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="hm-scene-dots">
+      @for (s of [0, 1, 2]; track s) {
+        <span class="hm-scene-dot" [class.active]="activeIndex() === s"></span>
       }
-    </div>
-
-    <div class="hm-panels">
-      <div class="hm-chart-card">
-        <span class="hm-panel-title">Ventas últimos 7 días</span>
-        <svg class="hm-chart" viewBox="0 0 240 70" preserveAspectRatio="none">
-          <polyline [attr.points]="chartPoints" fill="none" stroke-width="2.5" class="hm-chart-line" />
-        </svg>
-        <div class="hm-chart-axis">
-          @for (d of chartDays; track d) {
-            <span>{{ d }}</span>
-          }
-        </div>
-      </div>
-
-      <div class="hm-top-card">
-        <span class="hm-panel-title">Productos más vendidos</span>
-        <ul class="hm-top-list">
-          @for (p of topProductos; track p.nombre) {
-            <li>
-              <span class="hm-top-thumb"></span>
-              <span class="hm-top-info">
-                <strong>{{ p.nombre }}</strong>
-                <small>{{ p.unidades }}</small>
-              </span>
-            </li>
-          }
-        </ul>
-      </div>
     </div>
   </div>
 </div>
