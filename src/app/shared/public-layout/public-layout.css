@@ -50,7 +50,7 @@
   transform-origin: center;
   transition: transform var(--duration-base) var(--ease-standard);
 }
-.nav-links a:hover { color: var(--brand-primary-dark); }
+.nav-links a:hover { color: var(--brand-deep-700); }
 .nav-links a:hover::after { transform: scaleX(1); }
 .nav-links a.active { color: var(--brand-deep-700); font-weight: 700; }
 .nav-links a.active::after { transform: scaleX(1); }

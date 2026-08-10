@@ -63,6 +63,9 @@
 .ia-arrow { display: flex; align-items: center; color: var(--border-strong); flex-shrink: 0; }
 .ia-cta { display: flex; justify-content: center; margin-top: 32px; }
 
+/* ── 6. Precios (CTA hacia /precios) ── */
+.precios-cta { display: flex; justify-content: center; }
+
 /* ── 5. Testimonios ── */
 .testimonios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .testimonio-card {

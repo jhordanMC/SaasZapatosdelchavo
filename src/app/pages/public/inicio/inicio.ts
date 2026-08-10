@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HeroMockupComponent } from './components/hero-mockup/hero-mockup';
 import { DemoExplorerComponent } from './components/demo-explorer/demo-explorer';
-import { PreciosTeaserComponent } from './components/precios-teaser/precios-teaser';
 
 interface Feature {
   icon: 'box' | 'globe' | 'cart' | 'chart' | 'radar';
@@ -25,7 +24,7 @@ interface Testimonio {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent, PreciosTeaserComponent],
+  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })
