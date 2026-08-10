@@ -1,4 +1,12 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  QueryList,
+  ViewChildren,
+  signal,
+} from '@angular/core';
 
 interface MockMetric {
   label: string;
@@ -28,8 +36,10 @@ interface MockScene {
  *
  * Auto-play: cicla sola entre unas pocas "escenas" (Inventario → Ventas →
  * Finanzas) cada pocos segundos, para que se sienta viva sin que el
- * usuario tenga que interactuar. Es solo un signal + setInterval local,
- * no hay lógica de negocio real detrás.
+ * usuario tenga que interactuar. Un cursor decorativo se desplaza hasta
+ * el nav item correspondiente y "hace clic" justo antes de que cambie
+ * la escena, simulando a alguien navegando el dashboard. Todo corre con
+ * signals + setTimeout local, no hay lógica de negocio real detrás.
  */
 @Component({
   selector: 'app-hero-mockup',
@@ -38,7 +48,9 @@ interface MockScene {
   templateUrl: './hero-mockup.html',
   styleUrl: './hero-mockup.css',
 })
-export class HeroMockupComponent implements OnInit, OnDestroy {
+export class HeroMockupComponent implements AfterViewInit, OnDestroy {
+  @ViewChildren('navItemRef') navItemRefs!: QueryList<ElementRef<HTMLElement>>;
+
   readonly navList: string[] = [
     'Dashboard',
     'Inventario',
@@ -106,22 +118,58 @@ export class HeroMockupComponent implements OnInit, OnDestroy {
 
   readonly chartDays: string[] = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-  private readonly INTERVALO_MS = 3600;
-  private timerId: ReturnType<typeof setInterval> | undefined;
+  // Tiempos del ciclo cursor → clic → cambio de escena. Suman ~3.5s por
+  // escena, similar al INTERVALO_MS fijo que usaba el setInterval anterior.
+  private readonly HOLD_MS = 2700; // cuánto se queda quieta la escena antes de moverse
+  private readonly MOVE_MS = 550; // duración del desplazamiento del cursor (debe calzar con la transition del CSS)
+  private readonly CLICK_MS = 260; // duración del pulso de clic antes de soltar la escena
+
+  private cycleTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
   readonly activeIndex = signal(0);
+  readonly cursorX = signal(0);
+  readonly cursorY = signal(0);
+  readonly isClicking = signal(false);
 
   get activeScene(): MockScene {
     return this.scenes[this.activeIndex()];
   }
 
-  ngOnInit(): void {
-    this.timerId = setInterval(() => {
-      this.activeIndex.set((this.activeIndex() + 1) % this.scenes.length);
-    }, this.INTERVALO_MS);
+  ngAfterViewInit(): void {
+    // Espera un tick a que el DOM tenga layout real antes de medir el nav item.
+    setTimeout(() => {
+      this.moveCursorToScene(this.activeIndex());
+      this.cycleTimeoutId = setTimeout(() => this.scheduleNextStep(), this.HOLD_MS);
+    });
   }
 
   ngOnDestroy(): void {
-    if (this.timerId) clearInterval(this.timerId);
+    if (this.cycleTimeoutId) clearTimeout(this.cycleTimeoutId);
+  }
+
+  /** Mueve el cursor hasta el nav item que corresponde a una escena. */
+  private moveCursorToScene(sceneIndex: number): void {
+    const navIndex = this.navList.indexOf(this.scenes[sceneIndex].navLabel);
+    const el = this.navItemRefs?.toArray()[navIndex]?.nativeElement;
+    if (!el) return;
+    this.cursorX.set(el.offsetLeft + el.offsetWidth / 2);
+    this.cursorY.set(el.offsetTop + el.offsetHeight / 2);
+  }
+
+  /** Un ciclo completo: desliza el cursor, hace "clic" y recién ahí cambia la escena. */
+  private scheduleNextStep(): void {
+    const nextIndex = (this.activeIndex() + 1) % this.scenes.length;
+
+    this.moveCursorToScene(nextIndex);
+
+    this.cycleTimeoutId = setTimeout(() => {
+      this.isClicking.set(true);
+      this.activeIndex.set(nextIndex);
+
+      this.cycleTimeoutId = setTimeout(() => {
+        this.isClicking.set(false);
+        this.cycleTimeoutId = setTimeout(() => this.scheduleNextStep(), this.HOLD_MS);
+      }, this.CLICK_MS);
+    }, this.MOVE_MS);
   }
 }

@@ -1,6 +1,7 @@
 :host { display: block; width: 100%; }
 
 .hm-frame {
+  position: relative; /* ancla al .hm-cursor absoluto */
   display: flex;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -100,9 +101,52 @@
 .hm-top-info strong { font-size: 11.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hm-top-info small { font-size: 10px; color: var(--text-tertiary); }
 
+/* ── Cursor decorativo autoplay ──
+   Se posiciona en px sobre .hm-frame y se desliza vía transition en
+   left/top cada vez que el componente actualiza los signals cursorX/Y. */
+.hm-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: none;
+  transform: translate(-2px, -2px);
+  transition: left 550ms cubic-bezier(0.4, 0, 0.2, 1), top 550ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: left, top;
+}
+.hm-cursor-icon {
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+.hm-cursor-ring {
+  position: absolute;
+  left: 1px;
+  top: 0px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--brand-primary-dark);
+  opacity: 0;
+  transform: scale(0.35);
+}
+.hm-cursor-ring.active {
+  animation: hmCursorClick 420ms ease-out;
+}
+@keyframes hmCursorClick {
+  0% { opacity: 0.55; transform: scale(0.3); }
+  55% { opacity: 0.3; transform: scale(1.7); }
+  100% { opacity: 0; transform: scale(2.3); }
+}
+
 @media (max-width: 640px) {
   .hm-frame { height: auto; }
   .hm-sidebar { display: none; }
+  .hm-cursor { display: none; }
   .hm-metrics { grid-template-columns: repeat(2, 1fr); }
   .hm-panels { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-cursor { transition: none; }
+  .hm-cursor-ring.active { animation: none; }
 }

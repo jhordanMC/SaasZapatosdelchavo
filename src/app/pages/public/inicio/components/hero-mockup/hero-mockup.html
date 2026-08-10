@@ -6,7 +6,7 @@
     </div>
     <nav class="hm-nav">
       @for (item of navList; track item) {
-        <span class="hm-nav-item" [class.active]="item === activeScene.navLabel">{{ item }}</span>
+        <span #navItemRef class="hm-nav-item" [class.active]="item === activeScene.navLabel">{{ item }}</span>
       }
     </nav>
   </aside>
@@ -73,5 +73,18 @@
         <span class="hm-scene-dot" [class.active]="activeIndex() === s"></span>
       }
     </div>
+  </div>
+
+  <!-- Cursor decorativo: se desplaza solo hasta el nav item de la próxima
+       escena y "hace clic" justo antes de que cambien los datos, para dar
+       la sensación de que alguien está navegando el dashboard en vivo. -->
+  <div class="hm-cursor" [style.left.px]="cursorX()" [style.top.px]="cursorY()">
+    <span class="hm-cursor-ring" [class.active]="isClicking()"></span>
+    <svg class="hm-cursor-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path
+        d="M2 1.3 L2 14.2 L5.4 11.1 L7.6 15.9 L9.7 14.9 L7.5 10.2 L11.9 10.2 Z"
+        fill="#ffffff" stroke="#161616" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"
+      />
+    </svg>
   </div>
 </div>
