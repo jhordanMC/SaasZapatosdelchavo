@@ -1,4 +1,9 @@
 import { Routes } from '@angular/router';
+import { PublicLayoutComponent } from './shared/public-layout/public-layout';
+import { InicioComponent } from './pages/public/inicio/inicio';
+import { NosotrosComponent } from './pages/public/nosotros/nosotros';
+import { PreciosComponent } from './pages/public/precios/precios';
+import { ContactoComponent } from './pages/public/contacto/contacto';
 import { LoginComponent } from './pages/login/login';
 import { Verificar2faComponent } from './pages/verificar-2fa/verificar-2fa';
 import { OlvidecontraComponent } from './pages/olvidecontra/olvidecontra';
@@ -29,7 +34,19 @@ export const routes: Routes = [
   // canActivate no se ejecuta en una ruta que solo hace redirectTo (Angular
   // resuelve el redirect antes de correr guards), así que el chequeo de
   // "ya autenticado" vive únicamente en la ruta 'login' de abajo.
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+
+  // ── Zona pública: sitio de marketing (nav + footer propios) ──
+  {
+    path: '',
+    component: PublicLayoutComponent,
+    children: [
+      { path: '', pathMatch: 'full', component: InicioComponent },
+      { path: 'nosotros', component: NosotrosComponent },
+      { path: 'precios', component: PreciosComponent },
+      { path: 'contacto', component: ContactoComponent },
+    ],
+  },
+
   { path: 'login', component: LoginComponent, canActivate: [redirigirSiAutenticado] },
   { path: 'verificar-2fa', component: Verificar2faComponent },
   { path: 'olvide-contrasena', component: OlvidecontraComponent },

@@ -1,0 +1,23 @@
+<section class="intro">
+  <span class="hero-badge">Nuestra historia</span>
+  <h1>Construimos VILCAS para negocios como el tuyo</h1>
+  <p class="intro-sub">
+    Nacimos viendo a dueños de negocio llevar el inventario en cuadernos y las ventas en WhatsApp.
+    VILCAS junta todo eso en un solo lugar, pensado para el día a día real de una tienda o empresa pequeña.
+  </p>
+</section>
+
+<section class="page-section">
+  <div class="section-head">
+    <span class="eyebrow">Lo que nos guía</span>
+    <h2>Nuestros valores</h2>
+  </div>
+  <div class="valores-grid">
+    @for (v of valores; track v.titulo) {
+      <div class="valor-card">
+        <h3>{{ v.titulo }}</h3>
+        <p>{{ v.desc }}</p>
+      </div>
+    }
+  </div>
+</section>

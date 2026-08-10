@@ -1,0 +1,63 @@
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <span class="hero-badge">Gestión de negocios, simple</span>
+    <h1>Tu negocio, ordenado de principio a fin</h1>
+    <p class="hero-sub">
+      Inventario, ventas, finanzas y analítica en una sola plataforma. VILCAS reemplaza tus hojas de cálculo
+      sueltas por un panel que tu equipo realmente usa.
+    </p>
+    <div class="hero-actions">
+      <a routerLink="/login" class="btn btn-primary btn-lg">Probar gratis</a>
+      <a routerLink="/precios" class="btn btn-ghost btn-lg">Ver precios</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-val">12,480</span><span class="stat-label">SKUs gestionados</span></div>
+      <div class="stat"><span class="stat-val">0.3s</span><span class="stat-label">Sincronización</span></div>
+      <div class="stat"><span class="stat-val">99.9%</span><span class="stat-label">Uptime</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="page-section">
+  <div class="section-head">
+    <span class="eyebrow">Todo en un solo lugar</span>
+    <h2>Lo que necesita tu negocio, sin plugins ni parches</h2>
+  </div>
+  <div class="features-grid">
+    @for (f of features; track f.titulo) {
+      <div class="feature-card">
+        <div class="feature-icon">
+          @switch (f.icon) {
+            @case ('box') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            }
+            @case ('cart') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            }
+            @case ('chart') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            }
+            @case ('link') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            }
+            @case ('shield') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            }
+            @case ('bolt') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            }
+          }
+        </div>
+        <h3>{{ f.titulo }}</h3>
+        <p>{{ f.desc }}</p>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="cta-final">
+  <h2>Ordena tu negocio hoy</h2>
+  <p>Sin tarjeta de crédito. Crea tu cuenta y empieza a usar VILCAS en minutos.</p>
+  <a routerLink="/login" class="btn btn-primary btn-lg">Crear cuenta gratis</a>
+</section>

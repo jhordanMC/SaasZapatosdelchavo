@@ -1,0 +1,30 @@
+<section class="intro">
+  <span class="hero-badge">Contacto</span>
+  <h1>¿Tienes dudas sobre VILCAS?</h1>
+  <p class="intro-sub">Escríbenos y te respondemos en menos de 24 horas.</p>
+</section>
+
+<section class="contact-section">
+  @if (!enviado()) {
+    <form class="contact-form" (ngSubmit)="enviar()">
+      <label>
+        Nombre
+        <input type="text" name="nombre" [(ngModel)]="nombre" required placeholder="Tu nombre" />
+      </label>
+      <label>
+        Correo
+        <input type="email" name="correo" [(ngModel)]="correo" required placeholder="tucorreo@empresa.com" />
+      </label>
+      <label>
+        Mensaje
+        <textarea name="mensaje" [(ngModel)]="mensaje" required rows="5" placeholder="Cuéntanos en qué te ayudamos"></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary btn-lg">Enviar mensaje</button>
+    </form>
+  } @else {
+    <div class="contact-success">
+      <h3>¡Listo, {{ nombre }}!</h3>
+      <p>Recibimos tu mensaje, te contactamos pronto a {{ correo }}.</p>
+    </div>
+  }
+</section>

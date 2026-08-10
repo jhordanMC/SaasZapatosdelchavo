@@ -1,0 +1,31 @@
+<section class="intro">
+  <span class="hero-badge">Precios</span>
+  <h1>Empieza gratis, crece cuando lo necesites</h1>
+  <p class="intro-sub">Sin permanencia. Cambia o cancela tu plan cuando quieras.</p>
+</section>
+
+<section class="page-section">
+  <div class="pricing-grid">
+    @for (p of planes; track p.nombre) {
+      <div class="plan-card" [class.plan-featured]="p.destacado">
+        @if (p.destacado) { <span class="plan-tag">Más elegido</span> }
+        <h3>{{ p.nombre }}</h3>
+        <div class="plan-price">
+          <span class="plan-amount">{{ p.precio }}</span>
+          <span class="plan-period">{{ p.periodo }}</span>
+        </div>
+        <ul class="plan-items">
+          @for (item of p.items; track item) {
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ item }}
+            </li>
+          }
+        </ul>
+        <a routerLink="/login" class="btn" [class.btn-primary]="p.destacado" [class.btn-ghost]="!p.destacado">
+          Elegir {{ p.nombre }}
+        </a>
+      </div>
+    }
+  </div>
+</section>

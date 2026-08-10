@@ -1,0 +1,27 @@
+/* Clases compartidas entre las páginas de pages/public — evita repetir
+   .btn/.section-head en inicio, nosotros, precios y contacto. */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--radius-button);
+  font-weight: 600; font-size: 14px; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: all var(--duration-base) var(--ease-standard);
+}
+.btn-lg { padding: 14px 28px; font-size: 16px; }
+.btn-primary {
+  background: var(--brand-primary-dark); color: var(--text-on-brand-deep);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover { background: var(--brand-deep-700); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--text-primary); border-color: var(--border-default); }
+.btn-ghost:hover { background: var(--bg-surface-hover); }
+
+.section-head { max-width: 620px; margin: 0 auto 44px; text-align: center; }
+.eyebrow {
+  display: block; font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--brand-deep-700); margin-bottom: 10px;
+}
+.section-head h2 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+
+.page-section { max-width: 1180px; margin: 0 auto; padding: 64px 32px; }

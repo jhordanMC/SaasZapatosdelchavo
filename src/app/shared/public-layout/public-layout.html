@@ -1,0 +1,47 @@
+<div class="public-shell">
+  <header class="nav">
+    <div class="nav-inner">
+      <a routerLink="/" class="brand" (click)="cerrarMenu()">
+        <span class="brand-mark">V</span>
+        <span class="brand-word">VILCAS</span>
+      </a>
+
+      <nav class="nav-links" [class.open]="menuAbierto">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="cerrarMenu()">Inicio</a>
+        <a routerLink="/nosotros" routerLinkActive="active" (click)="cerrarMenu()">Nosotros</a>
+        <a routerLink="/precios" routerLinkActive="active" (click)="cerrarMenu()">Precios</a>
+        <a routerLink="/contacto" routerLinkActive="active" (click)="cerrarMenu()">Contacto</a>
+        <a routerLink="/login" class="btn btn-ghost nav-login-mobile">Iniciar sesión</a>
+      </nav>
+
+      <div class="nav-cta">
+        <a routerLink="/login" class="btn btn-ghost">Iniciar sesión</a>
+        <a routerLink="/login" class="btn btn-primary">Probar gratis</a>
+      </div>
+
+      <button class="nav-burger" (click)="toggleMenu()" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="public-content">
+    <router-outlet />
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand">
+        <span class="brand-mark">V</span>
+        <span class="brand-word">VILCAS</span>
+      </div>
+      <nav class="footer-links">
+        <a routerLink="/">Inicio</a>
+        <a routerLink="/nosotros">Nosotros</a>
+        <a routerLink="/precios">Precios</a>
+        <a routerLink="/contacto">Contacto</a>
+      </nav>
+      <span class="footer-copy">© {{ anioActual }} VILCAS. Todos los derechos reservados.</span>
+    </div>
+  </footer>
+</div>
