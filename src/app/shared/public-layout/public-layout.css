@@ -53,12 +53,7 @@
 .nav-burger { display: none; }
 
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.brand-mark {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: var(--brand-primary-dark); color: var(--text-on-brand-deep);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 15px; flex-shrink: 0;
-}
+.brand-logo { height: 32px; width: auto; flex-shrink: 0; }
 .brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--brand-wordmark); }
 
 .public-content { flex: 1; }
