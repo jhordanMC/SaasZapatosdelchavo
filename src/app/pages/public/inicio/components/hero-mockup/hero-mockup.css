@@ -7,7 +7,9 @@
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-  min-height: 420px;
+  /* Altura FIJA (no min-height): el auto-play cambia contenido adentro,
+     nunca el tamaño del card ni empuja el resto de la landing. */
+  height: 420px;
 }
 
 /* ── Sidebar oscuro, calcado de los tokens --sb-* reales de la app ── */
@@ -99,7 +101,7 @@
 .hm-top-info small { font-size: 10px; color: var(--text-tertiary); }
 
 @media (max-width: 640px) {
-  .hm-frame { min-height: 0; }
+  .hm-frame { height: auto; }
   .hm-sidebar { display: none; }
   .hm-metrics { grid-template-columns: repeat(2, 1fr); }
   .hm-panels { grid-template-columns: 1fr; }
