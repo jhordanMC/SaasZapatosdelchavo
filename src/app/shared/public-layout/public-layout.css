@@ -12,9 +12,8 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  background: color-mix(in srgb, var(--bg-canvas) 85%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, var(--sb-bg-top), var(--sb-bg-bottom));
+  border-bottom: 1px solid var(--sb-border);
 }
 .nav-inner {
   max-width: 1180px;
@@ -31,7 +30,7 @@
   gap: 28px;
 }
 .nav-links a {
-  color: var(--text-secondary);
+  color: var(--sb-text-dim);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -44,23 +43,27 @@
   position: absolute;
   left: 0; right: 0; bottom: -6px;
   height: 2px;
-  background: var(--brand-primary-dark);
+  background: var(--sb-accent);
   border-radius: var(--radius-pill);
   transform: scaleX(0);
   transform-origin: center;
   transition: transform var(--duration-base) var(--ease-standard);
 }
-.nav-links a:hover { color: var(--brand-deep-700); }
+.nav-links a:hover { color: var(--sb-text); }
 .nav-links a:hover::after { transform: scaleX(1); }
-.nav-links a.active { color: var(--brand-deep-700); font-weight: 700; }
+.nav-links a.active { color: var(--sb-text); font-weight: 700; }
 .nav-links a.active::after { transform: scaleX(1); }
 .nav-cta { display: flex; gap: 12px; flex-shrink: 0; }
+.nav-cta .btn-ghost, .nav-login-mobile.btn-ghost {
+  color: var(--sb-text); border-color: var(--sb-border);
+}
+.nav-cta .btn-ghost:hover, .nav-login-mobile.btn-ghost:hover { background: var(--sb-hover-bg); }
 .nav-login-mobile { display: none; }
 .nav-burger { display: none; }
 
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .brand-logo { height: 32px; width: auto; flex-shrink: 0; }
-.brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--brand-wordmark); }
+.brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--sb-text); }
 .brand-word .gd { color: var(--brand-gold); }
 
 .public-content { flex: 1; }
@@ -81,11 +84,11 @@
     display: flex; flex-direction: column; gap: 4px;
     background: none; border: none; cursor: pointer; padding: 6px;
   }
-  .nav-burger span { width: 20px; height: 2px; background: var(--text-primary); border-radius: 2px; }
+  .nav-burger span { width: 20px; height: 2px; background: var(--sb-text); border-radius: 2px; }
   .nav-links {
     position: fixed; top: 61px; left: 0; right: 0;
     flex-direction: column; align-items: flex-start; gap: 4px;
-    background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);
+    background: var(--sb-bg-bottom); border-bottom: 1px solid var(--sb-border);
     padding: 12px 24px 20px;
     transform: translateY(-8px); opacity: 0; pointer-events: none;
     transition: all var(--duration-base) var(--ease-standard);
