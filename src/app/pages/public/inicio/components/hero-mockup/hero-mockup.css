@@ -1,0 +1,93 @@
+:host { display: block; width: 100%; }
+
+.hm-frame {
+  display: flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  min-height: 420px;
+}
+
+/* ── Sidebar oscuro, calcado de los tokens --sb-* reales de la app ── */
+.hm-sidebar {
+  width: 148px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--sb-bg-top), var(--sb-bg-bottom));
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.hm-sidebar-brand {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 800; color: var(--sb-text); letter-spacing: 0.02em;
+}
+.hm-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand-gold); flex-shrink: 0; }
+.hm-nav { display: flex; flex-direction: column; gap: 4px; }
+.hm-nav-item {
+  font-size: 12px; font-weight: 600; color: var(--sb-text-dim);
+  padding: 8px 10px; border-radius: 10px;
+}
+.hm-nav-item.active {
+  background: var(--sb-active-bg); color: var(--sb-active-text); box-shadow: var(--sb-active-glow);
+}
+
+/* ── Panel principal claro ── */
+.hm-main { flex: 1; min-width: 0; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+
+.hm-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hm-search {
+  flex: 1; font-size: 12px; color: var(--text-tertiary);
+  background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill); padding: 8px 14px;
+}
+.hm-avatar {
+  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  background: var(--bg-canvas); border-radius: var(--radius-pill); padding: 8px 14px; white-space: nowrap;
+}
+
+.hm-greeting { display: flex; flex-direction: column; gap: 2px; }
+.hm-greeting strong { font-size: 15px; color: var(--text-primary); }
+.hm-greeting span { font-size: 12px; color: var(--text-secondary); }
+
+.hm-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.hm-metric {
+  background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+  border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.hm-metric-label { font-size: 10.5px; color: var(--text-tertiary); font-weight: 600; }
+.hm-metric-value { font-size: 17px; font-weight: 800; color: var(--text-primary); }
+.hm-metric-value.danger { color: var(--color-error); }
+.hm-metric-delta { font-size: 10.5px; color: var(--color-success); font-weight: 600; }
+.hm-metric-delta.danger { color: var(--color-error); }
+
+.hm-panels { flex: 1; display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; min-height: 0; }
+.hm-panel-title { font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; display: block; }
+
+.hm-chart-card, .hm-top-card {
+  background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+  border-radius: 14px; padding: 14px; display: flex; flex-direction: column;
+}
+.hm-chart { width: 100%; flex: 1; }
+.hm-chart-line { stroke: var(--brand-primary-dark); }
+.hm-chart-axis { display: flex; justify-content: space-between; margin-top: 4px; }
+.hm-chart-axis span { font-size: 9.5px; color: var(--text-tertiary); }
+
+.hm-top-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.hm-top-list li { display: flex; align-items: center; gap: 10px; }
+.hm-top-thumb {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  background: color-mix(in srgb, var(--brand-primary) 35%, var(--bg-surface));
+}
+.hm-top-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hm-top-info strong { font-size: 11.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hm-top-info small { font-size: 10px; color: var(--text-tertiary); }
+
+@media (max-width: 640px) {
+  .hm-frame { min-height: 0; }
+  .hm-sidebar { display: none; }
+  .hm-metrics { grid-template-columns: repeat(2, 1fr); }
+  .hm-panels { grid-template-columns: 1fr; }
+}

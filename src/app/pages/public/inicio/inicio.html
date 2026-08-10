@@ -1,28 +1,44 @@
+<!-- 1. Hero -->
 <section class="hero">
   <div class="hero-bg"></div>
-  <div class="hero-inner">
-    <span class="hero-badge">Gestión de negocios, simple</span>
-    <h1>Tu negocio, ordenado de principio a fin</h1>
-    <p class="hero-sub">
-      Inventario, ventas, finanzas y analítica en una sola plataforma. VILCAS reemplaza tus hojas de cálculo
-      sueltas por un panel que tu equipo realmente usa.
-    </p>
-    <div class="hero-actions">
-      <a routerLink="/login" class="btn btn-primary btn-lg">Probar gratis</a>
-      <a routerLink="/precios" class="btn btn-ghost btn-lg">Ver precios</a>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">Todo lo que tu negocio necesita, en un solo lugar</span>
+      <h1>Tu negocio, ordenado de <span class="hero-accent">principio a fin</span></h1>
+      <p class="hero-sub">
+        Inventario, ventas, finanzas y catálogos en una sola plataforma. Menos hojas de cálculo, más crecimiento.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/login" class="btn btn-primary btn-lg">Probar gratis</a>
+        <a routerLink="/nosotros" class="btn btn-ghost btn-lg">Ver cómo funciona</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-val">+12K</span><span class="stat-label">Negocios felices</span></div>
+        <div class="stat"><span class="stat-val">0.3s</span><span class="stat-label">Sincronización</span></div>
+        <div class="stat"><span class="stat-val">99.9%</span><span class="stat-label">Uptime</span></div>
+      </div>
     </div>
-    <div class="hero-stats">
-      <div class="stat"><span class="stat-val">12,480</span><span class="stat-label">SKUs gestionados</span></div>
-      <div class="stat"><span class="stat-val">0.3s</span><span class="stat-label">Sincronización</span></div>
-      <div class="stat"><span class="stat-val">99.9%</span><span class="stat-label">Uptime</span></div>
+    <div class="hero-visual">
+      <app-hero-mockup />
     </div>
   </div>
 </section>
 
+<!-- 2. Explora VILCAS en acción -->
 <section class="page-section">
   <div class="section-head">
-    <span class="eyebrow">Todo en un solo lugar</span>
-    <h2>Lo que necesita tu negocio, sin plugins ni parches</h2>
+    <span class="eyebrow">Pruébalo en 1 minuto</span>
+    <h2>Explora VILCAS en acción</h2>
+    <p class="section-sub">Interactúa con una vista previa de nuestra plataforma y descubre lo fácil que es gestionar tu negocio.</p>
+  </div>
+  <app-demo-explorer />
+</section>
+
+<!-- 3. Features -->
+<section class="page-section">
+  <div class="section-head">
+    <span class="eyebrow">Todo lo que necesitas</span>
+    <h2>Una plataforma, todas las herramientas</h2>
   </div>
   <div class="features-grid">
     @for (f of features; track f.titulo) {
@@ -32,20 +48,17 @@
             @case ('box') {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             }
+            @case ('globe') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            }
             @case ('cart') {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             }
             @case ('chart') {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             }
-            @case ('link') {
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            }
-            @case ('shield') {
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            }
-            @case ('bolt') {
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            @case ('radar') {
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-8.49a6 6 0 0 0 0 8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
             }
           }
         </div>
@@ -56,8 +69,79 @@
   </div>
 </section>
 
-<section class="cta-final">
-  <h2>Ordena tu negocio hoy</h2>
-  <p>Sin tarjeta de crédito. Crea tu cuenta y empieza a usar VILCAS en minutos.</p>
-  <a routerLink="/login" class="btn btn-primary btn-lg">Crear cuenta gratis</a>
+<!-- 4. Catálogos con IA -->
+<section class="page-section ia-section">
+  <div class="section-head ia-head">
+    <span class="eyebrow">Nuevo</span>
+    <h2>Crea catálogos increíbles con <span class="hero-accent">Inteligencia Artificial</span></h2>
+    <p class="section-sub">Sube una imagen de referencia o describe cómo quieres que se vea tu catálogo. Nuestra IA genera un diseño único para ti.</p>
+  </div>
+  <div class="ia-steps">
+    @for (paso of pasosIA; track paso.numero) {
+      <div class="ia-step">
+        <span class="ia-step-num">{{ paso.numero }}</span>
+        <h3>{{ paso.titulo }}</h3>
+        <p>{{ paso.desc }}</p>
+      </div>
+      @if (!$last) {
+        <span class="ia-arrow" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      }
+    }
+  </div>
+  <div class="ia-cta">
+    <a routerLink="/login" class="btn btn-primary btn-lg">Probar generador con IA</a>
+  </div>
+</section>
+
+<!-- 5. Testimonios -->
+<section class="page-section">
+  <div class="section-head">
+    <span class="eyebrow">Negocios que crecen con VILCAS</span>
+    <h2>Miles de negocios ya confían en nosotros</h2>
+  </div>
+  <div class="testimonios-grid">
+    @for (t of testimonios; track t.autor) {
+      <div class="testimonio-card">
+        <div class="testimonio-stars" aria-hidden="true">
+          @for (s of [1, 2, 3, 4, 5]; track s) {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          }
+        </div>
+        <p class="testimonio-quote">"{{ t.quote }}"</p>
+        <div class="testimonio-autor">
+          <span class="testimonio-avatar"></span>
+          <div>
+            <strong>{{ t.autor }}</strong>
+            <small>{{ t.rubro }}</small>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- 6. Precios -->
+<section class="page-section">
+  <div class="section-head">
+    <span class="eyebrow">Precios simples y transparentes</span>
+    <h2>Elige el plan perfecto para tu negocio</h2>
+  </div>
+  <app-precios-teaser />
+</section>
+
+<!-- 7. CTA final -->
+<section class="cta-final-dark">
+  <div class="cta-final-inner">
+    <div class="cta-final-copy">
+      <h2>¿Listo para llevar tu negocio al siguiente nivel?</h2>
+      <p>Empieza gratis y descubre por qué miles de negocios eligen VILCAS todos los días.</p>
+    </div>
+    <form class="cta-final-form" (submit)="$event.preventDefault()">
+      <input type="email" placeholder="Ingresa tu correo electrónico" class="cta-final-input" />
+      <a routerLink="/login" class="btn btn-primary btn-lg">Probar gratis ahora</a>
+    </form>
+    <span class="cta-final-note">No se requiere tarjeta de crédito · Cancela cuando quieras</span>
+  </div>
 </section>
