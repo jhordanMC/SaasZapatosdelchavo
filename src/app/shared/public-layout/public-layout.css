@@ -37,17 +37,23 @@
   font-weight: 500;
   position: relative;
   padding: 4px 0;
+  transition: color var(--duration-base) var(--ease-standard);
 }
-.nav-links a:hover { color: var(--text-primary); }
-.nav-links a.active { color: var(--brand-deep-700); font-weight: 700; }
-.nav-links a.active::after {
+.nav-links a::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: -6px;
   height: 2px;
   background: var(--brand-primary-dark);
   border-radius: var(--radius-pill);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--duration-base) var(--ease-standard);
 }
+.nav-links a:hover { color: var(--brand-primary-dark); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a.active { color: var(--brand-deep-700); font-weight: 700; }
+.nav-links a.active::after { transform: scaleX(1); }
 .nav-cta { display: flex; gap: 12px; flex-shrink: 0; }
 .nav-login-mobile { display: none; }
 .nav-burger { display: none; }
