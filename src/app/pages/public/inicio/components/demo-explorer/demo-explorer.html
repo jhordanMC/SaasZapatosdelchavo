@@ -54,7 +54,11 @@
           @if (card.badge) {
             <span class="de-card-badge">{{ card.badge }}</span>
           }
-          <span class="de-card-thumb"></span>
+          @if (card.imagen) {
+            <span class="de-card-thumb" [style.background-image]="'url(' + card.imagen + ')'"></span>
+          } @else {
+            <span class="de-card-thumb de-card-thumb-empty"></span>
+          }
           <strong class="de-card-title">{{ card.titulo }}</strong>
           <span class="de-card-meta">{{ card.linea1 }}</span>
           <span class="de-card-meta">{{ card.linea2 }}</span>

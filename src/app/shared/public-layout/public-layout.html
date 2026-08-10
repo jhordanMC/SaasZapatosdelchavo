@@ -30,17 +30,35 @@
   </main>
 
   <footer class="footer">
-    <div class="footer-inner">
-      <div class="brand">
-        <img src="/vilcas.png" alt="VILCAS" class="brand-logo" />
-        <span class="brand-word">VILC<span class="gd">A</span>S</span>
+    <div class="footer-top">
+      <div class="footer-brand-col">
+        <a routerLink="/" class="brand footer-brand">
+          <img src="/vilcas.png" alt="VILCAS" class="brand-logo" />
+          <span class="brand-word">VILC<span class="gd">A</span>S</span>
+        </a>
+        <p class="footer-tagline">Inventario, ventas, finanzas y catálogos en una sola plataforma.</p>
       </div>
-      <nav class="footer-links">
+
+      <nav class="footer-col">
+        <span class="footer-col-title">Producto</span>
         <a routerLink="/">Inicio</a>
-        <a routerLink="/nosotros">Nosotros</a>
         <a routerLink="/precios">Precios</a>
+      </nav>
+
+      <nav class="footer-col">
+        <span class="footer-col-title">Empresa</span>
+        <a routerLink="/nosotros">Nosotros</a>
         <a routerLink="/contacto">Contacto</a>
       </nav>
+
+      <nav class="footer-col">
+        <span class="footer-col-title">Cuenta</span>
+        <a routerLink="/login">Iniciar sesión</a>
+        <a routerLink="/precios">Empieza gratis</a>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
       <span class="footer-copy">© {{ anioActual }} VILCAS. Todos los derechos reservados.</span>
     </div>
   </footer>

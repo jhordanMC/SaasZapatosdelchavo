@@ -14,6 +14,7 @@ interface DemoCard {
   linea2: string;
   destaque: string;
   badge?: string;
+  imagen?: string;
 }
 
 /**
@@ -46,10 +47,35 @@ export class DemoExplorerComponent {
 
   private readonly cardsByTab: Record<TabKey, DemoCard[]> = {
     inventario: [
-      { titulo: 'Zapatilla Azul', linea1: 'Stock: 12 unidades', linea2: 'Margen: 32%', destaque: 'S/ 150' },
-      { titulo: 'Zapatilla Negra', linea1: 'Stock: 5 unidades', linea2: 'Margen: 28%', destaque: 'S/ 180', badge: 'Stock bajo' },
-      { titulo: 'Polo Vintage', linea1: 'Stock: 20 unidades', linea2: 'Margen: 40%', destaque: 'S/ 80' },
-      { titulo: 'Casaca Denim', linea1: 'Stock: 8 unidades', linea2: 'Margen: 32%', destaque: 'S/ 220' },
+      {
+        titulo: 'Zapatilla Azul',
+        linea1: 'Stock: 12 unidades',
+        linea2: 'Margen: 32%',
+        destaque: 'S/ 150',
+        imagen: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=300&h=225&q=80&auto=format&fit=crop',
+      },
+      {
+        titulo: 'Zapatilla Negra',
+        linea1: 'Stock: 5 unidades',
+        linea2: 'Margen: 28%',
+        destaque: 'S/ 180',
+        badge: 'Stock bajo',
+        imagen: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&h=225&q=80&auto=format&fit=crop',
+      },
+      {
+        titulo: 'Polo Vintage',
+        linea1: 'Stock: 20 unidades',
+        linea2: 'Margen: 40%',
+        destaque: 'S/ 80',
+        imagen: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=225&q=80&auto=format&fit=crop',
+      },
+      {
+        titulo: 'Casaca Denim',
+        linea1: 'Stock: 8 unidades',
+        linea2: 'Margen: 32%',
+        destaque: 'S/ 220',
+        imagen: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=225&q=80&auto=format&fit=crop',
+      },
     ],
     catalogo: [
       { titulo: 'Colección Verano', linea1: '18 productos publicados', linea2: 'Enlace público activo', destaque: 'Activo' },
