@@ -1,10 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal-on-scroll.directive';
 
 @Component({
   selector: 'app-contacto',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RevealOnScrollDirective],
   templateUrl: './contacto.html',
   styleUrl: './contacto.css',
 })

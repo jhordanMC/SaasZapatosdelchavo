@@ -7,14 +7,14 @@
   </p>
 </section>
 
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="section-head">
     <span class="eyebrow">Lo que nos guía</span>
     <h2>Nuestros valores</h2>
   </div>
   <div class="valores-grid">
-    @for (v of valores; track v.titulo) {
-      <div class="valor-card">
+    @for (v of valores; track v.titulo; let i = $index) {
+      <div class="valor-card" appReveal [appRevealDelay]="i * 80">
         <h3>{{ v.titulo }}</h3>
         <p>{{ v.desc }}</p>
       </div>

@@ -4,10 +4,10 @@
   <p class="intro-sub">Sin permanencia. Cambia o cancela tu plan cuando quieras.</p>
 </section>
 
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="pricing-grid">
-    @for (p of planes; track p.nombre) {
-      <div class="plan-card" [class.plan-featured]="p.destacado">
+    @for (p of planes; track p.nombre; let i = $index) {
+      <div class="plan-card" [class.plan-featured]="p.destacado" appReveal [appRevealDelay]="i * 80">
         @if (p.destacado) { <span class="plan-tag">Más elegido</span> }
         <h3>{{ p.nombre }}</h3>
         <div class="plan-price">

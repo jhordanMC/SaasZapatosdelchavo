@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal-on-scroll.directive';
 
 interface Plan {
   nombre: string;
@@ -12,7 +13,7 @@ interface Plan {
 @Component({
   selector: 'app-precios',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RevealOnScrollDirective],
   templateUrl: './precios.html',
   styleUrl: './precios.css',
 })

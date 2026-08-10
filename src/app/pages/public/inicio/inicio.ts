@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HeroMockupComponent } from './components/hero-mockup/hero-mockup';
 import { DemoExplorerComponent } from './components/demo-explorer/demo-explorer';
+import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal-on-scroll.directive';
 
 interface Feature {
   icon: 'box' | 'globe' | 'cart' | 'chart' | 'radar';
@@ -24,7 +25,7 @@ interface Testimonio {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent],
+  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent, RevealOnScrollDirective],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })

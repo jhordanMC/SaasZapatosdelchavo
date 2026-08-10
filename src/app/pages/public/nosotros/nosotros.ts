@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal-on-scroll.directive';
 
 interface Valor {
   titulo: string;
@@ -8,6 +9,7 @@ interface Valor {
 @Component({
   selector: 'app-nosotros',
   standalone: true,
+  imports: [RevealOnScrollDirective],
   templateUrl: './nosotros.html',
   styleUrl: './nosotros.css',
 })

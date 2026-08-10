@@ -14,6 +14,10 @@
   z-index: 30;
   background: linear-gradient(180deg, var(--sb-bg-top), var(--sb-bg-bottom));
   border-bottom: 1px solid var(--sb-border);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+.nav.nav-hidden {
+  transform: translateY(-100%);
 }
 .nav-inner {
   max-width: 1180px;
@@ -67,6 +71,20 @@
 .brand-word .gd { color: var(--brand-gold); }
 
 .public-content { flex: 1; }
+
+/* Fade-in de la vista completa cada vez que cambia de ruta (ver
+   onRouteActivate() en el .ts, que retira y vuelve a poner esta clase). */
+.public-content.page-enter {
+  animation: publicPageFadeIn var(--duration-slow, 480ms) var(--ease-standard) both;
+}
+@keyframes publicPageFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav { transition: none; }
+  .public-content.page-enter { animation: none; }
+}
 
 .footer { border-top: 1px solid var(--border-subtle); padding: 28px 32px; margin-top: 40px; }
 .footer-inner {

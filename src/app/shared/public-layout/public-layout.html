@@ -1,5 +1,5 @@
 <div class="public-shell">
-  <header class="nav">
+  <header class="nav" [class.nav-hidden]="navHidden()">
     <div class="nav-inner">
       <a routerLink="/" class="brand" (click)="cerrarMenu()">
         <img src="/vilcas.png" alt="VILCAS" class="brand-logo" />
@@ -25,8 +25,8 @@
     </div>
   </header>
 
-  <main class="public-content">
-    <router-outlet />
+  <main class="public-content" [class.page-enter]="viewVisible()">
+    <router-outlet (activate)="onRouteActivate()" />
   </main>
 
   <footer class="footer">

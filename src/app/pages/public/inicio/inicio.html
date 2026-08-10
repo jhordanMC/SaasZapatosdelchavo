@@ -25,7 +25,7 @@
 </section>
 
 <!-- 2. Explora VILCAS en acción -->
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="section-head">
     <span class="eyebrow">Pruébalo en 1 minuto</span>
     <h2>Explora VILCAS en acción</h2>
@@ -35,14 +35,14 @@
 </section>
 
 <!-- 3. Features -->
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="section-head">
     <span class="eyebrow">Todo lo que necesitas</span>
     <h2>Una plataforma, todas las herramientas</h2>
   </div>
   <div class="features-grid">
-    @for (f of features; track f.titulo) {
-      <div class="feature-card">
+    @for (f of features; track f.titulo; let i = $index) {
+      <div class="feature-card" appReveal [appRevealDelay]="i * 80">
         <div class="feature-icon">
           @switch (f.icon) {
             @case ('box') {
@@ -70,7 +70,7 @@
 </section>
 
 <!-- 4. Catálogos con IA -->
-<section class="page-section ia-section">
+<section class="page-section ia-section" appReveal>
   <div class="section-head ia-head">
     <span class="eyebrow">Nuevo</span>
     <h2>Crea catálogos increíbles con <span class="hero-accent">Inteligencia Artificial</span></h2>
@@ -96,14 +96,14 @@
 </section>
 
 <!-- 5. Testimonios -->
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="section-head">
     <span class="eyebrow">Negocios que crecen con VILCAS</span>
     <h2>Miles de negocios ya confían en nosotros</h2>
   </div>
   <div class="testimonios-grid">
-    @for (t of testimonios; track t.autor) {
-      <div class="testimonio-card">
+    @for (t of testimonios; track t.autor; let i = $index) {
+      <div class="testimonio-card" appReveal [appRevealDelay]="i * 80">
         <div class="testimonio-stars" aria-hidden="true">
           @for (s of [1, 2, 3, 4, 5]; track s) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -123,7 +123,7 @@
 </section>
 
 <!-- 6. Precios -->
-<section class="page-section">
+<section class="page-section" appReveal>
   <div class="section-head">
     <span class="eyebrow">Precios simples y transparentes</span>
     <h2>Un plan para cada etapa de tu negocio</h2>
@@ -135,7 +135,7 @@
 </section>
 
 <!-- 7. CTA final -->
-<section class="cta-final-dark">
+<section class="cta-final-dark" appReveal>
   <div class="cta-final-inner">
     <div class="cta-final-copy">
       <h2>¿Listo para llevar tu negocio al siguiente nivel?</h2>
