@@ -55,6 +55,7 @@
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .brand-logo { height: 32px; width: auto; flex-shrink: 0; }
 .brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--brand-wordmark); }
+.brand-word .gd { color: var(--brand-gold); }
 
 .public-content { flex: 1; }
 
