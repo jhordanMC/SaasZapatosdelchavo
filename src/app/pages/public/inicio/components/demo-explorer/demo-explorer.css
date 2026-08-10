@@ -53,9 +53,41 @@
   background-size: cover; background-position: center;
 }
 .de-card-thumb-empty { background-color: color-mix(in srgb, var(--brand-primary) 30%, var(--bg-surface)); }
+.de-card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
+.de-card-tag {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 7px;
+  background: var(--bg-surface-hover); color: var(--text-secondary);
+}
 .de-card-title { font-size: 13.5px; color: var(--text-primary); }
 .de-card-meta { font-size: 11.5px; color: var(--text-tertiary); }
 .de-card-price { margin-top: 6px; font-size: 15px; font-weight: 800; color: var(--brand-deep-700); }
+
+/* ── Panel de finanzas: cuadro de rentabilidad + KPIs, calcado de /empresa/finanzas ── */
+.de-finanzas { display: flex; flex-direction: column; gap: 16px; }
+.de-fin-banner {
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--color-success-bg) 100%);
+}
+.de-fin-badge {
+  display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 6px;
+  background: var(--color-success-bg); color: var(--color-success); margin-bottom: 8px;
+}
+.de-fin-titulo { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.de-fin-titulo strong { font-size: 16px; color: var(--color-success); }
+.de-fin-texto { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+
+.de-fin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.de-fin-stat {
+  background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 14px;
+}
+.de-fin-stat.destacado { border-color: var(--color-success); }
+.de-fin-stat-label { display: block; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); line-height: 1.35; }
+.de-fin-stat-valor { display: block; margin-top: 8px; font-size: 18px; font-weight: 800; color: var(--brand-deep-700); }
+.de-fin-stat.destacado .de-fin-stat-valor { color: var(--color-success); }
 
 @media (max-width: 900px) {
   .de-layout { grid-template-columns: 1fr; }
@@ -64,4 +96,5 @@
 }
 @media (max-width: 560px) {
   .de-cards { grid-template-columns: repeat(2, 1fr); }
+  .de-fin-stats { grid-template-columns: repeat(2, 1fr); }
 }

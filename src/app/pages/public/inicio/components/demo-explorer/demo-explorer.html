@@ -48,23 +48,52 @@
       <span class="de-dot"></span>
       <span class="de-panel-title">Demo interactiva</span>
     </div>
-    <div class="de-cards">
-      @for (card of activeCards; track card.titulo) {
-        <div class="de-card">
-          @if (card.badge) {
-            <span class="de-card-badge">{{ card.badge }}</span>
-          }
-          @if (card.imagen) {
-            <span class="de-card-thumb" [style.background-image]="'url(' + card.imagen + ')'"></span>
-          } @else {
-            <span class="de-card-thumb de-card-thumb-empty"></span>
-          }
-          <strong class="de-card-title">{{ card.titulo }}</strong>
-          <span class="de-card-meta">{{ card.linea1 }}</span>
-          <span class="de-card-meta">{{ card.linea2 }}</span>
-          <span class="de-card-price">{{ card.destaque }}</span>
+    @if (activeTab() === 'finanzas') {
+      <div class="de-finanzas">
+        <div class="de-fin-banner">
+          <span class="de-fin-badge">{{ finanzasBanner.badge }}</span>
+          <p class="de-fin-titulo">{{ finanzasBanner.titulo }} <strong>{{ finanzasBanner.respuesta }}</strong></p>
+          <p class="de-fin-texto">{{ finanzasBanner.texto }}</p>
         </div>
-      }
-    </div>
+        <div class="de-fin-stats">
+          @for (stat of finanzasStats; track stat.label) {
+            <div class="de-fin-stat" [class.destacado]="stat.destacado">
+              <span class="de-fin-stat-label">{{ stat.label }}</span>
+              <span class="de-fin-stat-valor">{{ stat.valor }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="de-cards">
+        @for (card of activeCards; track card.titulo) {
+          <div class="de-card">
+            @if (card.badge) {
+              <span class="de-card-badge">{{ card.badge }}</span>
+            }
+            @if (card.imagen) {
+              <span class="de-card-thumb" [style.background-image]="'url(' + card.imagen + ')'"></span>
+            } @else {
+              <span class="de-card-thumb de-card-thumb-empty"></span>
+            }
+            @if (card.tags?.length) {
+              <div class="de-card-tags">
+                @for (tag of card.tags; track tag) {
+                  <span class="de-card-tag">{{ tag }}</span>
+                }
+              </div>
+            }
+            <strong class="de-card-title">{{ card.titulo }}</strong>
+            @if (card.linea1) {
+              <span class="de-card-meta">{{ card.linea1 }}</span>
+            }
+            @if (card.linea2) {
+              <span class="de-card-meta">{{ card.linea2 }}</span>
+            }
+            <span class="de-card-price">{{ card.destaque }}</span>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>

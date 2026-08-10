@@ -10,18 +10,28 @@ interface DemoTab {
 
 interface DemoCard {
   titulo: string;
-  linea1: string;
-  linea2: string;
+  linea1?: string;
+  linea2?: string;
   destaque: string;
   badge?: string;
   imagen?: string;
+  tags?: string[];
+}
+
+interface FinanzasStat {
+  label: string;
+  valor: string;
+  destacado?: boolean;
 }
 
 /**
  * Vitrina visual con tabs — cambia qué set de cards mock se muestra al
  * hacer click. 100% datos hardcodeados en el propio componente: no llama
- * al backend ni reutiliza componentes reales de /empresa. El único
- * "estado" es qué tab está activo (signal), para simular interactividad.
+ * al backend ni reutiliza componentes reales de /empresa, pero el diseño
+ * de cada tab está calcado del diseño real de esa sección (inventario,
+ * ventas, catálogo, finanzas) para que la demo se sienta fiel al producto.
+ * El único "estado" es qué tab está activo (signal), para simular
+ * interactividad.
  */
 @Component({
   selector: 'app-demo-explorer',
@@ -41,66 +51,134 @@ export class DemoExplorerComponent {
   readonly checklist: Record<TabKey, string[]> = {
     inventario: ['Agrega y organiza tus productos', 'Controla stock, precios y categorías', 'Actualiza todo en tiempo real'],
     catalogo: ['Publica tu catálogo con un enlace público', 'Organiza por categorías y colecciones', 'Compártelo directo con tus clientes'],
-    ventas: ['Registra ventas y proformas al toque', 'Sigue el estado de cada pedido', 'Historial siempre a la mano'],
-    finanzas: ['Ingresos y gastos en un solo panel', 'Reportes automáticos por periodo', 'Ve tu balance sin armar Excel'],
+    ventas: ['Registra ventas al toque desde el catálogo', 'Controla el stock disponible en vivo', 'Genera proformas sin salir de la app'],
+    finanzas: ['Sabe al toque si estás siendo rentable', 'Ingresos, gastos y flujo de caja claros', 'Resumen mensual descargable en PDF o Excel'],
   };
 
-  private readonly cardsByTab: Record<TabKey, DemoCard[]> = {
-    inventario: [
-      {
-        titulo: 'Zapatilla Azul',
-        linea1: 'Stock: 12 unidades',
-        linea2: 'Margen: 32%',
-        destaque: 'S/ 150',
-        imagen: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=300&h=225&q=80&auto=format&fit=crop',
-      },
-      {
-        titulo: 'Zapatilla Negra',
-        linea1: 'Stock: 5 unidades',
-        linea2: 'Margen: 28%',
-        destaque: 'S/ 180',
-        badge: 'Stock bajo',
-        imagen: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&h=225&q=80&auto=format&fit=crop',
-      },
-      {
-        titulo: 'Polo Vintage',
-        linea1: 'Stock: 20 unidades',
-        linea2: 'Margen: 40%',
-        destaque: 'S/ 80',
-        imagen: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=225&q=80&auto=format&fit=crop',
-      },
-      {
-        titulo: 'Casaca Denim',
-        linea1: 'Stock: 8 unidades',
-        linea2: 'Margen: 32%',
-        destaque: 'S/ 220',
-        imagen: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=225&q=80&auto=format&fit=crop',
-      },
-    ],
-    catalogo: [
-      { titulo: 'Colección Verano', linea1: '18 productos publicados', linea2: 'Enlace público activo', destaque: 'Activo' },
-      { titulo: 'Colección Urbana', linea1: '12 productos publicados', linea2: 'Enlace público activo', destaque: 'Activo' },
-      { titulo: 'Accesorios', linea1: '9 productos publicados', linea2: 'Borrador', destaque: 'Borrador', badge: 'Sin publicar' },
-      { titulo: 'Temporada Fría', linea1: '15 productos publicados', linea2: 'Enlace público activo', destaque: 'Activo' },
-    ],
-    ventas: [
-      { titulo: 'Pedido #1042', linea1: 'María López', linea2: 'Hoy, 10:24 a.m.', destaque: 'S/ 320', badge: 'Pagado' },
-      { titulo: 'Pedido #1041', linea1: 'Carlos Ramírez', linea2: 'Hoy, 9:10 a.m.', destaque: 'S/ 145', badge: 'Pendiente' },
-      { titulo: 'Pedido #1040', linea1: 'Ana Torres', linea2: 'Ayer, 6:52 p.m.', destaque: 'S/ 580', badge: 'Pagado' },
-      { titulo: 'Pedido #1039', linea1: 'Jorge Salas', linea2: 'Ayer, 3:15 p.m.', destaque: 'S/ 95', badge: 'Pagado' },
-    ],
-    finanzas: [
-      { titulo: 'Ingresos del mes', linea1: 'Vs. mes anterior', linea2: '+12.5%', destaque: 'S/ 24,300' },
-      { titulo: 'Gastos del mes', linea1: 'Vs. mes anterior', linea2: '+3.1%', destaque: 'S/ 8,120' },
-      { titulo: 'Balance neto', linea1: 'Vs. mes anterior', linea2: '+18.4%', destaque: 'S/ 16,180' },
-      { titulo: 'Ticket promedio', linea1: 'Vs. mes anterior', linea2: '+5.6%', destaque: 'S/ 187' },
-    ],
+  /** Cards con foto, tags y precio — mismo layout que /empresa/inventario. */
+  private readonly cardsInventario: DemoCard[] = [
+    {
+      titulo: 'Zapatilla Azul',
+      tags: ['Deportivo', 'Hombre'],
+      linea1: '12 unidades en stock',
+      destaque: 'S/ 150',
+      linea2: 'Margen: S/ 50',
+      imagen: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Zapatilla Negra',
+      tags: ['Deportivo', 'Hombre'],
+      linea1: '5 unidades en stock',
+      destaque: 'S/ 180',
+      linea2: 'Margen: S/ 46',
+      badge: 'Stock bajo',
+      imagen: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Polo Vintage',
+      tags: ['Casual', 'Unisex'],
+      linea1: '20 unidades en stock',
+      destaque: 'S/ 80',
+      linea2: 'Margen: S/ 28',
+      imagen: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Casaca Denim',
+      tags: ['Casual', 'Mujer'],
+      linea1: '8 unidades en stock',
+      destaque: 'S/ 220',
+      linea2: 'Margen: S/ 70',
+      imagen: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+  ];
+
+  /** Colecciones con portada — mismo espíritu que /empresa/catalogo. */
+  private readonly cardsCatalogo: DemoCard[] = [
+    {
+      titulo: 'Colección Verano',
+      linea1: '18 productos publicados',
+      linea2: 'Enlace público activo',
+      destaque: 'Activo',
+      imagen: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Colección Urbana',
+      linea1: '12 productos publicados',
+      linea2: 'Enlace público activo',
+      destaque: 'Activo',
+      imagen: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Accesorios',
+      linea1: '9 productos publicados',
+      linea2: 'Borrador',
+      destaque: 'Borrador',
+      badge: 'Sin publicar',
+      imagen: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Temporada Fría',
+      linea1: '15 productos publicados',
+      linea2: 'Enlace público activo',
+      destaque: 'Activo',
+      imagen: 'https://images.unsplash.com/photo-1519638399535-1b036603ac77?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+  ];
+
+  /** Cards de venta rápida — mismo layout que /empresa/ventas (foto, nombre, precio, stock). */
+  private readonly cardsVentas: DemoCard[] = [
+    {
+      titulo: 'Zapatilla Azul',
+      destaque: 'S/ 150',
+      linea1: '12 unidades',
+      imagen: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Zapatilla Negra',
+      destaque: 'S/ 180',
+      linea1: '5 unidades',
+      badge: 'Stock bajo',
+      imagen: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Polo Vintage',
+      destaque: 'S/ 80',
+      linea1: '20 unidades',
+      imagen: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+    {
+      titulo: 'Casaca Denim',
+      destaque: 'S/ 220',
+      linea1: '8 unidades',
+      imagen: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=225&q=80&auto=format&fit=crop',
+    },
+  ];
+
+  private readonly cardsByTab: Partial<Record<TabKey, DemoCard[]>> = {
+    inventario: this.cardsInventario,
+    catalogo: this.cardsCatalogo,
+    ventas: this.cardsVentas,
   };
+
+  /** Panel de finanzas — calcado del cuadro de rentabilidad + KPIs de /empresa/finanzas. */
+  readonly finanzasBanner = {
+    badge: 'ESTADO: RENTABLE',
+    titulo: '¿Estás ganando dinero y siendo rentable?',
+    respuesta: 'SÍ',
+    texto: 'Tu negocio está generando ganancias netas en este período por un total de S/10,100. Tus ventas superan los costos operativos y de mercadería.',
+  };
+
+  readonly finanzasStats: FinanzasStat[] = [
+    { label: 'Ingresos totales del período', valor: 'S/ 11,100' },
+    { label: 'Ventas registradas', valor: '6' },
+    { label: 'Gasto operativo del período', valor: 'S/ 1,000' },
+    { label: 'Flujo de caja del período', valor: 'S/ 10,100', destacado: true },
+  ];
 
   readonly activeTab = signal<TabKey>('inventario');
 
   get activeCards(): DemoCard[] {
-    return this.cardsByTab[this.activeTab()];
+    return this.cardsByTab[this.activeTab()] ?? [];
   }
 
   get activeChecklist(): string[] {
