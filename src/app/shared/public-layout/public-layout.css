@@ -69,6 +69,7 @@
 .nav-powered-by {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 700;
   color: var(--sb-text-dim);
@@ -76,6 +77,7 @@
   white-space: nowrap;
   transition: color var(--duration-base) var(--ease-standard);
 }
+.nav-powered-by-logo { height: 18px; width: auto; flex-shrink: 0; }
 .nav-powered-by .gd { color: var(--brand-gold); }
 .nav-powered-by:hover { color: var(--sb-text); }
 .nav-login-mobile { display: none; }
