@@ -57,4 +57,19 @@ export class CatalogoPublicoComponent implements OnInit {
       ? producto.imagen_url
       : `${environment.apiUrl}${producto.imagen_url}`;
   }
+
+  /** Mismo criterio que imagenSrc() pero para la portada del catálogo. */
+  portadaSrc(catalogo: CatalogoPublico): string | null {
+    if (!catalogo.imagen_portada_url) return null;
+    return catalogo.imagen_portada_url.startsWith('http')
+      ? catalogo.imagen_portada_url
+      : `${environment.apiUrl}${catalogo.imagen_portada_url}`;
+  }
+
+  /** null si el catálogo no configuró whatsapp_numero — el botón flotante no se renderiza en ese caso. */
+  enlaceWhatsApp(catalogo: CatalogoPublico): string | null {
+    if (!catalogo.whatsapp_numero) return null;
+    const texto = encodeURIComponent(`Hola, quiero más información sobre ${catalogo.nombre}`);
+    return `https://wa.me/${catalogo.whatsapp_numero}?text=${texto}`;
+  }
 }

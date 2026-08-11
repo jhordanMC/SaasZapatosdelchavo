@@ -27,6 +27,9 @@ export interface CatalogoRead {
   enlace: string; // URL pública completa, ya armada por el backend
   estado: EstadoCatalogo;
   color_diseno: string;
+  imagen_portada_url: string | null;
+  subtitulo: string | null;
+  whatsapp_numero: string | null;
   visitas: number;
   productos_count: number;
   creado_en: string;
@@ -52,6 +55,9 @@ export interface CatalogoUpdateInput {
   nombre?: string;
   color_diseno?: string;
   estado?: EstadoCatalogo;
+  subtitulo?: string;
+  /** '' borra el número guardado — el backend lo normaliza a null (ver CatalogoUpdate del schema). */
+  whatsapp_numero?: string;
 }
 
 export interface MensajeResponse {
@@ -89,6 +95,14 @@ export class CatalogoService {
 
   eliminar(idCatalogo: string): Observable<MensajeResponse> {
     return this.http.delete<MensajeResponse>(`${this.base}/${idCatalogo}`);
+  }
+
+  /** Sube/reemplaza la portada (hero de la vista pública). El backend comprime
+   * y guarda como WEBP; la respuesta ya trae imagen_portada_url actualizado. */
+  subirPortada(idCatalogo: string, archivo: File): Observable<CatalogoRead> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<CatalogoRead>(`${this.base}/${idCatalogo}/portada`, formData);
   }
 
   // ── Productos del catálogo (picker) ──────────────────────────────────────

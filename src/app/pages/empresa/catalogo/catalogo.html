@@ -143,6 +143,15 @@
                       <button class="icon-btn" title="Copiar enlace" (click)="copiarEnlace(c)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       </button>
+                      <button class="icon-btn" title="Compartir por WhatsApp" (click)="compartirWhatsApp(c)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.51 2 12.04 2zm5.8 14.02c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.13.11-1.82-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.79-4.17-4.94-4.36-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.02-2.41.26-.29.58-.36.77-.36l.55.01c.18.01.41-.07.64.49.24.58.81 2 .88 2.14.07.15.11.32.02.51-.09.19-.14.31-.28.47-.14.16-.29.36-.42.48-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.87-1.06.18-.27.36-.22.6-.13.24.09 1.55.73 1.81.87.27.13.44.19.51.3.06.11.06.66-.18 1.34z"/></svg>
+                      </button>
+                      <button class="icon-btn" title="Compartir en Facebook" (click)="compartirFacebook(c)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.51 17.52 2 12 2S2 6.51 2 12.06C2 17.06 5.66 21.2 10.44 22v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22C18.34 21.2 22 17.06 22 12.06z"/></svg>
+                      </button>
+                      <button class="icon-btn" title="Compartir por correo" (click)="compartirEmail(c)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                      </button>
                       <div class="menu-contenedor">
                         <button class="icon-btn" title="Más acciones" (click)="toggleMenu(c.id_catalogo, $event)">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
@@ -254,6 +263,32 @@
       <h2>{{ catalogoEditando() ? 'Editar catálogo' : 'Nuevo catálogo' }}</h2>
     </div>
     <div class="modal-body">
+      <div class="form-row" *ngIf="catalogoEditando()">
+        <label>Portada</label>
+        <div class="portada-picker">
+          <div
+            class="portada-preview"
+            [style.background-image]="previsualizacionPortada() ? 'url(' + previsualizacionPortada() + ')' : (portadaActualSrc() ? 'url(' + portadaActualSrc() + ')' : null)"
+          >
+            <span class="portada-preview-placeholder" *ngIf="!previsualizacionPortada() && !portadaActualSrc()">Sin imagen</span>
+          </div>
+          <div class="portada-picker-acciones">
+            <label class="btn btn-ghost btn-chico">
+              {{ previsualizacionPortada() || portadaActualSrc() ? 'Cambiar imagen' : 'Subir imagen' }}
+              <input type="file" accept="image/*" (change)="onPortadaSeleccionada($event)" hidden />
+            </label>
+            <button
+              type="button"
+              class="btn btn-ghost btn-chico"
+              *ngIf="previsualizacionPortada()"
+              (click)="quitarPortadaSeleccionada()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="form-row">
         <label>Nombre del catálogo</label>
         <input
@@ -261,6 +296,27 @@
           placeholder="Ej: Colección Verano"
           [ngModel]="form().nombre"
           (ngModelChange)="actualizarFormCampo('nombre', $event)"
+        />
+      </div>
+
+      <div class="form-row">
+        <label>Subtítulo (opcional)</label>
+        <input
+          type="text"
+          placeholder="Ej: Estilo que te acompaña"
+          maxlength="200"
+          [ngModel]="form().subtitulo"
+          (ngModelChange)="actualizarFormCampo('subtitulo', $event)"
+        />
+      </div>
+
+      <div class="form-row">
+        <label>WhatsApp para pedidos (opcional)</label>
+        <input
+          type="text"
+          placeholder="Ej: 51987654321 (con código de país, sin +)"
+          [ngModel]="form().whatsapp_numero"
+          (ngModelChange)="actualizarFormCampo('whatsapp_numero', $event)"
         />
       </div>
 
@@ -291,7 +347,7 @@
       <div class="modal-acciones">
         <button class="btn btn-ghost" (click)="cerrarModalForm()" [disabled]="guardandoForm()">Cancelar</button>
         <button class="btn btn-primary" (click)="guardarForm()" [disabled]="guardandoForm()">
-          {{ guardandoForm() ? 'Guardando...' : (catalogoEditando() ? 'Guardar cambios' : 'Crear catálogo') }}
+          {{ subiendoPortada() ? 'Subiendo portada...' : guardandoForm() ? 'Guardando...' : (catalogoEditando() ? 'Guardar cambios' : 'Crear catálogo') }}
         </button>
       </div>
     </div>

@@ -41,6 +41,8 @@ const COLORES_SUGERIDOS = ['#0f2b23', '#1c1c1c', '#da9e0b', '#3a3a3a', '#f4c9c9'
 interface CatalogoForm {
   nombre: string;
   color_diseno: string;
+  subtitulo: string;
+  whatsapp_numero: string;
 }
 
 @Component({
@@ -83,9 +85,14 @@ export class CatalogoComponent implements OnInit {
   // ── Modal crear/editar ────────────────────────────────────────────────
   modalFormAbierto = signal(false);
   catalogoEditando = signal<CatalogoRead | null>(null);
-  form = signal<CatalogoForm>({ nombre: '', color_diseno: COLORES_SUGERIDOS[0] });
+  form = signal<CatalogoForm>({ nombre: '', color_diseno: COLORES_SUGERIDOS[0], subtitulo: '', whatsapp_numero: '' });
   guardandoForm = signal(false);
   errorForm = signal<string | null>(null);
+
+  // ── Portada (solo disponible editando, no en la creación: necesita id_catalogo) ──
+  archivoPortada: File | null = null;
+  previsualizacionPortada = signal<string | null>(null);
+  subiendoPortada = signal(false);
 
   // ── Modal picker de productos ────────────────────────────────────────
   catalogoProductos = signal<CatalogoRead | null>(null);
@@ -191,6 +198,30 @@ export class CatalogoComponent implements OnInit {
     }, 1500);
   }
 
+  // ── Compartir (redes) ────────────────────────────────────────────────
+  // Solo arman la URL de share estándar de cada red con el enlace público
+  // del catálogo — no hay nada que llamar en el backend para esto.
+
+  private enlaceAbsoluto(item: CatalogoRead): string {
+    return item.enlace.startsWith('http') ? item.enlace : `https://${item.enlace}`;
+  }
+
+  compartirWhatsApp(item: CatalogoRead): void {
+    const texto = encodeURIComponent(`Mira mi catálogo "${item.nombre}": ${this.enlaceAbsoluto(item)}`);
+    window.open(`https://wa.me/?text=${texto}`, '_blank');
+  }
+
+  compartirFacebook(item: CatalogoRead): void {
+    const url = encodeURIComponent(this.enlaceAbsoluto(item));
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  }
+
+  compartirEmail(item: CatalogoRead): void {
+    const asunto = encodeURIComponent(`Catálogo: ${item.nombre}`);
+    const cuerpo = encodeURIComponent(`Te comparto mi catálogo "${item.nombre}": ${this.enlaceAbsoluto(item)}`);
+    window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+  }
+
   verCatalogo(item: CatalogoRead): void {
     if (item.estado !== 'publicado') return;
     window.open(item.enlace.startsWith('http') ? item.enlace : `https://${item.enlace}`, '_blank');
@@ -236,8 +267,9 @@ export class CatalogoComponent implements OnInit {
 
   abrirModalCrear(): void {
     this.catalogoEditando.set(null);
-    this.form.set({ nombre: '', color_diseno: COLORES_SUGERIDOS[0] });
+    this.form.set({ nombre: '', color_diseno: COLORES_SUGERIDOS[0], subtitulo: '', whatsapp_numero: '' });
     this.errorForm.set(null);
+    this.resetPortadaForm();
     this.modalFormAbierto.set(true);
   }
 
@@ -246,22 +278,30 @@ export class CatalogoComponent implements OnInit {
    *  del formulario, solo que elegirlo ahí ya abre el modal listo). */
   abrirModalCrearConColor(color: string): void {
     this.catalogoEditando.set(null);
-    this.form.set({ nombre: '', color_diseno: color });
+    this.form.set({ nombre: '', color_diseno: color, subtitulo: '', whatsapp_numero: '' });
     this.errorForm.set(null);
+    this.resetPortadaForm();
     this.modalFormAbierto.set(true);
   }
 
   abrirModalEditar(item: CatalogoRead): void {
     this.menuAbierto.set(null);
     this.catalogoEditando.set(item);
-    this.form.set({ nombre: item.nombre, color_diseno: item.color_diseno });
+    this.form.set({
+      nombre: item.nombre,
+      color_diseno: item.color_diseno,
+      subtitulo: item.subtitulo ?? '',
+      whatsapp_numero: item.whatsapp_numero ?? '',
+    });
     this.errorForm.set(null);
+    this.resetPortadaForm();
     this.modalFormAbierto.set(true);
   }
 
   cerrarModalForm(): void {
     this.modalFormAbierto.set(false);
     this.catalogoEditando.set(null);
+    this.resetPortadaForm();
   }
 
   actualizarFormCampo<K extends keyof CatalogoForm>(campo: K, valor: CatalogoForm[K]): void {
@@ -279,13 +319,14 @@ export class CatalogoComponent implements OnInit {
 
     const editando = this.catalogoEditando();
     if (editando) {
-      const cambios: CatalogoUpdateInput = { nombre: datos.nombre.trim(), color_diseno: datos.color_diseno };
+      const cambios: CatalogoUpdateInput = {
+        nombre: datos.nombre.trim(),
+        color_diseno: datos.color_diseno,
+        subtitulo: datos.subtitulo.trim(),
+        whatsapp_numero: datos.whatsapp_numero.trim(),
+      };
       this.catalogoService.actualizar(editando.id_catalogo, cambios).subscribe({
-        next: (actualizado) => {
-          this.catalogos.set(this.catalogos().map((c) => (c.id_catalogo === actualizado.id_catalogo ? actualizado : c)));
-          this.guardandoForm.set(false);
-          this.cerrarModalForm();
-        },
+        next: (actualizado) => this.despuesDeGuardarForm(actualizado),
         error: (err) => {
           this.errorForm.set(err?.error?.detail ?? 'No se pudo actualizar el catálogo.');
           this.guardandoForm.set(false);
@@ -296,8 +337,21 @@ export class CatalogoComponent implements OnInit {
       this.catalogoService.crear(nuevo).subscribe({
         next: (creado) => {
           this.catalogos.set([creado, ...this.catalogos()]);
-          this.guardandoForm.set(false);
-          this.cerrarModalForm();
+          // subtitulo/whatsapp_numero no van en CatalogoCreate (el backend solo
+          // acepta nombre + color al crear) — si el usuario ya los llenó, se
+          // completan con un PATCH inmediato después de crear.
+          const extra: CatalogoUpdateInput = {
+            subtitulo: datos.subtitulo.trim(),
+            whatsapp_numero: datos.whatsapp_numero.trim(),
+          };
+          if (extra.subtitulo || extra.whatsapp_numero) {
+            this.catalogoService.actualizar(creado.id_catalogo, extra).subscribe({
+              next: (actualizado) => this.despuesDeGuardarForm(actualizado),
+              error: () => this.despuesDeGuardarForm(creado), // el catálogo ya se creó; el extra puede completarse después editando
+            });
+          } else {
+            this.despuesDeGuardarForm(creado);
+          }
         },
         error: (err) => {
           this.errorForm.set(err?.error?.detail ?? 'No se pudo crear el catálogo.');
@@ -305,6 +359,65 @@ export class CatalogoComponent implements OnInit {
         },
       });
     }
+  }
+
+  /** Común a crear y editar: refresca la fila en la tabla y, si hay una portada
+   * elegida en el form, la sube antes de cerrar el modal. */
+  private despuesDeGuardarForm(catalogo: CatalogoRead): void {
+    this.catalogos.set(this.catalogos().map((c) => (c.id_catalogo === catalogo.id_catalogo ? catalogo : c)));
+    if (!this.catalogos().some((c) => c.id_catalogo === catalogo.id_catalogo)) {
+      this.catalogos.set([catalogo, ...this.catalogos()]);
+    }
+    if (!this.archivoPortada) {
+      this.guardandoForm.set(false);
+      this.cerrarModalForm();
+      return;
+    }
+    this.subiendoPortada.set(true);
+    this.catalogoService.subirPortada(catalogo.id_catalogo, this.archivoPortada).subscribe({
+      next: (conPortada) => {
+        this.catalogos.set(this.catalogos().map((c) => (c.id_catalogo === conPortada.id_catalogo ? conPortada : c)));
+        this.subiendoPortada.set(false);
+        this.guardandoForm.set(false);
+        this.cerrarModalForm();
+      },
+      error: (err) => {
+        // El catálogo (nombre/color/etc) ya se guardó bien; solo falló la portada.
+        this.errorForm.set(err?.error?.detail ?? 'El catálogo se guardó, pero la portada no se pudo subir. Intenta subirla de nuevo.');
+        this.subiendoPortada.set(false);
+        this.guardandoForm.set(false);
+      },
+    });
+  }
+
+  // ── Portada ───────────────────────────────────────────────────────────
+
+  private resetPortadaForm(): void {
+    this.archivoPortada = null;
+    this.previsualizacionPortada.set(null);
+    this.subiendoPortada.set(false);
+  }
+
+  onPortadaSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0] ?? null;
+    if (!archivo) return;
+    this.archivoPortada = archivo;
+    const lector = new FileReader();
+    lector.onload = () => this.previsualizacionPortada.set(lector.result as string);
+    lector.readAsDataURL(archivo);
+  }
+
+  quitarPortadaSeleccionada(): void {
+    this.archivoPortada = null;
+    this.previsualizacionPortada.set(null);
+  }
+
+  /** Portada ya guardada del catálogo en edición (antes de elegir una nueva). */
+  portadaActualSrc(): string | null {
+    const item = this.catalogoEditando();
+    if (!item?.imagen_portada_url) return null;
+    return this.imagenSrc(item.imagen_portada_url);
   }
 
   // ── Eliminar ──────────────────────────────────────────────────────────

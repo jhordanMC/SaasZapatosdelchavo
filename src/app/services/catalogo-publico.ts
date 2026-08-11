@@ -19,6 +19,9 @@ export interface ProductoPublico {
 export interface CatalogoPublico {
   nombre: string;
   color_diseno: string;
+  imagen_portada_url: string | null;
+  subtitulo: string | null;
+  whatsapp_numero: string | null;
   productos: ProductoPublico[];
 }
 
