@@ -127,6 +127,52 @@
 /* ── Grid de productos ──────────────────────────────────────────────────── */
 .cp-main { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
 
+/* ── Filtros: buscador + tabs de categoría ─────────────────────────────── */
+.cp-filtros { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+
+.cp-buscador {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  max-width: 340px;
+  color: #8f8e86;
+}
+.cp-buscador:focus-within { border-color: var(--marca-borde); color: var(--color-marca); }
+.cp-buscador input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: #26261f;
+  width: 100%;
+  font-family: inherit;
+}
+.cp-buscador input::placeholder { color: #b3b2ab; }
+
+.cp-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.cp-tab {
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  background: #fff;
+  color: #55544c;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.cp-tab:hover { border-color: var(--marca-borde); }
+.cp-tab-activo {
+  background: var(--color-marca);
+  border-color: var(--color-marca);
+  color: #fff;
+}
+
 .cp-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -167,6 +213,15 @@
   flex-direction: column;
   gap: 3px;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cp-producto-categoria {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-marca);
+  opacity: 0.75;
 }
 
 .cp-producto-nombre {

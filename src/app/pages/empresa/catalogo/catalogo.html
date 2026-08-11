@@ -98,8 +98,12 @@
                 <tr *ngFor="let c of catalogosFiltrados()">
                   <td>
                     <div class="celda-catalogo">
-                      <span class="portada" [style.background]="c.color_diseno">
-                        <span class="portada-inicial">{{ c.nombre.charAt(0) }}</span>
+                      <span
+                        class="portada"
+                        [style.background]="imagenSrc(c.imagen_portada_url) ? null : c.color_diseno"
+                        [style.background-image]="imagenSrc(c.imagen_portada_url) ? 'url(' + imagenSrc(c.imagen_portada_url) + ')' : null"
+                      >
+                        <span class="portada-inicial" *ngIf="!imagenSrc(c.imagen_portada_url)">{{ c.nombre.charAt(0) }}</span>
                         <span class="portada-conteo" *ngIf="c.productos_count > 0">{{ c.productos_count }}</span>
                       </span>
                       <div>

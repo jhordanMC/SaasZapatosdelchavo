@@ -8,15 +8,18 @@
  * propio color de marca — no debe verse como parte del sitio de VILCAS.
  */
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { CatalogoPublico, CatalogoPublicoService, ProductoPublico } from '../../../services/catalogo-publico';
 
+const TODOS = 'Todos';
+
 @Component({
   selector: 'app-catalogo-publico',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './catalogo-publico.html',
   styleUrl: './catalogo-publico.css',
 })
@@ -30,6 +33,38 @@ export class CatalogoPublicoComponent implements OnInit {
   cargando = signal(true);
   /** true solo cuando el backend responde 404 (slug inexistente o catálogo despublicado) — distinto de un error de red. */
   noEncontrado = signal(false);
+
+  // ── Filtro por categoría + búsqueda ─────────────────────────────────────
+  // Ambos client-side: los productos del catálogo ya vienen completos en un
+  // solo GET (no hay paginación), así que no vale la pena ida y vuelta al
+  // backend por cada tab o cada letra escrita.
+  categoriaActiva = signal(TODOS);
+  busqueda = signal('');
+
+  /** "Todos" + cada categoría distinta que tenga al menos un producto en ESTE catálogo, en el orden en que aparecen. */
+  categoriasDisponibles = computed(() => {
+    const productos = this.catalogo()?.productos ?? [];
+    const vistas = new Set<string>();
+    const categorias: string[] = [TODOS];
+    for (const p of productos) {
+      if (p.categoria && !vistas.has(p.categoria)) {
+        vistas.add(p.categoria);
+        categorias.push(p.categoria);
+      }
+    }
+    return categorias;
+  });
+
+  productosFiltrados = computed(() => {
+    const productos = this.catalogo()?.productos ?? [];
+    const categoria = this.categoriaActiva();
+    const termino = this.busqueda().trim().toLowerCase();
+    return productos.filter((p) => {
+      const coincideCategoria = categoria === TODOS || p.categoria === categoria;
+      const coincideBusqueda = !termino || p.nombre.toLowerCase().includes(termino);
+      return coincideCategoria && coincideBusqueda;
+    });
+  });
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');

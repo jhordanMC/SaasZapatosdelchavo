@@ -14,6 +14,7 @@ export interface ProductoPublico {
   nombre: string;
   precio_venta: number;
   imagen_url: string | null;
+  categoria: string | null;
 }
 
 export interface CatalogoPublico {
