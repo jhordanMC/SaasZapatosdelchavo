@@ -1,0 +1,105 @@
+<section class="intro">
+  <span class="hero-badge">Libro de Reclamaciones</span>
+  <h1>Libro de Reclamaciones Virtual</h1>
+  <p class="intro-sub">
+    Conforme al Código de Protección y Defensa del Consumidor, cuentas con este libro
+    para registrar tu queja o reclamo. Te responderemos en un plazo no mayor a 30 días calendario.
+  </p>
+</section>
+
+<section class="reclamos-section" appReveal>
+  @if (!enviado()) {
+    <form class="reclamos-form" (ngSubmit)="enviar()">
+
+      <div class="reclamos-form-block">
+        <span class="reclamos-form-block-title">1. Datos del consumidor</span>
+        <div class="reclamos-form-grid">
+          <label class="span-2">
+            Nombre completo
+            <input type="text" name="nombre" [(ngModel)]="nombre" required placeholder="Nombre y apellidos" />
+          </label>
+          <label>
+            Tipo de documento
+            <select name="tipoDocumento" [(ngModel)]="tipoDocumento">
+              <option value="DNI">DNI</option>
+              <option value="CE">Carné de extranjería</option>
+              <option value="Pasaporte">Pasaporte</option>
+            </select>
+          </label>
+          <label>
+            N.º de documento
+            <input type="text" name="numeroDocumento" [(ngModel)]="numeroDocumento" required placeholder="12345678" />
+          </label>
+          <label>
+            Correo
+            <input type="email" name="correo" [(ngModel)]="correo" required placeholder="tucorreo@ejemplo.com" />
+          </label>
+          <label>
+            Teléfono
+            <input type="tel" name="telefono" [(ngModel)]="telefono" placeholder="999 999 999" />
+          </label>
+          <label class="span-2">
+            Domicilio
+            <input type="text" name="domicilio" [(ngModel)]="domicilio" placeholder="Dirección de contacto" />
+          </label>
+        </div>
+      </div>
+
+      <div class="reclamos-form-block">
+        <span class="reclamos-form-block-title">2. Identificación del bien contratado</span>
+        <div class="reclamos-form-grid">
+          <label>
+            Tipo
+            <select name="tipoBien" [(ngModel)]="tipoBien">
+              <option value="producto">Producto</option>
+              <option value="servicio">Servicio</option>
+            </select>
+          </label>
+          <label>
+            Monto reclamado (S/)
+            <input type="text" name="montoReclamado" [(ngModel)]="montoReclamado" placeholder="Opcional" />
+          </label>
+          <label class="span-2">
+            Descripción
+            <input type="text" name="descripcionBien" [(ngModel)]="descripcionBien" placeholder="Ej: Plan Pro — suscripción mensual" />
+          </label>
+        </div>
+      </div>
+
+      <div class="reclamos-form-block">
+        <span class="reclamos-form-block-title">3. Detalle</span>
+        <div class="reclamos-tipo-toggle">
+          <label [class.active]="tipo === 'reclamo'">
+            <input type="radio" name="tipo" value="reclamo" [(ngModel)]="tipo" />
+            Reclamo <small>Disconformidad con el producto o servicio</small>
+          </label>
+          <label [class.active]="tipo === 'queja'">
+            <input type="radio" name="tipo" value="queja" [(ngModel)]="tipo" />
+            Queja <small>Malestar por la atención recibida</small>
+          </label>
+        </div>
+        <label>
+          Detalle del {{ tipo }}
+          <textarea name="detalle" [(ngModel)]="detalle" required rows="4" placeholder="Cuéntanos qué pasó"></textarea>
+        </label>
+        <label>
+          Pedido del consumidor
+          <textarea name="pedido" [(ngModel)]="pedido" rows="3" placeholder="¿Qué solución esperas?"></textarea>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg">Enviar reclamo</button>
+      <p class="reclamos-legal-note">
+        La formulación del reclamo no impide acudir a otras vías de solución de controversias
+        ni es requisito previo para interponer una denuncia ante INDECOPI.
+      </p>
+    </form>
+  } @else {
+    <div class="reclamos-success">
+      <h3>¡Reclamo registrado, {{ nombre }}!</h3>
+      <p class="reclamos-success-codigo">N.º de reclamo: <strong>{{ numeroCorrelativo() }}</strong></p>
+      <p>Te responderemos a <strong>{{ correo }}</strong> en un plazo no mayor a 30 días calendario.</p>
+      <button class="btn btn-ghost" (click)="nuevoReclamo()">Registrar otro reclamo</button>
+    </div>
+  }
+</section>

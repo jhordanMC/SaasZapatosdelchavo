@@ -5,6 +5,8 @@ import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal
 interface Plan {
   nombre: string;
   precio: string;
+  precioAnterior?: string;
+  nota?: string;
   periodo: string;
   destacado: boolean;
   items: string[];
@@ -19,7 +21,7 @@ interface Plan {
 })
 export class PreciosComponent {
   readonly planes: Plan[] = [
-    { nombre: 'Standard', precio: 'S/ 100', periodo: '/mes', destacado: false,
+    { nombre: 'Standard', precio: 'S/ 129', precioAnterior: 'S/ 149', nota: 'Precio de lanzamiento', periodo: '/mes', destacado: false,
       items: ['1 local', 'Inventario y ventas básicas', 'Hasta 2 usuarios', 'Soporte por ticket'] },
     { nombre: 'Pro', precio: 'S/ 170', periodo: '/mes', destacado: true,
       items: ['Locales ilimitados', 'Catálogos y proformas', 'Analítica y finanzas', 'Integraciones con marketplaces', 'Usuarios ilimitados'] },

@@ -8,9 +8,14 @@
   <div class="pricing-grid">
     @for (p of planes; track p.nombre; let i = $index) {
       <div class="plan-card" [class.plan-featured]="p.destacado" appReveal [appRevealDelay]="i * 80">
-        @if (p.destacado) { <span class="plan-tag">Más elegido</span> }
+        @if (p.destacado) {
+          <span class="plan-tag">Más elegido</span>
+        } @else if (p.nota) {
+          <span class="plan-tag plan-tag-nota">{{ p.nota }}</span>
+        }
         <h3>{{ p.nombre }}</h3>
         <div class="plan-price">
+          @if (p.precioAnterior) { <span class="plan-amount-anterior">{{ p.precioAnterior }}</span> }
           <span class="plan-amount">{{ p.precio }}</span>
           <span class="plan-period">{{ p.periodo }}</span>
         </div>

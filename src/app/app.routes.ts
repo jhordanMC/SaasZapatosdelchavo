@@ -4,6 +4,7 @@ import { InicioComponent } from './pages/public/inicio/inicio';
 import { NosotrosComponent } from './pages/public/nosotros/nosotros';
 import { PreciosComponent } from './pages/public/precios/precios';
 import { ContactoComponent } from './pages/public/contacto/contacto';
+import { LibroReclamacionesComponent } from './pages/public/libro-reclamaciones/libro-reclamaciones';
 import { LoginComponent } from './pages/login/login';
 import { Verificar2faComponent } from './pages/verificar-2fa/verificar-2fa';
 import { OlvidecontraComponent } from './pages/olvidecontra/olvidecontra';
@@ -45,6 +46,7 @@ export const routes: Routes = [
       { path: 'nosotros', component: NosotrosComponent },
       { path: 'precios', component: PreciosComponent },
       { path: 'contacto', component: ContactoComponent },
+      { path: 'libro-de-reclamaciones', component: LibroReclamacionesComponent },
     ],
   },
 
