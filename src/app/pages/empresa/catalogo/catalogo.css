@@ -174,10 +174,11 @@
 
 .menu-contenedor { position: relative; }
 .menu-flotante {
-  position: absolute;
-  top: 34px;
-  right: 0;
-  z-index: 20;
+  /* fixed (no absolute): así no queda recortado por .tabla-wrap { overflow-x: auto }
+     — que por spec también clippea el eje Y — ni tapado por filas siguientes.
+     top/left los calcula toggleMenu() en el componente a partir del botón. */
+  position: fixed;
+  z-index: 300;
   min-width: 130px;
   background: var(--bg-surface-raised);
   border: 1px solid var(--border-default);
@@ -290,9 +291,15 @@
   .crear-card, .plantillas-card, .tip-card { flex: 1 1 260px; }
 }
 
+/* Viewport intermedio (ej. laptop con devtools abierto ~800-900px): los 4 KPI
+   ya no entran cómodos en una fila — pasan a 2x2 un poco antes que el resto
+   de cortes de tablet/celular. */
+@media (max-width: 900px) {
+  .kpi-fila-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
 /* Tablet / celular grande */
 @media (max-width: 768px) {
-  .kpi-fila-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .toolbar-card { padding: 12px; }
   .tabs { width: 100%; overflow-x: auto; }
   .toolbar-derecha { width: 100%; }

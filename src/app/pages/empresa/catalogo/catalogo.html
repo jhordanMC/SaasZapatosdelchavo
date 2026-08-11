@@ -141,10 +141,15 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       </button>
                       <div class="menu-contenedor">
-                        <button class="icon-btn" title="Más acciones" (click)="toggleMenu(c.id_catalogo)">
+                        <button class="icon-btn" title="Más acciones" (click)="toggleMenu(c.id_catalogo, $event)">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
                         </button>
-                        <div class="menu-flotante" *ngIf="menuAbierto() === c.id_catalogo">
+                        <div
+                          class="menu-flotante"
+                          *ngIf="menuAbierto() === c.id_catalogo && menuPos()"
+                          [style.top.px]="menuPos()!.top"
+                          [style.left.px]="menuPos()!.left"
+                        >
                           <button class="menu-item" (click)="abrirModalEditar(c)">Editar</button>
                           <button class="menu-item" (click)="abrirGestionProductos(c)">Gestionar productos</button>
                           <button class="menu-item" *ngIf="c.estado !== 'publicado'" (click)="publicar(c)">Publicar</button>

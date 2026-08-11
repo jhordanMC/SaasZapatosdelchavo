@@ -18,7 +18,7 @@
  *   - Gestionar productos: modal picker → GET productos seleccionables,
  *     POST agregar (lote) + DELETE quitar (uno por uno) al guardar.
  */
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -71,6 +71,10 @@ export class CatalogoComponent implements OnInit {
   enlaceCopiado = signal<string | null>(null);
   /** id del catálogo cuyo menú de acciones (⋮) está abierto. */
   menuAbierto = signal<string | null>(null);
+  /** Posición (fixed, en viewport) del menú abierto — calculada en toggleMenu() a partir
+   * del botón que lo disparó, así el menú escapa del scroll horizontal de .tabla-wrap en
+   * vez de quedar recortado/tapado por su overflow. */
+  menuPos = signal<{ top: number; left: number } | null>(null);
   /** id del catálogo cuyo estado (publicar/despublicar) se está actualizando. */
   actualizandoEstado = signal<string | null>(null);
   /** id del catálogo que se está eliminando. */
@@ -136,12 +140,35 @@ export class CatalogoComponent implements OnInit {
     this.busqueda.set(valor);
   }
 
-  toggleMenu(id: string): void {
-    this.menuAbierto.set(this.menuAbierto() === id ? null : id);
+  private static readonly ANCHO_MENU = 180;
+
+  toggleMenu(id: string, evento: MouseEvent): void {
+    if (this.menuAbierto() === id) {
+      this.menuAbierto.set(null);
+      this.menuPos.set(null);
+      return;
+    }
+    const boton = evento.currentTarget as HTMLElement;
+    const rect = boton.getBoundingClientRect();
+    const ancho = CatalogoComponent.ANCHO_MENU;
+    // Alineado a la derecha del botón, pero sin salirse de la ventana (clave en mobile).
+    const left = Math.min(Math.max(8, rect.right - ancho), window.innerWidth - ancho - 8);
+    const top = Math.min(rect.bottom + 6, window.innerHeight - 8);
+    this.menuPos.set({ top, left });
+    this.menuAbierto.set(id);
   }
 
   cerrarMenus(): void {
     this.menuAbierto.set(null);
+    this.menuPos.set(null);
+  }
+
+  /** El menú es `position: fixed` (viewport), no relativo a la fila — si el usuario
+   * scrollea la lista mientras está abierto, se desalinearía del botón; más simple
+   * cerrarlo que reposicionarlo en cada scroll. */
+  @HostListener('scroll')
+  onScrollHost(): void {
+    if (this.menuAbierto()) this.cerrarMenus();
   }
 
   estadoLabel(estado: EstadoCatalogo): string {
