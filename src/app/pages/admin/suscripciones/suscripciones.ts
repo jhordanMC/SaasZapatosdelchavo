@@ -2,6 +2,10 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
+  CaracteristicaPlan,
+  CaracteristicaPlanInput,
+  DescuentoPlan,
+  DescuentoPlanInput,
   EstadoPago,
   EstadoSuscripcion,
   Pago,
@@ -12,6 +16,8 @@ import {
   SuscripcionesService,
   SuscripcionListItem,
   SuscripcionUpdateInput,
+  TipoDescuento,
+  TipoPlan,
 } from '../../../services/suscripciones';
 import { hoyISO } from '../../../core/fecha-negocio';
 
@@ -42,6 +48,23 @@ interface PlanForm {
   maxVentasMes: number | null;
   integracionesOmnicanal: boolean;
   estaActivo: boolean;
+  descripcion: string;
+  tipoPlan: TipoPlan | '';
+  esDestacado: boolean;
+  ordenVisual: number;
+}
+
+interface NuevaCaracteristicaForm {
+  texto: string;
+  esPositiva: boolean;
+}
+
+interface NuevoDescuentoForm {
+  etiqueta: string;
+  tipo: TipoDescuento;
+  valor: number;
+  fechaInicio: string;
+  fechaFin: string;
 }
 
 @Component({
@@ -160,12 +183,20 @@ export class Suscripciones implements OnInit {
       maxVentasMes: null,
       integracionesOmnicanal: false,
       estaActivo: true,
+      descripcion: '',
+      tipoPlan: '',
+      esDestacado: false,
+      ordenVisual: 0,
     };
   }
 
   abrirModalNuevoPlan(): void {
     this.planEditando = null;
     this.formPlan = this.formularioPlanVacio();
+    this.caracteristicas.set([]);
+    this.descuentos.set([]);
+    this.nuevaCaracteristica = { texto: '', esPositiva: true };
+    this.nuevoDescuento = this.formularioDescuentoVacio();
     this.modalPlanAbierto = true;
   }
 
@@ -181,13 +212,21 @@ export class Suscripciones implements OnInit {
       maxVentasMes: plan.max_ventas_mes,
       integracionesOmnicanal: plan.integraciones_omnicanal,
       estaActivo: plan.esta_activo,
+      descripcion: plan.descripcion ?? '',
+      tipoPlan: plan.tipo_plan ?? '',
+      esDestacado: plan.es_destacado,
+      ordenVisual: plan.orden_visual,
     };
     this.modalPlanAbierto = true;
+    this.cargarCaracteristicas(plan.id_plan);
+    this.cargarDescuentos(plan.id_plan);
   }
 
   cerrarModalPlan(): void {
     this.modalPlanAbierto = false;
     this.planEditando = null;
+    this.caracteristicas.set([]);
+    this.descuentos.set([]);
   }
 
   get planFormValido(): boolean {
@@ -197,6 +236,13 @@ export class Suscripciones implements OnInit {
   guardarPlan(): void {
     if (!this.planFormValido || this.guardandoPlan) return;
     this.guardandoPlan = true;
+
+    const camposCatalogo = {
+      descripcion: this.formPlan.descripcion.trim() || null,
+      tipo_plan: this.formPlan.tipoPlan || null,
+      es_destacado: this.formPlan.esDestacado,
+      orden_visual: this.formPlan.ordenVisual,
+    };
 
     if (this.planEditando) {
       const payload: PlanUpdateInput = {
@@ -209,6 +255,7 @@ export class Suscripciones implements OnInit {
         max_ventas_mes: this.formPlan.maxVentasMes,
         integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
         esta_activo: this.formPlan.estaActivo,
+        ...camposCatalogo,
       };
       const idPlan = this.planEditando.id_plan;
       this.suscripcionesService.actualizarPlan(idPlan, payload).subscribe({
@@ -234,12 +281,18 @@ export class Suscripciones implements OnInit {
       max_locales: this.formPlan.maxLocales,
       max_ventas_mes: this.formPlan.maxVentasMes,
       integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
+      ...camposCatalogo,
     };
     this.suscripcionesService.crearPlan(payload).subscribe({
       next: (creado) => {
         this.guardandoPlan = false;
         this.planes.set([...this.planes(), creado]);
-        this.cerrarModalPlan();
+        // El plan recién creado no tiene características/descuentos aún:
+        // lo dejamos abierto en modo edición para que se puedan agregar
+        // sin tener que volver a buscarlo en la tabla.
+        this.planEditando = creado;
+        this.cargarCaracteristicas(creado.id_plan);
+        this.cargarDescuentos(creado.id_plan);
       },
       error: (err) => {
         this.guardandoPlan = false;
@@ -254,6 +307,129 @@ export class Suscripciones implements OnInit {
         this.planes.set(this.planes().map((p) => (p.id_plan === plan.id_plan ? actualizado : p)));
       },
       error: () => this.error.set('No se pudo cambiar el estado del plan.'),
+    });
+  }
+
+  // ── Características (bullets) del plan que se está editando ──
+  caracteristicas = signal<CaracteristicaPlan[]>([]);
+  cargandoCaracteristicas = signal(false);
+  guardandoCaracteristica = false;
+  nuevaCaracteristica: NuevaCaracteristicaForm = { texto: '', esPositiva: true };
+
+  private cargarCaracteristicas(idPlan: string): void {
+    this.cargandoCaracteristicas.set(true);
+    this.suscripcionesService.listarCaracteristicas(idPlan).subscribe({
+      next: (items) => {
+        this.caracteristicas.set(items);
+        this.cargandoCaracteristicas.set(false);
+      },
+      error: () => this.cargandoCaracteristicas.set(false),
+    });
+  }
+
+  agregarCaracteristica(): void {
+    if (!this.planEditando || !this.nuevaCaracteristica.texto.trim() || this.guardandoCaracteristica) return;
+    const idPlan = this.planEditando.id_plan;
+    const datos: CaracteristicaPlanInput = {
+      texto: this.nuevaCaracteristica.texto.trim(),
+      es_positiva: this.nuevaCaracteristica.esPositiva,
+      orden: this.caracteristicas().length,
+    };
+    this.guardandoCaracteristica = true;
+    this.suscripcionesService.crearCaracteristica(idPlan, datos).subscribe({
+      next: (creada) => {
+        this.guardandoCaracteristica = false;
+        this.caracteristicas.set([...this.caracteristicas(), creada]);
+        this.nuevaCaracteristica = { texto: '', esPositiva: true };
+      },
+      error: () => {
+        this.guardandoCaracteristica = false;
+        this.error.set('No se pudo agregar la característica.');
+      },
+    });
+  }
+
+  eliminarCaracteristica(item: CaracteristicaPlan): void {
+    if (!this.planEditando) return;
+    const idPlan = this.planEditando.id_plan;
+    this.suscripcionesService.eliminarCaracteristica(idPlan, item.id_caracteristica).subscribe({
+      next: () => {
+        this.caracteristicas.set(this.caracteristicas().filter((c) => c.id_caracteristica !== item.id_caracteristica));
+      },
+      error: () => this.error.set('No se pudo eliminar la característica.'),
+    });
+  }
+
+  // ── Descuentos temporales del plan que se está editando ──
+  descuentos = signal<DescuentoPlan[]>([]);
+  cargandoDescuentos = signal(false);
+  guardandoDescuento = false;
+  nuevoDescuento: NuevoDescuentoForm = this.formularioDescuentoVacio();
+
+  private formularioDescuentoVacio(): NuevoDescuentoForm {
+    return { etiqueta: '', tipo: 'porcentaje', valor: 0, fechaInicio: hoyISO(), fechaFin: '' };
+  }
+
+  private cargarDescuentos(idPlan: string): void {
+    this.cargandoDescuentos.set(true);
+    this.suscripcionesService.listarDescuentos(idPlan).subscribe({
+      next: (items) => {
+        this.descuentos.set(items);
+        this.cargandoDescuentos.set(false);
+      },
+      error: () => this.cargandoDescuentos.set(false),
+    });
+  }
+
+  get descuentoFormValido(): boolean {
+    return this.nuevoDescuento.etiqueta.trim().length > 0 && this.nuevoDescuento.valor > 0 && !!this.nuevoDescuento.fechaInicio;
+  }
+
+  agregarDescuento(): void {
+    if (!this.planEditando || !this.descuentoFormValido || this.guardandoDescuento) return;
+    const idPlan = this.planEditando.id_plan;
+    const datos: DescuentoPlanInput = {
+      etiqueta: this.nuevoDescuento.etiqueta.trim(),
+      tipo: this.nuevoDescuento.tipo,
+      valor: this.nuevoDescuento.valor,
+      fecha_inicio: this.nuevoDescuento.fechaInicio,
+      fecha_fin: this.nuevoDescuento.fechaFin || null,
+      esta_activo: true,
+    };
+    this.guardandoDescuento = true;
+    this.suscripcionesService.crearDescuento(idPlan, datos).subscribe({
+      next: (creado) => {
+        this.guardandoDescuento = false;
+        this.descuentos.set([creado, ...this.descuentos()]);
+        this.nuevoDescuento = this.formularioDescuentoVacio();
+      },
+      error: () => {
+        this.guardandoDescuento = false;
+        this.error.set('No se pudo registrar el descuento (revisa las fechas).');
+      },
+    });
+  }
+
+  /** "Finalizar" = desactivar, sin borrar el histórico de la promoción. */
+  finalizarDescuento(item: DescuentoPlan): void {
+    if (!this.planEditando) return;
+    const idPlan = this.planEditando.id_plan;
+    this.suscripcionesService.actualizarDescuento(idPlan, item.id_descuento, { esta_activo: false }).subscribe({
+      next: (actualizado) => {
+        this.descuentos.set(this.descuentos().map((d) => (d.id_descuento === actualizado.id_descuento ? actualizado : d)));
+      },
+      error: () => this.error.set('No se pudo finalizar el descuento.'),
+    });
+  }
+
+  eliminarDescuento(item: DescuentoPlan): void {
+    if (!this.planEditando) return;
+    const idPlan = this.planEditando.id_plan;
+    this.suscripcionesService.eliminarDescuento(idPlan, item.id_descuento).subscribe({
+      next: () => {
+        this.descuentos.set(this.descuentos().filter((d) => d.id_descuento !== item.id_descuento));
+      },
+      error: () => this.error.set('No se pudo eliminar el descuento.'),
     });
   }
 

@@ -67,7 +67,7 @@ interface LineaPagoMixto {
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ModalBrandHeaderComponent],
+  imports: [CommonModule, FormsModule, ModalBrandHeaderComponent],
   templateUrl: './ventas.html',
   styleUrls: ['./ventas.css'],
 })

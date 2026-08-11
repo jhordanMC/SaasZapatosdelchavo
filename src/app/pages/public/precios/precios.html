@@ -5,31 +5,54 @@
 </section>
 
 <section class="page-section" appReveal>
-  <div class="pricing-grid">
-    @for (p of planes; track p.nombre; let i = $index) {
-      <div class="plan-card" [class.plan-featured]="p.destacado" appReveal [appRevealDelay]="i * 80">
-        @if (p.destacado) {
-          <span class="plan-tag">Más elegido</span>
-        } @else if (p.nota) {
-          <span class="plan-tag plan-tag-nota">{{ p.nota }}</span>
-        }
+  <p class="pricing-status" *ngIf="cargando()">Cargando planes…</p>
+  <p class="pricing-status" *ngIf="!cargando() && error()">
+    No se pudo cargar el catálogo de planes en este momento. Intenta recargar la página.
+  </p>
+
+  <div class="pricing-grid" *ngIf="!cargando() && !error()">
+    @for (p of planes(); track p.id_plan; let i = $index) {
+      <div class="plan-card" [class.plan-featured]="p.es_destacado" appReveal [appRevealDelay]="i * 80">
+        @if (p.es_destacado) { <span class="plan-tag">Más elegido</span> }
+        @if (hayDescuento(p)) { <span class="plan-discount-tag">{{ p.descuento_activo?.etiqueta }}</span> }
+
         <h3>{{ p.nombre }}</h3>
+        <p class="plan-desc" *ngIf="p.descripcion">{{ p.descripcion }}</p>
+
         <div class="plan-price">
-          @if (p.precioAnterior) { <span class="plan-amount-anterior">{{ p.precioAnterior }}</span> }
-          <span class="plan-amount">{{ p.precio }}</span>
-          <span class="plan-period">{{ p.periodo }}</span>
+          @if (esPlanAMedida(p)) {
+            <span class="plan-amount">A medida</span>
+          } @else {
+            @if (hayDescuento(p)) {
+              <span class="plan-amount-old">{{ p.moneda === 'PEN' ? 'S/' : p.moneda }} {{ p.precio }}</span>
+            }
+            <span class="plan-amount">{{ precioFormateado(p) }}</span>
+            <span class="plan-period">{{ periodoFormateado(p) }}</span>
+          }
         </div>
+
         <ul class="plan-items">
-          @for (item of p.items; track item) {
-            <li>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ item }}
+          @for (item of p.caracteristicas; track item.id_caracteristica) {
+            <li [class.plan-item-off]="!item.es_positiva">
+              @if (item.es_positiva) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              }
+              {{ item.texto }}
             </li>
           }
         </ul>
-        <a routerLink="/login" class="btn" [class.btn-primary]="p.destacado" [class.btn-ghost]="!p.destacado">
-          Elegir {{ p.nombre }}
-        </a>
+
+        @if (esPlanAMedida(p)) {
+          <a [href]="whatsappUrl(p)" target="_blank" rel="noopener" class="btn" [class.btn-primary]="p.es_destacado" [class.btn-ghost]="!p.es_destacado">
+            Conversar por WhatsApp
+          </a>
+        } @else {
+          <a routerLink="/login" class="btn" [class.btn-primary]="p.es_destacado" [class.btn-ghost]="!p.es_destacado">
+            Elegir {{ p.nombre }}
+          </a>
+        }
       </div>
     }
   </div>

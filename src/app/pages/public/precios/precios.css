@@ -19,23 +19,25 @@
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   background: var(--brand-primary-dark); color: var(--text-on-brand-deep);
   font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: var(--radius-pill);
-  white-space: nowrap;
 }
-.plan-tag-nota {
-  background: var(--brand-gold); color: var(--text-on-mint);
+.plan-discount-tag {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--color-success); color: var(--text-on-brand-deep);
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill);
 }
+.plan-desc { font-size: 13px; color: var(--text-tertiary); margin: -6px 0 12px; }
 .plan-card h3 { font-size: 17px; font-weight: 700; margin: 4px 0 12px; }
-.plan-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
-.plan-amount-anterior {
-  font-size: 16px; font-weight: 600; color: var(--text-tertiary);
-  text-decoration: line-through; text-decoration-thickness: 1.5px;
-}
+.plan-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
 .plan-amount { font-size: 32px; font-weight: 800; }
+.plan-amount-old { font-size: 16px; color: var(--text-tertiary); text-decoration: line-through; flex-basis: 100%; }
 .plan-period { font-size: 14px; color: var(--text-tertiary); }
 .plan-items { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .plan-items li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-secondary); }
 .plan-items li svg { color: var(--color-success); flex-shrink: 0; }
+.plan-items li.plan-item-off { color: var(--text-tertiary); }
+.plan-items li.plan-item-off svg { color: var(--text-tertiary); }
 .plan-card .btn { width: 100%; }
+.pricing-status { text-align: center; color: var(--text-secondary); font-size: 15px; padding: 40px 0; }
 
 @media (max-width: 860px) {
   .pricing-grid { grid-template-columns: 1fr; }

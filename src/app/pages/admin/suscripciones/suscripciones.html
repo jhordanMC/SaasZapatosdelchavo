@@ -41,7 +41,9 @@
             🔗 Omnicanal
           </span>
         </span>
-        <span><span class="status-pill" [class.active]="plan.esta_activo">{{ plan.esta_activo ? 'activo' : 'inactivo' }}</span></span>
+        <span><span class="status-pill" [class.active]="plan.esta_activo">{{ plan.esta_activo ? 'activo' : 'inactivo' }}</span>
+          <span class="status-pill active" *ngIf="plan.es_destacado" title="Se muestra como 'Más elegido' en /precios">★ destacado</span>
+        </span>
         <span class="acciones-cell">
           <button class="btn-accion" (click)="abrirModalEditarPlan(plan)">Editar</button>
           <button class="btn-accion" (click)="toggleActivoPlan(plan)">{{ plan.esta_activo ? 'Desactivar' : 'Activar' }}</button>
@@ -149,7 +151,7 @@
 
 <!-- ══ MODAL: Nuevo / editar plan ══ -->
 <div class="modal-overlay" *ngIf="modalPlanAbierto" (click)="cerrarModalPlan()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
+  <div class="modal-card" [class.modal-card-wide]="planEditando" (click)="$event.stopPropagation()">
     <button class="modal-close" (click)="cerrarModalPlan()" aria-label="Cerrar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -173,6 +175,11 @@
       <div class="form-group">
         <label for="inputNombrePlan">Nombre</label>
         <input id="inputNombrePlan" type="text" class="form-input" placeholder="Ej. Starter" [(ngModel)]="formPlan.nombre" />
+      </div>
+
+      <div class="form-group">
+        <label for="inputDescripcionPlan">Descripción (párrafo introductorio para la landing)</label>
+        <textarea id="inputDescripcionPlan" class="form-input" rows="2" placeholder="Ej. Ideal para negocios que recién empiezan" [(ngModel)]="formPlan.descripcion"></textarea>
       </div>
 
       <div class="form-grid-2">
@@ -211,6 +218,23 @@
         </div>
       </div>
 
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="selectTipoPlan">Tipo de plan (landing /precios)</label>
+          <select id="selectTipoPlan" class="form-input form-select" [(ngModel)]="formPlan.tipoPlan">
+            <option value="">Sin definir</option>
+            <option value="standard">Standard</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+            <option value="custom">A medida (redirige a WhatsApp)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputOrdenVisual">Orden visual en la landing</label>
+          <input id="inputOrdenVisual" type="number" class="form-input" [(ngModel)]="formPlan.ordenVisual" />
+        </div>
+      </div>
+
       <div class="form-group form-group-omnicanal">
         <label class="checkbox-inline checkbox-omnicanal">
           <input type="checkbox" [(ngModel)]="formPlan.integracionesOmnicanal" />
@@ -222,8 +246,13 @@
       </div>
 
       <label class="checkbox-inline">
+        <input type="checkbox" [(ngModel)]="formPlan.esDestacado" />
+        Destacado ("Más elegido" en la landing)
+      </label>
+
+      <label class="checkbox-inline">
         <input type="checkbox" [(ngModel)]="formPlan.estaActivo" />
-        Plan activo (disponible para asignar a empresas)
+        Plan activo (disponible para asignar a empresas y visible en /precios)
       </label>
 
       <div class="modal-actions modal-actions-split">
@@ -232,6 +261,103 @@
           {{ guardandoPlan ? 'Guardando…' : 'Guardar' }}
         </button>
       </div>
+
+      <!-- Solo disponible una vez que el plan existe (necesita id_plan) -->
+      <ng-container *ngIf="planEditando">
+        <div class="pagos-form-divider"><span>Características (bullets de la landing)</span></div>
+
+        <p class="empty-state-mini" *ngIf="cargandoCaracteristicas()">Cargando características…</p>
+
+        <ul class="caracteristicas-list" *ngIf="!cargandoCaracteristicas() && caracteristicas().length > 0">
+          <li *ngFor="let c of caracteristicas()">
+            <span [class.caracteristica-off]="!c.es_positiva">
+              {{ c.es_positiva ? '✓' : '✕' }} {{ c.texto }}
+            </span>
+            <button class="btn-accion" (click)="eliminarCaracteristica(c)">Quitar</button>
+          </li>
+        </ul>
+        <p class="empty-state-mini" *ngIf="!cargandoCaracteristicas() && caracteristicas().length === 0">
+          Todavía no hay características para este plan.
+        </p>
+
+        <div class="form-grid-2 form-grid-add-caracteristica">
+          <div class="form-group">
+            <label for="inputNuevaCaracteristica">Nueva característica</label>
+            <input id="inputNuevaCaracteristica" type="text" class="form-input" placeholder="Ej. Locales ilimitados" [(ngModel)]="nuevaCaracteristica.texto" />
+          </div>
+          <div class="form-group">
+            <label for="selectPositivaCaracteristica">Tipo</label>
+            <select id="selectPositivaCaracteristica" class="form-input form-select" [(ngModel)]="nuevaCaracteristica.esPositiva">
+              <option [ngValue]="true">Incluida (check verde)</option>
+              <option [ngValue]="false">No incluida (cruz gris)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-accion" [disabled]="!nuevaCaracteristica.texto.trim() || guardandoCaracteristica" (click)="agregarCaracteristica()">
+          {{ guardandoCaracteristica ? 'Agregando…' : '+ Agregar característica' }}
+        </button>
+
+        <div class="pagos-form-divider"><span>Descuentos temporales (promociones)</span></div>
+
+        <p class="empty-state-mini" *ngIf="cargandoDescuentos()">Cargando descuentos…</p>
+
+        <div class="table-wrap" *ngIf="!cargandoDescuentos() && descuentos().length > 0">
+          <div class="table-row table-head">
+            <span>Etiqueta</span>
+            <span>Valor</span>
+            <span>Vigencia</span>
+            <span>Estado</span>
+            <span>Acciones</span>
+          </div>
+          <div class="table-row" *ngFor="let d of descuentos()">
+            <span>{{ d.etiqueta }}</span>
+            <span>{{ d.tipo === 'porcentaje' ? d.valor + '%' : ('S/ ' + d.valor) }}</span>
+            <span>{{ d.fecha_inicio.slice(0, 10) }} — {{ d.fecha_fin ? d.fecha_fin.slice(0, 10) : 'sin fin' }}</span>
+            <span><span class="status-pill" [class.active]="d.esta_activo">{{ d.esta_activo ? 'activo' : 'finalizado' }}</span></span>
+            <span class="acciones-cell">
+              <button class="btn-accion" *ngIf="d.esta_activo" (click)="finalizarDescuento(d)">Finalizar</button>
+              <button class="btn-accion" (click)="eliminarDescuento(d)">Eliminar</button>
+            </span>
+          </div>
+        </div>
+        <p class="empty-state-mini" *ngIf="!cargandoDescuentos() && descuentos().length === 0">
+          Este plan no tiene descuentos registrados.
+        </p>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="inputEtiquetaDescuento">Etiqueta</label>
+            <input id="inputEtiquetaDescuento" type="text" class="form-input" placeholder="Ej. Promo Aniversario 20%" [(ngModel)]="nuevoDescuento.etiqueta" />
+          </div>
+          <div class="form-group">
+            <label for="selectTipoDescuento">Tipo</label>
+            <select id="selectTipoDescuento" class="form-input form-select" [(ngModel)]="nuevoDescuento.tipo">
+              <option value="porcentaje">Porcentaje (%)</option>
+              <option value="monto_fijo">Monto fijo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="inputValorDescuento">Valor</label>
+            <input id="inputValorDescuento" type="number" min="0" class="form-input" [(ngModel)]="nuevoDescuento.valor" />
+          </div>
+          <div class="form-group"></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="inputFechaInicioDescuento">Fecha de inicio</label>
+            <input id="inputFechaInicioDescuento" type="date" class="form-input" [(ngModel)]="nuevoDescuento.fechaInicio" />
+          </div>
+          <div class="form-group">
+            <label for="inputFechaFinDescuento">Fecha de fin (vacío = sin fin)</label>
+            <input id="inputFechaFinDescuento" type="date" class="form-input" [(ngModel)]="nuevoDescuento.fechaFin" />
+          </div>
+        </div>
+        <button class="btn-accion" [disabled]="!descuentoFormValido || guardandoDescuento" (click)="agregarDescuento()">
+          {{ guardandoDescuento ? 'Guardando…' : '+ Registrar descuento' }}
+        </button>
+      </ng-container>
     </div>
   </div>
 </div>
