@@ -53,31 +53,31 @@ export class InicioComponent implements OnInit, OnDestroy {
     {
       quote: 'Vilcas me cambió el chip, pasé de perder horas renegando con el stock de mi inventario a tener todo mi catálogo digital listo para mandar por WhatsApp en segundos. Ahora sé exactamente qué se vende y qué no, sin volverme loca con sistemas raros y caros.',
       autor: 'Sandra Matienzo',
-      rubro: 'Dueña de Deco Sky',
+      rubro: 'Dueña de Deco Sky (Ingeniera industrial y asesora comercial en Mapfre)',
       foto: 'testimonios/resena1.png',
     },
     {
       quote: 'La plataforma es intuitiva y de fácil manejo, organiza y muestra cómo se está manejando el negocio de manera rápida y fácil.',
       autor: 'Diego Saldarriaga',
-      rubro: 'Dueño de Papayawash',
+      rubro: 'Dueño de Papayawash (Empresario de gran marca de motos)',
       foto: 'testimonios/resena2.png',
     },
     {
       quote: 'Lo que más me sorprende de Vilcas es lo rápido que cualquier negocio lo entiende y lo empieza a usar, en cuestión de minutos pasan de un control manual a estar 100% digitalizados, evitando errores de stock y ofreciendo una atención impecable.',
       autor: 'Edgar Manco',
-      rubro: 'Team Leader Live Operations Spain',
+      rubro: 'Team Leader Live Operations Spain (Experto en experiencia de usuario -UX- de una startup multinacional española)',
       foto: 'testimonios/resena3.png',
     },
     {
       quote: 'Lo que más me gusta de Vilcas es que me simplificó bastante el día a día. Puedo revisar mis productos y mis ventas sin estar buscando información por todos lados.',
       autor: 'Ricardo Liendo',
-      rubro: 'Dueño de Takana (empresa de marketing digital)',
+      rubro: 'Dueño de Takana (empresa de marketing digital) (Jefe de prácticas y profesor académico)',
       foto: 'testimonios/resena4.png',
     },
     {
       quote: 'No tengo mucho tiempo entre la universidad y el negocio, así que necesitaba algo sencillo. Vilcas me permite revisar lo importante rápidamente y seguir con mis cosas.',
       autor: 'Piero Rojas',
-      rubro: 'Estudiante de medicina y emprendedor de Kstyle',
+      rubro: 'Estudiante de medicina y emprendedor de Kstyle (Años de experiencia como jefe de operaciones de Contact Center)',
       foto: 'testimonios/resena5.png',
     },
   ];
