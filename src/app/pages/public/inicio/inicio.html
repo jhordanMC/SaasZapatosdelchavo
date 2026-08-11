@@ -109,7 +109,7 @@
         </div>
         <p class="testimonio-quote">"{{ t.quote }}"</p>
         <div class="testimonio-autor">
-          <span class="testimonio-avatar"></span>
+          <img class="testimonio-avatar" [src]="t.foto" [alt]="t.autor" loading="lazy" />
           <div>
             <strong>{{ t.autor }}</strong>
             <small>{{ t.rubro }}</small>
