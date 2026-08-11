@@ -36,11 +36,11 @@ export class PreciosComponent implements OnInit {
 
   /** El plan "A medida" no tiene precio fijo: siempre redirige a WhatsApp. */
   esPlanAMedida(p: PlanPublico): boolean {
-    return p.tipo_plan === 'custom';
+    return p.es_a_medida === true;
   }
 
   hayDescuento(p: PlanPublico): boolean {
-    return !!p.descuento_activo && p.precio_efectivo < p.precio;
+    return !!p.descuento_activo && Number(p.precio_efectivo) < Number(p.precio);
   }
 
   precioFormateado(p: PlanPublico): string {

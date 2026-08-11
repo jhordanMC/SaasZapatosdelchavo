@@ -16,7 +16,7 @@
 }
 .plan-featured { border-color: var(--border-strong); box-shadow: var(--shadow-glow-mint); transform: scale(1.03); }
 .plan-tag {
-  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  position: absolute; top: -12px; left: 24px;
   background: var(--brand-primary-dark); color: var(--text-on-brand-deep);
   font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: var(--radius-pill);
 }

@@ -884,7 +884,7 @@ export class EmpresaDetalleComponent implements OnInit {
 
   /** Se llama tras resolver suscripcion() o planes() (lo que termine último) — evita carreras. */
   private evaluarCargaIntegraciones(): void {
-    if (this.planAsignado()?.integraciones_omnicanal && !this.integracionesCargadas) {
+    if (this.planAsignado() && !this.integracionesCargadas) {
       this.cargarIntegracionesMarketplace();
     }
   }

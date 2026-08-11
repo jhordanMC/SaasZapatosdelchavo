@@ -7,8 +7,22 @@ export type EstadoSuscripcion = 'trial' | 'activa' | 'vencida' | 'cancelada';
 export type EstadoPago = 'pendiente' | 'pagado' | 'fallido' | 'reembolsado';
 
 export type PeriodoPlan = 'mensual' | 'anual';
-export type TipoPlan = 'standard' | 'pro' | 'enterprise' | 'custom';
 export type TipoDescuento = 'porcentaje' | 'monto_fijo';
+
+export interface TipoPlanRead {
+  nombre: string;
+  cantidad_planes: number;
+  nombres_planes: string | null;
+  creado_en: string | null;
+}
+
+export interface TipoPlanCreate {
+  nombre: string;
+}
+
+export interface TipoPlanUpdate {
+  nombre: string;
+}
 
 export interface Plan {
   id_plan: string;
@@ -19,11 +33,10 @@ export interface Plan {
   max_usuarios: number | null;
   max_locales: number | null;
   max_ventas_mes: number | null;
-  /** Beneficio: acceso a conectar marketplaces (Falabella, Ripley, Mercado Libre). */
-  integraciones_omnicanal: boolean;
   esta_activo: boolean;
   descripcion: string | null;
-  tipo_plan: TipoPlan | null;
+  tipo_plan: string | null;
+  es_a_medida: boolean;
   es_destacado: boolean;
   orden_visual: number;
 }
@@ -36,9 +49,10 @@ export interface PlanCreateInput {
   max_usuarios?: number | null;
   max_locales?: number | null;
   max_ventas_mes?: number | null;
-  integraciones_omnicanal?: boolean;
+  esta_activo?: boolean;
   descripcion?: string | null;
-  tipo_plan?: TipoPlan | null;
+  tipo_plan?: string | null;
+  es_a_medida?: boolean;
   es_destacado?: boolean;
   orden_visual?: number;
 }
@@ -51,10 +65,10 @@ export interface PlanUpdateInput {
   max_usuarios?: number | null;
   max_locales?: number | null;
   max_ventas_mes?: number | null;
-  integraciones_omnicanal?: boolean;
   esta_activo?: boolean;
   descripcion?: string | null;
-  tipo_plan?: TipoPlan | null;
+  tipo_plan?: string | null;
+  es_a_medida?: boolean;
   es_destacado?: boolean;
   orden_visual?: number;
 }
@@ -166,6 +180,23 @@ export class SuscripcionesService {
 
   actualizarPlan(idPlan: string, datos: PlanUpdateInput): Observable<Plan> {
     return this.http.put<Plan>(`${this.apiUrl}/empresas/planes/${idPlan}`, datos);
+  }
+
+  // ── Tipos de Plan (Catálogo) ──
+  listarTiposPlan(): Observable<TipoPlanRead[]> {
+    return this.http.get<TipoPlanRead[]>(`${this.apiUrl}/billing/tipos-plan`);
+  }
+
+  crearTipoPlan(datos: TipoPlanCreate): Observable<TipoPlanRead> {
+    return this.http.post<TipoPlanRead>(`${this.apiUrl}/billing/tipos-plan`, datos);
+  }
+
+  actualizarTipoPlan(nombreActual: string, datos: TipoPlanUpdate): Observable<TipoPlanRead> {
+    return this.http.put<TipoPlanRead>(`${this.apiUrl}/billing/tipos-plan/${encodeURIComponent(nombreActual)}`, datos);
+  }
+
+  eliminarTipoPlan(nombre: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/billing/tipos-plan/${encodeURIComponent(nombre)}`);
   }
 
   // ── Características (bullets del plan) ──

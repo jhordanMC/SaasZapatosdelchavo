@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +17,7 @@ import {
   SuscripcionListItem,
   SuscripcionUpdateInput,
   TipoDescuento,
-  TipoPlan,
+  TipoPlanRead,
 } from '../../../services/suscripciones';
 import { hoyISO } from '../../../core/fecha-negocio';
 
@@ -46,10 +46,10 @@ interface PlanForm {
   maxUsuarios: number | null;
   maxLocales: number | null;
   maxVentasMes: number | null;
-  integracionesOmnicanal: boolean;
   estaActivo: boolean;
   descripcion: string;
-  tipoPlan: TipoPlan | '';
+  tipoPlan: string;
+  esAMedida: boolean;
   esDestacado: boolean;
   ordenVisual: number;
 }
@@ -82,6 +82,15 @@ export class Suscripciones implements OnInit {
 
   suscripciones = signal<SuscripcionListItem[]>([]);
   planes = signal<Plan[]>([]);
+  planesOrdenados = computed(() => {
+    return [...this.planes()].sort((a, b) => a.orden_visual - b.orden_visual);
+  });
+  tiposPlan = signal<TipoPlanRead[]>([]);
+
+  modalTiposAbierto = false;
+  tipoPlanEditando: string | null = null;
+  formTipoPlanNombre = '';
+
   cargando = signal(true);
   cargandoPlanes = signal(true);
   error = signal<string | null>(null);
@@ -91,6 +100,7 @@ export class Suscripciones implements OnInit {
 
   ngOnInit(): void {
     this.cargarPlanes();
+    this.cargarTiposPlan();
     this.cargarSuscripciones();
   }
 
@@ -116,6 +126,70 @@ export class Suscripciones implements OnInit {
   get planesActivos(): Plan[] {
     return this.planes().filter((p) => p.esta_activo);
   }
+
+  // --- Drag and Drop for ordering planes ---
+  draggedIndex: number | null = null;
+
+  onDragStart(event: DragEvent, index: number): void {
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+    setTimeout(() => (event.target as HTMLElement).classList.add('dragging'), 0);
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDragEnter(event: DragEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).classList.add('drag-over');
+  }
+
+  onDragLeave(event: DragEvent): void {
+    (event.currentTarget as HTMLElement).classList.remove('drag-over');
+  }
+
+  onDrop(event: DragEvent, dropIndex: number): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).classList.remove('drag-over');
+    
+    const targetElement = document.querySelector('.dragging');
+    if (targetElement) {
+      targetElement.classList.remove('dragging');
+    }
+
+    if (this.draggedIndex === null || this.draggedIndex === dropIndex) return;
+
+    this.reordenarPlanes(this.draggedIndex, dropIndex);
+    this.draggedIndex = null;
+  }
+
+  reordenarPlanes(fromIndex: number, toIndex: number): void {
+    const planesActuales = [...this.planesOrdenados()];
+    const item = planesActuales[fromIndex];
+    
+    planesActuales.splice(fromIndex, 1);
+    planesActuales.splice(toIndex, 0, item);
+
+    planesActuales.forEach((p, index) => {
+      const nuevoOrden = index + 1;
+      if (p.orden_visual !== nuevoOrden) {
+        p.orden_visual = nuevoOrden;
+        this.suscripcionesService.actualizarPlan(p.id_plan, { orden_visual: nuevoOrden }).subscribe({
+          error: () => this.error.set('No se pudo guardar el nuevo orden visual de algunos planes.')
+        });
+      }
+    });
+
+    this.planes.set(planesActuales);
+  }
+  // ----------------------------------------
 
   private cargarSuscripciones(): void {
     this.cargando.set(true);
@@ -181,10 +255,10 @@ export class Suscripciones implements OnInit {
       maxUsuarios: null,
       maxLocales: null,
       maxVentasMes: null,
-      integracionesOmnicanal: false,
       estaActivo: true,
       descripcion: '',
       tipoPlan: '',
+      esAMedida: false,
       esDestacado: false,
       ordenVisual: 0,
     };
@@ -210,10 +284,10 @@ export class Suscripciones implements OnInit {
       maxUsuarios: plan.max_usuarios,
       maxLocales: plan.max_locales,
       maxVentasMes: plan.max_ventas_mes,
-      integracionesOmnicanal: plan.integraciones_omnicanal,
       estaActivo: plan.esta_activo,
       descripcion: plan.descripcion ?? '',
       tipoPlan: plan.tipo_plan ?? '',
+      esAMedida: plan.es_a_medida ?? false,
       esDestacado: plan.es_destacado,
       ordenVisual: plan.orden_visual,
     };
@@ -230,18 +304,124 @@ export class Suscripciones implements OnInit {
   }
 
   get planFormValido(): boolean {
-    return this.formPlan.nombre.trim().length > 0 && this.formPlan.precio >= 0;
+    return this.formPlan.nombre.trim().length > 0 && this.formPlan.precio >= 0 && this.formPlan.moneda.trim().length > 0;
+  }
+
+  // ── Gestión Tipos de Plan ──
+
+  cargarTiposPlan(): void {
+    this.suscripcionesService.listarTiposPlan().subscribe({
+      next: (res) => this.tiposPlan.set(res),
+      error: () => console.error('Error cargando tipos de plan'),
+    });
+  }
+
+  abrirModalTipos(): void {
+    this.modalTiposAbierto = true;
+    this.formTipoPlanNombre = '';
+    this.tipoPlanEditando = null;
+  }
+
+  cerrarModalTipos(): void {
+    this.modalTiposAbierto = false;
+  }
+
+  crearTipoPlan(): void {
+    const nombre = this.formTipoPlanNombre.trim();
+    if (!nombre) return;
+    this.suscripcionesService.crearTipoPlan({ nombre }).subscribe({
+      next: () => {
+        this.cargarTiposPlan();
+        this.formTipoPlanNombre = '';
+      },
+      error: (err) => alert(err.error?.detail || 'Error al crear tipo de plan'),
+    });
+  }
+
+  editarTipoPlan(tipo: TipoPlanRead): void {
+    this.tipoPlanEditando = tipo.nombre;
+    this.formTipoPlanNombre = tipo.nombre;
+  }
+
+  guardarEdicionTipoPlan(tipoViejo: string): void {
+    const nuevo = this.formTipoPlanNombre.trim();
+    if (!nuevo || nuevo === tipoViejo) {
+      this.cancelarEdicionTipoPlan();
+      return;
+    }
+    this.suscripcionesService.actualizarTipoPlan(tipoViejo, { nombre: nuevo }).subscribe({
+      next: () => {
+        this.cargarTiposPlan();
+        this.cargarPlanes(); // Los nombres en los planes cambiaron
+        this.tipoPlanEditando = null;
+        this.formTipoPlanNombre = '';
+      },
+      error: (err) => alert(err.error?.detail || 'Error al actualizar tipo de plan'),
+    });
+  }
+
+  cancelarEdicionTipoPlan(): void {
+    this.tipoPlanEditando = null;
+    this.formTipoPlanNombre = '';
+  }
+
+  eliminarTipoPlan(nombre: string): void {
+    if (!confirm(`¿Eliminar el tipo de plan "${nombre}"? Los planes que lo usen quedarán sin tipo.`)) return;
+    this.suscripcionesService.eliminarTipoPlan(nombre).subscribe({
+      next: () => {
+        this.cargarTiposPlan();
+        this.cargarPlanes();
+      },
+      error: (err) => alert(err.error?.detail || 'Error al eliminar tipo de plan'),
+    });
+  }
+
+  alCambiarEsAMedida(): void {
+    if (this.formPlan.esAMedida) {
+      this.formPlan.precio = 0;
+      this.formPlan.periodo = 'mensual';
+      this.formPlan.moneda = 'PEN';
+      this.formPlan.maxUsuarios = null;
+      this.formPlan.maxLocales = null;
+      this.formPlan.maxVentasMes = null;
+    }
   }
 
   guardarPlan(): void {
     if (!this.planFormValido || this.guardandoPlan) return;
     this.guardandoPlan = true;
 
+    // Asegurarnos de limpiar datos de límites si es a medida antes de enviar
+    this.alCambiarEsAMedida();
+
+    const planesList = [...this.planesOrdenados()];
+    let nuevoOrden = 1;
+
+    if (!this.planEditando) {
+      if (this.formPlan.estaActivo) {
+        const lastActivo = [...planesList].reverse().find(p => p.esta_activo);
+        nuevoOrden = lastActivo ? lastActivo.orden_visual + 1 : 1;
+        
+        const planesToShift = planesList.filter(p => p.orden_visual >= nuevoOrden);
+        planesToShift.forEach(p => {
+          p.orden_visual += 1;
+          this.suscripcionesService.actualizarPlan(p.id_plan, { orden_visual: p.orden_visual }).subscribe({
+            error: () => console.error('Error shifting plan', p.id_plan)
+          });
+        });
+        // We update the list eagerly so the next planes.set() has them shifted
+      } else {
+        const lastPlan = planesList[planesList.length - 1];
+        nuevoOrden = lastPlan ? lastPlan.orden_visual + 1 : 1;
+      }
+    }
+
     const camposCatalogo = {
       descripcion: this.formPlan.descripcion.trim() || null,
-      tipo_plan: this.formPlan.tipoPlan || null,
+      tipo_plan: this.formPlan.tipoPlan.trim() || null,
+      es_a_medida: this.formPlan.esAMedida,
       es_destacado: this.formPlan.esDestacado,
-      orden_visual: this.formPlan.ordenVisual,
+      orden_visual: this.planEditando ? this.formPlan.ordenVisual : nuevoOrden,
     };
 
     if (this.planEditando) {
@@ -253,7 +433,6 @@ export class Suscripciones implements OnInit {
         max_usuarios: this.formPlan.maxUsuarios,
         max_locales: this.formPlan.maxLocales,
         max_ventas_mes: this.formPlan.maxVentasMes,
-        integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
         esta_activo: this.formPlan.estaActivo,
         ...camposCatalogo,
       };
@@ -280,13 +459,14 @@ export class Suscripciones implements OnInit {
       max_usuarios: this.formPlan.maxUsuarios,
       max_locales: this.formPlan.maxLocales,
       max_ventas_mes: this.formPlan.maxVentasMes,
-      integraciones_omnicanal: this.formPlan.integracionesOmnicanal,
+      esta_activo: this.formPlan.estaActivo,
       ...camposCatalogo,
     };
     this.suscripcionesService.crearPlan(payload).subscribe({
       next: (creado) => {
         this.guardandoPlan = false;
-        this.planes.set([...this.planes(), creado]);
+        // Agregamos el creado y pasamos toda la lista modificada
+        this.planes.set([...planesList, creado]);
         // El plan recién creado no tiene características/descuentos aún:
         // lo dejamos abierto en modo edición para que se puedan agregar
         // sin tener que volver a buscarlo en la tabla.

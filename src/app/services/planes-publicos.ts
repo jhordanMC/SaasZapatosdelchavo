@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TipoDescuento, TipoPlan } from './suscripciones';
+import { TipoDescuento } from './suscripciones';
 
 export interface CaracteristicaPlanPublica {
   id_caracteristica: string;
@@ -27,7 +27,8 @@ export interface PlanPublico {
   id_plan: string;
   nombre: string;
   descripcion: string | null;
-  tipo_plan: TipoPlan | null;
+  tipo_plan: string | null;
+  es_a_medida: boolean;
   precio: number;
   precio_efectivo: number;
   moneda: string;
