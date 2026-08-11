@@ -57,9 +57,6 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
     'Catálogos',
     'Ventas',
     'Finanzas',
-    'Reportes',
-    'Clientes',
-    'Configuración',
   ];
 
   private readonly scenes: MockScene[] = [

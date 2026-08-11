@@ -276,8 +276,10 @@
 ══════════════════════════════ */
 .modal-card {
   max-width: 380px;
+  max-height: 88vh;
   background: var(--bg-surface-hover);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .modal-brand-bottom {
