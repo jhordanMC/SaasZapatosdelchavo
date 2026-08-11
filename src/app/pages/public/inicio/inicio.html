@@ -99,23 +99,30 @@
     <span class="eyebrow">Testimonios</span>
     <h2>Miles de negocios ya confían en nosotros</h2>
   </div>
-  <div class="testimonios-grid">
-    @for (t of testimonios; track t.autor; let i = $index) {
-      <div class="testimonio-card" appReveal [appRevealDelay]="i * 80">
-        <div class="testimonio-stars" aria-hidden="true">
-          @for (s of [1, 2, 3, 4, 5]; track s) {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          }
-        </div>
-        <p class="testimonio-quote">"{{ t.quote }}"</p>
-        <div class="testimonio-autor">
-          <img class="testimonio-avatar" [src]="t.foto" [alt]="t.autor" loading="lazy" />
-          <div>
-            <strong>{{ t.autor }}</strong>
-            <small>{{ t.rubro }}</small>
+  <div class="testimonios-viewport">
+    <div class="testimonios-track" [style.transform]="'translateX(-' + (testimonioActivo * 100) + '%)'">
+      @for (t of testimonios; track t.autor; let i = $index) {
+        <div class="testimonio-card" appReveal [appRevealDelay]="i * 80">
+          <div class="testimonio-stars" aria-hidden="true">
+            @for (s of [1, 2, 3, 4, 5]; track s) {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            }
+          </div>
+          <p class="testimonio-quote">"{{ t.quote }}"</p>
+          <div class="testimonio-autor">
+            <img class="testimonio-avatar" [src]="t.foto" [alt]="t.autor" loading="lazy" />
+            <div>
+              <strong>{{ t.autor }}</strong>
+              <small>{{ t.rubro }}</small>
+            </div>
           </div>
         </div>
-      </div>
+      }
+    </div>
+  </div>
+  <div class="testimonios-dots" aria-hidden="true">
+    @for (t of testimonios; track t.autor; let i = $index) {
+      <span class="testimonios-dot" [class.active]="i === testimonioActivo"></span>
     }
   </div>
 </section>

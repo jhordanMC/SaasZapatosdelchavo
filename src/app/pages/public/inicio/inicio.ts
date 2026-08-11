@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HeroMockupComponent } from './components/hero-mockup/hero-mockup';
 import { DemoExplorerComponent } from './components/demo-explorer/demo-explorer';
@@ -30,7 +30,10 @@ interface Testimonio {
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })
-export class InicioComponent {
+export class InicioComponent implements OnInit, OnDestroy {
+  testimonioActivo = 0;
+  private testimonioTimer?: ReturnType<typeof setInterval>;
+
   readonly features: Feature[] = [
     { icon: 'box', titulo: 'Inventario Inteligente', desc: 'Controla tu stock, categorías, precios y más.' },
     { icon: 'globe', titulo: 'Catálogos Públicos', desc: 'Crea catálogos online y compártelos con tus clientes.' },
@@ -78,4 +81,16 @@ export class InicioComponent {
       foto: 'testimonios/resena5.png',
     },
   ];
+
+  ngOnInit(): void {
+    this.testimonioTimer = setInterval(() => {
+      this.testimonioActivo = (this.testimonioActivo + 1) % this.testimonios.length;
+    }, 5000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.testimonioTimer) {
+      clearInterval(this.testimonioTimer);
+    }
+  }
 }
