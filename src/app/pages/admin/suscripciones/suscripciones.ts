@@ -94,9 +94,25 @@ export class Suscripciones implements OnInit {
   cargando = signal(true);
   cargandoPlanes = signal(true);
   error = signal<string | null>(null);
+  errorDescuento = signal<string | null>(null);
+  errorTablaDescuento = signal<{ id: string, msg: string } | null>(null);
 
   busqueda = '';
   filtroEstado: EstadoSuscripcion | 'Todos' = 'Todos';
+
+  private timerErrorDescuento: any;
+  mostrarErrorDescuento(msg: string) {
+    this.errorDescuento.set(msg);
+    clearTimeout(this.timerErrorDescuento);
+    this.timerErrorDescuento = setTimeout(() => this.errorDescuento.set(null), 4000);
+  }
+
+  private timerErrorTabla: any;
+  mostrarErrorTabla(idDescuento: string, msg: string) {
+    this.errorTablaDescuento.set({ id: idDescuento, msg });
+    clearTimeout(this.timerErrorTabla);
+    this.timerErrorTabla = setTimeout(() => this.errorTablaDescuento.set(null), 4000);
+  }
 
   ngOnInit(): void {
     this.cargarPlanes();
@@ -269,8 +285,12 @@ export class Suscripciones implements OnInit {
     this.formPlan = this.formularioPlanVacio();
     this.caracteristicas.set([]);
     this.descuentos.set([]);
+    this.caracteristicaEditandoId = null;
     this.nuevaCaracteristica = { texto: '', esPositiva: true };
     this.nuevoDescuento = this.formularioDescuentoVacio();
+    this.error.set(null);
+    this.errorDescuento.set(null);
+    this.errorTablaDescuento.set(null);
     this.modalPlanAbierto = true;
   }
 
@@ -291,6 +311,9 @@ export class Suscripciones implements OnInit {
       esDestacado: plan.es_destacado,
       ordenVisual: plan.orden_visual,
     };
+    this.error.set(null);
+    this.errorDescuento.set(null);
+    this.errorTablaDescuento.set(null);
     this.modalPlanAbierto = true;
     this.cargarCaracteristicas(plan.id_plan);
     this.cargarDescuentos(plan.id_plan);
@@ -299,6 +322,9 @@ export class Suscripciones implements OnInit {
   cerrarModalPlan(): void {
     this.modalPlanAbierto = false;
     this.planEditando = null;
+    this.error.set(null);
+    this.errorDescuento.set(null);
+    this.errorTablaDescuento.set(null);
     this.caracteristicas.set([]);
     this.descuentos.set([]);
   }
@@ -500,11 +526,23 @@ export class Suscripciones implements OnInit {
     this.cargandoCaracteristicas.set(true);
     this.suscripcionesService.listarCaracteristicas(idPlan).subscribe({
       next: (items) => {
-        this.caracteristicas.set(items);
+        this.caracteristicas.set(items.sort((a, b) => (a.es_positiva === b.es_positiva ? 0 : a.es_positiva ? -1 : 1)));
         this.cargandoCaracteristicas.set(false);
       },
       error: () => this.cargandoCaracteristicas.set(false),
     });
+  }
+
+  caracteristicaEditandoId: string | null = null;
+
+  prepararEdicionCaracteristica(item: CaracteristicaPlan): void {
+    this.caracteristicaEditandoId = item.id_caracteristica;
+    this.nuevaCaracteristica = { texto: item.texto, esPositiva: item.es_positiva };
+  }
+
+  cancelarEdicionCaracteristica(): void {
+    this.caracteristicaEditandoId = null;
+    this.nuevaCaracteristica = { texto: '', esPositiva: true };
   }
 
   agregarCaracteristica(): void {
@@ -516,27 +554,53 @@ export class Suscripciones implements OnInit {
       orden: this.caracteristicas().length,
     };
     this.guardandoCaracteristica = true;
-    this.suscripcionesService.crearCaracteristica(idPlan, datos).subscribe({
-      next: (creada) => {
-        this.guardandoCaracteristica = false;
-        this.caracteristicas.set([...this.caracteristicas(), creada]);
-        this.nuevaCaracteristica = { texto: '', esPositiva: true };
-      },
-      error: () => {
-        this.guardandoCaracteristica = false;
-        this.error.set('No se pudo agregar la característica.');
-      },
-    });
+    
+    if (this.caracteristicaEditandoId) {
+      this.suscripcionesService.actualizarCaracteristica(idPlan, this.caracteristicaEditandoId, { texto: datos.texto, es_positiva: datos.es_positiva }).subscribe({
+        next: (actualizada) => {
+          this.guardandoCaracteristica = false;
+          this.caracteristicas.set(
+            this.caracteristicas()
+              .map((c) => (c.id_caracteristica === actualizada.id_caracteristica ? actualizada : c))
+              .sort((a, b) => (a.es_positiva === b.es_positiva ? 0 : a.es_positiva ? -1 : 1))
+          );
+          this.cancelarEdicionCaracteristica();
+        },
+        error: () => {
+          this.guardandoCaracteristica = false;
+          this.error.set('No se pudo actualizar la característica.');
+        }
+      });
+    } else {
+      this.suscripcionesService.crearCaracteristica(idPlan, datos).subscribe({
+        next: (creada) => {
+          this.guardandoCaracteristica = false;
+          this.caracteristicas.set([...this.caracteristicas(), creada].sort((a, b) => (a.es_positiva === b.es_positiva ? 0 : a.es_positiva ? -1 : 1)));
+          this.nuevaCaracteristica = { texto: '', esPositiva: true };
+        },
+        error: () => {
+          this.guardandoCaracteristica = false;
+          this.error.set('No se pudo agregar la característica.');
+        },
+      });
+    }
   }
 
+  eliminandoCaracteristicaId: string | number | null = null;
+
   eliminarCaracteristica(item: CaracteristicaPlan): void {
-    if (!this.planEditando) return;
+    if (!this.planEditando || this.eliminandoCaracteristicaId !== null) return;
     const idPlan = this.planEditando.id_plan;
+    this.eliminandoCaracteristicaId = item.id_caracteristica;
     this.suscripcionesService.eliminarCaracteristica(idPlan, item.id_caracteristica).subscribe({
       next: () => {
         this.caracteristicas.set(this.caracteristicas().filter((c) => c.id_caracteristica !== item.id_caracteristica));
+        this.eliminandoCaracteristicaId = null;
       },
-      error: () => this.error.set('No se pudo eliminar la característica.'),
+      error: () => {
+        this.error.set('No se pudo eliminar la característica.');
+        this.eliminandoCaracteristicaId = null;
+      },
     });
   }
 
@@ -546,8 +610,27 @@ export class Suscripciones implements OnInit {
   guardandoDescuento = false;
   nuevoDescuento: NuevoDescuentoForm = this.formularioDescuentoVacio();
 
+  descuentoEditandoId: string | null = null;
+  eliminandoDescuentoId: string | null = null;
+
   private formularioDescuentoVacio(): NuevoDescuentoForm {
     return { etiqueta: '', tipo: 'porcentaje', valor: 0, fechaInicio: hoyISO(), fechaFin: '' };
+  }
+
+  prepararEdicionDescuento(item: DescuentoPlan): void {
+    this.descuentoEditandoId = item.id_descuento;
+    this.nuevoDescuento = {
+      etiqueta: item.etiqueta,
+      tipo: item.tipo,
+      valor: item.valor,
+      fechaInicio: item.fecha_inicio.slice(0, 10),
+      fechaFin: item.fecha_fin ? item.fecha_fin.slice(0, 10) : ''
+    };
+  }
+
+  cancelarEdicionDescuento(): void {
+    this.descuentoEditandoId = null;
+    this.nuevoDescuento = this.formularioDescuentoVacio();
   }
 
   private cargarDescuentos(idPlan: string): void {
@@ -568,6 +651,43 @@ export class Suscripciones implements OnInit {
   agregarDescuento(): void {
     if (!this.planEditando || !this.descuentoFormValido || this.guardandoDescuento) return;
     const idPlan = this.planEditando.id_plan;
+    
+    const descuentoExistente = this.descuentoEditandoId ? this.descuentos().find(x => x.id_descuento === this.descuentoEditandoId) : null;
+    const esActivo = descuentoExistente ? descuentoExistente.esta_activo : true; // Nuevo nace activo
+    
+    const nuevaInicio = this.nuevoDescuento.fechaInicio;
+    const esInfinito1 = !this.nuevoDescuento.fechaFin;
+    const nuevaFin = this.nuevoDescuento.fechaFin || '9999-12-31';
+    
+    if (!esInfinito1 && nuevaFin < nuevaInicio) {
+      this.mostrarErrorDescuento('La fecha de fin no puede ser anterior a la de inicio.');
+      return;
+    }
+    
+    if (esActivo) {
+      const solapado = this.descuentos().find(d => {
+        if (!d.esta_activo) return false;
+        if (this.descuentoEditandoId && d.id_descuento === this.descuentoEditandoId) return false;
+        const esInfinito2 = !d.fecha_fin;
+        
+        if (esInfinito1 !== esInfinito2) return false;
+        if (esInfinito1 && esInfinito2) return true;
+        
+        const dInicio = d.fecha_inicio.slice(0, 10);
+        const dFin = d.fecha_fin!.slice(0, 10);
+        return (nuevaInicio <= dFin) && (dInicio <= nuevaFin);
+      });
+      
+      if (solapado) {
+        if (esInfinito1 && !solapado.fecha_fin) {
+          this.mostrarErrorDescuento(`Ya existe un descuento sin fecha fin ('${solapado.etiqueta}'). Solo puede haber uno.`);
+        } else {
+          this.mostrarErrorDescuento(`Las fechas chocan con el descuento existente: '${solapado.etiqueta}'.`);
+        }
+        return;
+      }
+    }
+
     const datos: DescuentoPlanInput = {
       etiqueta: this.nuevoDescuento.etiqueta.trim(),
       tipo: this.nuevoDescuento.tipo,
@@ -577,39 +697,117 @@ export class Suscripciones implements OnInit {
       esta_activo: true,
     };
     this.guardandoDescuento = true;
-    this.suscripcionesService.crearDescuento(idPlan, datos).subscribe({
-      next: (creado) => {
-        this.guardandoDescuento = false;
-        this.descuentos.set([creado, ...this.descuentos()]);
-        this.nuevoDescuento = this.formularioDescuentoVacio();
+    
+    if (this.descuentoEditandoId) {
+      this.suscripcionesService.actualizarDescuento(idPlan, this.descuentoEditandoId, {
+        etiqueta: datos.etiqueta,
+        tipo: datos.tipo,
+        valor: datos.valor,
+        fecha_inicio: datos.fecha_inicio,
+        fecha_fin: datos.fecha_fin
+      }).subscribe({
+        next: (actualizado) => {
+          this.errorDescuento.set(null);
+          this.errorTablaDescuento.set(null);
+          this.guardandoDescuento = false;
+          this.descuentos.set(this.descuentos().map(d => d.id_descuento === actualizado.id_descuento ? actualizado : d));
+          this.cancelarEdicionDescuento();
+        },
+        error: (err) => {
+          this.guardandoDescuento = false;
+          const msg = err.error?.detail || 'No se pudo actualizar el descuento.';
+          this.mostrarErrorDescuento(msg);
+        }
+      });
+    } else {
+      this.suscripcionesService.crearDescuento(idPlan, datos).subscribe({
+        next: (creado) => {
+          this.errorDescuento.set(null);
+          this.errorTablaDescuento.set(null);
+          this.guardandoDescuento = false;
+          this.descuentos.set([creado, ...this.descuentos()]);
+          this.nuevoDescuento = this.formularioDescuentoVacio();
+        },
+        error: (err) => {
+          this.guardandoDescuento = false;
+          const msg = err.error?.detail || 'No se pudo registrar el descuento (revisa las fechas).';
+          this.mostrarErrorDescuento(msg);
+        },
+      });
+    }
+  }
+
+  cambiandoEstadoId: string | null = null;
+
+  cambiarEstadoDescuento(item: DescuentoPlan, estaActivo: boolean): void {
+    if (!this.planEditando || this.cambiandoEstadoId !== null) return;
+    const idPlan = this.planEditando.id_plan;
+    
+    if (estaActivo) {
+      const nuevaInicio = item.fecha_inicio.slice(0, 10);
+      const esInfinito1 = !item.fecha_fin;
+      const nuevaFin = item.fecha_fin ? item.fecha_fin.slice(0, 10) : '9999-12-31';
+
+      const solapado = this.descuentos().find(d => {
+        if (!d.esta_activo || d.id_descuento === item.id_descuento) return false;
+        
+        const esInfinito2 = !d.fecha_fin;
+        if (esInfinito1 !== esInfinito2) return false;
+        if (esInfinito1 && esInfinito2) return true;
+        
+        const dInicio = d.fecha_inicio.slice(0, 10);
+        const dFin = d.fecha_fin!.slice(0, 10);
+        return (nuevaInicio <= dFin) && (dInicio <= nuevaFin);
+      });
+      
+      if (solapado) {
+        // Al clonar el objeto y actualizar el array, obligamos a Angular a repintar 
+        // toda la fila y el <select> nativo vuelve a sincronizarse con 'false'.
+        const itemRevertido = { ...item, esta_activo: false };
+        this.descuentos.set(this.descuentos().map(d => d.id_descuento === item.id_descuento ? itemRevertido : d));
+        
+        if (esInfinito1 && !solapado.fecha_fin) {
+          this.mostrarErrorTabla(item.id_descuento, `No se puede activar: Ya hay un descuento sin fecha fin activo ('${solapado.etiqueta}').`);
+        } else {
+          this.mostrarErrorTabla(item.id_descuento, `No se puede activar: Las fechas chocan con el descuento activo '${solapado.etiqueta}'.`);
+        }
+        return;
+      }
+    }
+    
+    this.cambiandoEstadoId = item.id_descuento;
+    
+    this.suscripcionesService.actualizarDescuento(idPlan, item.id_descuento, { esta_activo: estaActivo }).subscribe({
+      next: (actualizado) => {
+        this.errorTablaDescuento.set(null);
+        this.descuentos.set(this.descuentos().map((d) => (d.id_descuento === actualizado.id_descuento ? actualizado : d)));
+        this.cambiandoEstadoId = null;
       },
       error: () => {
-        this.guardandoDescuento = false;
-        this.error.set('No se pudo registrar el descuento (revisa las fechas).');
+        this.cambiandoEstadoId = null;
+        this.mostrarErrorTabla(item.id_descuento, 'No se pudo cambiar el estado del descuento.');
+        
+        const itemRevertido = { ...item, esta_activo: !estaActivo };
+        this.descuentos.set(this.descuentos().map((d) => (d.id_descuento === item.id_descuento ? itemRevertido : d)));
       },
     });
   }
 
-  /** "Finalizar" = desactivar, sin borrar el histórico de la promoción. */
-  finalizarDescuento(item: DescuentoPlan): void {
-    if (!this.planEditando) return;
-    const idPlan = this.planEditando.id_plan;
-    this.suscripcionesService.actualizarDescuento(idPlan, item.id_descuento, { esta_activo: false }).subscribe({
-      next: (actualizado) => {
-        this.descuentos.set(this.descuentos().map((d) => (d.id_descuento === actualizado.id_descuento ? actualizado : d)));
-      },
-      error: () => this.error.set('No se pudo finalizar el descuento.'),
-    });
-  }
 
   eliminarDescuento(item: DescuentoPlan): void {
-    if (!this.planEditando) return;
+    if (!this.planEditando || this.eliminandoDescuentoId !== null) return;
     const idPlan = this.planEditando.id_plan;
+    this.eliminandoDescuentoId = item.id_descuento;
     this.suscripcionesService.eliminarDescuento(idPlan, item.id_descuento).subscribe({
       next: () => {
+        this.errorTablaDescuento.set(null);
         this.descuentos.set(this.descuentos().filter((d) => d.id_descuento !== item.id_descuento));
+        this.eliminandoDescuentoId = null;
       },
-      error: () => this.error.set('No se pudo eliminar el descuento.'),
+      error: () => {
+        this.mostrarErrorTabla(item.id_descuento, 'No se pudo eliminar el descuento.');
+        this.eliminandoDescuentoId = null;
+      },
     });
   }
 

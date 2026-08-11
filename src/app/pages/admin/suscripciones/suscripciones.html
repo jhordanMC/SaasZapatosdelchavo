@@ -6,7 +6,7 @@
     <button class="tab-btn" [class.activo]="tabActiva === 'suscripciones'" (click)="cambiarTab('suscripciones')">Suscripciones</button>
   </div>
 
-  <p class="empty-state" *ngIf="error()">{{ error() }}</p>
+  <p class="empty-state" *ngIf="error() && !modalPlanAbierto">{{ error() }}</p>
 
   <!-- ══════════════ TAB: PLANES (catálogo global) ══════════════ -->
   <div class="data-table-card" *ngIf="tabActiva === 'planes'">
@@ -197,17 +197,19 @@
         </button>
       </div>
 
-      <div class="form-group">
-        <label for="inputNombrePlan">Nombre</label>
-        <input id="inputNombrePlan" type="text" class="form-input" placeholder="Ej. Starter" [(ngModel)]="formPlan.nombre" />
-      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="inputNombrePlan">Nombre</label>
+          <input id="inputNombrePlan" type="text" class="form-input" placeholder="Ej. Starter" [(ngModel)]="formPlan.nombre" />
+        </div>
 
-      <div class="form-group">
-        <label>Tipo de plan comercial</label>
-        <select class="form-input form-select" [(ngModel)]="formPlan.tipoPlan">
-          <option value="">Sin definir</option>
-          <option *ngFor="let t of tiposPlan()" [value]="t.nombre">{{ t.nombre }}</option>
-        </select>
+        <div class="form-group">
+          <label>Tipo de plan comercial</label>
+          <select class="form-input form-select" [(ngModel)]="formPlan.tipoPlan">
+            <option value="">Sin definir</option>
+            <option *ngFor="let t of tiposPlan()" [value]="t.nombre">{{ t.nombre }}</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
@@ -219,7 +221,18 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label for="inputPrecioPlan">Precio de lista</label>
-            <input id="inputPrecioPlan" type="number" min="0" class="form-input" [(ngModel)]="formPlan.precio" />
+            <div class="input-group">
+              <input id="inputPrecioPlan" type="number" min="0" class="form-input" [(ngModel)]="formPlan.precio" />
+              <select class="form-select" [(ngModel)]="formPlan.moneda" title="Moneda">
+                <option value="PEN">PEN</option>
+                <option value="USD">USD</option>
+                <option value="MXN">MXN</option>
+                <option value="COP">COP</option>
+                <option value="CLP">CLP</option>
+                <option value="ARS">ARS</option>
+                <option value="BRL">BRL</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label for="selectPeriodoPlan">Periodo</label>
@@ -230,109 +243,88 @@
           </div>
         </div>
 
-        <div class="form-grid-2">
+        <div class="form-grid-3" style="align-items: flex-end;">
           <div class="form-group">
-            <label for="inputMoneda">Moneda</label>
-            <input id="inputMoneda" type="text" maxlength="3" class="form-input" placeholder="PEN" [(ngModel)]="formPlan.moneda" />
+            <label for="inputMaxUsuarios">Máx. usuarios</label>
+            <input id="inputMaxUsuarios" type="number" min="0" class="form-input" placeholder="Ilimitado" [(ngModel)]="formPlan.maxUsuarios" />
           </div>
           <div class="form-group">
-            <label for="inputMaxUsuarios">Máx. usuarios (vacío = ilimitado)</label>
-            <input id="inputMaxUsuarios" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxUsuarios" />
+            <label for="inputMaxLocales">Máx. locales</label>
+            <input id="inputMaxLocales" type="number" min="0" class="form-input" placeholder="Ilimitado" [(ngModel)]="formPlan.maxLocales" />
+          </div>
+          <div class="form-group">
+            <label for="inputMaxVentas">Máx. ventas/mes</label>
+            <input id="inputMaxVentas" type="number" min="0" class="form-input" placeholder="Ilimitado" [(ngModel)]="formPlan.maxVentasMes" />
           </div>
         </div>
 
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label for="inputMaxLocales">Máx. locales (vacío = ilimitado)</label>
-            <input id="inputMaxLocales" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxLocales" />
-          </div>
-          <div class="form-group">
-            <label for="inputMaxVentas">Máx. ventas/mes (vacío = ilimitado)</label>
-            <input id="inputMaxVentas" type="number" min="0" class="form-input" [(ngModel)]="formPlan.maxVentasMes" />
-          </div>
-        </div>
+        <p class="limites-info-text">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Si dejas un límite vacío, el sistema lo tomará como <strong>ilimitado</strong>.</span>
+        </p>
       </ng-container>
 
       <!-- Se removió el orden visual del modal para ponerlo en la tabla -->
 
       <label class="checkbox-inline">
         <input type="checkbox" [(ngModel)]="formPlan.esDestacado" />
-        Destacado ("Más elegido" en la landing)
+        <div class="checkmark"></div>
+        <span>Destacado ("Más elegido" en la landing)</span>
       </label>
 
       <label class="checkbox-inline">
         <input type="checkbox" [(ngModel)]="formPlan.estaActivo" />
-        Plan activo (disponible para asignar a empresas y visible en /precios)
+        <div class="checkmark"></div>
+        <span>Plan activo (disponible para asignar a empresas y visible en /precios)</span>
       </label>
-
-      <div class="modal-actions modal-actions-split">
-        <button class="btn-clear" (click)="cerrarModalPlan()">Cancelar</button>
-        <button class="btn-primary" [disabled]="!planFormValido || guardandoPlan" (click)="guardarPlan()">
-          {{ guardandoPlan ? 'Guardando…' : 'Guardar' }}
-        </button>
-      </div>
 
       <!-- Solo disponible una vez que el plan existe (necesita id_plan) -->
       <ng-container *ngIf="planEditando">
         <div class="pagos-form-divider"><span>Características (bullets de la landing)</span></div>
 
+        <div class="form-group form-grid-add-caracteristica">
+          <label for="inputNuevaCaracteristica">Nueva característica</label>
+          <input id="inputNuevaCaracteristica" type="text" class="form-input" placeholder="Ej. Locales ilimitados" [(ngModel)]="nuevaCaracteristica.texto" />
+        </div>
+        
+        <div class="form-grid-2" style="align-items: flex-end; margin-bottom: 24px;">
+          <div class="form-group">
+            <label for="selectPositivaCaracteristica">Tipo de característica</label>
+            <select id="selectPositivaCaracteristica" class="form-input form-select" [(ngModel)]="nuevaCaracteristica.esPositiva">
+              <option [ngValue]="true">Incluida (check verde)</option>
+              <option [ngValue]="false">No incluida (cruz roja)</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button *ngIf="caracteristicaEditandoId" class="btn-clear" (click)="cancelarEdicionCaracteristica()">Cancelar</button>
+            <button class="btn-primary" style="padding: 11px 18px; text-align: center; display: flex; justify-content: center; align-items: center; flex: 1;" [disabled]="!nuevaCaracteristica.texto.trim() || guardandoCaracteristica" (click)="agregarCaracteristica()">
+              {{ guardandoCaracteristica ? (caracteristicaEditandoId ? 'Actualizando…' : 'Agregando…') : (caracteristicaEditandoId ? 'Actualizar' : '+ Agregar característica') }}
+            </button>
+          </div>
+        </div>
         <p class="empty-state-mini" *ngIf="cargandoCaracteristicas()">Cargando características…</p>
 
         <ul class="caracteristicas-list" *ngIf="!cargandoCaracteristicas() && caracteristicas().length > 0">
           <li *ngFor="let c of caracteristicas()">
             <span [class.caracteristica-off]="!c.es_positiva">
-              {{ c.es_positiva ? '✓' : '✕' }} {{ c.texto }}
+              <span [class.icon-check]="c.es_positiva" [class.icon-cross]="!c.es_positiva">
+                {{ c.es_positiva ? '✓' : '✕' }}
+              </span>
+              {{ c.texto }}
             </span>
-            <button class="btn-accion" (click)="eliminarCaracteristica(c)">Quitar</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-accion" (click)="prepararEdicionCaracteristica(c)">Editar</button>
+              <button class="btn-accion btn-accion-danger" [disabled]="eliminandoCaracteristicaId === c.id_caracteristica" (click)="eliminarCaracteristica(c)">
+                {{ eliminandoCaracteristicaId === c.id_caracteristica ? 'Quitando…' : 'Quitar' }}
+              </button>
+            </div>
           </li>
         </ul>
         <p class="empty-state-mini" *ngIf="!cargandoCaracteristicas() && caracteristicas().length === 0">
           Todavía no hay características para este plan.
         </p>
 
-        <div class="form-grid-2 form-grid-add-caracteristica">
-          <div class="form-group">
-            <label for="inputNuevaCaracteristica">Nueva característica</label>
-            <input id="inputNuevaCaracteristica" type="text" class="form-input" placeholder="Ej. Locales ilimitados" [(ngModel)]="nuevaCaracteristica.texto" />
-          </div>
-          <div class="form-group">
-            <label for="selectPositivaCaracteristica">Tipo</label>
-            <select id="selectPositivaCaracteristica" class="form-input form-select" [(ngModel)]="nuevaCaracteristica.esPositiva">
-              <option [ngValue]="true">Incluida (check verde)</option>
-              <option [ngValue]="false">No incluida (cruz gris)</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-accion" [disabled]="!nuevaCaracteristica.texto.trim() || guardandoCaracteristica" (click)="agregarCaracteristica()">
-          {{ guardandoCaracteristica ? 'Agregando…' : '+ Agregar característica' }}
-        </button>
-
         <div class="pagos-form-divider"><span>Descuentos temporales (promociones)</span></div>
-
-        <p class="empty-state-mini" *ngIf="cargandoDescuentos()">Cargando descuentos…</p>
-
-        <div class="table-wrap" *ngIf="!cargandoDescuentos() && descuentos().length > 0">
-          <div class="table-row table-head">
-            <span>Etiqueta</span>
-            <span>Valor</span>
-            <span>Vigencia</span>
-            <span>Estado</span>
-            <span>Acciones</span>
-          </div>
-          <div class="table-row" *ngFor="let d of descuentos()">
-            <span>{{ d.etiqueta }}</span>
-            <span>{{ d.tipo === 'porcentaje' ? d.valor + '%' : ('S/ ' + d.valor) }}</span>
-            <span>{{ d.fecha_inicio.slice(0, 10) }} — {{ d.fecha_fin ? d.fecha_fin.slice(0, 10) : 'sin fin' }}</span>
-            <span><span class="status-pill" [class.active]="d.esta_activo">{{ d.esta_activo ? 'activo' : 'finalizado' }}</span></span>
-            <span class="acciones-cell">
-              <button class="btn-accion" *ngIf="d.esta_activo" (click)="finalizarDescuento(d)">Finalizar</button>
-              <button class="btn-accion" (click)="eliminarDescuento(d)">Eliminar</button>
-            </span>
-          </div>
-        </div>
-        <p class="empty-state-mini" *ngIf="!cargandoDescuentos() && descuentos().length === 0">
-          Este plan no tiene descuentos registrados.
-        </p>
 
         <div class="form-grid-2">
           <div class="form-group">
@@ -340,19 +332,15 @@
             <input id="inputEtiquetaDescuento" type="text" class="form-input" placeholder="Ej. Promo Aniversario 20%" [(ngModel)]="nuevoDescuento.etiqueta" />
           </div>
           <div class="form-group">
-            <label for="selectTipoDescuento">Tipo</label>
-            <select id="selectTipoDescuento" class="form-input form-select" [(ngModel)]="nuevoDescuento.tipo">
-              <option value="porcentaje">Porcentaje (%)</option>
-              <option value="monto_fijo">Monto fijo</option>
-            </select>
+            <label for="inputValorDescuento">Valor del descuento</label>
+            <div class="input-group">
+              <input id="inputValorDescuento" type="number" min="0" class="form-input" style="flex: 1;" placeholder="Ej. 20" [(ngModel)]="nuevoDescuento.valor" />
+              <select id="selectTipoDescuento" class="form-select" style="flex: 1;" [(ngModel)]="nuevoDescuento.tipo">
+                <option value="porcentaje">Porcentaje %</option>
+                <option value="monto_fijo">Monto fijo S/</option>
+              </select>
+            </div>
           </div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label for="inputValorDescuento">Valor</label>
-            <input id="inputValorDescuento" type="number" min="0" class="form-input" [(ngModel)]="nuevoDescuento.valor" />
-          </div>
-          <div class="form-group"></div>
         </div>
         <div class="form-grid-2">
           <div class="form-group">
@@ -364,10 +352,78 @@
             <input id="inputFechaFinDescuento" type="date" class="form-input" [(ngModel)]="nuevoDescuento.fechaFin" />
           </div>
         </div>
-        <button class="btn-accion" [disabled]="!descuentoFormValido || guardandoDescuento" (click)="agregarDescuento()">
-          {{ guardandoDescuento ? 'Guardando…' : '+ Registrar descuento' }}
-        </button>
+        
+        <div *ngIf="errorDescuento()" style="color: #d32f2f; font-size: 13px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: center; gap: 6px; line-height: 1.4; text-align: left;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span style="max-width: 450px;">{{ errorDescuento() }}</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 12px; width: 100%;" [style.justify-content]="descuentoEditandoId ? 'space-between' : 'center'">
+          <button *ngIf="descuentoEditandoId" class="btn-clear" style="flex: 1; text-align: center; display: flex; justify-content: center; align-items: center;" (click)="cancelarEdicionDescuento()">Cancelar</button>
+          <button class="btn-primary" style="padding: 11px 18px; text-align: center; display: flex; justify-content: center; align-items: center; width: 250px;" [disabled]="!descuentoFormValido || guardandoDescuento" (click)="agregarDescuento()">
+            {{ guardandoDescuento ? (descuentoEditandoId ? 'Actualizando…' : 'Guardando…') : (descuentoEditandoId ? 'Actualizar descuento' : '+ Registrar descuento') }}
+          </button>
+        </div>
+        <p class="empty-state-mini" *ngIf="cargandoDescuentos()">Cargando descuentos…</p>
+
+        <div class="table-wrap table-descuentos" style="margin-bottom: 24px;" *ngIf="!cargandoDescuentos() && descuentos().length > 0">
+          <div class="table-row table-head">
+            <span>Etiqueta</span>
+            <span>Valor</span>
+            <span>Vigencia</span>
+            <span>Estado</span>
+            <span>Acciones</span>
+          </div>
+          <ng-container *ngFor="let d of descuentos()">
+            <div class="table-row">
+              <span class="mobile-label-title">{{ d.etiqueta }}</span>
+            <span class="mobile-label" data-label="Valor">{{ d.tipo === 'porcentaje' ? (+d.valor) + '%' : ('S/ ' + (+d.valor)) }}</span>
+            <span class="mobile-label" data-label="Vigencia">{{ d.fecha_inicio.slice(0, 10) }} — {{ d.fecha_fin ? d.fecha_fin.slice(0, 10) : 'sin fin' }}</span>
+            <span class="mobile-label" data-label="Estado" style="position: relative; display: inline-block;">
+              <select class="form-input form-select status-select" 
+                      [class.is-active]="d.esta_activo && cambiandoEstadoId !== d.id_descuento" 
+                      [class.is-inactive]="!d.esta_activo && cambiandoEstadoId !== d.id_descuento" 
+                      [class.is-loading]="cambiandoEstadoId === d.id_descuento"
+                      [disabled]="cambiandoEstadoId === d.id_descuento"
+                      [style.color]="cambiandoEstadoId === d.id_descuento ? 'transparent' : null"
+                      style="padding: 4px 8px; font-size: 12px; border-radius: 6px; height: 28px; width: 85px;" 
+                      [ngModel]="d.esta_activo" 
+                      (ngModelChange)="cambiarEstadoDescuento(d, $event)">
+                <option [ngValue]="true" class="opt-active">Activo</option>
+                <option [ngValue]="false" class="opt-inactive">Inactivo</option>
+              </select>
+              
+              <div *ngIf="cambiandoEstadoId === d.id_descuento" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                <span class="descuento-spinner"></span>
+              </div>
+            </span>
+            <span class="acciones-cell" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: nowrap;">
+              <button class="btn-icon" title="Editar" (click)="prepararEdicionDescuento(d)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="btn-icon btn-icon-danger" title="Eliminar" [disabled]="eliminandoDescuentoId === d.id_descuento" (click)="eliminarDescuento(d)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </span>
+          </div>
+          <div *ngIf="errorTablaDescuento()?.id === d.id_descuento" style="padding: 10px 14px; background: #fffcfc; color: #d32f2f; font-size: 13px; font-weight: 500; display: flex; align-items: flex-start; gap: 6px; border-bottom: 1px solid #eaeaea;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>{{ errorTablaDescuento()?.msg }}</span>
+            </div>
+          </ng-container>
+        </div>
+        <p class="empty-state-mini" *ngIf="!cargandoDescuentos() && descuentos().length === 0">
+          Este plan no tiene descuentos registrados.
+        </p>
+
       </ng-container>
+
+      <div class="modal-actions modal-actions-split">
+        <button class="btn-clear" (click)="cerrarModalPlan()">Cancelar</button>
+        <button class="btn-primary" [disabled]="!planFormValido || guardandoPlan" (click)="guardarPlan()">
+          {{ guardandoPlan ? 'Guardando plan…' : 'Guardar Plan' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -556,7 +612,7 @@
       <div class="data-table-container" style="border: none; box-shadow: none; border-top: 1px solid #f1f5f9; border-radius: 0;">
         <div class="table-row table-head" style="display: grid; grid-template-columns: 2fr 1fr 2fr 1fr; align-items: center; border-bottom: 1px solid #e2e8f0; background: transparent; padding: 12px 0;">
           <div style="font-size: 11px; font-weight: 800; color: #74a485; text-transform: uppercase;">TIPO DE PLAN</div>
-          <div style="font-size: 11px; font-weight: 800; color: #74a485; text-transform: uppercase;">CANTIDAD</div>
+          <div style="font-size: 11px; font-weight: 800; color: #74a485; text-transform: uppercase;">N° PLANES<br>ASIGNADOS</div>
           <div style="font-size: 11px; font-weight: 800; color: #74a485; text-transform: uppercase;">PLANES<br>ASIGNADOS</div>
           <div style="font-size: 11px; font-weight: 800; color: #74a485; text-transform: uppercase;">ACCIONES</div>
         </div>
