@@ -1,34 +1,53 @@
 <div class="cp-page" [style.--color-marca]="catalogo()?.color_diseno ?? '#0f2b23'">
 
-  <div class="cp-estado" *ngIf="cargando()">Cargando catálogo…</div>
+  <div class="cp-estado" *ngIf="cargando()">
+    <span class="cp-spinner" aria-hidden="true"></span>
+    Cargando catálogo…
+  </div>
 
   <div class="cp-estado cp-estado-error" *ngIf="!cargando() && noEncontrado()">
+    <span class="cp-estado-error-icono" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </span>
     <h1>Catálogo no disponible</h1>
     <p>Este enlace no existe o el catálogo ya no está publicado.</p>
   </div>
 
-  <ng-container *ngIf="!cargando() && !noEncontrado() && catalogo()">
-    <header class="cp-header">
-      <h1>{{ catalogo()!.nombre }}</h1>
+  <ng-container *ngIf="!cargando() && !noEncontrado() && catalogo() as cat">
+    <header class="cp-hero">
+      <div class="cp-hero-inner">
+        <span class="cp-monograma">{{ cat.nombre.charAt(0) }}</span>
+        <h1>{{ cat.nombre }}</h1>
+        <span class="cp-hero-eyebrow">
+          {{ cat.productos.length }} producto{{ cat.productos.length === 1 ? '' : 's' }} disponible{{ cat.productos.length === 1 ? '' : 's' }}
+        </span>
+      </div>
     </header>
 
-    <main class="cp-grid" *ngIf="catalogo()!.productos.length > 0; else sinProductos">
-      <article class="cp-producto" *ngFor="let p of catalogo()!.productos">
-        <div class="cp-producto-imagen" [style.background-image]="imagenSrc(p) ? 'url(' + imagenSrc(p) + ')' : null">
-          <span class="cp-producto-imagen-placeholder" *ngIf="!imagenSrc(p)">Sin foto</span>
-        </div>
-        <div class="cp-producto-info">
-          <span class="cp-producto-nombre">{{ p.nombre }}</span>
-          <span class="cp-producto-precio">S/ {{ p.precio_venta | number:'1.2-2' }}</span>
-        </div>
-      </article>
+    <main class="cp-main">
+      <div class="cp-grid" *ngIf="cat.productos.length > 0; else sinProductos">
+        <article class="cp-producto" *ngFor="let p of cat.productos">
+          <div class="cp-producto-imagen" [style.background-image]="imagenSrc(p) ? 'url(' + imagenSrc(p) + ')' : null">
+            <span class="cp-producto-imagen-placeholder" *ngIf="!imagenSrc(p)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+            </span>
+          </div>
+          <div class="cp-producto-info">
+            <span class="cp-producto-nombre">{{ p.nombre }}</span>
+            <span class="cp-producto-precio">S/ {{ p.precio_venta | number:'1.2-2' }}</span>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #sinProductos>
+        <div class="cp-estado cp-estado-vacio">Este catálogo todavía no tiene productos.</div>
+      </ng-template>
     </main>
 
-    <ng-template #sinProductos>
-      <div class="cp-estado">Este catálogo todavía no tiene productos.</div>
-    </ng-template>
-
-    <footer class="cp-footer">Powered by ALBA</footer>
+    <footer class="cp-footer">
+      <span class="cp-footer-marca">{{ cat.nombre }}</span>
+      <span class="cp-footer-powered">Powered by ALBA</span>
+    </footer>
   </ng-container>
 
 </div>
