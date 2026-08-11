@@ -59,7 +59,7 @@ export class InicioComponent implements OnInit, OnDestroy {
     {
       quote: 'La plataforma es intuitiva y de fácil manejo, organiza y muestra cómo se está manejando el negocio de manera rápida y fácil.',
       autor: 'Diego Saldarriaga',
-      rubro: 'Dueño de Papayawash (Empresario de gran marca de motos)',
+      rubro: 'Dueño de Papayawash (Años de experiencia como jefe de operaciones de contact center)',
       foto: 'testimonios/resena2.png',
     },
     {
@@ -77,7 +77,7 @@ export class InicioComponent implements OnInit, OnDestroy {
     {
       quote: 'No tengo mucho tiempo entre la universidad y el negocio, así que necesitaba algo sencillo. Vilcas me permite revisar lo importante rápidamente y seguir con mis cosas.',
       autor: 'Piero Rojas',
-      rubro: 'Estudiante de medicina y emprendedor de Kstyle (Años de experiencia como jefe de operaciones de Contact Center)',
+      rubro: 'Estudiante de medicina y emprendedor de Kstyle',
       foto: 'testimonios/resena5.png',
     },
   ];
