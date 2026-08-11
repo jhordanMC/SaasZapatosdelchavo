@@ -7,6 +7,8 @@ export type EstadoSuscripcion = 'trial' | 'activa' | 'vencida' | 'cancelada';
 export type EstadoPago = 'pendiente' | 'pagado' | 'fallido' | 'reembolsado';
 
 export type PeriodoPlan = 'mensual' | 'anual';
+export type TipoPlan = 'standard' | 'pro' | 'enterprise' | 'custom';
+export type TipoDescuento = 'porcentaje' | 'monto_fijo';
 
 export interface Plan {
   id_plan: string;
@@ -20,6 +22,10 @@ export interface Plan {
   /** Beneficio: acceso a conectar marketplaces (Falabella, Ripley, Mercado Libre). */
   integraciones_omnicanal: boolean;
   esta_activo: boolean;
+  descripcion: string | null;
+  tipo_plan: TipoPlan | null;
+  es_destacado: boolean;
+  orden_visual: number;
 }
 
 export interface PlanCreateInput {
@@ -31,6 +37,10 @@ export interface PlanCreateInput {
   max_locales?: number | null;
   max_ventas_mes?: number | null;
   integraciones_omnicanal?: boolean;
+  descripcion?: string | null;
+  tipo_plan?: TipoPlan | null;
+  es_destacado?: boolean;
+  orden_visual?: number;
 }
 
 export interface PlanUpdateInput {
@@ -42,6 +52,44 @@ export interface PlanUpdateInput {
   max_locales?: number | null;
   max_ventas_mes?: number | null;
   integraciones_omnicanal?: boolean;
+  esta_activo?: boolean;
+  descripcion?: string | null;
+  tipo_plan?: TipoPlan | null;
+  es_destacado?: boolean;
+  orden_visual?: number;
+}
+
+export interface CaracteristicaPlan {
+  id_caracteristica: string;
+  id_plan: string;
+  texto: string;
+  es_positiva: boolean;
+  orden: number;
+}
+
+export interface CaracteristicaPlanInput {
+  texto: string;
+  es_positiva?: boolean;
+  orden?: number;
+}
+
+export interface DescuentoPlan {
+  id_descuento: string;
+  id_plan: string;
+  etiqueta: string;
+  tipo: TipoDescuento;
+  valor: number;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  esta_activo: boolean;
+}
+
+export interface DescuentoPlanInput {
+  etiqueta: string;
+  tipo: TipoDescuento;
+  valor: number;
+  fecha_inicio: string;
+  fecha_fin?: string | null;
   esta_activo?: boolean;
 }
 
@@ -118,6 +166,51 @@ export class SuscripcionesService {
 
   actualizarPlan(idPlan: string, datos: PlanUpdateInput): Observable<Plan> {
     return this.http.put<Plan>(`${this.apiUrl}/empresas/planes/${idPlan}`, datos);
+  }
+
+  // ── Características (bullets del plan) ──
+  listarCaracteristicas(idPlan: string): Observable<CaracteristicaPlan[]> {
+    return this.http.get<CaracteristicaPlan[]>(`${this.apiUrl}/empresas/planes/${idPlan}/caracteristicas`);
+  }
+
+  crearCaracteristica(idPlan: string, datos: CaracteristicaPlanInput): Observable<CaracteristicaPlan> {
+    return this.http.post<CaracteristicaPlan>(`${this.apiUrl}/empresas/planes/${idPlan}/caracteristicas`, datos);
+  }
+
+  actualizarCaracteristica(
+    idPlan: string,
+    idCaracteristica: string,
+    datos: Partial<CaracteristicaPlanInput>
+  ): Observable<CaracteristicaPlan> {
+    return this.http.put<CaracteristicaPlan>(
+      `${this.apiUrl}/empresas/planes/${idPlan}/caracteristicas/${idCaracteristica}`,
+      datos
+    );
+  }
+
+  eliminarCaracteristica(idPlan: string, idCaracteristica: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/empresas/planes/${idPlan}/caracteristicas/${idCaracteristica}`);
+  }
+
+  // ── Descuentos temporales del plan ──
+  listarDescuentos(idPlan: string): Observable<DescuentoPlan[]> {
+    return this.http.get<DescuentoPlan[]>(`${this.apiUrl}/empresas/planes/${idPlan}/descuentos`);
+  }
+
+  crearDescuento(idPlan: string, datos: DescuentoPlanInput): Observable<DescuentoPlan> {
+    return this.http.post<DescuentoPlan>(`${this.apiUrl}/empresas/planes/${idPlan}/descuentos`, datos);
+  }
+
+  actualizarDescuento(
+    idPlan: string,
+    idDescuento: string,
+    datos: Partial<DescuentoPlanInput>
+  ): Observable<DescuentoPlan> {
+    return this.http.put<DescuentoPlan>(`${this.apiUrl}/empresas/planes/${idPlan}/descuentos/${idDescuento}`, datos);
+  }
+
+  eliminarDescuento(idPlan: string, idDescuento: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/empresas/planes/${idPlan}/descuentos/${idDescuento}`);
   }
 
   /** Cross-tenant: todas las suscripciones de todas las empresas, para el panel centralizado. */
