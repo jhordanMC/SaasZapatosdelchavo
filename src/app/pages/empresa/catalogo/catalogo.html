@@ -98,7 +98,10 @@
                 <tr *ngFor="let c of catalogosFiltrados()">
                   <td>
                     <div class="celda-catalogo">
-                      <span class="miniatura" [style.background]="c.color_diseno"></span>
+                      <span class="portada" [style.background]="c.color_diseno">
+                        <span class="portada-inicial">{{ c.nombre.charAt(0) }}</span>
+                        <span class="portada-conteo" *ngIf="c.productos_count > 0">{{ c.productos_count }}</span>
+                      </span>
                       <div>
                         <div class="celda-nombre">{{ c.nombre }}</div>
                         <div class="celda-fecha">Actualizado {{ formatearFecha(c.actualizado_en) }}</div>
@@ -165,10 +168,16 @@
           </div>
 
           <ng-template #sinCatalogos>
-            <div class="estado-vacio">
-              <p *ngIf="busqueda()">No encontramos catálogos con ese nombre.</p>
-              <p *ngIf="!busqueda()">Todavía no tienes catálogos. Crea el primero con el botón de la derecha.</p>
+            <div class="estado-vacio" *ngIf="busqueda()">
+              <p>No encontramos catálogos con ese nombre.</p>
             </div>
+            <button class="estado-vacio-crear" *ngIf="!busqueda()" (click)="abrirModalCrear()">
+              <span class="estado-vacio-icono">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+              </span>
+              <span class="estado-vacio-titulo">Crea tu primer catálogo</span>
+              <span class="estado-vacio-descripcion">Ponle nombre y color, agrégale productos de tu inventario y compártelo con un enlace.</span>
+            </button>
           </ng-template>
         </ng-container>
       </div>
@@ -198,6 +207,21 @@
               <span class="opcion-descripcion">Próximamente: sube una imagen y la IA genera el diseño</span>
             </span>
           </button>
+
+          <div class="inicio-rapido">
+            <span class="inicio-rapido-label">O elige un color y arranca al toque</span>
+            <div class="inicio-rapido-fila">
+              <button
+                *ngFor="let color of coloresSugeridos"
+                type="button"
+                class="inicio-rapido-swatch"
+                [style.background]="color"
+                (click)="abrirModalCrearConColor(color)"
+                [attr.aria-label]="'Nuevo catálogo con color ' + color"
+                title="Nuevo catálogo con este color"
+              ></button>
+            </div>
+          </div>
         </div>
 
         <div class="card tip-card">

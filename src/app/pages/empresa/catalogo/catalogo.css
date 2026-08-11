@@ -133,7 +133,52 @@
 .tabla td { padding: 10px 8px; color: var(--text-primary); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
 .tabla tbody tr:last-child td { border-bottom: none; }
 
-.celda-catalogo { display: flex; align-items: center; gap: 10px; }
+.celda-catalogo { display: flex; align-items: center; gap: 12px; }
+
+/* Portada generativa: reemplaza el punto de color plano por una "tapa" de
+   catálogo en miniatura — inicial del nombre + conteo de productos. No
+   depende de fotos de producto (el SaaS es dinámico: zapatillas, ropa,
+   joyería, lo que venda cada empresa), así que la identidad visual de
+   cada catálogo sale de su propio nombre + color, no de una imagen fija. */
+.portada {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), var(--shadow-sm);
+  overflow: hidden;
+}
+.portada-inicial {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.portada-conteo {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 .miniatura { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: inline-block; }
 .miniatura-diseno { width: 40px; height: 28px; border-radius: 6px; }
 .celda-nombre { font-weight: 600; color: var(--text-primary); }
@@ -444,6 +489,55 @@
 
 .opcion-crear-deshabilitada { opacity: 0.5; cursor: not-allowed; }
 .opcion-crear-deshabilitada:hover { border-color: transparent; background: none; }
+
+/* ── Inicio rápido por color (panel lateral) ────────────────────────────── */
+.inicio-rapido { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.inicio-rapido-label { display: block; font-size: 11.5px; color: var(--text-tertiary); margin-bottom: 8px; }
+.inicio-rapido-fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.inicio-rapido-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+.inicio-rapido-swatch:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 0 2px var(--bg-surface), 0 0 0 3px var(--brand-mint);
+}
+
+/* ── Estado vacío: tile de crear (dashed, invita a la acción) ──────────── */
+.estado-vacio-crear {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 20px;
+  border: 1.5px dashed var(--border-default);
+  border-radius: var(--radius-input);
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--duration-base) var(--ease-standard), background var(--duration-base) var(--ease-standard);
+}
+.estado-vacio-crear:hover { border-color: var(--border-strong); background: var(--bg-surface-hover); }
+.estado-vacio-icono {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand-mint) 20%, var(--bg-surface));
+  color: var(--brand-deep);
+  margin-bottom: 4px;
+}
+.estado-vacio-titulo { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.estado-vacio-descripcion { font-size: 12px; color: var(--text-tertiary); max-width: 320px; line-height: 1.5; }
 
 /* ── Modal picker de productos ──────────────────────────────────────────── */
 .campo-buscar-picker { width: 100%; margin-bottom: 14px; }

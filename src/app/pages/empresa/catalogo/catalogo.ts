@@ -241,6 +241,16 @@ export class CatalogoComponent implements OnInit {
     this.modalFormAbierto.set(true);
   }
 
+  /** Igual que abrirModalCrear() pero con un color precargado — usado por
+   *  la tira de inicio rápido del panel lateral (mismos colores sugeridos
+   *  del formulario, solo que elegirlo ahí ya abre el modal listo). */
+  abrirModalCrearConColor(color: string): void {
+    this.catalogoEditando.set(null);
+    this.form.set({ nombre: '', color_diseno: color });
+    this.errorForm.set(null);
+    this.modalFormAbierto.set(true);
+  }
+
   abrirModalEditar(item: CatalogoRead): void {
     this.menuAbierto.set(null);
     this.catalogoEditando.set(item);
