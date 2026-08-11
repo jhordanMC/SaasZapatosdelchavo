@@ -278,8 +278,7 @@
   max-width: 380px;
   max-height: 88vh;
   background: var(--bg-surface-hover);
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* overflow-y/scrollbar los hereda de .modal-card en styles/components.css */
 }
 
 .modal-brand-bottom {

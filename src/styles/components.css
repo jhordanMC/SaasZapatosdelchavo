@@ -272,6 +272,24 @@
   border-radius: 24px;
   box-shadow: var(--shadow-lg);
   animation: modalCardIn 0.25s ease both;
+  /* Scrollbar delgado, pegado al borde derecho de la tarjeta, con los
+     mismos tokens de color que el resto de la UI (se adapta solo en
+     modo oscuro). Compartido por todos los modales de la app. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+.modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-card::-webkit-scrollbar-thumb {
+  background-color: var(--border-default);
+  border-radius: 10px;
+}
+.modal-card::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-secondary);
 }
 .modal-card-wide {
   max-width: 640px;
