@@ -293,7 +293,7 @@
         </div>
         <label class="picker-item" *ngFor="let p of productosPickerFiltrados()">
           <input type="checkbox" [checked]="estaSeleccionadoPicker(p.id_producto)" (change)="toggleProductoPicker(p.id_producto)" />
-          <span class="picker-item-imagen" [style.background-image]="p.imagen_url ? 'url(' + p.imagen_url + ')' : null"></span>
+          <span class="picker-item-imagen" [style.background-image]="imagenSrc(p.imagen_url) ? 'url(' + imagenSrc(p.imagen_url) + ')' : null"></span>
           <span class="picker-item-info">
             <span class="picker-item-nombre">{{ p.nombre }}</span>
             <span class="picker-item-meta">S/ {{ p.precio_venta | number:'1.2-2' }} · Stock: {{ p.stock_total }}</span>

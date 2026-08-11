@@ -1,0 +1,34 @@
+<div class="cp-page" [style.--color-marca]="catalogo()?.color_diseno ?? '#0f2b23'">
+
+  <div class="cp-estado" *ngIf="cargando()">Cargando catálogo…</div>
+
+  <div class="cp-estado cp-estado-error" *ngIf="!cargando() && noEncontrado()">
+    <h1>Catálogo no disponible</h1>
+    <p>Este enlace no existe o el catálogo ya no está publicado.</p>
+  </div>
+
+  <ng-container *ngIf="!cargando() && !noEncontrado() && catalogo()">
+    <header class="cp-header">
+      <h1>{{ catalogo()!.nombre }}</h1>
+    </header>
+
+    <main class="cp-grid" *ngIf="catalogo()!.productos.length > 0; else sinProductos">
+      <article class="cp-producto" *ngFor="let p of catalogo()!.productos">
+        <div class="cp-producto-imagen" [style.background-image]="imagenSrc(p) ? 'url(' + imagenSrc(p) + ')' : null">
+          <span class="cp-producto-imagen-placeholder" *ngIf="!imagenSrc(p)">Sin foto</span>
+        </div>
+        <div class="cp-producto-info">
+          <span class="cp-producto-nombre">{{ p.nombre }}</span>
+          <span class="cp-producto-precio">S/ {{ p.precio_venta | number:'1.2-2' }}</span>
+        </div>
+      </article>
+    </main>
+
+    <ng-template #sinProductos>
+      <div class="cp-estado">Este catálogo todavía no tiene productos.</div>
+    </ng-template>
+
+    <footer class="cp-footer">Powered by ALBA</footer>
+  </ng-container>
+
+</div>

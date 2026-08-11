@@ -23,6 +23,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import {
   CatalogoCreateInput,
   CatalogoProductoRead,
@@ -325,6 +326,14 @@ export class CatalogoComponent implements OnInit {
 
   estaSeleccionadoPicker(idProducto: string): boolean {
     return this.seleccionPicker().has(idProducto);
+  }
+
+  /** Arma la URL absoluta de una foto de producto (imagen_url del backend guarda solo la ruta relativa, ej. /uploads/...). */
+  imagenSrc(imagenUrl: string | null): string | null {
+    if (!imagenUrl) return null;
+    return imagenUrl.startsWith('data:') || imagenUrl.startsWith('http')
+      ? imagenUrl
+      : `${environment.apiUrl}${imagenUrl}`;
   }
 
   toggleProductoPicker(idProducto: string): void {

@@ -27,6 +27,7 @@ import { FinanzasComponent } from './pages/empresa/finanzas/finanzas';
 import { AnaliticaComponent } from './pages/empresa/analitica/analitica';
 import { IntegracionesComponent } from './pages/empresa/integraciones/integraciones';
 import { NotFoundComponent } from './pages/not-found/not-found';
+import { CatalogoPublicoComponent } from './pages/public/catalogo-publico/catalogo-publico';
 import { AccesoRestringidoComponent } from './pages/acceso-restringido/acceso-restringido';
 import { roleGuard, redirigirSiAutenticado, vistaGuard, resolverPrimeraVista } from './core/auth.guard';
 
@@ -180,6 +181,10 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // ── Catálogo público (/c/<slug>) — sin login, sin layout de marketing:
+  // es la vitrina de productos de la empresa, coincide con settings.PUBLIC_CATALOGO_BASE_URL del backend.
+  { path: 'c/:slug', component: CatalogoPublicoComponent },
 
   // ⚠️ debe ir siempre al final: un wildcard antes se comería el resto de rutas
   { path: '**', component: NotFoundComponent },
