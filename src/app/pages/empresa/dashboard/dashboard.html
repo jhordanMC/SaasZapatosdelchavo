@@ -274,51 +274,62 @@
   <div class="top5-grid">
     <div class="panel">
       <h3 class="titulo-con-icono">Tus productos más importantes</h3>
-      <p class="panel-sub">Tus productos y categorías con mejor desempeño.</p>
 
-      <h4 class="subtitulo-categorias">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        Tus 5 productos más vendidos
-      </h4>
-      <p class="panel-sub">Según la cantidad vendida · {{ etiquetaPeriodoActual }}.</p>
-      <div class="chart-productos" *ngIf="top5MasVendidos.length > 0">
-        <div class="chart-productos-fila" [attr.data-tooltip]="f.nombre + ': ' + f.unidades_periodo + ' und · ' + f.velocidad_diaria.toFixed(1) + '/día'" *ngFor="let f of top5MasVendidos">
-          <span class="chart-productos-nombre" [title]="f.nombre">{{ f.nombre }}</span>
-          <div class="chart-productos-track">
-            <div class="chart-productos-fill" [style.width.%]="Math.max(14, (f.unidades_periodo / maxUnidadesTop5) * 100)">
-              <span class="chart-productos-fill-texto">{{ f.unidades_periodo }} und · {{ f.velocidad_diaria.toFixed(1) }}/día</span>
+      <div class="subseccion-caja">
+        <div class="subseccion-header">
+          <div class="subseccion-icono">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          </div>
+          <div>
+            <h4 class="subseccion-titulo">Tus 5 productos más vendidos</h4>
+            <p class="subseccion-sub">Según la cantidad vendida · {{ etiquetaPeriodoActual }}.</p>
+          </div>
+        </div>
+        <div class="chart-productos" *ngIf="top5MasVendidos.length > 0">
+          <div class="chart-productos-fila" [attr.data-tooltip]="f.nombre + ': ' + f.unidades_periodo + ' und · ' + f.velocidad_diaria.toFixed(1) + '/día'" *ngFor="let f of top5MasVendidos">
+            <span class="chart-productos-nombre" [title]="f.nombre">{{ f.nombre }}</span>
+            <div class="chart-productos-track">
+              <div class="chart-productos-fill" [style.width.%]="Math.max(14, (f.unidades_periodo / maxUnidadesTop5) * 100)">
+                <span class="chart-productos-fill-texto">{{ f.unidades_periodo }} und · {{ f.velocidad_diaria.toFixed(1) }}/día</span>
+              </div>
             </div>
           </div>
         </div>
+        <p class="tabla-vacia" *ngIf="top5MasVendidos.length === 0">Todavía no hay ventas suficientes.</p>
       </div>
-      <p class="tabla-vacia" *ngIf="top5MasVendidos.length === 0">Todavía no hay ventas suficientes.</p>
 
-      <h4 class="subtitulo-categorias">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
-        Categorías más vendidas <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto.">como sustituto de marca</span>
-      </h4>
-      <p class="panel-sub">Según la cantidad vendida.</p>
-      <div class="piramide-skeleton" *ngIf="cargandoTopCategorias()">
-        <div class="skeleton-bar" *ngFor="let n of [1,2,3]"></div>
-      </div>
-      <ng-container *ngIf="!cargandoTopCategorias()">
-        <div class="piramide" *ngIf="topCategorias().length > 0">
-          <div
-            class="piramide-fila"
-            [attr.data-tooltip]="c.nombre + ': ' + c.unidades + ' und · S/' + c.ingresos.toFixed(2)"
-            *ngFor="let c of topCategorias(); let i = index"
-          >
-            <div class="piramide-barra" [style.width.%]="Math.max(28, (c.ingresos / maxIngresosCategoria) * 100)">
-              <span class="piramide-rank">#{{ i + 1 }}</span>
-            </div>
-            <span class="piramide-nombre" [title]="c.nombre">{{ c.nombre }}</span>
+      <div class="subseccion-caja">
+        <div class="subseccion-header">
+          <div class="subseccion-icono">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+          </div>
+          <div>
+            <h4 class="subseccion-titulo">Categorías más vendidas <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto.">como sustituto de marca</span></h4>
+            <p class="subseccion-sub">Según la cantidad vendida.</p>
           </div>
         </div>
-        <p class="tabla-vacia" *ngIf="topCategorias().length === 0">Todavía no hay ventas suficientes.</p>
-      </ng-container>
+        <div class="piramide-skeleton" *ngIf="cargandoTopCategorias()">
+          <div class="skeleton-bar" *ngFor="let n of [1,2,3]"></div>
+        </div>
+        <ng-container *ngIf="!cargandoTopCategorias()">
+          <div class="piramide" *ngIf="topCategorias().length > 0">
+            <div
+              class="piramide-fila"
+              [attr.data-tooltip]="c.nombre + ': ' + c.unidades + ' und · S/' + c.ingresos.toFixed(2)"
+              *ngFor="let c of topCategorias(); let i = index"
+            >
+              <div class="piramide-barra" [style.width.%]="Math.max(28, (c.ingresos / maxIngresosCategoria) * 100)">
+                <span class="piramide-rank">#{{ i + 1 }}</span>
+              </div>
+              <span class="piramide-nombre" [title]="c.nombre">{{ c.nombre }}</span>
+            </div>
+          </div>
+          <p class="tabla-vacia" *ngIf="topCategorias().length === 0">Todavía no hay ventas suficientes.</p>
+        </ng-container>
+      </div>
     </div>
 
-    <div class="panel">
+    <div class="panel panel-atencion">
       <h3 class="titulo-con-icono">Productos que necesitan tu atención</h3>
 
       <h4 class="subtitulo-categorias">

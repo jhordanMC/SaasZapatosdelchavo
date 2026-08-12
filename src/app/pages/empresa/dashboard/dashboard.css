@@ -204,6 +204,13 @@
 }
 .panel:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 .panel h3 { margin: 0 0 4px; font-size: 14.5px; font-weight: 700; color: var(--text-primary); font-family: var(--font-sans); }
+
+/* Solo el panel "Productos que necesitan tu atención": cuando no hay datos,
+   el mensaje se centra en el espacio libre en vez de quedar pegado arriba
+   con un vacío enorme debajo (el grid estira esta columna a la altura de
+   la de al lado, que suele tener más contenido). */
+.panel-atencion { display: flex; flex-direction: column; }
+.panel-atencion .tabla-vacia { flex: 1; display: flex; align-items: center; justify-content: center; }
 .titulo-con-icono { display: flex; align-items: center; gap: 8px; color: var(--brand-deep); }
 .panel-sub { margin: 0 0 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 .titulo-seccion { margin: 4px 0 -6px; font-size: 14px; font-weight: 700; color: var(--text-primary); font-family: var(--font-sans); }
@@ -349,6 +356,30 @@
   color: var(--text-primary);
   margin: 20px 0 8px;
 }
+
+/* ── Subsecciones en caja propia con ícono circular — "Tus productos más importantes" ── */
+.subseccion-caja {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
+  margin-top: 14px;
+}
+.subseccion-caja:first-of-type { margin-top: 12px; }
+.subseccion-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.subseccion-icono {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.subseccion-titulo { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.subseccion-sub { margin: 2px 0 0; font-size: 11.5px; color: var(--text-secondary); }
+.subseccion-caja .tabla-vacia { padding: 10px 0 2px; }
 .badge-ejemplo {
   display: inline-block;
   margin-left: 4px;
