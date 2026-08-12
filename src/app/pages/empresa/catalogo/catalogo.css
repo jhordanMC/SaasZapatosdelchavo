@@ -495,10 +495,10 @@
 /* ── Portada (modal editar) ─────────────────────────────────────────────── */
 .portada-picker { display: flex; align-items: center; gap: 12px; }
 .portada-preview {
-  width: 76px;
-  height: 76px;
+  width: 68px;
+  height: 68px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 50%;
   border: 1.5px dashed var(--border-default);
   background-color: var(--bg-canvas);
   background-size: cover;
