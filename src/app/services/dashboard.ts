@@ -75,6 +75,13 @@ export interface PuntoMes {
   ingresos: number;
 }
 
+/** Ingresos y ganancia real (costo real, no margen promedio) de una semana ISO. */
+export interface PuntoVentaGanancia {
+  etiqueta: string;
+  ingresos: number;
+  ganancia_neta: number;
+}
+
 export interface TopCategoria {
   nombre: string;
   unidades: number;
@@ -201,6 +208,16 @@ export class DashboardService {
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
     return this.http.get<TopCategoria[]>(`${this.base}/top-categorias`, { params });
+  }
+
+  /**
+   * Ganancia real (no estimada) por semana ISO dentro de [desde, hasta] —
+   * reemplaza el cálculo de `gananciaEstimada` que antes hacía el componente
+   * a mano (ingresos_semana × margen_promedio_del_período).
+   */
+  obtenerVentasGananciaPorPeriodo(desde: string, hasta: string): Observable<PuntoVentaGanancia[]> {
+    const params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    return this.http.get<PuntoVentaGanancia[]>(`${this.base}/ventas-ganancia-por-periodo`, { params });
   }
 
   /**

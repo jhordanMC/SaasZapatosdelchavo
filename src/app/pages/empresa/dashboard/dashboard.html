@@ -43,49 +43,52 @@
     </div>
   </div>
 
-  <!-- ═══════════════ HERO: GANANCIA NETA REAL ═══════════════ -->
-  <div class="cuadro-rentabilidad-plano cuadro-rentabilidad-skeleton" *ngIf="avanceCargando()">
-    <div class="skeleton-linea skeleton-linea-badge"></div>
-    <div class="skeleton-linea skeleton-linea-valor"></div>
-    <div class="skeleton-linea skeleton-linea-sub"></div>
-    <div class="skeleton-linea skeleton-linea-termometro"></div>
-  </div>
-  <div class="cuadro-rentabilidad-plano" [class.es-rentable]="a.esta_generando_ganancia" [class.no-rentable]="!a.esta_generando_ganancia" *ngIf="!avanceCargando() && avanceResumen() as a">
-    <div class="cuadro-header">
-      <span class="cuadro-badge">{{ a.esta_generando_ganancia ? 'ESTADO: RENTABLE' : 'ESTADO: EN PÉRDIDA O RECUPERACIÓN' }}</span>
-      <span class="hero-label">Ganancia neta real (lo que de verdad te queda)</span>
+  <!-- ═══════════════ HERO: GANANCIA NETA REAL + KPIs, EN UNA SOLA FILA ═══════════════ -->
+  <div class="hero-grid">
+    <div class="cuadro-rentabilidad-plano cuadro-rentabilidad-skeleton" *ngIf="avanceCargando()">
+      <div class="skeleton-linea skeleton-linea-badge"></div>
+      <div class="skeleton-linea skeleton-linea-valor"></div>
+      <div class="skeleton-linea skeleton-linea-sub"></div>
+      <div class="skeleton-linea skeleton-linea-termometro"></div>
     </div>
-    <p class="hero-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</p>
-    <p class="hero-sub">De S/{{ a.ingresos_periodo.toFixed(2) }} vendidos en {{ a.cantidad_ventas }} venta(s)</p>
-
-    <!-- Termómetro de margen: el elemento firma de este dashboard -->
-    <div class="termometro">
-      <div class="termometro-track">
-        <div class="termometro-zona termometro-zona-roja"></div>
-        <div class="termometro-zona termometro-zona-ambar"></div>
-        <div class="termometro-zona termometro-zona-verde"></div>
-        <div class="termometro-puntero" [style.left.%]="Math.max(2, Math.min(98, a.margen_promedio_pct * 2))"></div>
+    <div class="cuadro-rentabilidad-plano" [class.es-rentable]="a.esta_generando_ganancia" [class.no-rentable]="!a.esta_generando_ganancia" *ngIf="!avanceCargando() && avanceResumen() as a">
+      <div class="cuadro-header">
+        <div class="cuadro-titulo-fila">
+          <span class="cuadro-titulo">Estado de tu negocio</span>
+          <span class="cuadro-badge">{{ a.esta_generando_ganancia ? 'Rentable' : 'En pérdida' }}</span>
+        </div>
+        <span class="hero-label">Ganancia real</span>
       </div>
-      <div class="termometro-leyenda">
-        <span>0%</span>
-        <span class="termometro-estado" [ngClass]="a.margen_promedio_pct < 10 ? 'termometro-estado-rojo' : a.margen_promedio_pct < 20 ? 'termometro-estado-ambar' : 'termometro-estado-verde'">
-          {{ a.margen_promedio_pct < 10 ? 'Margen muy bajo' : a.margen_promedio_pct < 20 ? 'Margen ajustado' : 'Vas bien' }}
-          · {{ a.margen_promedio_pct.toFixed(0) }}% de margen
-        </span>
-        <span>50%+</span>
+      <p class="hero-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</p>
+      <p class="hero-sub">Lo que te queda después de todos tus costos.</p>
+
+      <!-- Termómetro de margen: el elemento firma de este dashboard -->
+      <div class="termometro">
+        <div class="termometro-track">
+          <div class="termometro-zona termometro-zona-roja"></div>
+          <div class="termometro-zona termometro-zona-ambar"></div>
+          <div class="termometro-zona termometro-zona-verde"></div>
+          <div class="termometro-puntero" [style.left.%]="Math.max(2, Math.min(98, a.margen_promedio_pct * 2))"></div>
+        </div>
+        <div class="termometro-leyenda">
+          <span>0%</span>
+          <span class="termometro-estado" [ngClass]="a.margen_promedio_pct < 10 ? 'termometro-estado-rojo' : a.margen_promedio_pct < 20 ? 'termometro-estado-ambar' : 'termometro-estado-verde'">
+            Margen actual: {{ a.margen_promedio_pct.toFixed(0) }}% · {{ a.margen_promedio_pct < 10 ? 'Necesita atención' : a.margen_promedio_pct < 20 ? 'Margen ajustado' : 'Vas bien' }}
+          </span>
+          <span>50%+</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="kpi-fila-4">
+    <div class="kpi-fila-4">
     <div class="kpi-hero-card">
       <div class="kpi-hero-icono kpi-hero-icono-verde">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </div>
       <span class="skeleton-linea skeleton-linea-kpi" *ngIf="avanceCargando()"></span>
       <span class="kpi-hero-valor" *ngIf="!avanceCargando() && avanceResumen() as a">S/{{ a.ingresos_periodo.toFixed(2) }}</span>
-      <span class="kpi-hero-label">Ventas totales</span>
-      <span class="kpi-hero-nota" *ngIf="!avanceCargando() && avanceResumen() as a">{{ a.cantidad_ventas }} venta(s)</span>
+      <span class="kpi-hero-label">Total vendido</span>
+      <span class="kpi-hero-nota" *ngIf="!avanceCargando() && avanceResumen() as a">{{ a.cantidad_ventas }} venta(s) · En este período</span>
     </div>
     <div class="kpi-hero-card">
       <div class="kpi-hero-icono kpi-hero-icono-dorado">
@@ -94,23 +97,24 @@
       <span class="skeleton-linea skeleton-linea-kpi" *ngIf="avanceCargando()"></span>
       <span class="kpi-hero-valor" *ngIf="!avanceCargando() && avanceResumen() as a">S/{{ a.ticket_promedio.toFixed(2) }}</span>
       <span class="kpi-hero-label">Venta promedio</span>
-      <span class="kpi-hero-nota">Por cada venta</span>
+      <span class="kpi-hero-nota">Por cada venta · En este período</span>
     </div>
     <div class="kpi-hero-card">
       <div class="kpi-hero-icono kpi-hero-icono-rojo">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
       </div>
       <span class="kpi-hero-valor">S/{{ valorInventario.toFixed(0) }}</span>
-      <span class="kpi-hero-label">Capital inmovilizado en stock</span>
-      <span class="kpi-hero-nota">Valorizado al costo — plata parada en zapatos</span>
+      <span class="kpi-hero-label">Dinero invertido en productos</span>
+      <span class="kpi-hero-nota">Valor de tus productos en stock</span>
     </div>
     <div class="kpi-hero-card" [class.kpi-hero-alerta]="productosEnRiesgoMerma > 0">
       <div class="kpi-hero-icono kpi-hero-icono-ambar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </div>
       <span class="kpi-hero-valor">{{ productosEnRiesgoMerma }}</span>
-      <span class="kpi-hero-label">Productos en riesgo de merma</span>
-      <span class="kpi-hero-nota">Sin movimiento — revisa la sección de rotación</span>
+      <span class="kpi-hero-label">Productos sin ventas recientes</span>
+      <span class="kpi-hero-nota">Productos que llevan tiempo sin venderse</span>
+    </div>
     </div>
   </div>
 
@@ -158,29 +162,29 @@
   <!-- ═══════════════ GRÁFICOS ═══════════════ -->
   <div class="graficos-grid">
     <div class="panel panel-grafico">
-      <h3>Evolución de ventas vs. ganancia real</h3>
-      <p class="panel-sub">Ingresos reales por semana. La ganancia es una <strong>estimación</strong> (ingresos × tu margen promedio del período filtrado arriba) — el sistema todavía no calcula la ganancia exacta semana por semana.</p>
+      <h3>Ventas y ganancias</h3>
+      <p class="panel-sub">Ingresos y ganancia real por semana (mismo criterio de costo real que Finanzas).</p>
 
-      <div class="evolucion-chart" *ngIf="evolucion.length > 0">
-        <div class="evolucion-col" *ngFor="let p of evolucion">
+      <div class="evolucion-chart" *ngIf="ventasGanancia().length > 0">
+        <div class="evolucion-col" *ngFor="let p of ventasGanancia()">
           <div class="evolucion-barras">
             <div class="evolucion-barra-ingreso" [style.height.%]="(p.ingresos / maxIngresoEvolucion) * 100" [attr.data-tooltip]="'Ingresos: S/' + p.ingresos.toFixed(2)"></div>
-            <div class="evolucion-barra-ganancia" [style.height.%]="(p.gananciaEstimada / maxIngresoEvolucion) * 100" [attr.data-tooltip]="'Ganancia estimada: S/' + p.gananciaEstimada.toFixed(2)"></div>
+            <div class="evolucion-barra-ganancia" [style.height.%]="(p.ganancia_neta / maxIngresoEvolucion) * 100" [attr.data-tooltip]="'Ganancia real: S/' + p.ganancia_neta.toFixed(2)"></div>
           </div>
           <span class="evolucion-label">{{ p.etiqueta }}</span>
         </div>
       </div>
-      <p class="tabla-vacia" *ngIf="evolucion.length === 0">Todavía no hay suficientes semanas con ventas.</p>
+      <p class="tabla-vacia" *ngIf="!cargandoVentasGanancia() && ventasGanancia().length === 0">Todavía no hay suficientes semanas con ventas.</p>
 
       <div class="evolucion-leyenda">
-        <span><span class="leyenda-punto" style="background:var(--brand-primary)"></span> Ingresos</span>
-        <span><span class="leyenda-punto" style="background:var(--brand-gold)"></span> Ganancia estimada</span>
+        <span><span class="leyenda-punto" style="background:var(--brand-primary)"></span> Ventas</span>
+        <span><span class="leyenda-punto" style="background:var(--brand-gold)"></span> Ganancia real</span>
       </div>
     </div>
 
     <div class="panel panel-grafico">
-      <h3>Métodos de pago</h3>
-      <p class="panel-sub">Cómo te están pagando, por monto cobrado en este período.</p>
+      <h3>Cómo te están pagando</h3>
+      <p class="panel-sub">Resumen de los pagos registrados en este período.</p>
       <div class="bar-list" *ngIf="metodosPago().length > 0">
         <div class="bar-list-row" *ngFor="let m of metodosPago()">
           <span class="bar-list-label">{{ etiquetaMetodoPago(m.metodo) }}</span>
@@ -193,7 +197,7 @@
   </div>
 
   <!-- ═══════════════ ALERTAS INTELIGENTES ═══════════════ -->
-  <h3 class="titulo-seccion">Alertas de hoy</h3>
+  <h3 class="titulo-seccion">Lo que debes revisar hoy</h3>
   <div class="alertas-grid">
     <div class="alerta alerta-roja">
       <div class="alerta-head">
@@ -217,7 +221,7 @@
     <div class="alerta alerta-ambar">
       <div class="alerta-head">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Capital atrapado</span>
+        <span>Dinero en productos sin vender</span>
       </div>
       <div class="alerta-cuerpo" *ngIf="capitalAtrapado.cantidad > 0; else sinCapitalAtrapado">
         <strong>{{ capitalAtrapado.cantidad }} modelo(s)</strong> llevan 30 días o más sin venderse
@@ -230,7 +234,7 @@
     <div class="alerta alerta-verde">
       <div class="alerta-head">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.2 1 2.05V17h6v-2.25c0-.85.4-1.64 1-2.05A7 7 0 0 0 12 2Z"/></svg>
-        <span>Sugerencia de reabastecimiento</span>
+        <span>Productos por reponer</span>
       </div>
       <div class="alerta-cuerpo" *ngIf="sugerenciaReabastecimiento.length > 0; else sinSugerencia">
         El/los producto(s)
@@ -248,11 +252,14 @@
   <!-- ═══════════════ TOP 5 ═══════════════ -->
   <div class="top5-grid">
     <div class="panel">
-      <h3 class="titulo-con-icono">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        Top 5 modelos más vendidos
-      </h3>
-      <p class="panel-sub">{{ etiquetaPeriodoActual }}, con su velocidad de venta.</p>
+      <h3 class="titulo-con-icono">Tus productos más importantes</h3>
+      <p class="panel-sub">Tus productos y categorías con mejor desempeño.</p>
+
+      <h4 class="subtitulo-categorias">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        Tus 5 productos más vendidos
+      </h4>
+      <p class="panel-sub">Según la cantidad vendida · {{ etiquetaPeriodoActual }}.</p>
       <div class="chart-productos" *ngIf="top5MasVendidos.length > 0">
         <div class="chart-productos-fila" [attr.data-tooltip]="f.nombre + ': ' + f.unidades_periodo + ' und · ' + f.velocidad_diaria.toFixed(1) + '/día'" *ngFor="let f of top5MasVendidos">
           <span class="chart-productos-nombre" [title]="f.nombre">{{ f.nombre }}</span>
@@ -267,8 +274,9 @@
 
       <h4 class="subtitulo-categorias">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
-        Top categorías <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto.">como sustituto de marca</span>
+        Categorías más vendidas <span class="badge-ejemplo" title="El catálogo no tiene un campo de 'marca'; se agrupa por categoría del producto.">como sustituto de marca</span>
       </h4>
+      <p class="panel-sub">Según la cantidad vendida.</p>
       <div class="piramide-skeleton" *ngIf="cargandoTopCategorias()">
         <div class="skeleton-bar" *ngFor="let n of [1,2,3]"></div>
       </div>
@@ -290,11 +298,13 @@
     </div>
 
     <div class="panel">
-      <h3 class="titulo-con-icono">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
-        Top 5 en riesgo de merma
-      </h3>
-      <p class="panel-sub">Sin movimiento {{ etiquetaPeriodoActual }} — capital parado.</p>
+      <h3 class="titulo-con-icono">Productos que necesitan tu atención</h3>
+
+      <h4 class="subtitulo-categorias">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+        5 productos que llevan más tiempo sin venderse
+      </h4>
+      <p class="panel-sub">Revisa estos productos para tomar acción.</p>
       <div class="chart-productos" *ngIf="top5RiesgoMerma.length > 0">
         <div class="chart-productos-fila" [attr.data-tooltip]="f.nombre + ': ' + f.stock_actual + ' en stock · ' + (f.estado === 'sin-movimiento' ? 'sin ventas' : 'rotación lenta')" *ngFor="let f of top5RiesgoMerma">
           <span class="chart-productos-nombre" [title]="f.nombre">{{ f.nombre }}</span>
@@ -311,8 +321,8 @@
 
   <!-- ═══════════════ GASTOS OPERATIVOS DE MAYOR IMPACTO ═══════════════ -->
   <div class="panel" *ngIf="gastosPorTipo.length > 0">
-    <h3>Gastos operativos de mayor impacto</h3>
-    <p class="panel-sub">Mensualizados, de mayor a menor peso en tu costo fijo.</p>
+    <h3>Gastos que más dinero consumen</h3>
+    <p class="panel-sub">Estos son los gastos que más afectan tus ganancias.</p>
     <div class="bar-list">
       <div class="bar-list-row" [attr.data-tooltip]="g.tipo + ': S/' + g.montoMensual.toFixed(2) + ' (' + g.pct.toFixed(0) + '%)'" *ngFor="let g of gastosPorTipo">
         <span class="bar-list-label">{{ g.tipo }}</span>
@@ -323,4 +333,3 @@
   </div>
 
 </div>
-

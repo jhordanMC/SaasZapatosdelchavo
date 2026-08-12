@@ -1,8 +1,8 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService, FilaRotacion, TopCategoria } from '../../../services/dashboard';
-import { FinanzasService, GastoRecurrenteRead, PuntoSemana, ResumenFinanciero, VentasPorMetodoPago } from '../../../services/finanzas';
+import { DashboardService, FilaRotacion, PuntoVentaGanancia, TopCategoria } from '../../../services/dashboard';
+import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero, VentasPorMetodoPago } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
 import { ETIQUETAS_TIPO_DEVOLUCION, MetodoPago, ResumenDevolucionesDashboard, TipoDevolucion, VentasService } from '../../../services/ventas';
 
@@ -22,12 +22,6 @@ interface FilaGasto {
   tipo: string;
   montoMensual: number;
   pct: number;
-}
-
-interface PuntoEvolucion {
-  etiqueta: string;
-  ingresos: number;
-  gananciaEstimada: number;
 }
 
 interface TallaRota {
@@ -214,6 +208,7 @@ export class EmpresaDashboardComponent implements OnInit {
       next: (lista) => this.metodosPago.set(lista),
       error: () => this.metodosPago.set([]),
     });
+    this.cargarVentasGanancia();
   }
 
   private cargarTopCategorias(): void {
@@ -252,24 +247,30 @@ export class EmpresaDashboardComponent implements OnInit {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Evolución de ventas vs. ganancia real (últimas semanas)
+  // Ventas vs. ganancia real por semana (ya no es estimación:
+  // GET /dashboard/ventas-ganancia-por-periodo calcula costo real por
+  // semana, mismo criterio que FinanzasService.calcular_kpis_financieros).
   // ═══════════════════════════════════════════════════════════
-  // El backend expone ingresos reales por semana, pero no un desglose de
-  // ganancia por semana — así que la ganancia de cada punto es una
-  // ESTIMACIÓN: ingresos de esa semana × tu margen promedio del período
-  // filtrado arriba. Se muestra clarísimo en el HTML que es estimado.
 
-  get evolucion(): PuntoEvolucion[] {
-    const margenFrac = (this.avanceResumen()?.margen_promedio_pct ?? 0) / 100;
-    return this.finanzasService.ingresosPorSemana().map((p: PuntoSemana) => ({
-      etiqueta: p.etiqueta,
-      ingresos: p.total,
-      gananciaEstimada: Math.max(0, p.total * margenFrac),
-    }));
+  ventasGanancia = signal<PuntoVentaGanancia[]>([]);
+  cargandoVentasGanancia = signal(false);
+
+  private cargarVentasGanancia(): void {
+    this.cargandoVentasGanancia.set(true);
+    this.dashboardService.obtenerVentasGananciaPorPeriodo(this.avanceDesde, this.avanceHasta).subscribe({
+      next: (lista) => {
+        this.ventasGanancia.set(lista);
+        this.cargandoVentasGanancia.set(false);
+      },
+      error: () => {
+        this.ventasGanancia.set([]);
+        this.cargandoVentasGanancia.set(false);
+      },
+    });
   }
 
   get maxIngresoEvolucion(): number {
-    return Math.max(1, ...this.evolucion.map((p) => p.ingresos));
+    return Math.max(1, ...this.ventasGanancia().map((p) => p.ingresos));
   }
 
   // ═══════════════════════════════════════════════════════════
