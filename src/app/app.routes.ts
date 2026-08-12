@@ -16,6 +16,7 @@ import { Suscripciones } from './pages/admin/suscripciones/suscripciones';
 import { ActividadComponent } from './pages/admin/actividad/actividad';
 import { Anuncios } from './pages/admin/anuncios/anuncios';
 import { TicketsAdminComponent } from './pages/admin/tickets/tickets';
+import { ReclamacionesAdminComponent } from './pages/admin/reclamaciones/reclamaciones';
 import { EmpresaLayoutComponent } from './shared/empresa-layout/empresa-layout';
 import { EmpresaDashboardComponent } from './pages/empresa/dashboard/dashboard';
 import { InventarioComponent } from './pages/empresa/inventario/inventario';
@@ -103,6 +104,11 @@ export const routes: Routes = [
         component: TicketsAdminComponent,
         data: { title: 'Tickets', subtitle: 'Tickets reportados por las empresas, incluidos los de Cirobot' },
         // Sin vistaGuard a propósito: roleGuard('admin') del layout ya alcanza (ver admin-layout.ts).
+      },
+      {
+        path: 'reclamaciones',
+        component: ReclamacionesAdminComponent,
+        data: { title: 'Reclamaciones', subtitle: 'Libro de reclamaciones — reclamos y quejas registrados' },
       },
     ],
   },

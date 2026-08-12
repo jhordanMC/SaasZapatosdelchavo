@@ -1,0 +1,128 @@
+<div class="content">
+
+  <!-- ═══════════════ FILTROS ═══════════════ -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.activo]="filtroEstado() === null" (click)="filtrarPor(null)">Todos</button>
+    <button
+      class="tab-btn"
+      *ngFor="let e of ESTADOS"
+      [class.activo]="filtroEstado() === e"
+      (click)="filtrarPor(e)"
+    >{{ ETIQUETAS_ESTADO[e] }}</button>
+  </div>
+
+  <!-- ═══════════════ TABLA ═══════════════ -->
+  <div class="data-table-card">
+    <div class="estado-carga" *ngIf="cargando()">
+      <span class="spinner"></span> Cargando reclamaciones…
+    </div>
+    <p class="error-msg" *ngIf="error()">{{ error() }}</p>
+
+    <div class="table-wrap" *ngIf="!cargando() && reclamaciones().length > 0">
+      <div class="table-head">
+        <span>Correlativo</span>
+        <span>Nombre</span>
+        <span>Tipo</span>
+        <span>Contacto</span>
+        <span>Estado</span>
+        <span>Fecha</span>
+      </div>
+      <div class="table-row" *ngFor="let r of reclamaciones()" (click)="abrirDetalle(r)">
+        <span class="celda-correlativo">{{ r.numero_correlativo }}</span>
+        <span>{{ r.nombre }}</span>
+        <span>
+          <span class="tipo-pill" [class.tipo-reclamo]="r.tipo === 'reclamo'" [class.tipo-queja]="r.tipo === 'queja'">
+            {{ r.tipo === 'reclamo' ? 'Reclamo' : 'Queja' }}
+          </span>
+        </span>
+        <span class="celda-contacto">
+          <span *ngIf="r.correo">{{ r.correo }}</span>
+          <span *ngIf="r.telefono" class="contacto-tel">{{ r.telefono }}</span>
+        </span>
+        <span>
+          <span class="status-pill" [style.background]="colorEstado(r.estado) + '22'" [style.color]="colorEstado(r.estado)">
+            {{ etiquetaEstado(r.estado) }}
+          </span>
+        </span>
+        <span>{{ formatFecha(r.creado_en) }}</span>
+      </div>
+    </div>
+
+    <p class="tabla-vacia" *ngIf="!cargando() && reclamaciones().length === 0">No hay reclamaciones con este filtro.</p>
+  </div>
+
+  <!-- ═══════════════ PANEL LATERAL DE DETALLE ═══════════════ -->
+  <div class="modal-overlay" *ngIf="seleccionada()" (click)="cerrarDetalle()">
+    <div class="modal-card modal-card-wide" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="cerrarDetalle()" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <ng-container *ngIf="seleccionada() as r">
+        <div class="detalle-header">
+          <span class="detalle-correlativo">{{ r.numero_correlativo }}</span>
+          <span class="tipo-pill" [class.tipo-reclamo]="r.tipo === 'reclamo'" [class.tipo-queja]="r.tipo === 'queja'">
+            {{ r.tipo === 'reclamo' ? 'Reclamo' : 'Queja' }}
+          </span>
+        </div>
+
+        <div class="detalle-seccion">
+          <span class="detalle-seccion-titulo">1. Datos del consumidor</span>
+          <div class="detalle-grid">
+            <div class="detalle-campo"><span class="campo-label">Nombre</span><span>{{ r.nombre }}</span></div>
+            <div class="detalle-campo"><span class="campo-label">Documento</span><span>{{ r.tipo_documento }} {{ r.numero_documento }}</span></div>
+            <div class="detalle-campo" *ngIf="r.correo"><span class="campo-label">Correo</span><span>{{ r.correo }}</span></div>
+            <div class="detalle-campo" *ngIf="r.telefono"><span class="campo-label">Teléfono</span><span>{{ r.telefono }}</span></div>
+            <div class="detalle-campo" *ngIf="r.domicilio"><span class="campo-label">Domicilio</span><span>{{ r.domicilio }}</span></div>
+          </div>
+        </div>
+
+        <div class="detalle-seccion">
+          <span class="detalle-seccion-titulo">2. Bien contratado</span>
+          <div class="detalle-grid">
+            <div class="detalle-campo"><span class="campo-label">Tipo</span><span>{{ r.tipo_bien }}</span></div>
+            <div class="detalle-campo" *ngIf="r.monto_reclamado"><span class="campo-label">Monto reclamado</span><span>{{ r.monto_reclamado }}</span></div>
+            <div class="detalle-campo detalle-campo-full" *ngIf="r.descripcion_bien"><span class="campo-label">Descripción</span><span>{{ r.descripcion_bien }}</span></div>
+          </div>
+        </div>
+
+        <div class="detalle-seccion">
+          <span class="detalle-seccion-titulo">3. Detalle del {{ r.tipo }}</span>
+          <p class="detalle-texto">{{ r.detalle }}</p>
+          <p class="detalle-texto detalle-pedido" *ngIf="r.pedido"><strong>Pedido:</strong> {{ r.pedido }}</p>
+        </div>
+
+        <!-- Gestión admin -->
+        <div class="detalle-seccion detalle-gestion">
+          <span class="detalle-seccion-titulo">Gestión interna</span>
+
+          <div class="gestion-row">
+            <label class="campo-label">Estado</label>
+            <select [(ngModel)]="nuevoEstado" class="form-select-inline">
+              <option *ngFor="let e of ESTADOS" [value]="e">{{ ETIQUETAS_ESTADO[e] }}</option>
+            </select>
+          </div>
+
+          <div class="gestion-row">
+            <label class="campo-label">Notas internas (no visibles al ciudadano)</label>
+            <textarea [(ngModel)]="notasInternas" rows="3" class="form-textarea-inline" placeholder="Anota el seguimiento o respuesta interna…"></textarea>
+          </div>
+
+          <div class="gestion-actions">
+            <button class="btn-primary" [disabled]="guardandoEstado()" (click)="guardarEstado()">
+              {{ guardandoEstado() ? 'Guardando…' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="detalle-footer">
+          <span>Registrado: {{ formatFecha(r.creado_en) }}</span>
+          <span *ngIf="r.actualizado_en !== r.creado_en">Actualizado: {{ formatFecha(r.actualizado_en) }}</span>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+</div>

@@ -67,6 +67,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       // todo el staff de ALBA, sin gate de vistaGuard: el layout admin ya
       // exige roleGuard('admin'), no hace falta un permiso más fino todavía.
       base.push({ label: 'Tickets', route: '/admin/tickets', icon: 'tickets' });
+      base.push({ label: 'Reclamaciones', route: '/admin/reclamaciones', icon: 'reclamaciones' });
       base.push({ label: 'Configuración', href: '#', icon: 'config' });
       return base;
     });

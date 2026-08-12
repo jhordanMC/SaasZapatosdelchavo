@@ -1,6 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal-on-scroll.directive';
+import { ReclamacionesService, ReclamacionCreate } from '../../../services/reclamaciones';
 
 /**
  * Libro de Reclamaciones Virtual — hoja de reclamación exigida por INDECOPI
@@ -14,7 +16,7 @@ import { RevealOnScrollDirective } from '../../../shared/reveal-on-scroll/reveal
 @Component({
   selector: 'app-libro-reclamaciones',
   standalone: true,
-  imports: [FormsModule, RevealOnScrollDirective],
+  imports: [CommonModule, FormsModule, RevealOnScrollDirective],
   templateUrl: './libro-reclamaciones.html',
   styleUrl: './libro-reclamaciones.css',
 })
@@ -37,15 +39,63 @@ export class LibroReclamacionesComponent {
   detalle = '';
   pedido = '';
 
+  enviando = signal(false);
   enviado = signal(false);
   numeroCorrelativo = signal('');
+  error = signal('');
+  metodoContactoUsado = signal(''); // 'correo', 'telefono' o 'ambos'
+
+  constructor(private reclamacionesService: ReclamacionesService) {}
 
   enviar(): void {
-    if (!this.nombre || !this.numeroDocumento || !this.correo || !this.detalle) return;
-    // TODO: conectar a tu endpoint real cuando el backend lo exponga.
-    const correlativo = `RC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    this.numeroCorrelativo.set(correlativo);
-    this.enviado.set(true);
+    if (!this.nombre || !this.numeroDocumento || !this.detalle) return;
+    
+    // Validación de contacto: al menos uno requerido
+    if (!this.correo && !this.telefono) {
+      this.error.set('Debes proporcionar al menos un correo o teléfono de contacto.');
+      return;
+    }
+
+    this.error.set('');
+    this.enviando.set(true);
+
+    const data: ReclamacionCreate = {
+      nombre: this.nombre,
+      tipo_documento: this.tipoDocumento,
+      numero_documento: this.numeroDocumento,
+      correo: this.correo || null,
+      telefono: this.telefono || null,
+      domicilio: this.domicilio || null,
+      tipo_bien: this.tipoBien,
+      monto_reclamado: this.montoReclamado || null,
+      descripcion_bien: this.descripcionBien || null,
+      tipo: this.tipo,
+      detalle: this.detalle,
+      pedido: this.pedido || null,
+    };
+
+    this.reclamacionesService.registrar(data).subscribe({
+      next: (res) => {
+        this.numeroCorrelativo.set(res.numero_correlativo);
+        this.enviando.set(false);
+        this.enviado.set(true);
+        if (this.correo && this.telefono) {
+            this.metodoContactoUsado.set('ambos');
+        } else if (this.correo) {
+            this.metodoContactoUsado.set('correo');
+        } else {
+            this.metodoContactoUsado.set('telefono');
+        }
+      },
+      error: (err) => {
+        this.enviando.set(false);
+        if (err.status === 422) {
+          this.error.set('Revisa los datos ingresados. Falta información requerida.');
+        } else {
+          this.error.set('Ocurrió un error al enviar el reclamo. Por favor, intenta de nuevo.');
+        }
+      }
+    });
   }
 
   nuevoReclamo(): void {
@@ -59,5 +109,7 @@ export class LibroReclamacionesComponent {
     this.detalle = '';
     this.pedido = '';
     this.enviado.set(false);
+    this.numeroCorrelativo.set('');
+    this.error.set('');
   }
 }
