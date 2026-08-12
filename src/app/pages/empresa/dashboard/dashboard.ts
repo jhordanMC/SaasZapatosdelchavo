@@ -269,8 +269,54 @@ export class EmpresaDashboardComponent implements OnInit {
     });
   }
 
-  get maxIngresoEvolucion(): number {
-    return Math.max(1, ...this.ventasGanancia().map((p) => p.ingresos));
+  /**
+   * Escala del gráfico "Ventas y ganancias" — antes solo se escalaba por
+   * `ingresos` (siempre positivo). Ahora `ganancia_neta` puede ser negativa
+   * (semana con pérdida), así que la escala cubre [min, max] de AMBAS series
+   * y las barras se dibujan desde una línea de cero real, no desde el piso.
+   */
+  private nicerStepEvolucion(rango: number): number {
+    if (rango <= 0) return 100;
+    const bruto = rango / 4;
+    const magnitud = Math.pow(10, Math.floor(Math.log10(bruto)));
+    const norm = bruto / magnitud;
+    const normLindo = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+    return normLindo * magnitud;
+  }
+
+  get escalaEvolucion(): { max: number; min: number; ticks: number[] } {
+    const valores = this.ventasGanancia().flatMap((p) => [p.ingresos, p.ganancia_neta]);
+    const rawMax = Math.max(0, ...valores, 1);
+    const rawMin = Math.min(0, ...valores);
+    const step = this.nicerStepEvolucion(rawMax - rawMin);
+    const max = Math.ceil(rawMax / step) * step || step;
+    const min = Math.floor(rawMin / step) * step;
+    const ticks: number[] = [];
+    for (let t = max; t >= min - 0.01; t -= step) ticks.push(Math.round(t));
+    return { max, min, ticks };
+  }
+
+  /** Posición (% desde abajo del área del gráfico) que corresponde a un valor dado. */
+  pctEvolucion(v: number): number {
+    const { max, min } = this.escalaEvolucion;
+    const rango = max - min || 1;
+    return ((v - min) / rango) * 100;
+  }
+
+  get zeroLinePctEvolucion(): number {
+    return this.pctEvolucion(0);
+  }
+
+  /** Alto de la barra (%) — desde la línea de cero hasta el valor, sea positivo o negativo. */
+  alturaBarraEvolucion(v: number): number {
+    const { max, min } = this.escalaEvolucion;
+    const rango = max - min || 1;
+    return (Math.abs(v) / rango) * 100;
+  }
+
+  /** Punto de apoyo (% desde abajo) donde empieza a dibujarse la barra. */
+  basePctBarraEvolucion(v: number): number {
+    return v >= 0 ? this.zeroLinePctEvolucion : this.zeroLinePctEvolucion - this.alturaBarraEvolucion(v);
   }
 
   // ═══════════════════════════════════════════════════════════

@@ -165,13 +165,34 @@
       <h3>Ventas y ganancias</h3>
       <p class="panel-sub">Ingresos y ganancia real por semana (mismo criterio de costo real que Finanzas).</p>
 
-      <div class="evolucion-chart" *ngIf="ventasGanancia().length > 0">
-        <div class="evolucion-col" *ngFor="let p of ventasGanancia()">
-          <div class="evolucion-barras">
-            <div class="evolucion-barra-ingreso" [style.height.%]="(p.ingresos / maxIngresoEvolucion) * 100" [attr.data-tooltip]="'Ingresos: S/' + p.ingresos.toFixed(2)"></div>
-            <div class="evolucion-barra-ganancia" [style.height.%]="(p.ganancia_neta / maxIngresoEvolucion) * 100" [attr.data-tooltip]="'Ganancia real: S/' + p.ganancia_neta.toFixed(2)"></div>
+      <div class="evolucion-chart-wrap" *ngIf="ventasGanancia().length > 0">
+        <div class="evolucion-eje-y">
+          <span class="evolucion-eje-tick" *ngFor="let t of escalaEvolucion.ticks">S/{{ t | number }}</span>
+        </div>
+        <div class="evolucion-chart-body">
+          <div class="evolucion-chart">
+            <div class="evolucion-gridline" *ngFor="let t of escalaEvolucion.ticks" [style.bottom.%]="pctEvolucion(t)"></div>
+            <div class="evolucion-linea-cero" [style.bottom.%]="zeroLinePctEvolucion"></div>
+            <div class="evolucion-col" *ngFor="let p of ventasGanancia()">
+              <div
+                class="evolucion-barra-ingreso"
+                [class.evolucion-barra-negativa]="p.ingresos < 0"
+                [style.height.%]="alturaBarraEvolucion(p.ingresos)"
+                [style.bottom.%]="basePctBarraEvolucion(p.ingresos)"
+                [attr.data-tooltip]="'Ingresos: S/' + p.ingresos.toFixed(2)"
+              ></div>
+              <div
+                class="evolucion-barra-ganancia"
+                [class.evolucion-barra-negativa]="p.ganancia_neta < 0"
+                [style.height.%]="alturaBarraEvolucion(p.ganancia_neta)"
+                [style.bottom.%]="basePctBarraEvolucion(p.ganancia_neta)"
+                [attr.data-tooltip]="'Ganancia real: S/' + p.ganancia_neta.toFixed(2)"
+              ></div>
+            </div>
           </div>
-          <span class="evolucion-label">{{ p.etiqueta }}</span>
+          <div class="evolucion-labels">
+            <span class="evolucion-label" *ngFor="let p of ventasGanancia()">{{ p.etiqueta }}</span>
+          </div>
         </div>
       </div>
       <p class="tabla-vacia" *ngIf="!cargandoVentasGanancia() && ventasGanancia().length === 0">Todavía no hay suficientes semanas con ventas.</p>
