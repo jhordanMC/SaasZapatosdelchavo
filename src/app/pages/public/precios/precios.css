@@ -1,11 +1,6 @@
 :host { display: block; }
 
 .intro { max-width: 620px; margin: 0 auto; padding: 80px 32px 20px; text-align: center; }
-.hero-badge {
-  display: inline-block; padding: 6px 14px; border-radius: var(--radius-pill);
-  background: var(--bg-surface); border: 1px solid var(--border-default);
-  font-size: 13px; font-weight: 600; color: var(--brand-deep-700); margin-bottom: 20px;
-}
 .intro h1 { font-size: 38px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
 .intro-sub { font-size: 16px; color: var(--text-secondary); margin: 0; }
 
@@ -44,4 +39,3 @@
   .plan-featured { transform: none; }
   .intro h1 { font-size: 28px; }
 }
-
