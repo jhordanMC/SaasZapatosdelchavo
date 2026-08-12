@@ -173,11 +173,14 @@
 
 .cp-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* auto-fill + minmax en vez de repeat(4, 1fr): con pocos productos las
+     columnas NO se estiran para llenar el ancho (eso era lo que dejaba
+     una card sola ocupando toda una fila). justify-content: start las
+     mantiene pegadas a la izquierda en vez de repartir el espacio sobrante
+     entre ellas. */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 250px));
+  justify-content: start;
   gap: 20px;
-}
-@media (max-width: 860px) {
-  .cp-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 .cp-producto {
@@ -281,7 +284,7 @@
   .cp-monograma, .cp-logo { width: 46px; height: 46px; border-radius: 13px; font-size: 18px; }
   .cp-main { padding: 4px 16px 40px; }
   .cp-footer { padding: 20px 16px 28px; }
-  .cp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .cp-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 165px)); justify-content: start; gap: 12px; }
   .cp-producto-info { padding: 10px 10px 12px; }
   .cp-whatsapp-flotante { right: 16px; bottom: 16px; width: 52px; height: 52px; }
 }
