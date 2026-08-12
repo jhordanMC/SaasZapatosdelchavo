@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HeroMockupComponent } from './components/hero-mockup/hero-mockup';
 import { DemoExplorerComponent } from './components/demo-explorer/demo-explorer';
@@ -26,13 +27,15 @@ interface Testimonio {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent, RevealOnScrollDirective],
+  imports: [RouterLink, HeroMockupComponent, DemoExplorerComponent, RevealOnScrollDirective, NgTemplateOutlet],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })
 export class InicioComponent implements OnInit, OnDestroy {
   testimonioActivo = 0;
-  private testimonioTimer?: ReturnType<typeof setInterval>;
+  testimonioVentana = 0;
+  private testimonioTimerMobile?: ReturnType<typeof setInterval>;
+  private testimonioTimerDesktop?: ReturnType<typeof setInterval>;
 
   readonly features: Feature[] = [
     { icon: 'box', titulo: 'Inventario Inteligente', desc: 'Controla tu stock, categorías, precios y más.' },
@@ -82,15 +85,32 @@ export class InicioComponent implements OnInit, OnDestroy {
     },
   ];
 
+  /** Ventana de 3 testimonios para escritorio: siempre muestra 3, y cada
+   *  10s avanza una posición (entra el siguiente, sale el primero). */
+  get testimoniosVisiblesDesktop(): Testimonio[] {
+    const total = this.testimonios.length;
+    const visibles: Testimonio[] = [];
+    for (let i = 0; i < 3; i++) {
+      visibles.push(this.testimonios[(this.testimonioVentana + i) % total]);
+    }
+    return visibles;
+  }
+
   ngOnInit(): void {
-    this.testimonioTimer = setInterval(() => {
+    this.testimonioTimerMobile = setInterval(() => {
       this.testimonioActivo = (this.testimonioActivo + 1) % this.testimonios.length;
     }, 5000);
+    this.testimonioTimerDesktop = setInterval(() => {
+      this.testimonioVentana = (this.testimonioVentana + 1) % this.testimonios.length;
+    }, 10000);
   }
 
   ngOnDestroy(): void {
-    if (this.testimonioTimer) {
-      clearInterval(this.testimonioTimer);
+    if (this.testimonioTimerMobile) {
+      clearInterval(this.testimonioTimerMobile);
+    }
+    if (this.testimonioTimerDesktop) {
+      clearInterval(this.testimonioTimerDesktop);
     }
   }
 }

@@ -99,32 +99,47 @@
     <span class="eyebrow">Testimonios</span>
     <h2>Tomamos testimonios reales de personas top en sus rubros que ya usaron nuestro software</h2>
   </div>
-  <div class="testimonios-viewport">
+
+  <!-- Móvil: carrusel de 1 tarjeta, cambia cada 5s -->
+  <div class="testimonios-viewport testimonios-solo-movil">
     <div class="testimonios-track" [style.transform]="'translateX(-' + (testimonioActivo * 100) + '%)'">
       @for (t of testimonios; track t.autor; let i = $index) {
         <div class="testimonio-card" appReveal [appRevealDelay]="i * 80">
-          <div class="testimonio-stars" aria-hidden="true">
-            @for (s of [1, 2, 3, 4, 5]; track s) {
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            }
-          </div>
-          <p class="testimonio-quote">"{{ t.quote }}"</p>
-          <div class="testimonio-autor">
-            <img class="testimonio-avatar" [src]="t.foto" [alt]="t.autor" loading="lazy" />
-            <div>
-              <strong>{{ t.autor }}</strong>
-              <small>{{ t.rubro }}</small>
-            </div>
-          </div>
+          <ng-container [ngTemplateOutlet]="cardContent" [ngTemplateOutletContext]="{ $implicit: t }" />
         </div>
       }
     </div>
   </div>
-  <div class="testimonios-dots" aria-hidden="true">
+  <div class="testimonios-dots testimonios-solo-movil" aria-hidden="true">
     @for (t of testimonios; track t.autor; let i = $index) {
       <span class="testimonios-dot" [class.active]="i === testimonioActivo"></span>
     }
   </div>
+
+  <!-- Escritorio/tablet: 3 tarjetas a la vez, cada 10s entra la siguiente -->
+  <div class="testimonios-grid-desktop">
+    @for (t of testimoniosVisiblesDesktop; track t.autor) {
+      <div class="testimonio-card">
+        <ng-container [ngTemplateOutlet]="cardContent" [ngTemplateOutletContext]="{ $implicit: t }" />
+      </div>
+    }
+  </div>
+
+  <ng-template #cardContent let-t>
+    <div class="testimonio-stars" aria-hidden="true">
+      @for (s of [1, 2, 3, 4, 5]; track s) {
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      }
+    </div>
+    <p class="testimonio-quote">"{{ t.quote }}"</p>
+    <div class="testimonio-autor">
+      <img class="testimonio-avatar" [src]="t.foto" [alt]="t.autor" loading="lazy" />
+      <div>
+        <strong>{{ t.autor }}</strong>
+        <small>{{ t.rubro }}</small>
+      </div>
+    </div>
+  </ng-template>
 </section>
 
 <!-- 6. CTA final -->

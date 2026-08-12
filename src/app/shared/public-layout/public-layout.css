@@ -117,6 +117,7 @@
 .footer-brand { align-self: flex-start; }
 .footer-brand .brand-word { color: var(--sb-text); }
 .footer-tagline { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--sb-text-dim); }
+.footer-empresa { margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: var(--sb-text-dim); opacity: 0.75; }
 
 .footer-col { display: flex; flex-direction: column; gap: 12px; }
 .footer-col-title {

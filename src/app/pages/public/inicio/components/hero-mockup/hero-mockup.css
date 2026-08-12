@@ -140,8 +140,11 @@
 
 @media (max-width: 640px) {
   .hm-frame { height: auto; }
-  .hm-sidebar { display: none; }
+  .hm-sidebar { width: 96px; padding: 14px 8px; gap: 14px; }
+  .hm-sidebar-brand { font-size: 10.5px; gap: 5px; }
+  .hm-nav-item { font-size: 10px; padding: 6px 6px; }
   .hm-cursor { display: none; }
+  .hm-main { padding: 16px 14px; }
   .hm-metrics { grid-template-columns: repeat(2, 1fr); }
   .hm-panels { grid-template-columns: 1fr; }
 }
@@ -149,4 +152,9 @@
 @media (prefers-reduced-motion: reduce) {
   .hm-cursor { transition: none; }
   .hm-cursor-ring.active { animation: none; }
+}
+@media (max-width: 380px) {
+  .hm-sidebar { width: 82px; padding: 12px 6px; }
+  .hm-sidebar-brand span:last-child { display: none; }
+  .hm-nav-item { font-size: 9px; padding: 5px 5px; }
 }
