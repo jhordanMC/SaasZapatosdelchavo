@@ -268,13 +268,13 @@
     </div>
     <div class="modal-body">
       <div class="form-row" *ngIf="catalogoEditando()">
-        <label>Portada</label>
+        <label>Logo (opcional)</label>
         <div class="portada-picker">
           <div
             class="portada-preview"
             [style.background-image]="previsualizacionPortada() ? 'url(' + previsualizacionPortada() + ')' : (portadaActualSrc() ? 'url(' + portadaActualSrc() + ')' : null)"
           >
-            <span class="portada-preview-placeholder" *ngIf="!previsualizacionPortada() && !portadaActualSrc()">Sin imagen</span>
+            <span class="portada-preview-placeholder" *ngIf="!previsualizacionPortada() && !portadaActualSrc()">Sin logo</span>
           </div>
           <div class="portada-picker-acciones">
             <label class="btn btn-ghost btn-chico">

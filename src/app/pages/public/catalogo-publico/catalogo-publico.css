@@ -65,23 +65,6 @@
   gap: 10px;
 }
 
-/* Cuando hay portada, el gradiente pasa a ser un velo sobre la foto (para
-   que el nombre siga siendo legible) en vez del fondo suave de siempre. */
-.cp-hero-con-portada {
-  background-size: cover;
-  background-position: center;
-  position: relative;
-}
-.cp-hero-con-portada::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.42) 45%, rgba(0, 0, 0, 0.22) 100%);
-}
-.cp-hero-con-portada .cp-hero-inner { position: relative; z-index: 1; }
-.cp-hero-con-portada h1 { color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
-.cp-hero-con-portada .cp-hero-eyebrow { color: rgba(255, 255, 255, 0.92); }
-
 .cp-hero-subtitulo {
   margin: -6px 0 0;
   font-size: 14.5px;
@@ -89,11 +72,10 @@
   max-width: 480px;
   line-height: 1.5;
 }
-.cp-hero-con-portada .cp-hero-subtitulo { color: rgba(255, 255, 255, 0.88); }
 
 /* Monograma — mismo lenguaje visual que la "portada" del dashboard del
-   dueño: la identidad de cada catálogo nace de su inicial + su color, no
-   de un logo que no tenemos. Cohesión entre panel interno y vitrina. */
+   dueño: si el catálogo no tiene logo subido, su identidad nace de su
+   inicial + su color de marca. */
 .cp-monograma {
   width: 56px;
   height: 56px;
@@ -107,6 +89,18 @@
   font-weight: 800;
   text-transform: uppercase;
   box-shadow: 0 10px 26px color-mix(in srgb, var(--color-marca) 34%, transparent);
+}
+
+/* Logo del catálogo — reemplaza al monograma cuando el dueño sube una
+   imagen. Mismo tamaño/posición para que el layout del hero no salte
+   entre catálogos con y sin logo. object-fit: cover recorta si la imagen
+   no es cuadrada, en vez de deformarla. */
+.cp-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--color-marca) 34%, transparent), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .cp-hero h1 {
@@ -284,7 +278,7 @@
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .cp-hero { padding: 32px 16px 24px; }
-  .cp-monograma { width: 46px; height: 46px; border-radius: 13px; font-size: 18px; }
+  .cp-monograma, .cp-logo { width: 46px; height: 46px; border-radius: 13px; font-size: 18px; }
   .cp-main { padding: 4px 16px 40px; }
   .cp-footer { padding: 20px 16px 28px; }
   .cp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }

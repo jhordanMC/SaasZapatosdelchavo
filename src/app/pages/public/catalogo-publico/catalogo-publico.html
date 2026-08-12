@@ -14,9 +14,10 @@
   </div>
 
   <div class="cp-card" *ngIf="!cargando() && !noEncontrado() && catalogo() as cat">
-    <header class="cp-hero" [class.cp-hero-con-portada]="!!portadaSrc(cat)" [style.background-image]="portadaSrc(cat) ? 'url(' + portadaSrc(cat) + ')' : null">
+    <header class="cp-hero">
       <div class="cp-hero-inner">
         <span class="cp-monograma" *ngIf="!portadaSrc(cat)">{{ cat.nombre.charAt(0) }}</span>
+        <img class="cp-logo" *ngIf="portadaSrc(cat) as logo" [src]="logo" [alt]="cat.nombre" />
         <h1>{{ cat.nombre }}</h1>
         <p class="cp-hero-subtitulo" *ngIf="cat.subtitulo">{{ cat.subtitulo }}</p>
         <span class="cp-hero-eyebrow">
