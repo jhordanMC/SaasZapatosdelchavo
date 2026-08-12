@@ -77,6 +77,13 @@ export class EmpresaDashboardComponent implements OnInit {
   periodoAvance: PeriodoAvance = 'dia';
   avanceDesde = this.hoyISO();
   avanceHasta = this.hoyISO();
+  /** "Hasta" que usa SOLO el gráfico "Ventas y ganancias" — a diferencia de
+   * `avanceHasta` (que se corta en "hoy" para reflejar datos reales en las
+   * cards de KPIs), este llega hasta el fin natural del período elegido
+   * (fin de semana/mes/año) para que el gráfico muestre el período completo,
+   * con los días/semanas/meses que todavía no pasaron en S/0. Se recalcula
+   * en `cambiarPeriodo()`. */
+  avanceHastaGrafico = this.hoyISO();
   avanceResumen = signal<ResumenFinanciero | null>(null);
   avanceCargando = signal(false);
   avanceError = signal<string | null>(null);
@@ -147,9 +154,24 @@ export class EmpresaDashboardComponent implements OnInit {
     return this.formatearISO(lunes);
   }
 
+  private domingoDeEstaSemanaISO(): string {
+    const hoy = this.ahoraEnLima();
+    const diaSemana = hoy.getDay();
+    const diasHastaElDomingo = diaSemana === 0 ? 0 : 7 - diaSemana;
+    const domingo = new Date(hoy);
+    domingo.setDate(hoy.getDate() + diasHastaElDomingo);
+    return this.formatearISO(domingo);
+  }
+
   private primerDiaDeEsteMesISO(): string {
     const hoy = this.ahoraEnLima();
     return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  }
+
+  private ultimoDiaDeEsteMesISO(): string {
+    const hoy = this.ahoraEnLima();
+    // Día 0 del mes siguiente = último día del mes actual.
+    return this.formatearISO(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
   }
 
   private primerDiaDeEsteAnioISO(): string {
@@ -157,20 +179,34 @@ export class EmpresaDashboardComponent implements OnInit {
     return this.formatearISO(new Date(hoy.getFullYear(), 0, 1));
   }
 
+  private ultimoDiaDeEsteAnioISO(): string {
+    const hoy = this.ahoraEnLima();
+    return this.formatearISO(new Date(hoy.getFullYear(), 11, 31));
+  }
+
   cambiarPeriodo(periodo: PeriodoAvance): void {
     this.periodoAvance = periodo;
     if (periodo === 'dia') {
       this.avanceDesde = this.hoyISO();
       this.avanceHasta = this.hoyISO();
+      this.avanceHastaGrafico = this.avanceHasta;
     } else if (periodo === 'semana') {
       this.avanceDesde = this.lunesDeEstaSemanaISO();
       this.avanceHasta = this.hoyISO();
+      // El gráfico llega hasta el domingo aunque hoy sea, por ejemplo, martes:
+      // así se ven los 7 días de la semana (los que faltan salen en S/0),
+      // no solo los que ya transcurrieron.
+      this.avanceHastaGrafico = this.domingoDeEstaSemanaISO();
     } else if (periodo === 'mes') {
       this.avanceDesde = this.primerDiaDeEsteMesISO();
       this.avanceHasta = this.hoyISO();
+      // Ídem: el gráfico llega hasta el último día del mes, para que se vean
+      // todas las semanas del mes completo aunque todavía falten días.
+      this.avanceHastaGrafico = this.ultimoDiaDeEsteMesISO();
     } else if (periodo === 'anio') {
       this.avanceDesde = this.primerDiaDeEsteAnioISO();
       this.avanceHasta = this.hoyISO();
+      this.avanceHastaGrafico = this.ultimoDiaDeEsteAnioISO();
     }
     if (periodo !== 'personalizado') {
       this.cargarAvance();
@@ -184,6 +220,10 @@ export class EmpresaDashboardComponent implements OnInit {
   onFechaPersonalizadaChange(): void {
     if (!this.avanceDesde || !this.avanceHasta) return;
     if (this.avanceDesde > this.avanceHasta) return;
+    // En "Personalizado" el usuario eligió el rango a mano — no tiene sentido
+    // "rellenar" más allá de lo que pidió, así que el gráfico usa el mismo
+    // hasta que el resto de las cards.
+    this.avanceHastaGrafico = this.avanceHasta;
     this.cargarAvance();
     this.cargarTopCategorias();
     this.cargarRotacion();
@@ -257,7 +297,7 @@ export class EmpresaDashboardComponent implements OnInit {
 
   private cargarVentasGanancia(): void {
     this.cargandoVentasGanancia.set(true);
-    this.dashboardService.obtenerVentasGananciaPorPeriodo(this.avanceDesde, this.avanceHasta).subscribe({
+    this.dashboardService.obtenerVentasGananciaPorPeriodo(this.avanceDesde, this.avanceHastaGrafico).subscribe({
       next: (lista) => {
         this.ventasGanancia.set(lista);
         this.cargandoVentasGanancia.set(false);
