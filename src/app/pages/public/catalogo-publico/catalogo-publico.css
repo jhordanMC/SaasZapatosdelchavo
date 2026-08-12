@@ -268,13 +268,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #25d366;
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(37, 211, 102, 0.4);
   transition: transform 0.18s cubic-bezier(0.22, 0.8, 0.35, 1), box-shadow 0.18s;
 }
-.cp-whatsapp-flotante:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 14px 30px rgba(37, 211, 102, 0.48); }
-.cp-whatsapp-icono { width: 34px; height: 34px; object-fit: contain; display: block; }
+.cp-whatsapp-flotante:hover { transform: translateY(-2px) scale(1.04); }
+.cp-whatsapp-icono { width: 58px; height: 58px; object-fit: contain; display: block; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
@@ -285,6 +282,7 @@
   .cp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .cp-producto-info { padding: 10px 10px 12px; }
   .cp-whatsapp-flotante { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+  .cp-whatsapp-icono { width: 52px; height: 52px; }
 }
 
 /* ── Motion reducida ────────────────────────────────────────────────────── */
