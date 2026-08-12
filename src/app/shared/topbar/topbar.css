@@ -86,18 +86,6 @@
   color: var(--text-primary);
 }
 .topbar-buscador input::placeholder { color: var(--text-tertiary); }
-.topbar-buscador-atajo {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-tertiary);
-}
 
 .topbar-right {
   display: flex;
