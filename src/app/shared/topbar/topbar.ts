@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth';
 import { CuentaGuardada } from '../../core/cuentas-guardadas.service';
 import { ThemeService } from '../../core/theme.service';
+import { AppLang, I18nService } from '../../core/i18n.service';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
 import { SatisfaccionService } from '../../services/satisfaccion';
 import { esArchivoDeImagen } from '../../utils/validar-imagen';
@@ -31,6 +32,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private anunciosService: AnunciosService,
     private satisfaccionService: SatisfaccionService,
     public themeService: ThemeService,
+    public i18n: I18nService,
   ) {}
 
   readonly apiUrl = environment.apiUrl;
@@ -616,12 +618,31 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   // ════════════════════════════════════════════════════════
-  // Accesibilidad: botón junto a la campana. El widget (accesibilidad.js /
-  // accesibilidad-responsive.js) ya no muestra su propio botón flotante:
-  // se abre/cierra únicamente desde acá vía window.AccessibilityWidget.
+  // Idioma: botón junto a la campana. Reemplaza al antiguo widget de
+  // accesibilidad (accesibilidad.js / accesibilidad-responsive.js), que
+  // vivía fuera de Angular y era la única forma de cambiar I18nService.lang
+  // (vía un evento 'vilcas-lang-change' que ya no existe). Ahora el botón
+  // llama a i18n.setLang() directamente.
   // ════════════════════════════════════════════════════════
-  toggleAccesibilidad(): void {
-    (window as any).AccessibilityWidget?.toggle?.();
+  readonly idiomasDisponibles: { code: AppLang; label: string; nativeLabel: string; flag: string }[] = [
+    { code: 'es', label: 'Español', nativeLabel: 'Español', flag: '🇵🇪' },
+    { code: 'qu', label: 'Quechua', nativeLabel: 'Runasimi', flag: '🏔️' },
+    { code: 'en', label: 'Inglés', nativeLabel: 'English', flag: '🇺🇸' },
+  ];
+
+  showIdiomaDropdown = false;
+
+  get idiomaActual() {
+    return this.idiomasDisponibles.find((i) => i.code === this.i18n.lang()) ?? this.idiomasDisponibles[0];
+  }
+
+  toggleIdiomaDropdown(): void {
+    this.showIdiomaDropdown = !this.showIdiomaDropdown;
+  }
+
+  seleccionarIdioma(idioma: AppLang): void {
+    this.i18n.setLang(idioma);
+    this.showIdiomaDropdown = false;
   }
 
   // ════════════════════════════════════════════════════════

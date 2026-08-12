@@ -14,21 +14,39 @@
   </div>
 
   <div class="topbar-right">
-    <button
-      class="topbar-action"
-      aria-label="Accesibilidad"
-      title="Opciones de accesibilidad"
-      (click)="toggleAccesibilidad()"
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <circle cx="12" cy="7.2" r="1.4" fill="currentColor" stroke="none"/>
-        <path d="M7.5 9.8h9"/>
-        <path d="M12 9.8v3.4"/>
-        <path d="M12 13.2 9 19"/>
-        <path d="M12 13.2 15 19"/>
-      </svg>
-    </button>
+    <div class="idioma-wrapper">
+      <button
+        class="topbar-action topbar-action-idioma"
+        aria-label="Cambiar idioma"
+        title="Cambiar idioma"
+        (click)="toggleIdiomaDropdown()"
+      >
+        <span class="idioma-flag">{{ idiomaActual.flag }}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      <div class="notif-dropdown-overlay" *ngIf="showIdiomaDropdown" (click)="showIdiomaDropdown = false"></div>
+      <div class="idioma-dropdown" *ngIf="showIdiomaDropdown" (click)="$event.stopPropagation()">
+        <div class="notif-dropdown-header">Idioma</div>
+        <button
+          class="idioma-dropdown-item"
+          *ngFor="let idioma of idiomasDisponibles"
+          [class.idioma-dropdown-item-activo]="i18n.lang() === idioma.code"
+          (click)="seleccionarIdioma(idioma.code)"
+        >
+          <span class="idioma-flag">{{ idioma.flag }}</span>
+          <span class="idioma-dropdown-texto">
+            <span class="idioma-dropdown-nombre">{{ idioma.nativeLabel }}</span>
+            <span class="idioma-dropdown-nota">{{ idioma.label }}</span>
+          </span>
+          <svg *ngIf="i18n.lang() === idioma.code" class="idioma-dropdown-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <div class="notif-wrapper">
       <button class="topbar-action" aria-label="Notificaciones" (click)="toggleAnunciosDropdown()">

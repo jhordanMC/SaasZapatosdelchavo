@@ -219,16 +219,6 @@ export class I18nService {
   /** Signal reactivo: cualquier componente que lo lea se re-renderiza solo al cambiar de idioma. */
   lang = signal<AppLang>(this.readInitialLang());
 
-  constructor() {
-    // Puente con el widget de accesibilidad (vanilla JS, vive fuera de Angular
-    // pegado a document.body). El widget dispara este evento al elegir idioma.
-    window.addEventListener('vilcas-lang-change', (ev: Event) => {
-      const detail = (ev as CustomEvent).detail as { lang?: string } | undefined;
-      const lang = detail?.lang;
-      if (lang === 'es' || lang === 'en' || lang === 'qu') this.setLang(lang);
-    });
-  }
-
   private readInitialLang(): AppLang {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
