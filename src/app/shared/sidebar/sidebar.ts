@@ -29,7 +29,8 @@ export interface SidebarItem {
     | 'suscripciones'
     | 'anuncios'
     | 'integraciones'
-    | 'tickets';
+    | 'tickets'
+    | 'reclamaciones';
   exact?: boolean;
 }
 

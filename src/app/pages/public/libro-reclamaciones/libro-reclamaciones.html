@@ -32,7 +32,7 @@
           </label>
           <label>
             Correo
-            <input type="email" name="correo" [(ngModel)]="correo" required placeholder="tucorreo@ejemplo.com" />
+            <input type="email" name="correo" [(ngModel)]="correo" placeholder="tucorreo@ejemplo.com" />
           </label>
           <label>
             Teléfono
@@ -88,7 +88,13 @@
         </label>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-lg">Enviar reclamo</button>
+      <div *ngIf="error()" class="reclamos-error-block">
+        {{ error() }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" [disabled]="enviando()">
+        {{ enviando() ? 'Enviando...' : 'Enviar reclamo' }}
+      </button>
       <p class="reclamos-legal-note">
         La formulación del reclamo no impide acudir a otras vías de solución de controversias
         ni es requisito previo para interponer una denuncia ante INDECOPI.
@@ -98,7 +104,12 @@
     <div class="reclamos-success">
       <h3>¡Reclamo registrado, {{ nombre }}!</h3>
       <p class="reclamos-success-codigo">N.º de reclamo: <strong>{{ numeroCorrelativo() }}</strong></p>
-      <p>Te responderemos a <strong>{{ correo }}</strong> en un plazo no mayor a 30 días calendario.</p>
+      <p *ngIf="metodoContactoUsado() === 'ambos' || metodoContactoUsado() === 'correo'">
+        Te responderemos a <strong>{{ correo }}</strong> en un plazo no mayor a 30 días calendario.
+      </p>
+      <p *ngIf="metodoContactoUsado() === 'telefono'">
+        Nos contactaremos al <strong>{{ telefono }}</strong> en un plazo no mayor a 30 días calendario.
+      </p>
       <button class="btn btn-ghost" (click)="nuevoReclamo()">Registrar otro reclamo</button>
     </div>
   }
