@@ -105,33 +105,21 @@
 }
 
 .card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: auto;
+  height: 64px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 18px;
+  background: transparent !important;
+  border-radius: 0;
 }
 
-.icon-blue {
-  background: color-mix(in srgb, #2563eb 15%, transparent);
-  color: #2563eb;
-}
-
-.icon-shield {
-  background: color-mix(in srgb, #059669 15%, transparent);
-  color: #059669;
-}
-
-.icon-purple {
-  background: color-mix(in srgb, #7c3aed 15%, transparent);
-  color: #7c3aed;
-}
-
+.icon-blue,
+.icon-shield,
+.icon-purple,
 .icon-amber {
-  background: color-mix(in srgb, #d97706 15%, transparent);
-  color: #d97706;
+  background: transparent !important;
 }
 
 .info-card h3 {
@@ -186,15 +174,15 @@
   overflow: hidden;
   position: relative;
   width: 100%;
-  padding: 16px 0;
-  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  padding: 20px 0;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
 .marcas-pasarela-track {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 36px;
   width: max-content;
   animation: pasarelaSlideRight 10s linear infinite;
 }
@@ -216,43 +204,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 190px;
-  height: 96px;
-  padding: 16px 24px;
-  background: var(--bg-surface);
+  width: 220px;
+  height: 110px;
+  padding: 16px 28px;
+  background: #ffffff;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card, 16px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
   transition: all var(--duration-base, 200ms) var(--ease-standard, ease);
   flex-shrink: 0;
   text-decoration: none;
 }
 
 .marca-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-3px) scale(1.03);
-  border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--border-subtle));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) scale(1.04);
+  border-color: color-mix(in srgb, var(--brand-primary) 50%, var(--border-subtle));
 }
 
 .marca-img {
   max-width: 100%;
-  max-height: 56px;
+  max-height: 76px;
   width: auto;
   height: auto;
   object-fit: contain;
-  filter: grayscale(15%);
-  transition: filter var(--duration-base, 200ms) ease, transform var(--duration-base, 200ms) ease;
+  filter: none !important;
+  transition: transform var(--duration-base, 200ms) ease;
 }
 
 .marca-card:hover .marca-img {
-  filter: grayscale(0%);
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .card-brand-logo {
-  width: 38px;
-  height: 38px;
+  max-width: 170px;
+  max-height: 64px;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  filter: none !important;
 }
 
 @media (max-width: 860px) {
@@ -266,11 +256,14 @@
     padding: 28px 24px;
   }
   .marca-card {
-    width: 160px;
-    height: 84px;
-    padding: 12px 18px;
+    width: 170px;
+    height: 90px;
+    padding: 12px 20px;
   }
   .marca-img {
-    max-height: 44px;
+    max-height: 56px;
+  }
+  .card-brand-logo {
+    max-height: 52px;
   }
 }
