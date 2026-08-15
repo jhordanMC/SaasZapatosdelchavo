@@ -1,18 +1,276 @@
 :host { display: block; }
 
-.intro { max-width: 700px; margin: 0 auto; padding: 80px 32px 40px; text-align: center; }
-.intro h1 { font-size: 38px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.02em; }
-.intro-sub { font-size: 17px; color: var(--text-secondary); line-height: 1.65; margin: 0; }
-
-.valores-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.valor-card {
-  background: var(--bg-surface); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card); padding: var(--space-card); box-shadow: var(--shadow-sm);
+.intro {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 32px 48px;
+  text-align: center;
 }
-.valor-card h3 { font-size: 17px; font-weight: 700; margin: 0 0 10px; color: var(--brand-deep-700); }
-.valor-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+
+.intro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill, 9999px);
+  background: color-mix(in srgb, var(--brand-primary, #6366f1) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary, #6366f1) 25%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-deep-700, #3730a3);
+  margin-bottom: 22px;
+}
+
+.intro h1 {
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0 0 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.brand-accent {
+  color: var(--brand-deep-700, #3730a3);
+}
+
+.intro-sub {
+  font-size: 16.5px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 780px;
+}
+
+/* Misión section */
+.mision-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 8%, var(--bg-surface)), var(--bg-surface));
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--brand-deep-700);
+  border-radius: var(--radius-card, 16px);
+  padding: 36px 40px;
+  box-shadow: var(--shadow-sm);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.mision-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand-deep-700);
+  margin-bottom: 10px;
+}
+
+.mision-card h2 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 14px;
+  color: var(--text-primary);
+}
+
+.mision-card p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Grids for cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.info-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card, 16px);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-base, 200ms) var(--ease-standard, ease);
+  display: flex;
+  flex-direction: column;
+}
+
+.info-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--border-subtle));
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.icon-blue {
+  background: color-mix(in srgb, #2563eb 15%, transparent);
+  color: #2563eb;
+}
+
+.icon-shield {
+  background: color-mix(in srgb, #059669 15%, transparent);
+  color: #059669;
+}
+
+.icon-purple {
+  background: color-mix(in srgb, #7c3aed 15%, transparent);
+  color: #7c3aed;
+}
+
+.icon-amber {
+  background: color-mix(in srgb, #d97706 15%, transparent);
+  color: #d97706;
+}
+
+.info-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.info-card p {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Links en texto */
+.text-link {
+  color: var(--brand-deep-700);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand-deep-700) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: all var(--duration-base, 200ms) var(--ease-standard, ease);
+}
+
+.text-link:hover {
+  color: var(--brand-primary);
+  text-decoration-color: var(--brand-primary);
+}
+
+.badge-link {
+  color: var(--brand-deep-700);
+  font-weight: 700;
+}
+
+.brand-link-title {
+  text-decoration: none;
+}
+
+.fw-bold {
+  font-weight: 700;
+}
+
+/* Marcas Section & Pasarela de Logos */
+.marcas-section {
+  padding-top: 16px;
+  padding-bottom: 32px;
+}
+
+.marcas-pasarela-wrapper {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  padding: 16px 0;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marcas-pasarela-track {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: max-content;
+  animation: pasarelaSlideRight 10s linear infinite;
+}
+
+.marcas-pasarela-wrapper:hover .marcas-pasarela-track {
+  animation-play-state: paused;
+}
+
+@keyframes pasarelaSlideRight {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.marca-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 190px;
+  height: 96px;
+  padding: 16px 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card, 16px);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-base, 200ms) var(--ease-standard, ease);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.marca-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px) scale(1.03);
+  border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--border-subtle));
+}
+
+.marca-img {
+  max-width: 100%;
+  max-height: 56px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(15%);
+  transition: filter var(--duration-base, 200ms) ease, transform var(--duration-base, 200ms) ease;
+}
+
+.marca-card:hover .marca-img {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+.card-brand-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
 
 @media (max-width: 860px) {
-  .valores-grid { grid-template-columns: 1fr; }
-  .intro h1 { font-size: 28px; }
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .intro h1 {
+    font-size: 30px;
+  }
+  .mision-card {
+    padding: 28px 24px;
+  }
+  .marca-card {
+    width: 160px;
+    height: 84px;
+    padding: 12px 18px;
+  }
+  .marca-img {
+    max-height: 44px;
+  }
 }

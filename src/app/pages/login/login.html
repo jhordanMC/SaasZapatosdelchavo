@@ -68,7 +68,9 @@
 
     <div class="card">
       <div class="logo-area">
-        <img src="vilcas.png" alt="Vilcas" class="logo-img" (error)="onLogoError($event)"/>
+        <a href="https://www.vilcaspe.com/" target="_blank" rel="noopener noreferrer" title="Ir a VILCAS web">
+          <img src="vilcas.png" alt="Vilcas" class="logo-img" (error)="onLogoError($event)"/>
+        </a>
         <svg *ngIf="showLogoFallback" class="logo-fallback" style="display:block" viewBox="0 0 68 56" fill="none">
           <polygon points="12,4 20,4 34,44 48,4 56,4 34,52 12,4" fill="#024B40"/>
           <polygon points="20,4 28,4 34,28 40,4 48,4 34,44 20,4" fill="#DA9E0B"/>
