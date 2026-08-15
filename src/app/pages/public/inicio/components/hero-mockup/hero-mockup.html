@@ -69,7 +69,7 @@
     }
 
     <div class="hm-scene-dots">
-      @for (s of [0, 1, 2]; track s) {
+      @for (s of [0, 1, 2, 3, 4]; track s) {
         <span class="hm-scene-dot" [class.active]="activeIndex() === s"></span>
       }
     </div>

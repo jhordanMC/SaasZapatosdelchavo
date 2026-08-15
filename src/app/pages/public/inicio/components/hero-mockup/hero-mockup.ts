@@ -61,7 +61,7 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
 
   private readonly scenes: MockScene[] = [
     {
-      navLabel: 'Inventario',
+      navLabel: 'Dashboard',
       panelTitle: 'Ventas últimos 7 días',
       listTitle: 'Productos más vendidos',
       metrics: [
@@ -76,6 +76,40 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
         { nombre: 'Gorra Snapback', dato: '64 uds' },
       ],
       chartPoints: '0,58 40,46 80,60 120,26 160,38 200,14 240,30',
+    },
+    {
+      navLabel: 'Inventario',
+      panelTitle: 'Rotación de Inventario',
+      listTitle: 'Alerta de Reposición',
+      metrics: [
+        { label: 'Total artículos', value: '1,240', delta: 'En catálogo' },
+        { label: 'Categorías', value: '18', delta: 'Registradas' },
+        { label: 'Valorizado', value: 'S/ 48,200', delta: 'Costo total' },
+        { label: 'Por agotar', value: '8', delta: 'Urgente', danger: true },
+      ],
+      topItems: [
+        { nombre: 'Polera Oversize', dato: '5 uds (Reordenar)' },
+        { nombre: 'Zapatilla Urban', dato: '3 uds (Reordenar)' },
+        { nombre: 'Casaca Denim', dato: '2 uds (Reordenar)' },
+      ],
+      chartPoints: '0,30 40,20 80,45 120,15 160,30 200,10 240,25',
+    },
+    {
+      navLabel: 'Catálogos',
+      panelTitle: 'Visitas al Catálogo Digital',
+      listTitle: 'Colecciones Activas',
+      metrics: [
+        { label: 'Visitas hoy', value: '542', delta: '+14.2% vs ayer' },
+        { label: 'Catálogos IA', value: '4', delta: 'Publicados' },
+        { label: 'Compartidos', value: '128', delta: 'Vía WhatsApp' },
+        { label: 'Sin stock', value: '2', delta: 'En catálogo', danger: true },
+      ],
+      topItems: [
+        { nombre: 'Colección Otoño 2026', dato: '320 vistas' },
+        { nombre: 'Ofertas de Calzado', dato: '184 vistas' },
+        { nombre: 'Accesorios Top', dato: '95 vistas' },
+      ],
+      chartPoints: '0,60 40,35 80,50 120,20 160,30 200,15 240,8',
     },
     {
       navLabel: 'Ventas',
