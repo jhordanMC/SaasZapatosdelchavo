@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService, FilaRotacion, PuntoVentaGanancia, TopCategoria } from '../../../services/dashboard';
 import { FinanzasService, GastoRecurrenteRead, ResumenFinanciero, VentasPorMetodoPago } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
-import { ETIQUETAS_TIPO_DEVOLUCION, MetodoPago, ResumenDevolucionesDashboard, TipoDevolucion, VentasService } from '../../../services/ventas';
+import { MetodoPago } from '../../../services/ventas';
 
 /** Período del filtro único del dashboard — 'personalizado' deja que el usuario elija el rango a mano. */
 type PeriodoAvance = 'dia' | 'semana' | 'mes' | 'anio' | 'personalizado';
@@ -43,8 +43,7 @@ export class EmpresaDashboardComponent implements OnInit {
   constructor(
     public dashboardService: DashboardService,
     public finanzasService: FinanzasService,
-    private inventarioService: InventarioService,
-    private ventasService: VentasService
+    private inventarioService: InventarioService
   ) {}
 
   /** id_producto → costo_compra, para calcular capital atrapado a costo real. */
@@ -274,7 +273,6 @@ export class EmpresaDashboardComponent implements OnInit {
       this.cargarAvance();
       this.cargarTopCategorias();
       this.cargarRotacion();
-      this.cargarResumenDevoluciones();
       this.cargarTopDevueltos();
     }
   }
@@ -289,7 +287,6 @@ export class EmpresaDashboardComponent implements OnInit {
     this.cargarAvance();
     this.cargarTopCategorias();
     this.cargarRotacion();
-    this.cargarResumenDevoluciones();
     this.cargarTopDevueltos();
   }
 
@@ -528,44 +525,5 @@ export class EmpresaDashboardComponent implements OnInit {
       .sort((a, b) => b.montoMensual - a.montoMensual);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // Mini-tarjeta de Devoluciones — mismo período elegido arriba
-  // (Hoy/Esta semana/Este mes/Este año/Personalizado).
-  // ═══════════════════════════════════════════════════════════
 
-  resumenDevoluciones = signal<ResumenDevolucionesDashboard | null>(null);
-  cargandoDevoluciones = signal(false);
-
-  private cargarResumenDevoluciones(): void {
-    this.cargandoDevoluciones.set(true);
-    this.ventasService
-      .resumenDevolucionesDashboard(`${this.avanceDesde}T00:00:00`, `${this.avanceHasta}T23:59:59`)
-      .subscribe({
-        next: (r) => {
-          this.resumenDevoluciones.set(r);
-          this.cargandoDevoluciones.set(false);
-        },
-        error: () => {
-          this.resumenDevoluciones.set(null);
-          this.cargandoDevoluciones.set(false);
-        },
-      });
-  }
-
-  /** Proveedor con más devoluciones del período (para el titular de la tarjeta). */
-  get proveedorConMasDevoluciones(): { proveedor: string; cantidad: number } | null {
-    return this.resumenDevoluciones()?.porProveedor[0] ?? null;
-  }
-
-  etiquetaTipoDevolucion(tipo: TipoDevolucion): string {
-    return ETIQUETAS_TIPO_DEVOLUCION[tipo];
-  }
-
-  /** % que representa el impacto de las devoluciones sobre la ganancia neta del período. */
-  get pctImpactoDevolucionesEnGanancia(): number {
-    const ganancia = this.avanceResumen()?.ganancia_neta_periodo ?? 0;
-    const impacto = this.resumenDevoluciones()?.impactoGanancia ?? 0;
-    if (ganancia <= 0) return 0;
-    return Math.min(100, (impacto / ganancia) * 100);
-  }
 }

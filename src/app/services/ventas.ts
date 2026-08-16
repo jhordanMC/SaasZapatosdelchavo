@@ -448,7 +448,7 @@ export class VentasService {
    */
   resumenDevolucionesDashboard(desde: string, hasta: string): Observable<ResumenDevolucionesDashboard> {
     return new Observable((observer) => {
-      this.listarDevoluciones({ estado: 'procesada', desde, hasta }, 0, 1000).subscribe({
+      this.listarDevoluciones({ estado: 'procesada', desde, hasta }, 0, 200).subscribe({
         next: (items) => {
           const porTipo: Record<TipoDevolucion, number> = { parcial: 0, total: 0, cambio_producto: 0, cambio_con_ajuste: 0 };
           let impactoGanancia = 0;

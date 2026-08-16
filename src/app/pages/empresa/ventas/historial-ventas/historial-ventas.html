@@ -90,14 +90,12 @@
           <div class="timeline-celda timeline-opciones">
             <button class="btn-ver-detalle" (click)="abrirDetalle(v)">Ver detalle</button>
             <button
-              class="btn-icon-devolucion"
+              class="btn-ver-detalle btn-texto-devolucion"
               *ngIf="puedeDevolver() && v.estado === 'pagada'"
               title="Registrar devolución"
               (click)="abrirDevolucion(v)"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 14 4 9 9 4" /><path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-              </svg>
+              Devolver
             </button>
             <button
               class="btn-icon-danger"
