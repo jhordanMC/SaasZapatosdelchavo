@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Allow: /nosotros
+Allow: /precios
+Allow: /contacto
+Allow: /libro-de-reclamaciones
+Allow: /c/
+
+# Bloquear indexación de áreas privadas y administrativas
+Disallow: /admin/
+Disallow: /empresa/
+Disallow: /verificar-2fa
+Disallow: /olvide-contrasena
+Disallow: /acceso-restringido
+
+# Enlace al Sitemap XML oficial
+Sitemap: https://www.vilcaspe.com/sitemap.xml
