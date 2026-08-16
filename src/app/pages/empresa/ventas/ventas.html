@@ -593,9 +593,9 @@
         <p class="venta-id">ID: {{ ventaConfirmada?.id_venta }}</p>
       </div>
       <div class="modal-footer modal-footer-acciones">
-        <button class="btn-secondary" *ngIf="ventaConfirmada" (click)="imprimirBoleta80mm(ventaConfirmada)" title="Imprimir ticket 80 mm">🖨️ Ticket 80mm</button>
-        <button class="btn-secondary" *ngIf="ventaConfirmada" (click)="imprimirBoletaNormal(ventaConfirmada)" title="Imprimir boleta A4">📄 Formato Normal</button>
-        <button class="btn-primary" (click)="cerrarTodo()">Cerrar</button>
+        <button type="button" class="btn-secondary" *ngIf="ventaConfirmada" (click)="imprimirBoletaNormal(ventaConfirmada)">🖨️ Formato Normal</button>
+        <button type="button" class="btn-primary" *ngIf="ventaConfirmada" (click)="imprimirBoleta80mm(ventaConfirmada)">🖨️ Imprimir Ticket</button>
+        <button type="button" class="btn-clear" (click)="cerrarTodo()">Cerrar</button>
       </div>
     </ng-container>
 
@@ -645,7 +645,7 @@
 
 <!-- ═══════════════ Modal: registrar devolución (desde Ventas) ═══════════════ -->
 <div class="modal-overlay" *ngIf="ventaADevolver || cargandoVentaADevolver()" (click)="cerrarDevolucionPOS()">
-  <div class="modal-card modal-detalle modal-devolucion" (click)="$event.stopPropagation()">
+  <div class="modal-card modal-detalle" (click)="$event.stopPropagation()">
     <app-modal-brand-header subtitle="Registrar devolución" (cerrar)="cerrarDevolucionPOS()"></app-modal-brand-header>
 
     <div class="modal-body" *ngIf="cargandoVentaADevolver()">
@@ -655,42 +655,27 @@
     <div class="modal-body" *ngIf="ventaADevolver as venta">
       <button type="button" class="btn-volver-devolucion" (click)="volverABuscadorDevolucion()">‹ Elegir otra venta</button>
 
-      <div class="devolucion-header-summary">
-        <span class="devolucion-venta-folio">Venta #{{ venta.id_venta.slice(-6).toUpperCase() }}</span>
-        <span class="devolucion-venta-total">Total Venta: S/{{ venta.total.toFixed(2) }}</span>
-      </div>
-
-      <p class="detalle-subtitulo">¿Qué productos se devuelven?</p>
+      <p class="detalle-subtitulo">¿QUÉ SE DEVUELVE?</p>
       <div class="devolucion-lineas">
-        <div class="devolucion-linea-card" *ngFor="let l of lineasDevolucion">
-          <div class="devolucion-linea-top">
-            <div class="devolucion-linea-info">
-              <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
-              <span class="devolucion-linea-meta">
-                Talla: <strong>{{ l.detalle.talla ?? '—' }}</strong> · SKU: {{ l.detalle.sku ?? '—' }}
-              </span>
-            </div>
-            <span class="badge-disponible" [class.badge-agotado]="l.disponible === 0">
-              {{ l.disponible }} / {{ l.detalle.cantidad }} disp.
+        <div class="devolucion-linea" *ngFor="let l of lineasDevolucion">
+          <div class="devolucion-linea-info">
+            <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
+            <span class="devolucion-linea-meta">
+              Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
             </span>
           </div>
-
           <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
-            <div class="devolucion-cantidad-stepper">
-              <button type="button" class="btn-stepper" (click)="cambiarCantidadDevolucion(l, l.cantidad - 1)" [disabled]="l.cantidad <= 0">−</button>
-              <input
-                type="number"
-                class="devolucion-linea-cantidad"
-                min="0"
-                [max]="l.disponible"
-                [ngModel]="l.cantidad"
-                (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
-              />
-              <button type="button" class="btn-stepper" (click)="cambiarCantidadDevolucion(l, l.cantidad + 1)" [disabled]="l.cantidad >= l.disponible">+</button>
-            </div>
+            <input
+              type="number"
+              class="devolucion-linea-cantidad"
+              min="0"
+              [max]="l.disponible"
+              [ngModel]="l.cantidad"
+              (ngModelChange)="cambiarCantidadDevolucion(l, $event)"
+            />
             <label class="restaurar-stock-opcion devolucion-linea-checkbox" *ngIf="l.cantidad > 0">
               <input type="checkbox" [ngModel]="l.restaurarStock" (ngModelChange)="l.restaurarStock = $event" />
-              Reingresar {{ l.cantidad }} al stock
+              Vuelve al stock
             </label>
           </div>
           <span class="devolucion-linea-sin-disponible" *ngIf="l.disponible === 0">Ya devuelta por completo</span>

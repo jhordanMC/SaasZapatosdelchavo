@@ -247,6 +247,18 @@ export async function exportarResumenMensualPDF(
   doc.setTextColor(190, 225, 215);
   doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 24);
 
+  // Logo VILCAS en la esquina derecha de la cabecera institucional
+  if (logoVilcasDataUrl) {
+    try {
+      doc.addImage(logoVilcasDataUrl, 'PNG', 184, 6, 12, 12);
+      doc.setFontSize(7);
+      doc.setTextColor(200, 235, 225);
+      doc.text('Plataforma VILCAS', 190, 22, { align: 'center' });
+    } catch {
+      // Ignorar si no carga
+    }
+  }
+
   // Recuadro derecho tipo Boleta
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(136, 5, 60, 26, 2, 2, 'FD');

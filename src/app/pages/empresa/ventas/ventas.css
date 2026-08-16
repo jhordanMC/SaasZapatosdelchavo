@@ -836,109 +836,83 @@
   padding: 0 0 10px;
 }
 
-.modal-devolucion { width: 580px; max-width: 95vw; max-height: 90vh; }
-.devolucion-header-summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  background: var(--bg-canvas);
-  border-radius: 10px;
-  border: 1px solid var(--border-default);
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.devolucion-venta-folio { color: var(--brand-deep); }
-.devolucion-venta-total { color: var(--text-primary); font-weight: 700; }
-
+/* ── Modal: registrar devolución ─────────────────────────────────────── */
 .devolucion-lineas {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 320px;
+  max-height: 280px;
   overflow-y: auto;
   margin-bottom: 16px;
-  padding-right: 4px;
 }
-.devolucion-linea-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--bg-canvas);
-  border: 1.5px solid var(--border-default);
-  border-radius: 12px;
-  transition: border-color 0.2s ease;
-}
-.devolucion-linea-card:hover { border-color: var(--brand-deep); }
-
-.devolucion-linea-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.devolucion-linea-info { display: flex; flex-direction: column; gap: 3px; }
-.devolucion-linea-nombre { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
-.devolucion-linea-meta { font-size: 11.5px; color: var(--text-tertiary); }
-
-.badge-disponible {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(2, 75, 64, 0.1);
-  color: var(--brand-deep);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.badge-disponible.badge-agotado { background: rgba(180, 50, 50, 0.1); color: #b43232; }
-
-.devolucion-linea-controles {
+.devolucion-linea {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 8px;
-  border-top: 1px dashed var(--border-default);
+  padding: 12px 14px;
+  background: var(--bg-canvas, #f8faf9);
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 12px;
 }
-.devolucion-cantidad-stepper { display: flex; align-items: center; gap: 4px; }
-.btn-stepper {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 16px;
+.devolucion-linea-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.devolucion-linea-nombre {
+  font-size: 13.5px;
   font-weight: 700;
-  cursor: pointer;
+  color: var(--text-primary);
+}
+.devolucion-linea-meta {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.devolucion-linea-controles {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.btn-stepper:hover:not(:disabled) { background: var(--brand-deep); color: white; border-color: var(--brand-deep); }
-.btn-stepper:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .devolucion-linea-cantidad {
-  min-width: 90px;
-  width: 100px;
+  min-width: 85px;
+  width: 90px;
   padding: 6px 10px;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   border: 1.5px solid var(--border-default);
   border-radius: 8px;
-  background: var(--bg-surface);
+  background: var(--bg-surface, #ffffff);
   color: var(--text-primary);
   text-align: center;
   box-sizing: border-box;
-  -moz-appearance: textfield;
 }
 .devolucion-linea-cantidad::-webkit-outer-spin-button,
 .devolucion-linea-cantidad::-webkit-inner-spin-button {
-  -webkit-appearance: none;
   margin: 0;
 }
-.devolucion-linea-checkbox { font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.devolucion-linea-sin-disponible { font-size: 11.5px; color: var(--text-tertiary); font-style: italic; flex-shrink: 0; }
+
+.devolucion-linea-checkbox {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.devolucion-linea-sin-disponible {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  flex-shrink: 0;
+}
 .restaurar-stock-opcion { display: flex; align-items: center; gap: 4px; }
 
 /* Evidencias / cambio de producto — mismos nombres que en Historial de Ventas */
