@@ -24,6 +24,8 @@
     [userDni]="usuario()?.dni ?? '—'"
     [userEmail]="usuario()?.correo ?? '—'"
     [userPhone]="usuario()?.telefono ?? '—'"
+    [navItems]="navItems()"
+    contextoBusqueda="empresa"
   ></app-topbar>
 
   <router-outlet></router-outlet>

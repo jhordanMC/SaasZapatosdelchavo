@@ -21,6 +21,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -106,7 +107,10 @@ const CATEGORIAS_SUGERIDAS = [
   styleUrls: ['./inventario.css'],
 })
 export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
-  constructor(private inventarioService: InventarioService) {
+  constructor(
+    private inventarioService: InventarioService,
+    private activatedRoute: ActivatedRoute,
+  ) {
     // Debounce de 300ms: espera a que el usuario deje de teclear antes de
     // pedir la página 1 al backend con el nuevo texto de búsqueda.
     this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
@@ -202,6 +206,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
+    // Llega desde el command palette del topbar (⌘K → resultado de
+    // "Productos") con ?q=texto — precarga el filtro de búsqueda antes de
+    // pedir la primera página, para que el usuario aterrice ya filtrado.
+    const q = this.activatedRoute.snapshot.queryParamMap.get('q');
+    if (q) this.busqueda = q;
     this.cargarDatosIniciales();
   }
 

@@ -25,6 +25,12 @@ export interface Empresa {
   creado_en: string;
 }
 
+export interface EmpresaBusquedaRapidaItem {
+  id_empresa: string;
+  nombre: string;
+  estado: EstadoEmpresa;
+}
+
 export interface Sector {
   id_sector: string;
   nombre: string;
@@ -91,6 +97,13 @@ export class EmpresasService {
    * empresa-detalle.ts antes de llamar esto. */
   eliminarEmpresa(idEmpresa: string): Observable<{ mensaje: string }> {
     return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/empresas/${idEmpresa}`);
+  }
+
+  /** Command palette del topbar (⌘K) — salto directo a una empresa por nombre. */
+  buscarRapido(q: string, limit = 6): Observable<EmpresaBusquedaRapidaItem[]> {
+    return this.http.get<EmpresaBusquedaRapidaItem[]>(`${this.apiUrl}/empresas/buscar-rapido`, {
+      params: { q, limit: String(limit) },
+    });
   }
 
   // ── Sectores (catálogo global) ──────────────────────────

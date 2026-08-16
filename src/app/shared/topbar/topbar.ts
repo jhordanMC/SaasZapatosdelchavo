@@ -3,20 +3,36 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth';
 import { CuentaGuardada } from '../../core/cuentas-guardadas.service';
 import { ThemeService } from '../../core/theme.service';
 import { AppLang, I18nService } from '../../core/i18n.service';
 import { AnuncioParaUsuario, AnunciosService } from '../../services/anuncios';
 import { SatisfaccionService } from '../../services/satisfaccion';
+import { EmpresasService } from '../../services/empresas';
+import { InventarioService } from '../../services/inventario';
 import { esArchivoDeImagen } from '../../utils/validar-imagen';
 import { environment } from '../../../environments/environment';
+import { SidebarItem } from '../sidebar/sidebar';
 
 /** Las secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
 export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password' | 'cuentas';
 
 /** 'lista' = ver/alternar cuentas guardadas; las otras 2 son el mini-login para sumar una nueva. */
 type PasoCuentas = 'lista' | 'agregar-credenciales' | 'agregar-codigo';
+
+/** Un resultado del command palette (⌘K): un salto de navegación (sección
+ *  del sidebar) o un salto directo a una entidad (empresa/producto). */
+interface ResultadoBusqueda {
+  tipo: 'nav' | 'entidad';
+  label: string;
+  sublabel?: string;
+  icono: 'nav' | 'empresas' | 'inventario';
+  ruta: unknown[];
+  queryParams?: Record<string, string>;
+}
 
 @Component({
   selector: 'app-topbar',
@@ -31,6 +47,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private router: Router,
     private anunciosService: AnunciosService,
     private satisfaccionService: SatisfaccionService,
+    private empresasService: EmpresasService,
+    private inventarioService: InventarioService,
     public themeService: ThemeService,
     public i18n: I18nService,
   ) {}
@@ -59,11 +77,25 @@ export class TopbarComponent implements OnInit, OnDestroy {
   showProfileModal = false;
   confirmandoCierre = false;
 
-  // ── Buscador (⌘K / Ctrl+K enfoca el campo) ──
-  // Solo enfoca el input por ahora — todavía no hay un endpoint de
-  // búsqueda global en el backend, así que no pretende devolver resultados.
+  // ── Buscador global (⌘K / Ctrl+K) — command palette ──────────────────
+  // Combina 2 fuentes de resultados:
+  //  1) Navegación: fuzzy-match local e instantáneo contra `navItems`
+  //     (las secciones del sidebar que cada layout le pasa a este topbar).
+  //  2) Entidades: según `contextoBusqueda`, un salto directo a una
+  //     empresa (admin) o a un producto (empresa) — con debounce, porque
+  //     esa sí pega contra el backend.
+  @Input() navItems: SidebarItem[] = [];
+  /** Qué entidad busca la fuente #2 — cada layout (admin/empresa) pasa la suya. */
+  @Input() contextoBusqueda: 'admin' | 'empresa' = 'empresa';
+
   @ViewChild('buscadorInput') buscadorInput?: ElementRef<HTMLInputElement>;
   busqueda = '';
+  mostrarResultadosBusqueda = false;
+  buscandoEntidades = signal(false);
+  resultadosEntidades = signal<ResultadoBusqueda[]>([]);
+  indiceActivoBusqueda = -1;
+
+  private readonly busquedaSubject = new Subject<string>();
 
   @HostListener('document:keydown', ['$event'])
   manejarAtajoBusqueda(evento: KeyboardEvent): void {
@@ -71,6 +103,129 @@ export class TopbarComponent implements OnInit, OnDestroy {
     if (!esAtajo) return;
     evento.preventDefault();
     this.buscadorInput?.nativeElement.focus();
+    this.buscadorInput?.nativeElement.select();
+  }
+
+  private normalizar(texto: string): string {
+    return texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  /** Navegación: local, sin llamada a backend — se recalcula en cada tecleo. */
+  get resultadosNavegacion(): ResultadoBusqueda[] {
+    const termino = this.normalizar(this.busqueda);
+    if (!termino) return [];
+    const resultados: ResultadoBusqueda[] = [];
+    for (const item of this.navItems) {
+      if (item.route && this.normalizar(item.label).includes(termino)) {
+        resultados.push({ tipo: 'nav', label: item.label, icono: 'nav', ruta: [item.route] });
+      }
+      for (const sub of item.subItems ?? []) {
+        if (this.normalizar(sub.label).includes(termino)) {
+          resultados.push({
+            tipo: 'nav',
+            label: sub.label,
+            sublabel: item.label,
+            icono: 'nav',
+            ruta: [sub.route],
+          });
+        }
+      }
+    }
+    return resultados.slice(0, 5);
+  }
+
+  /** Lista aplanada (navegación + entidades) — la que recorre el teclado (↑↓). */
+  get resultadosCombinados(): ResultadoBusqueda[] {
+    return [...this.resultadosNavegacion, ...this.resultadosEntidades()];
+  }
+
+  onBusquedaFocus(): void {
+    if (this.busqueda.trim()) this.mostrarResultadosBusqueda = true;
+  }
+
+  onBusquedaInput(valor: string): void {
+    this.busqueda = valor;
+    this.indiceActivoBusqueda = -1;
+    const termino = valor.trim();
+    this.mostrarResultadosBusqueda = termino.length > 0;
+    this.busquedaSubject.next(termino);
+  }
+
+  private suscribirBusquedaEntidades(): void {
+    this.busquedaSubject
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap((termino) => {
+          if (!termino) {
+            this.buscandoEntidades.set(false);
+            return of<ResultadoBusqueda[]>([]);
+          }
+          this.buscandoEntidades.set(true);
+
+          if (this.contextoBusqueda === 'admin') {
+            return this.empresasService.buscarRapido(termino, 6).pipe(
+              map((empresas): ResultadoBusqueda[] =>
+                empresas.map((e) => ({
+                  tipo: 'entidad',
+                  label: e.nombre,
+                  sublabel:
+                    e.estado === 'activa' ? 'Empresa activa' : e.estado === 'suspendida' ? 'Empresa suspendida' : 'Empresa cancelada',
+                  icono: 'empresas',
+                  ruta: ['/admin/empresas', e.id_empresa],
+                })),
+              ),
+              catchError(() => of<ResultadoBusqueda[]>([])),
+            );
+          }
+
+          return this.inventarioService.listarProductos({ busqueda: termino }, 0, 6).pipe(
+            map((pagina): ResultadoBusqueda[] =>
+              pagina.items.map((p) => ({
+                tipo: 'entidad',
+                label: p.nombre,
+                sublabel: p.nombre_categoria ?? 'Producto',
+                icono: 'inventario',
+                ruta: ['/empresa/inventario'],
+                queryParams: { q: p.nombre },
+              })),
+            ),
+            catchError(() => of<ResultadoBusqueda[]>([])),
+          );
+        }),
+      )
+      .subscribe((resultados) => {
+        this.buscandoEntidades.set(false);
+        this.resultadosEntidades.set(resultados);
+      });
+  }
+
+  moverSeleccionBusqueda(direccion: 1 | -1): void {
+    const total = this.resultadosCombinados.length;
+    if (total === 0) return;
+    this.indiceActivoBusqueda = (this.indiceActivoBusqueda + direccion + total) % total;
+  }
+
+  confirmarSeleccionBusqueda(): void {
+    const resultados = this.resultadosCombinados;
+    const elegido = this.indiceActivoBusqueda >= 0 ? resultados[this.indiceActivoBusqueda] : resultados[0];
+    if (elegido) this.irAResultado(elegido);
+  }
+
+  irAResultado(resultado: ResultadoBusqueda): void {
+    this.router.navigate(resultado.ruta, resultado.queryParams ? { queryParams: resultado.queryParams } : undefined);
+    this.cerrarResultadosBusqueda();
+  }
+
+  cerrarResultadosBusqueda(): void {
+    this.mostrarResultadosBusqueda = false;
+    this.busqueda = '';
+    this.indiceActivoBusqueda = -1;
+    this.resultadosEntidades.set([]);
   }
 
   // ── Foto de perfil (avatar) ────────────────────────────────────────
@@ -657,12 +812,14 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarAnuncios();
+    this.suscribirBusquedaEntidades();
   }
 
   ngOnDestroy(): void {
     this.detenerIntervaloNuevaCuenta();
     if (this.shakeCodigoCuentaTimeout) clearTimeout(this.shakeCodigoCuentaTimeout);
     if (this.shakeCodigoPasswordTimeout) clearTimeout(this.shakeCodigoPasswordTimeout);
+    this.busquedaSubject.complete();
   }
 
   private cargarAnuncios(): void {
