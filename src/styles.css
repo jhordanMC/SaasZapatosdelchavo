@@ -9,6 +9,10 @@
   font-family: var(--font-sans);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: inherit;

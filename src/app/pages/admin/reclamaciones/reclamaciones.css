@@ -1,4 +1,5 @@
-:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
+  scrollbar-gutter: stable; }
 
 .content { padding: var(--space-page); display: flex; flex-direction: column; gap: 20px; }
 

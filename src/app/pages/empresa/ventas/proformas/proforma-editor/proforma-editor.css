@@ -1,4 +1,5 @@
-:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; background: var(--bg-canvas); }
+:host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
+  scrollbar-gutter: stable; background: var(--bg-canvas); }
 
 .editor-toolbar { display: flex; padding: var(--space-page) var(--space-page) 0; }
 
