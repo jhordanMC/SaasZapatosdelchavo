@@ -380,10 +380,10 @@
   min-width: 0;
   transition: border-color 0.2s;
 }
-.form-row-2 { flex-direction: row; gap: 12px; }
+.form-row-2 { display: flex; flex-direction: row; gap: 12px; }
 .form-row-2 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
-.form-row-3 { flex-direction: row; gap: 12px; }
+.form-row-3 { display: flex; flex-direction: row; gap: 12px; }
 .form-row-3 > div { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 
 .margen-ganancia-campo { position: relative; }
