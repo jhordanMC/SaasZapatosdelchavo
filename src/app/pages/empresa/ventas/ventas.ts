@@ -1214,22 +1214,6 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resultadosProductoCambio.set([]);
   }
 
-  private opcionesBranding() {
-    const u = this.authService.usuarioActual();
-    return {
-      nombreEmpresa: u?.nombreEmpresa ?? null,
-      clienteFotoUrl: u?.avatarUrl ? `${environment.apiUrl}${u.avatarUrl}` : null,
-    };
-  }
-
-  imprimirBoleta80mm(venta: VentaRead): void {
-    exportarBoletaVenta80mm(venta, this.opcionesBranding());
-  }
-
-  imprimirBoletaNormal(venta: VentaRead): void {
-    exportarBoletaVentaNormal(venta, this.opcionesBranding());
-  }
-
   cambiarCantidadDevolucion(linea: (typeof this.lineasDevolucion)[number], valor: number | string): void {
     let num = typeof valor === 'string' ? parseInt(valor, 10) : valor;
     if (isNaN(num) || num < 0) num = 0;
@@ -1283,5 +1267,28 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
           this.errorDevolucion.set(err?.error?.detail ?? 'No se pudo registrar la devolución.');
         },
       });
+  }
+
+  private opcionesBranding() {
+    const u = this.authService.usuarioActual();
+    let fotoUrl: string | null = null;
+    if (u?.avatarUrl) {
+      fotoUrl = u.avatarUrl.startsWith('http')
+        ? u.avatarUrl
+        : `${environment.apiUrl}${u.avatarUrl.startsWith('/') ? '' : '/'}${u.avatarUrl}`;
+    }
+    return {
+      nombreEmpresa: u?.nombreEmpresa ?? null,
+      nombreUsuario: u?.nombre ?? null,
+      clienteFotoUrl: fotoUrl,
+    };
+  }
+
+  imprimirBoleta80mm(venta: any): void {
+    if (venta) exportarBoletaVenta80mm(venta, this.opcionesBranding());
+  }
+
+  imprimirBoletaNormal(venta: any): void {
+    if (venta) exportarBoletaVentaNormal(venta, this.opcionesBranding());
   }
 }

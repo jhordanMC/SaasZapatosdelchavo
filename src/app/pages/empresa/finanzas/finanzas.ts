@@ -305,9 +305,16 @@ export class FinanzasComponent implements OnInit {
 
   private opcionesBranding() {
     const u = this.authService.usuarioActual();
+    let fotoUrl: string | null = null;
+    if (u?.avatarUrl) {
+      fotoUrl = u.avatarUrl.startsWith('http')
+        ? u.avatarUrl
+        : `${environment.apiUrl}${u.avatarUrl.startsWith('/') ? '' : '/'}${u.avatarUrl}`;
+    }
     return {
       nombreEmpresa: u?.nombreEmpresa ?? null,
-      clienteFotoUrl: u?.avatarUrl ? `${environment.apiUrl}${u.avatarUrl}` : null,
+      nombreUsuario: u?.nombre ?? null,
+      clienteFotoUrl: fotoUrl,
     };
   }
 

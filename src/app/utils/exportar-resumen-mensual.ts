@@ -179,13 +179,21 @@ export function construirResumenMensual(
 
 export interface OpcionesBrandingReporte {
   nombreEmpresa?: string | null;
+  nombreUsuario?: string | null;
   clienteFotoUrl?: string | null;
 }
 
 // ---------------------------------------------------------------------------
 async function imagenADataUrl(url: string): Promise<string | null> {
+  if (!url) return null;
   try {
-    const resp = await fetch(url);
+    const fullUrl = url.startsWith('http') || url.startsWith('data:')
+      ? url
+      : `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+
+    if (fullUrl.startsWith('data:')) return fullUrl;
+
+    const resp = await fetch(fullUrl);
     if (!resp.ok) return null;
     const blob = await resp.blob();
     return await new Promise<string>((resolve, reject) => {
@@ -223,61 +231,80 @@ export async function exportarResumenMensualPDF(
 
   // Cabecera institucional estilo Boleta / Comprobante
   doc.setFillColor(2, 75, 64); // #024b40
-  doc.rect(0, 0, 210, 36, 'F');
+  doc.rect(0, 0, 210, 42, 'F');
 
   let posXTexto = margenIzq;
 
+  // 1. Foto de perfil del usuario/cliente a la izquierda
   if (clienteFotoDataUrl) {
     try {
-      doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), margenIzq, 6, 24, 24);
-      posXTexto = margenIzq + 28;
+      doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), 12, 6, 28, 28);
+      posXTexto = 46;
     } catch {
-      posXTexto = margenIzq;
+      posXTexto = 14;
     }
+  } else {
+    // Si no hay foto o falla la carga, dibujamos un badge circular de avatar elegante
+    doc.setFillColor(4, 105, 90);
+    doc.circle(26, 20, 14, 'F');
+    doc.setFontSize(15);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    const inicial = (opciones?.nombreEmpresa || opciones?.nombreUsuario || 'E').slice(0, 1).toUpperCase();
+    doc.text(inicial, 26, 25, { align: 'center' });
+    posXTexto = 46;
   }
 
+  // Nombre de Empresa y Título
   const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.text(nombreEmpresa, posXTexto, 16);
+  doc.text(nombreEmpresa, posXTexto, 15);
 
-  doc.setFontSize(9.5);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(190, 225, 215);
-  doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 24);
+  doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 23);
 
-  // Logo VILCAS en la esquina derecha de la cabecera institucional
+  if (opciones?.nombreUsuario) {
+    doc.setFontSize(8);
+    doc.setTextColor(220, 240, 235);
+    doc.text(`Usuario: ${opciones.nombreUsuario}`, posXTexto, 30);
+  }
+
+  // 2. Recuadro blanco de Boleta (RESUMEN DE CAJA) en la zona media (sin solaparse)
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(110, 6, 52, 30, 2, 2, 'FD');
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
+  doc.text('RESUMEN DE CAJA', 136, 13, { align: 'center' });
+
+  const numBoleta = `RPT-${r.mes.replace('-', '')}`;
+  doc.setFontSize(9.5);
+  doc.text(numBoleta, 136, 21, { align: 'center' });
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Período: ${r.etiquetaMes}`, 136, 28, { align: 'center' });
+
+  // 3. Logo VILCAS a la derecha extrema (X=168), 100% nítido y visible sin solapamiento
   if (logoVilcasDataUrl) {
     try {
-      doc.addImage(logoVilcasDataUrl, 'PNG', 184, 6, 12, 12);
-      doc.setFontSize(7);
-      doc.setTextColor(200, 235, 225);
-      doc.text('Plataforma VILCAS', 190, 22, { align: 'center' });
+      doc.addImage(logoVilcasDataUrl, 'PNG', 168, 6, 28, 16);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(230, 245, 240);
+      doc.text('VILCAS POS', 182, 26, { align: 'center' });
     } catch {
       // Ignorar si no carga
     }
   }
 
-  // Recuadro derecho tipo Boleta
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(136, 5, 60, 26, 2, 2, 'FD');
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(2, 75, 64);
-  doc.text('RESUMEN DE VENTA Y CAJA', 166, 12, { align: 'center' });
-
-  const numBoleta = `RPT-${r.mes.replace('-', '')}`;
-  doc.setFontSize(10);
-  doc.text(numBoleta, 166, 20, { align: 'center' });
-
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Período: ${r.etiquetaMes}`, 166, 26, { align: 'center' });
-
-  y = 44;
+  y = 48;
 
   // Bloque: Resumen general de la Boleta / Comprobante
   doc.setFontSize(11);
