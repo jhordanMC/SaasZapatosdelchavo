@@ -161,6 +161,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   editandoId: string | null = null;
   form: ProductoForm = this.formVacio();
 
+  // ── Modal de producto: paso del wizard (resumen de tallas ↔ editar 1 talla) ──
+  vistaModal: 'producto' | 'talla' = 'producto';
+  varianteEditandoIndex: number | null = null;
+  private varianteEditandoSnapshot: VarianteFormItem | null = null;
+
+  // ── Confirmación al eliminar una talla individual ────────────────────────
+  varianteAEliminarIndex: number | null = null;
+
   // ── Confirmación al intentar salir del modal con datos sin guardar ──────
   mostrarConfirmarSalir = false;
 
@@ -423,10 +431,19 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       precioVenta: '',
       fotoUrl: null,
       fotoPrevisualizable: true,
-      variantes: [
-        { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: '', tipoUbicacion: '' },
-      ],
+      // Antes arrancaba con una fila vacía editable inline. Ahora "+ Agregar
+      // talla" abre directo el paso de edición, así que un producto nuevo
+      // arranca sin tallas (el resumen muestra el estado vacío).
+      variantes: [],
     };
+  }
+
+  /** Vuelve el modal de producto al paso "resumen" (se llama al abrir/cerrar el modal). */
+  private resetVistaTalla(): void {
+    this.vistaModal = 'producto';
+    this.varianteEditandoIndex = null;
+    this.varianteEditandoSnapshot = null;
+    this.varianteAEliminarIndex = null;
   }
 
   /** Deja pasar solo dígitos y un único punto decimal (costo/precio). */
@@ -462,6 +479,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mostrarInfoMargen = false;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
+    this.resetVistaTalla();
     this.showModal = true;
   }
 
@@ -476,6 +494,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.archivoFotoPendiente = null;
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
+        this.resetVistaTalla();
         this.showModal = true;
         this.cargandoDetalle.set(null);
       },
@@ -500,6 +519,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.archivoFotoPendiente = null;
         this.cerrarPanelNuevaCategoria();
         this.cerrarPanelGestionAlmacenes();
+        this.resetVistaTalla();
         this.showModal = true;
         this.cargandoDetalle.set(null);
       },
@@ -549,6 +569,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.archivoFotoPendiente = null;
     this.cerrarPanelNuevaCategoria();
     this.cerrarPanelGestionAlmacenes();
+    this.resetVistaTalla();
   }
 
   /** True si el formulario tiene algo digitado (para no perderlo por accidente). */
@@ -593,14 +614,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.form.variantes.reduce((total, v) => total + (parseInt(v.cantidad, 10) || 0), 0);
   }
 
-  agregarFilaVariante(): void {
+  private nuevaFilaVarianteVacia(): VarianteFormItem {
     const hayLocales = this.locales().length > 0;
     const hayAlmacenes = this.almacenesReales().length > 0;
     const tipo: 'almacen' | 'local' | '' = hayLocales ? 'local' : (hayAlmacenes ? 'almacen' : '');
     const primerUbicacion = hayLocales
       ? `local:${this.locales()[0].id_local}`
       : (hayAlmacenes ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
-    this.form.variantes.push({ talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: primerUbicacion, tipoUbicacion: tipo });
+    return { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: primerUbicacion, tipoUbicacion: tipo };
   }
 
   /** Al cambiar el tipo (Almacén/Local) se limpia la ubicación elegida, para que
@@ -612,6 +633,86 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quitarFilaVariante(index: number): void {
     this.form.variantes.splice(index, 1);
+  }
+
+  // ── Wizard del modal de producto: resumen de tallas ↔ editar 1 talla ────
+
+  /** Nombre legible de la ubicación de una variante ('local:ID' / 'almacen:ID' → nombre real). */
+  nombreUbicacion(v: VarianteFormItem): string {
+    if (!v.ubicacion) return '—';
+    const [tipo, id] = v.ubicacion.split(':');
+    if (tipo === 'local') return this.locales().find((l) => l.id_local === id)?.nombre ?? '—';
+    if (tipo === 'almacen') return this.almacenesReales().find((a) => a.id_almacen === id)?.nombre ?? '—';
+    return '—';
+  }
+
+  /** Cantidad de ubicaciones distintas (locales/almacenes) usadas por las tallas del formulario. */
+  get almacenesActivosCount(): number {
+    return new Set(this.form.variantes.map((v) => v.ubicacion).filter((u) => !!u)).size;
+  }
+
+  /** Todas las tallas menos la que se está editando ahora — panel de contexto de solo lectura. */
+  get otrasTallas(): { variante: VarianteFormItem; index: number }[] {
+    if (this.varianteEditandoIndex === null) return [];
+    return this.form.variantes
+      .map((variante, index) => ({ variante, index }))
+      .filter((item) => item.index !== this.varianteEditandoIndex);
+  }
+
+  /** Abre el paso "Editar talla y stock" para una fila ya existente, guardando una copia por si cancela. */
+  abrirEditarTalla(index: number): void {
+    this.varianteEditandoSnapshot = { ...this.form.variantes[index] };
+    this.varianteEditandoIndex = index;
+    this.vistaModal = 'talla';
+  }
+
+  /** "+ Agregar talla": crea la fila y abre directo su edición (sin snapshot: si cancela, se descarta entera). */
+  abrirNuevaTalla(): void {
+    this.form.variantes.push(this.nuevaFilaVarianteVacia());
+    this.varianteEditandoSnapshot = null;
+    this.varianteEditandoIndex = this.form.variantes.length - 1;
+    this.vistaModal = 'talla';
+  }
+
+  /** Vuelve al resumen. Descarta la fila si era nueva, o restaura su snapshot si ya existía. */
+  cancelarEdicionTalla(): void {
+    if (this.varianteEditandoIndex === null) return;
+    if (this.varianteEditandoSnapshot) {
+      this.form.variantes[this.varianteEditandoIndex] = this.varianteEditandoSnapshot;
+    } else {
+      this.form.variantes.splice(this.varianteEditandoIndex, 1);
+    }
+    this.varianteEditandoSnapshot = null;
+    this.varianteEditandoIndex = null;
+    this.vistaModal = 'producto';
+  }
+
+  /** Confirma los cambios de la talla actual y vuelve al resumen (se persiste recién al guardar el producto). */
+  guardarCambiosTalla(): void {
+    this.varianteEditandoSnapshot = null;
+    this.varianteEditandoIndex = null;
+    this.vistaModal = 'producto';
+  }
+
+  pedirEliminarTalla(index: number): void {
+    this.varianteAEliminarIndex = index;
+  }
+
+  cancelarEliminarTalla(): void {
+    this.varianteAEliminarIndex = null;
+  }
+
+  confirmarEliminarTalla(): void {
+    if (this.varianteAEliminarIndex === null) return;
+    const index = this.varianteAEliminarIndex;
+    this.quitarFilaVariante(index);
+    // Si justo estábamos editando esa talla, volvemos al resumen.
+    if (this.varianteEditandoIndex === index) {
+      this.varianteEditandoSnapshot = null;
+      this.varianteEditandoIndex = null;
+      this.vistaModal = 'producto';
+    }
+    this.varianteAEliminarIndex = null;
   }
 
   // ── Creador / gestor rápido de categoría ──────────────────────────────────
