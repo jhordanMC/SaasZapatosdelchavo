@@ -579,12 +579,6 @@
         </div>
       </div>
 
-      <!-- Cancelar / Guardar cambios: justo debajo de los campos, antes de "Otras tallas" (pedido explícito) -->
-      <div class="talla-acciones-inline">
-        <button class="btn-secondary" (click)="cancelarEdicionTalla()">Cancelar</button>
-        <button class="btn-primary" (click)="guardarCambiosTalla()">Guardar cambios</button>
-      </div>
-
       <!-- Contexto: las demás tallas del producto, de solo lectura -->
       <div class="otras-tallas" *ngIf="otrasTallas.length > 0">
         <div class="otras-tallas-titulo">Otras tallas del producto</div>
@@ -624,6 +618,12 @@
       <!-- Error del modal -->
       <div class="modal-error" *ngIf="errorModal()">
         {{ errorModal() }}
+      </div>
+
+      <!-- Cancelar / Guardar cambios: al final, como en el mockup -->
+      <div class="talla-acciones-inline">
+        <button class="btn-secondary" (click)="cancelarEdicionTalla()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarCambiosTalla()">Guardar cambios</button>
       </div>
     </div>
 
