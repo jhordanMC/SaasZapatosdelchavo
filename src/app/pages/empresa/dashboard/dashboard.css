@@ -580,37 +580,3 @@
     transform: none;
   }
 }
-
-/* ═══════════════ Mini-tarjeta: Devoluciones del período ═══════════════ */
-.panel-devoluciones {
-  margin: 16px 0;
-  padding: 18px 20px;
-  border-radius: 16px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-}
-.panel-devoluciones-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.panel-devoluciones-titulo { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.panel-devoluciones-cantidad { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 4px 10px; border-radius: 999px; background: var(--bg-canvas); }
-
-.panel-devoluciones-cuerpo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.panel-devoluciones-col { display: flex; flex-direction: column; gap: 6px; }
-.panel-devoluciones-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.02em; }
-.panel-devoluciones-valor { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.panel-devoluciones-valor-rojo { color: var(--color-danger, #d33); }
-.panel-devoluciones-nota { font-size: 11px; color: var(--text-tertiary); }
-.panel-devoluciones-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip-tipo-devolucion {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--bg-canvas);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-default);
-}
-.panel-devoluciones-vacio { font-size: 12.5px; color: var(--text-tertiary); margin: 0; }
-
-@media (max-width: 900px) {
-  .panel-devoluciones-cuerpo { grid-template-columns: 1fr; }
-}

@@ -123,46 +123,6 @@
     </div>
   </div>
 
-  <!-- ═══════════════ MINI-TARJETA: DEVOLUCIONES DEL PERÍODO ═══════════════ -->
-  <div class="panel-devoluciones" *ngIf="cargandoDevoluciones()">
-    <div class="skeleton-linea skeleton-linea-badge"></div>
-    <div class="skeleton-linea skeleton-linea-valor"></div>
-  </div>
-  <div class="panel-devoluciones" *ngIf="!cargandoDevoluciones() && resumenDevoluciones() as r">
-    <div class="panel-devoluciones-header">
-      <span class="panel-devoluciones-titulo">Devoluciones {{ etiquetaPeriodoActual }}</span>
-      <span class="panel-devoluciones-cantidad">{{ r.cantidadDevoluciones }} devolución(es)</span>
-    </div>
-
-    <div class="panel-devoluciones-cuerpo" *ngIf="r.cantidadDevoluciones > 0; else sinDevoluciones">
-      <div class="panel-devoluciones-col">
-        <span class="panel-devoluciones-label">Proveedor con más devoluciones</span>
-        <span class="panel-devoluciones-valor" *ngIf="proveedorConMasDevoluciones as p">{{ p.proveedor }} · {{ p.cantidad }}</span>
-      </div>
-
-      <div class="panel-devoluciones-col">
-        <span class="panel-devoluciones-label">Por tipo</span>
-        <div class="panel-devoluciones-chips">
-          <span class="chip-tipo-devolucion" *ngIf="r.porTipo.total > 0">{{ r.porTipo.total }} {{ etiquetaTipoDevolucion('total') }}</span>
-          <span class="chip-tipo-devolucion" *ngIf="r.porTipo.parcial > 0">{{ r.porTipo.parcial }} {{ etiquetaTipoDevolucion('parcial') }}</span>
-          <span class="chip-tipo-devolucion" *ngIf="r.porTipo.cambio_producto > 0">{{ r.porTipo.cambio_producto }} {{ etiquetaTipoDevolucion('cambio_producto') }}</span>
-          <span class="chip-tipo-devolucion" *ngIf="r.porTipo.cambio_con_ajuste > 0">{{ r.porTipo.cambio_con_ajuste }} {{ etiquetaTipoDevolucion('cambio_con_ajuste') }}</span>
-        </div>
-      </div>
-
-      <div class="panel-devoluciones-col">
-        <span class="panel-devoluciones-label">Impacto en la ganancia {{ etiquetaPeriodoActual }}</span>
-        <span class="panel-devoluciones-valor panel-devoluciones-valor-rojo">−S/{{ r.impactoGanancia.toFixed(2) }}</span>
-        <span class="panel-devoluciones-nota" *ngIf="pctImpactoDevolucionesEnGanancia > 0">
-          {{ pctImpactoDevolucionesEnGanancia.toFixed(1) }}% de la ganancia neta del período
-        </span>
-      </div>
-    </div>
-
-    <ng-template #sinDevoluciones>
-      <p class="panel-devoluciones-vacio">Sin devoluciones registradas en este período. 🎉</p>
-    </ng-template>
-  </div>
 
   <!-- ═══════════════ GRÁFICOS ═══════════════ -->
   <div class="graficos-grid">
