@@ -3,10 +3,12 @@
     "rewrite": "/index.html",
     "exclude": [
       "/assets/*",
-      "*.{css,js,json,png,jpg,jpeg,gif,svg,ico,webp,woff,woff2,ttf,eot,map}"
+      "*.{css,js,json,png,jpg,jpeg,gif,svg,ico,webp,woff,woff2,ttf,eot,map,xml,txt}"
     ]
   },
   "mimeTypes": {
-    ".json": "application/json"
+    ".json": "application/json",
+    ".xml": "application/xml",
+    ".txt": "text/plain"
   }
 }
