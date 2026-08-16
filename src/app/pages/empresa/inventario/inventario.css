@@ -777,27 +777,58 @@
 ══════════════════════════════ */
 .vista-editar-talla .opcional { font-weight: 400; color: var(--text-tertiary); }
 
-.otras-tallas-lista {
-  max-height: 220px;
-  overflow-y: auto;
+/* Cancelar / Guardar cambios, inline justo debajo de los campos (no al fondo del modal) */
+.talla-acciones-inline {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-right: 2px;
-}
-.otras-tallas-item {
-  display: flex;
-  align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  padding: 9px 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
 }
-.otras-tallas-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.otras-tallas-info strong { font-size: 12.5px; color: var(--text-primary); }
-.otras-tallas-info span { font-size: 11px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.otras-tallas-stock { font-size: 12px; font-weight: 700; color: var(--brand-deep); flex-shrink: 0; }
+
+/* Título de sección "Otras tallas del producto" — verde, como el mockup */
+.otras-tallas-titulo {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--brand-deep);
+  margin-bottom: 2px;
+}
+
+/* Tabla de contexto (mismo lenguaje visual que el resumen del paso 1, sin borrar) */
+.otras-tallas-tabla {
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.otras-tallas-columnas,
+.otras-tallas-fila {
+  display: grid;
+  grid-template-columns: 0.55fr 1.1fr 0.55fr 0.9fr 1.05fr 40px;
+  gap: 8px;
+  align-items: center;
+}
+.otras-tallas-columnas {
+  padding: 9px 14px;
+  background: var(--bg-canvas);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.otras-tallas-columnas span {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+.otras-tallas-columnas .col-acciones { text-align: right; }
+
+.otras-tallas-fila {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s;
+}
+.otras-tallas-fila:last-child { border-bottom: none; }
+.otras-tallas-fila:hover { background: var(--bg-surface-hover); }
+.otras-tallas-accion { display: flex; justify-content: flex-end; }
 
 .aviso-info-talla {
   display: flex;
@@ -917,6 +948,38 @@
 
   .variantes-resumen-totales { flex-wrap: wrap; }
   .resumen-stat { flex: 1 1 calc(50% - 5px); }
+
+  /* Tabla "Otras tallas del producto" (paso 2): también se apila en tarjetas */
+  .otras-tallas-tabla { border: none; border-radius: 0; }
+  .otras-tallas-columnas { display: none; }
+  .otras-tallas-fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .otras-tallas-fila:last-child { border-bottom: 1px solid var(--border-subtle); margin-bottom: 0; }
+  .otras-tallas-fila .resumen-valor {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 100px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .otras-tallas-fila .resumen-valor::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
+  }
+  .otras-tallas-accion { flex: 1 1 100%; justify-content: flex-end; }
 }
 
 @media (max-width: 480px) {

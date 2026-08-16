@@ -579,21 +579,37 @@
         </div>
       </div>
 
+      <!-- Cancelar / Guardar cambios: justo debajo de los campos, antes de "Otras tallas" (pedido explícito) -->
+      <div class="talla-acciones-inline">
+        <button class="btn-secondary" (click)="cancelarEdicionTalla()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarCambiosTalla()">Guardar cambios</button>
+      </div>
+
       <!-- Contexto: las demás tallas del producto, de solo lectura -->
       <div class="otras-tallas" *ngIf="otrasTallas.length > 0">
-        <div class="gestion-divider"><span>Otras tallas del producto</span></div>
-        <div class="otras-tallas-lista">
-          <div class="otras-tallas-item" *ngFor="let ot of otrasTallas">
-            <div class="otras-tallas-info">
-              <strong>Talla {{ ot.variante.talla || '—' }}</strong>
-              <span>{{ nombreUbicacion(ot.variante) }} · SKU {{ ot.variante.sku || '—' }}</span>
+        <div class="otras-tallas-titulo">Otras tallas del producto</div>
+        <div class="otras-tallas-tabla">
+          <div class="otras-tallas-columnas">
+            <span>Talla</span>
+            <span>Almacén / Local</span>
+            <span>Stock</span>
+            <span>SKU</span>
+            <span>Cód. Barras</span>
+            <span class="col-acciones">Acciones</span>
+          </div>
+          <div class="otras-tallas-fila" *ngFor="let ot of otrasTallas">
+            <span class="resumen-valor resumen-valor-strong" data-label="Talla">{{ ot.variante.talla || '—' }}</span>
+            <span class="resumen-valor" data-label="Almacén / Local" [title]="nombreUbicacion(ot.variante)">{{ nombreUbicacion(ot.variante) }}</span>
+            <span class="resumen-valor" data-label="Stock">{{ ot.variante.cantidad || 0 }}</span>
+            <span class="resumen-valor" data-label="SKU" [title]="ot.variante.sku || ''">{{ ot.variante.sku || '—' }}</span>
+            <span class="resumen-valor" data-label="Cód. Barras" [title]="ot.variante.codigo_barras || ''">{{ ot.variante.codigo_barras || '—' }}</span>
+            <div class="otras-tallas-accion">
+              <button type="button" class="btn-icon-secundario" (click)="abrirEditarTalla(ot.index)" title="Editar esta talla">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
             </div>
-            <span class="otras-tallas-stock">{{ ot.variante.cantidad || 0 }} uds</span>
-            <button type="button" class="btn-icon-secundario" (click)="abrirEditarTalla(ot.index)" title="Editar esta talla">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
           </div>
         </div>
       </div>
@@ -617,11 +633,6 @@
         <span *ngIf="guardando()">Guardando…</span>
         <span *ngIf="!guardando()">Guardar producto</span>
       </button>
-    </div>
-
-    <div class="modal-footer" *ngIf="vistaModal === 'talla'">
-      <button class="btn-secondary" (click)="cancelarEdicionTalla()">Cancelar</button>
-      <button class="btn-primary" (click)="guardarCambiosTalla()">Guardar cambios</button>
     </div>
   </div>
 </div>
