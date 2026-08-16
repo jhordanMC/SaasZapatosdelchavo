@@ -17,15 +17,12 @@
       <span class="hm-avatar">Empresa Demo</span>
     </div>
 
-    <div class="hm-greeting">
-      <strong>¡Hola, Empresa Demo! 👋</strong>
-      <span>Este es el resumen de tu negocio hoy.</span>
-    </div>
-
-    <!-- El @for con track activeIndex() fuerza a Angular a recrear todo este
-         bloque cada vez que cambia la escena, así el fade-in de la animación
-         CSS se re-dispara solo en cada ciclo del auto-play. -->
     @for (scene of [activeScene]; track activeIndex()) {
+      <div class="hm-greeting">
+        <strong>{{ scene.greetingTitle }}</strong>
+        <span>{{ scene.greetingSubtitle }}</span>
+      </div>
+
       <div class="hm-scene">
         <div class="hm-metrics">
           @for (m of scene.metrics; track m.label) {
@@ -38,17 +35,36 @@
         </div>
 
         <div class="hm-panels">
-          <div class="hm-chart-card">
-            <span class="hm-panel-title">{{ scene.panelTitle }}</span>
-            <svg class="hm-chart" viewBox="0 0 240 70" preserveAspectRatio="none">
-              <polyline [attr.points]="scene.chartPoints" fill="none" stroke-width="2.5" class="hm-chart-line" />
-            </svg>
-            <div class="hm-chart-axis">
-              @for (d of chartDays; track d) {
-                <span>{{ d }}</span>
-              }
+          @if (scene.tableItems) {
+            <div class="hm-table-card">
+              <div class="hm-card-header">
+                <span class="hm-panel-title">{{ scene.panelTitle }}</span>
+                <span class="hm-mini-btn">+ Agregar</span>
+              </div>
+              <div class="hm-mini-table">
+                @for (t of scene.tableItems; track t.col1) {
+                  <div class="hm-table-row">
+                    <span class="hm-col-bold">{{ t.col1 }}</span>
+                    <span class="hm-col-sub">{{ t.col2 }}</span>
+                    <span class="hm-col-val">{{ t.col3 }}</span>
+                    <span class="hm-col-badge" [class]="t.badgeType">{{ t.badge }}</span>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
+          } @else {
+            <div class="hm-chart-card">
+              <span class="hm-panel-title">{{ scene.panelTitle }}</span>
+              <svg class="hm-chart" viewBox="0 0 240 70" preserveAspectRatio="none">
+                <polyline [attr.points]="scene.chartPoints" fill="none" stroke-width="2.5" class="hm-chart-line" />
+              </svg>
+              <div class="hm-chart-axis">
+                @for (d of chartDays; track d) {
+                  <span>{{ d }}</span>
+                }
+              </div>
+            </div>
+          }
 
           <div class="hm-top-card">
             <span class="hm-panel-title">{{ scene.listTitle }}</span>
@@ -75,9 +91,28 @@
     </div>
   </div>
 
-  <!-- Cursor decorativo: se desplaza solo hasta el nav item de la próxima
-       escena y "hace clic" justo antes de que cambien los datos, para dar
-       la sensación de que alguien está navegando el dashboard en vivo. -->
+  <!-- Bot del perrito Cirobot (flotante interactivo) -->
+  <div class="hm-cirobot-widget">
+    <div class="hm-cbot-bubble">
+      <div class="hm-cbot-head-row">
+        <span class="hm-cbot-badge">🐶 Cirobot AI</span>
+        <span class="hm-cbot-online-dot"></span>
+      </div>
+      <small>Asistente activo en VILCAS</small>
+    </div>
+    <div class="hm-cbot-avatar-button">
+      <svg class="hm-cbot-dog-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 8V4H8" />
+        <rect width="16" height="12" x="4" y="8" rx="2" />
+        <path d="M2 14h2" />
+        <path d="M20 14h2" />
+        <path d="M15 13v2" />
+        <path d="M9 13v2" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Cursor decorativo -->
   <div class="hm-cursor" [style.left.px]="cursorX()" [style.top.px]="cursorY()">
     <span class="hm-cursor-ring" [class.active]="isClicking()"></span>
     <svg class="hm-cursor-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">

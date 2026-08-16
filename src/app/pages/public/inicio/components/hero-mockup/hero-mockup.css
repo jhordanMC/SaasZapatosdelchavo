@@ -296,6 +296,170 @@
   color: #6b7280;
 }
 
+/* ── Tabla Mini para Inventario / Ventas ── */
+.hm-table-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.hm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.hm-mini-btn {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.hm-mini-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hm-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: #fafafa;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.hm-col-bold {
+  font-weight: 700;
+  color: #111827;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hm-col-sub {
+  font-size: 10px;
+  color: #6b7280;
+  margin: 0 8px;
+}
+
+.hm-col-val {
+  font-weight: 700;
+  color: #111827;
+  margin-right: 8px;
+}
+
+.hm-col-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+.hm-col-badge.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.hm-col-badge.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.hm-col-badge.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ── Cirobot Widget Flotante (Bot del perrito) ── */
+.hm-cirobot-widget {
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hm-cbot-bubble {
+  background: #ffffff;
+  border: 1px solid #d1fae5;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: cbotFloatBounce 3s ease-in-out infinite alternate;
+}
+
+@keyframes cbotFloatBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+.hm-cbot-head-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-cbot-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #047857;
+}
+
+.hm-cbot-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.hm-cbot-bubble small {
+  font-size: 9.5px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.hm-cbot-avatar-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  border: 2px solid #ffffff;
+  transition: transform 200ms ease;
+}
+
+.hm-cbot-avatar-button:hover {
+  transform: scale(1.08);
+}
+
+.hm-cbot-dog-svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* ── Cursor decorativo autoplay ── */
 .hm-cursor {
   position: absolute;

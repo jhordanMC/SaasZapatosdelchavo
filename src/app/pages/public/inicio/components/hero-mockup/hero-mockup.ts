@@ -20,13 +20,34 @@ interface MockTopItem {
   dato: string;
 }
 
+export interface MockTableItem {
+  col1: string;
+  col2: string;
+  col3: string;
+  col4: string;
+  badge?: string;
+  badgeType?: 'success' | 'warning' | 'danger';
+}
+
+export interface MockCatalogCard {
+  titulo: string;
+  productos: string;
+  vistas: string;
+  badge: string;
+}
+
 interface MockScene {
   navLabel: string;
+  greetingTitle: string;
+  greetingSubtitle: string;
   panelTitle: string;
   listTitle: string;
   metrics: MockMetric[];
   topItems: MockTopItem[];
+  tableItems?: MockTableItem[];
+  catalogCards?: MockCatalogCard[];
   chartPoints: string;
+  viewType: 'dashboard' | 'inventory' | 'catalogs' | 'sales' | 'finance';
 }
 
 /**
@@ -62,8 +83,11 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
   private readonly scenes: MockScene[] = [
     {
       navLabel: 'Dashboard',
+      greetingTitle: '¡Hola, Empresa Demo! 👋',
+      greetingSubtitle: 'Este es el resumen de tu negocio hoy.',
       panelTitle: 'Ventas últimos 7 días',
       listTitle: 'Productos más vendidos',
+      viewType: 'dashboard',
       metrics: [
         { label: 'Ventas hoy', value: 'S/ 2,180', delta: '+9.4% vs ayer' },
         { label: 'Pedidos', value: '31', delta: '+6.1% vs ayer' },
@@ -79,8 +103,11 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
     },
     {
       navLabel: 'Inventario',
-      panelTitle: 'Rotación de Inventario',
-      listTitle: 'Alerta de Reposición',
+      greetingTitle: '📦 Inventario de Productos',
+      greetingSubtitle: 'Gestión y control de stock en tiempo real.',
+      panelTitle: 'Stock de Productos',
+      listTitle: 'Artículos por Agotar',
+      viewType: 'inventory',
       metrics: [
         { label: 'Total artículos', value: '1,240', delta: 'En catálogo' },
         { label: 'Categorías', value: '18', delta: 'Registradas' },
@@ -88,16 +115,24 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
         { label: 'Por agotar', value: '8', delta: 'Urgente', danger: true },
       ],
       topItems: [
-        { nombre: 'Polera Oversize', dato: '5 uds (Reordenar)' },
-        { nombre: 'Zapatilla Urban', dato: '3 uds (Reordenar)' },
-        { nombre: 'Casaca Denim', dato: '2 uds (Reordenar)' },
+        { nombre: 'Polera Oversize', dato: '5 uds restantes' },
+        { nombre: 'Zapatilla Urban', dato: '3 uds restantes' },
+        { nombre: 'Casaca Denim', dato: '2 uds restantes' },
+      ],
+      tableItems: [
+        { col1: 'Zapato Cuero Oxford', col2: 'SKU: ZAP-001', col3: 'S/ 189.00', col4: '42 uds', badge: 'En Stock', badgeType: 'success' },
+        { col1: 'Zapatilla Urban White', col2: 'SKU: ZAP-084', col3: 'S/ 149.00', col4: '3 uds', badge: 'Stock Bajo', badgeType: 'danger' },
+        { col1: 'Mocasín Classic Black', col2: 'SKU: ZAP-012', col3: 'S/ 129.00', col4: '18 uds', badge: 'En Stock', badgeType: 'success' },
       ],
       chartPoints: '0,30 40,20 80,45 120,15 160,30 200,10 240,25',
     },
     {
       navLabel: 'Catálogos',
-      panelTitle: 'Visitas al Catálogo Digital',
-      listTitle: 'Colecciones Activas',
+      greetingTitle: '🎨 Catálogos Digitales IA',
+      greetingSubtitle: 'Tus productos listos para vender por WhatsApp.',
+      panelTitle: 'Visitas al Catálogo',
+      listTitle: 'Catálogos Activos',
+      viewType: 'catalogs',
       metrics: [
         { label: 'Visitas hoy', value: '542', delta: '+14.2% vs ayer' },
         { label: 'Catálogos IA', value: '4', delta: 'Publicados' },
@@ -105,16 +140,23 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
         { label: 'Sin stock', value: '2', delta: 'En catálogo', danger: true },
       ],
       topItems: [
-        { nombre: 'Colección Otoño 2026', dato: '320 vistas' },
-        { nombre: 'Ofertas de Calzado', dato: '184 vistas' },
-        { nombre: 'Accesorios Top', dato: '95 vistas' },
+        { nombre: 'Colección Otoño', dato: '320 vistas' },
+        { nombre: 'Calzado & Accesorios', dato: '184 vistas' },
+        { nombre: 'Ofertas de Temporada', dato: '95 vistas' },
+      ],
+      catalogCards: [
+        { titulo: 'Colección Primavera 2026', productos: '142 productos', vistas: '320 vistas', badge: 'Publicado' },
+        { titulo: 'Calzado & Accesorios Top', productos: '86 productos', vistas: '184 vistas', badge: 'Publicado' },
       ],
       chartPoints: '0,60 40,35 80,50 120,20 160,30 200,15 240,8',
     },
     {
       navLabel: 'Ventas',
-      panelTitle: 'Pedidos últimos 7 días',
-      listTitle: 'Últimos pedidos',
+      greetingTitle: '🛒 Pedidos & Ventas',
+      greetingSubtitle: 'Historial de ventas y seguimiento de cobros.',
+      panelTitle: 'Pedidos de la semana',
+      listTitle: 'Últimos Pedidos',
+      viewType: 'sales',
       metrics: [
         { label: 'Pedidos hoy', value: '31', delta: '+6.1% vs ayer' },
         { label: 'Ticket promedio', value: 'S/ 210', delta: '+4.2% vs ayer' },
@@ -122,16 +164,24 @@ export class HeroMockupComponent implements AfterViewInit, OnDestroy {
         { label: 'Pendientes', value: '3', delta: 'Por confirmar', danger: true },
       ],
       topItems: [
-        { nombre: 'Rosa Fernández', dato: 'S/ 410' },
-        { nombre: 'Luis Quispe', dato: 'S/ 95' },
-        { nombre: 'Diana Cárdenas', dato: 'S/ 260' },
+        { nombre: 'Rosa Fernández', dato: 'S/ 410.00' },
+        { nombre: 'Luis Quispe', dato: 'S/ 95.00' },
+        { nombre: 'Diana Cárdenas', dato: 'S/ 260.00' },
+      ],
+      tableItems: [
+        { col1: '#PED-1094', col2: 'Rosa Fernández', col3: 'Yape', col4: 'S/ 410.00', badge: 'Completado', badgeType: 'success' },
+        { col1: '#PED-1093', col2: 'Luis Quispe', col3: 'Efectivo', col4: 'S/ 95.00', badge: 'Completado', badgeType: 'success' },
+        { col1: '#PED-1092', col2: 'Diana Cárdenas', col3: 'Tarjeta', col4: 'S/ 260.00', badge: 'Pendiente', badgeType: 'warning' },
       ],
       chartPoints: '0,44 40,52 80,24 120,36 160,16 200,28 240,10',
     },
     {
       navLabel: 'Finanzas',
+      greetingTitle: '💰 Flujo de Caja & Finanzas',
+      greetingSubtitle: 'Balance general de ingresos y egresos.',
       panelTitle: 'Balance últimos 7 días',
       listTitle: 'Resumen del mes',
+      viewType: 'finance',
       metrics: [
         { label: 'Ingresos', value: 'S/ 18,540', delta: '+9.8% vs mes ant.' },
         { label: 'Gastos', value: 'S/ 6,300', delta: '+2.4% vs mes ant.' },
