@@ -62,18 +62,23 @@
       <p class="hero-valor">S/{{ a.ganancia_neta_periodo.toFixed(2) }}</p>
       <p class="hero-sub">Lo que te queda después de todos tus costos.</p>
 
+      <div class="alerta-gastos-dashboard" *ngIf="textoAvisoGastos">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>{{ textoAvisoGastos }}</span>
+      </div>
+
       <!-- Termómetro de margen: el elemento firma de este dashboard -->
       <div class="termometro">
         <div class="termometro-track">
           <div class="termometro-zona termometro-zona-roja"></div>
           <div class="termometro-zona termometro-zona-ambar"></div>
           <div class="termometro-zona termometro-zona-verde"></div>
-          <div class="termometro-puntero" [style.left.%]="Math.max(2, Math.min(98, a.margen_promedio_pct * 2))"></div>
+          <div class="termometro-puntero" [style.left.%]="posicionPunteroMargen"></div>
         </div>
         <div class="termometro-leyenda">
           <span>0%</span>
-          <span class="termometro-estado" [ngClass]="a.margen_promedio_pct < 10 ? 'termometro-estado-rojo' : a.margen_promedio_pct < 20 ? 'termometro-estado-ambar' : 'termometro-estado-verde'">
-            Margen actual: {{ a.margen_promedio_pct.toFixed(0) }}% · {{ a.margen_promedio_pct < 10 ? 'Necesita atención' : a.margen_promedio_pct < 20 ? 'Margen ajustado' : 'Vas bien' }}
+          <span class="termometro-estado" [ngClass]="claseEstadoMargen">
+            Margen actual: {{ margenRealPct.toFixed(0) }}% · {{ textoEstadoMargen }}
           </span>
           <span>50%+</span>
         </div>

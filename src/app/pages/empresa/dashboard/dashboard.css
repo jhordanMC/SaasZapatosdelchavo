@@ -65,6 +65,25 @@
   border-radius: 999px;
 }
 
+.alerta-gastos-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.alerta-gastos-dashboard svg {
+  color: var(--brand-gold);
+  flex-shrink: 0;
+}
+
 /* ══════════════════════════════
    Hero: Ganancia Neta Real + termómetro
 ══════════════════════════════ */

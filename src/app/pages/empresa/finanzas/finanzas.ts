@@ -266,6 +266,8 @@ export class FinanzasComponent implements OnInit {
             ingresos_con_costo_periodo: 0,
             ganancia_neta_periodo: 0,
             esta_generando_ganancia: false,
+            hay_gastos_unicos_periodo: false,
+            hay_gastos_recurrentes_periodo: false,
             margen_promedio_pct: 0,
             margen_basado_en_ventas_reales: false,
             punto_equilibrio_periodo: null,

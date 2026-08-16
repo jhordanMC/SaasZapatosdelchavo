@@ -95,6 +95,8 @@ export interface ResumenFinanciero {
   ingresos_con_costo_periodo: number;
   ganancia_neta_periodo: number;
   esta_generando_ganancia: boolean;
+  hay_gastos_unicos_periodo: boolean;
+  hay_gastos_recurrentes_periodo: boolean;
   margen_promedio_pct: number;
   margen_basado_en_ventas_reales: boolean;
   punto_equilibrio_periodo: number | null;

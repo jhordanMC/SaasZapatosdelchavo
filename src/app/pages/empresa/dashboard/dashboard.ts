@@ -98,6 +98,58 @@ export class EmpresaDashboardComponent implements OnInit {
     return this.metodosPago().reduce((acc, m) => acc + m.monto, 0);
   }
 
+  // ── Margen y Termómetro (Estado del Negocio) ──────────────────────────────
+
+  /**
+   * Margen real del período.
+   * Evita divisiones por 0 y recalcula el % en base a la ganancia real / ingresos.
+   */
+  get margenRealPct(): number {
+    const a = this.avanceResumen();
+    if (!a) return 0;
+    if (a.ingresos_periodo === 0) return 0;
+    return (a.ganancia_neta_periodo / a.ingresos_periodo) * 100;
+  }
+
+  /**
+   * Posición visual del puntero (0% a 100% de la barra física).
+   * La escala de la barra va desde <=0% (inicio) hasta >=50% (final).
+   */
+  get posicionPunteroMargen(): number {
+    const margen = this.margenRealPct;
+    if (margen <= 0) return 2; // Margen negativo/cero clava la barra a la izquierda
+    // La barra representa 0 a 50%, así que * 2 nos da la posición (min 2% por borde, max 98%)
+    return Math.max(2, Math.min(98, margen * 2));
+  }
+
+  get claseEstadoMargen(): string {
+    const margen = this.margenRealPct;
+    if (margen < 0) return 'termometro-estado-rojo';
+    if (margen < 10) return 'termometro-estado-rojo';
+    if (margen < 20) return 'termometro-estado-ambar';
+    return 'termometro-estado-verde';
+  }
+
+  get textoEstadoMargen(): string {
+    const margen = this.margenRealPct;
+    if (margen < 0) return 'En pérdida';
+    if (margen < 10) return 'Necesita atención';
+    if (margen < 20) return 'Margen ajustado';
+    return 'Vas bien';
+  }
+
+  get textoAvisoGastos(): string {
+    const a = this.avanceResumen();
+    if (!a) return '';
+    const hayRecurentes = a.hay_gastos_recurrentes_periodo;
+    const hayUnicos = a.hay_gastos_unicos_periodo;
+
+    if (hayRecurentes && hayUnicos) return 'Se han descontado gastos recurrentes y únicos en este período.';
+    if (hayRecurentes) return 'Se han descontado gastos recurrentes en este período.';
+    if (hayUnicos) return 'Se han descontado gastos únicos en este período.';
+    return 'No se han descontado gastos (fijos ni únicos) en este período.';
+  }
+
   /** Frase para las cards "Top" que dependen del período elegido arriba (Hoy/Esta semana/etc). */
   get etiquetaPeriodoActual(): string {
     switch (this.periodoAvance) {
