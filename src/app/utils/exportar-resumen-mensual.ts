@@ -184,8 +184,36 @@ export interface OpcionesBrandingReporte {
 }
 
 // ---------------------------------------------------------------------------
+function cargarImagenEnCanvas(url: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    if (url.startsWith('data:')) return resolve(url);
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
 async function imagenADataUrl(url: string): Promise<string | null> {
   if (!url) return null;
+  const canvasRes = await cargarImagenEnCanvas(url);
+  if (canvasRes) return canvasRes;
+
   try {
     const fullUrl = url.startsWith('http') || url.startsWith('data:')
       ? url
@@ -229,82 +257,79 @@ export async function exportarResumenMensualPDF(
   const logoVilcasDataUrl = await imagenADataUrl('/vilcas.png');
   const logoAlbaDataUrl = await imagenADataUrl('/Logoalbasinfondo.png');
 
-  // Cabecera institucional estilo Boleta / Comprobante
+  // Cabecera institucional verde
   doc.setFillColor(2, 75, 64); // #024b40
-  doc.rect(0, 0, 210, 42, 'F');
+  doc.rect(0, 0, 210, 38, 'F');
 
   let posXTexto = margenIzq;
 
   // 1. Foto de perfil del usuario/cliente a la izquierda
   if (clienteFotoDataUrl) {
     try {
-      doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), 12, 6, 28, 28);
+      doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), 12, 5, 28, 28);
       posXTexto = 46;
     } catch {
       posXTexto = 14;
     }
   } else {
-    // Si no hay foto o falla la carga, dibujamos un badge circular de avatar elegante
+    // Badge circular de avatar elegante con la inicial
     doc.setFillColor(4, 105, 90);
-    doc.circle(26, 20, 14, 'F');
+    doc.circle(26, 19, 13, 'F');
     doc.setFontSize(15);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     const inicial = (opciones?.nombreEmpresa || opciones?.nombreUsuario || 'E').slice(0, 1).toUpperCase();
-    doc.text(inicial, 26, 25, { align: 'center' });
+    doc.text(inicial, 26, 24, { align: 'center' });
     posXTexto = 46;
   }
 
   // Nombre de Empresa y Título
   const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.text(nombreEmpresa, posXTexto, 15);
+  doc.text(nombreEmpresa, posXTexto, 14);
 
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(190, 225, 215);
-  doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 23);
+  doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 21);
 
   if (opciones?.nombreUsuario) {
     doc.setFontSize(8);
     doc.setTextColor(220, 240, 235);
-    doc.text(`Usuario: ${opciones.nombreUsuario}`, posXTexto, 30);
+    doc.text(`Usuario: ${opciones.nombreUsuario}`, posXTexto, 28);
   }
 
-  // 2. Recuadro blanco de Boleta (RESUMEN DE CAJA) en la zona media (sin solaparse)
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(110, 6, 52, 30, 2, 2, 'FD');
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(2, 75, 64);
-  doc.text('RESUMEN DE CAJA', 136, 13, { align: 'center' });
-
-  const numBoleta = `RPT-${r.mes.replace('-', '')}`;
-  doc.setFontSize(9.5);
-  doc.text(numBoleta, 136, 21, { align: 'center' });
-
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Período: ${r.etiquetaMes}`, 136, 28, { align: 'center' });
-
-  // 3. Logo VILCAS a la derecha extrema (X=168), 100% nítido y visible sin solapamiento
+  // 2. Logo VILCAS a la derecha extrema con la letra A en dorado
   if (logoVilcasDataUrl) {
     try {
-      doc.addImage(logoVilcasDataUrl, 'PNG', 168, 6, 28, 16);
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(230, 245, 240);
-      doc.text('VILCAS POS', 182, 26, { align: 'center' });
+      doc.addImage(logoVilcasDataUrl, 'PNG', 165, 4, 24, 12);
     } catch {
       // Ignorar si no carga
     }
   }
 
-  y = 48;
+  const startXVilcas = 166;
+  const yVilcasText = 23;
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+
+  // V I L C (Blanco)
+  doc.setTextColor(255, 255, 255);
+  doc.text('V I L C ', startXVilcas, yVilcasText);
+
+  // A (Dorado)
+  const wVilc = doc.getTextWidth('V I L C ');
+  doc.setTextColor(229, 175, 45); // #E5AF2D Dorado brillante
+  doc.text('A', startXVilcas + wVilc, yVilcasText);
+
+  // S (Blanco)
+  const wA = doc.getTextWidth('A');
+  doc.setTextColor(255, 255, 255);
+  doc.text(' S', startXVilcas + wVilc + wA, yVilcasText);
+
+  y = 44;
 
   // Bloque: Resumen general de la Boleta / Comprobante
   doc.setFontSize(11);
@@ -407,6 +432,24 @@ export async function exportarResumenMensualPDF(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     y = (doc as any).lastAutoTable.finalY + 8;
   }
+
+  // Resumen de Caja y Folio oficial (al final del documento, sin tapar textos)
+  doc.setFillColor(242, 246, 244);
+  doc.setDrawColor(2, 75, 64);
+  doc.roundedRect(margenIzq, y, 182, 14, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
+  const numBoleta = `RPT-${r.mes.replace('-', '')}`;
+  doc.text(`RESUMEN DE CAJA · COMPROBANTE N° ${numBoleta}`, margenIzq + 6, y + 6);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(70, 80, 75);
+  doc.text(`Período de Cierre: ${r.etiquetaMes} · Moneda oficial: Soles (S/) · Sistema VILCAS`, margenIzq + 6, y + 11);
+
+  y += 18;
 
   // Cuadro Final de Cierre / Balance estilo Boleta
   doc.setFillColor(248, 250, 249);

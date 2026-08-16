@@ -397,17 +397,17 @@
 .devolucion-lineas {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 280px;
+  gap: 8px;
+  max-height: calc(75vh - 180px);
   overflow-y: auto;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .devolucion-linea {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   background: var(--bg-canvas, #f8faf9);
   border: 1px solid var(--border-default, #e5e7eb);
   border-radius: 12px;
@@ -431,15 +431,18 @@
 
 .devolucion-linea-controles {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
   flex-shrink: 0;
 }
 
 .devolucion-linea-cantidad {
-  min-width: 85px;
-  width: 90px;
-  padding: 6px 10px;
+  min-width: 90px;
+  width: 95px;
+  height: 32px;
+  padding: 4px 8px;
   font-size: 14px;
   font-weight: 600;
   border: 1.5px solid var(--border-default);
@@ -455,14 +458,15 @@
 }
 
 .devolucion-linea-checkbox {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   white-space: nowrap;
+  margin-top: 1px;
 }
 .devolucion-linea-sin-disponible {
   font-size: 11.5px;

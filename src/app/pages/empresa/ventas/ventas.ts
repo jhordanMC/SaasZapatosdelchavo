@@ -1271,12 +1271,15 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private opcionesBranding() {
     const u = this.authService.usuarioActual();
-    let fotoUrl: string | null = null;
-    if (u?.avatarUrl) {
+    const topbarImg = document.querySelector('img.avatar-img') as HTMLImageElement | null;
+    let fotoUrl: string | null = topbarImg?.src || null;
+
+    if (!fotoUrl && u?.avatarUrl) {
       fotoUrl = u.avatarUrl.startsWith('http')
         ? u.avatarUrl
         : `${environment.apiUrl}${u.avatarUrl.startsWith('/') ? '' : '/'}${u.avatarUrl}`;
     }
+
     return {
       nombreEmpresa: u?.nombreEmpresa ?? null,
       nombreUsuario: u?.nombre ?? null,
