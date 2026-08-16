@@ -161,6 +161,16 @@ export class EmpresaDashboardComponent implements OnInit {
     }
   }
 
+  get subtituloVentasGanancias(): string {
+    switch (this.periodoAvance) {
+      case 'dia': return 'Ingresos y ganancia real por franja horaria (cada 2 horas).';
+      case 'semana': return 'Ingresos y ganancia real por día de la semana.';
+      case 'mes': return 'Ingresos y ganancia real por semanas del mes.';
+      case 'anio': return 'Ingresos y ganancia real por mes del año.';
+      default: return 'Ingresos y ganancia real por período (mismo criterio de costo real que Finanzas).';
+    }
+  }
+
   /** El sistema todavía no distingue ventas al por menor de al por mayor
    * (no hay un campo "canal"/tipo de venta en el modelo de datos) — el
    * selector queda visible para que se note el hueco, pero no filtra nada
