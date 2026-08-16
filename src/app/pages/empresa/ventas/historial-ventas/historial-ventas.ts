@@ -450,7 +450,7 @@ export class HistorialVentasComponent implements OnInit {
           this.ventaAEliminar.set(null);
           this.aplicarCambio();
         },
-        error: (err) => {
+        error: (err: any) => {
           this.eliminando.set(false);
           this.errorEliminar.set(err?.error?.detail ?? 'No se pudo eliminar la venta.');
         },

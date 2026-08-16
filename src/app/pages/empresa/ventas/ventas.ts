@@ -24,7 +24,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, sig
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { environment } from '../../../../environments/environment';
@@ -47,6 +47,7 @@ import {
   TipoDescuento,
   VariantePOSRead,
   VentasService,
+  SubirComprobanteResponse,
   requiereComprobante,
 } from '../../../services/ventas';
 
@@ -59,6 +60,7 @@ interface LineaPagoMixto {
   /** Solo si metodo === 'efectivo': lo que el cliente entrega en físico (para calcular vuelto de esa línea). */
   montoRecibido: number;
   fotoUrl: string | null;
+  archivoPendiente: File | null;
   /** false = el navegador no puede pintar una preview de este archivo (HEIC/DNG en la mayoría) — se muestra un placeholder en vez de <img>. */
   fotoPrevisualizable: boolean;
   errorFoto: string;
@@ -145,6 +147,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   metodoPago: MetodoPago = 'efectivo';
   montoPagado = 0;
   fotoVentaUrl: string | null = null;
+  archivoVentaPendiente: File | null = null;
   /** false = el navegador no puede pintar una preview de este archivo (HEIC/DNG en la mayoría) — se muestra un placeholder en vez de <img>. */
   fotoVentaPrevisualizable = true;
   errorFoto = '';
@@ -779,6 +782,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       input.value = '';
       return;
     }
+    this.archivoVentaPendiente = archivo;
     this.fotoVentaPrevisualizable = esPrevisualizableEnNavegador(archivo);
     const lector = new FileReader();
     lector.onload = () => (this.fotoVentaUrl = lector.result as string);
@@ -789,6 +793,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quitarFotoVenta(): void {
     this.fotoVentaUrl = null;
+    this.archivoVentaPendiente = null;
     this.fotoVentaPrevisualizable = true;
   }
 
@@ -813,7 +818,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     // Arranca con una sola línea prellenada por el total, para que el
     // usuario solo tenga que ajustar montos y agregar la(s) línea(s) que falten.
     this.pagosDivididos = [
-      { metodo: 'efectivo', monto: this.totalCarrito, montoRecibido: this.totalCarrito, fotoUrl: null, fotoPrevisualizable: true, errorFoto: '' },
+      { metodo: 'efectivo', monto: this.totalCarrito, montoRecibido: this.totalCarrito, fotoUrl: null, archivoPendiente: null, fotoPrevisualizable: true, errorFoto: '' },
     ];
     this.checkoutError = '';
   }
@@ -832,6 +837,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       monto: Math.max(0, this.saldoPendientePagoMixto),
       montoRecibido: Math.max(0, this.saldoPendientePagoMixto),
       fotoUrl: null,
+      archivoPendiente: null,
       fotoPrevisualizable: true,
       errorFoto: '',
     });
@@ -844,7 +850,10 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   cambiarMetodoLinea(linea: LineaPagoMixto, metodo: MetodoPago): void {
     linea.metodo = metodo;
     linea.errorFoto = '';
-    if (metodo !== 'efectivo') linea.fotoUrl = null;
+    if (metodo !== 'efectivo') {
+      linea.fotoUrl = null;
+      linea.archivoPendiente = null;
+    }
   }
 
   actualizarMontoLinea(linea: LineaPagoMixto, valor: number): void {
@@ -873,6 +882,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       input.value = '';
       return;
     }
+    linea.archivoPendiente = archivo;
     linea.fotoPrevisualizable = esPrevisualizableEnNavegador(archivo);
     const lector = new FileReader();
     lector.onload = () => (linea.fotoUrl = lector.result as string);
@@ -883,6 +893,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quitarFotoLinea(linea: LineaPagoMixto): void {
     linea.fotoUrl = null;
+    linea.archivoPendiente = null;
     linea.fotoPrevisualizable = true;
   }
 
@@ -984,20 +995,54 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.checkoutError = '';
     this.confirmando = true;
 
-    // Construir payload de pago(s) — uno solo, o varios si es pago mixto.
+    // Recolectar los archivos pendientes que realmente hay que subir.
+    const archivosASubir: { key: string; archivo: File }[] = this.pagoMixto
+      ? this.pagosDivididos
+          .map((l, i) => (l.archivoPendiente ? { key: `linea-${i}`, archivo: l.archivoPendiente } : null))
+          .filter((x): x is { key: string; archivo: File } => x !== null)
+      : this.archivoVentaPendiente
+        ? [{ key: 'unico', archivo: this.archivoVentaPendiente }]
+        : [];
+
+    if (archivosASubir.length === 0) {
+      this.armarPagosYConfirmar({});
+      return;
+    }
+
+    // Sube todos los comprobantes pendientes en paralelo, mapea key → URL.
+    forkJoin(
+      archivosASubir.reduce((acc, { key, archivo }) => {
+        acc[key] = this.ventasService.subirComprobantePago(archivo);
+        return acc;
+      }, {} as Record<string, Observable<SubirComprobanteResponse>>)
+    ).subscribe({
+      next: (resultados) => {
+        const urlsPorKey: Record<string, string> = {};
+        for (const key of Object.keys(resultados)) urlsPorKey[key] = resultados[key].url;
+        this.armarPagosYConfirmar(urlsPorKey);
+      },
+      error: (err) => {
+        this.confirmando = false;
+        this.checkoutError = err?.error?.detail ?? 'No se pudo subir la foto del comprobante. Intenta nuevamente.';
+      },
+    });
+  }
+
+  /** Segunda mitad de confirmarVenta(): ya con las URLs de comprobante resueltas (o {} si no había ninguna). */
+  private armarPagosYConfirmar(urlsPorKey: Record<string, string>): void {
     const pagos: PagoCreate[] = this.pagoMixto
-      ? this.pagosDivididos.map((l) => ({
+      ? this.pagosDivididos.map((l, i) => ({
           metodo: l.metodo,
           monto: l.monto,
           ...(l.metodo === 'efectivo' ? { monto_recibido: l.montoRecibido } : {}),
-          ...(l.fotoUrl ? { foto_comprobante: l.fotoUrl } : {}),
+          ...(urlsPorKey[`linea-${i}`] ? { url_comprobante: urlsPorKey[`linea-${i}`] } : {}),
         }))
       : [
           {
             metodo: this.metodoPago,
             monto: this.totalCarrito,
             ...(this.metodoPago === 'efectivo' ? { monto_recibido: this.montoPagado } : {}),
-            ...(this.fotoVentaUrl ? { foto_comprobante: this.fotoVentaUrl } : {}),
+            ...(urlsPorKey['unico'] ? { url_comprobante: urlsPorKey['unico'] } : {}),
           },
         ];
 
@@ -1009,16 +1054,14 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         this.pasoCheckout = 'exito';
         this.confirmando = false;
         this.fotoVentaUrl = null;
+        this.archivoVentaPendiente = null;
         this.pagoMixto = false;
         this.pagosDivididos = [];
-        // Vaciar carrito tras venta exitosa
         this.ventasService.vaciarCarrito();
-        // Refrescar catálogo para actualizar stock visible
         this.cargarPrimeraPaginaProductosPOS();
       },
       error: (err) => {
-        this.checkoutError =
-          err?.error?.detail ?? 'No se pudo registrar la venta. Intenta nuevamente.';
+        this.checkoutError = err?.error?.detail ?? 'No se pudo registrar la venta. Intenta nuevamente.';
         this.pasoCheckout = 'formulario';
         this.confirmando = false;
       },
@@ -1030,6 +1073,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pasoCheckout = 'formulario';
     this.ventaConfirmada = null;
     this.fotoVentaUrl = null;
+    this.archivoVentaPendiente = null;
     this.errorFoto = '';
     this.confirmando = false;
     this.pagoMixto = false;

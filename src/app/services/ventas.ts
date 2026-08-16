@@ -91,6 +91,7 @@ export interface PagoCreate {
   /** Solo efectivo: monto entregado por el cliente. */
   monto_recibido?: number | null;
   numero_operacion?: string | null;
+  url_comprobante?: string | null;
 }
 
 export interface VentaCreate {
@@ -127,6 +128,7 @@ export interface PagoRead {
   monto_recibido: number | null;
   vuelto: number;
   numero_operacion: string | null;
+  url_comprobante: string | null;
   estado: string;
   creado_en: string;
 }
@@ -147,6 +149,10 @@ export interface VentaRead {
 
 export interface MensajeResponse {
   mensaje: string;
+}
+
+export interface SubirComprobanteResponse {
+  url: string;
 }
 
 // ── Historial de ventas ──────────────────────────────────────────────────────
@@ -386,6 +392,13 @@ export class VentasService {
    */
   eliminarVenta(idVenta: string, data: EliminarVentaRequest): Observable<MensajeResponse> {
     return this.http.post<MensajeResponse>(`${this.base}/${idVenta}/anular`, data);
+  }
+
+  /** Sube y comprime la foto de comprobante de un pago (yape/plin/transferencia). Reutiliza el mismo mecanismo de disco que Inventario. */
+  subirComprobantePago(archivo: File): Observable<SubirComprobanteResponse> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<SubirComprobanteResponse>(`${this.base}/pos/upload-comprobante`, formData);
   }
 
   /**

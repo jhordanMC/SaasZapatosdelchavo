@@ -298,7 +298,18 @@
       <div class="confirmar-pago">
         <div class="confirmar-pago-fila" *ngFor="let p of venta.pagos">
           <span>{{ p.metodo }} <span *ngIf="p.numero_operacion">· {{ p.numero_operacion }}</span></span>
-          <strong>S/{{ p.monto.toFixed(2) }}</strong>
+          <span>S/{{ p.monto.toFixed(2) }}</span>
+
+          <!-- NUEVO: evidencia de pago, solo si existe -->
+          <a
+            *ngIf="p.url_comprobante"
+            [href]="imagenSrc(p.url_comprobante)"
+            target="_blank"
+            rel="noopener"
+            class="ver-comprobante-link"
+          >
+            Ver comprobante
+          </a>
         </div>
         <div class="confirmar-pago-fila" *ngIf="venta.pagos.length > 1">
           <span>Total pagado</span>

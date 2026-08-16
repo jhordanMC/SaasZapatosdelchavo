@@ -1,6 +1,13 @@
 :host { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
   scrollbar-gutter: stable; background: var(--bg-canvas); }
 
+.ver-comprobante-link {
+  font-size: 0.85rem;
+  color: var(--primary-color, #007bff);
+  text-decoration: underline;
+  margin-left: 8px;
+}
+
 .content { padding: var(--space-page) var(--space-page) 40px; display: flex; flex-direction: column; gap: 20px; }
 
 /* ══════════════════════════════
