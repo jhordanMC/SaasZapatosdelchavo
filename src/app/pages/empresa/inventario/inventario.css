@@ -950,37 +950,111 @@
   .variantes-resumen-totales { flex-wrap: wrap; }
   .resumen-stat { flex: 1 1 calc(50% - 5px); }
 
-  /* Tabla "Otras tallas del producto" (paso 2): también se apila en tarjetas */
+  /* Tabla "Otras tallas del producto" (paso 2): tarjeta con "Talla N · uds" como título,
+     y Almacén/SKU/Cód. barras en filas de etiqueta:valor, como el mockup mobile */
   .otras-tallas-tabla { border: none; border-radius: 0; }
   .otras-tallas-columnas { display: none; }
   .otras-tallas-fila {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 10px;
+    align-items: center;
+    gap: 3px 10px;
+    padding: 12px 14px;
     background: var(--bg-canvas);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     margin-bottom: 8px;
   }
   .otras-tallas-fila:last-child { border-bottom: 1px solid var(--border-subtle); margin-bottom: 0; }
-  .otras-tallas-fila .resumen-valor {
-    flex: 1 1 calc(50% - 6px);
-    min-width: 100px;
+
+  .otras-tallas-fila [data-label="Talla"] {
+    order: 1;
+    flex: 1 1 auto;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+  .otras-tallas-fila [data-label="Talla"]::before {
+    content: "Talla ";
+    display: inline;
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    color: inherit;
+    margin-bottom: 0;
+  }
+
+  .otras-tallas-fila [data-label="Stock"] {
+    order: 2;
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--brand-deep);
+  }
+  .otras-tallas-fila [data-label="Stock"]::before { content: none; }
+  .otras-tallas-fila [data-label="Stock"]::after { content: " uds"; font-weight: 700; }
+
+  .otras-tallas-fila [data-label="Almacén / Local"],
+  .otras-tallas-fila [data-label="SKU"],
+  .otras-tallas-fila [data-label="Cód. Barras"] {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-primary);
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
   }
-  .otras-tallas-fila .resumen-valor::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    letter-spacing: 0.03em;
-    margin-bottom: 2px;
+  .otras-tallas-fila [data-label="Almacén / Local"] {
+    order: 3;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
   }
-  .otras-tallas-accion { flex: 1 1 100%; justify-content: flex-end; }
+  .otras-tallas-fila [data-label="SKU"] { order: 4; }
+  .otras-tallas-fila [data-label="Cód. Barras"] { order: 5; }
+  .otras-tallas-fila [data-label="Almacén / Local"]::before,
+  .otras-tallas-fila [data-label="SKU"]::before,
+  .otras-tallas-fila [data-label="Cód. Barras"]::before {
+    content: attr(data-label) ":";
+    display: inline;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-tertiary);
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .otras-tallas-accion { order: 6; flex: 0 0 auto; margin-left: auto; margin-top: 6px; justify-content: flex-end; }
+
+  /* Campos del modal de talla: Talla en fila completa, Tipo de sede + Sede/Almacén en 2
+     columnas, y Stock/SKU/Cód. barras apilados uno debajo del otro, como el mockup mobile */
+  .talla-fila-superior.form-row-3 {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 14px 10px;
+  }
+  .talla-fila-superior.form-row-3 > div:nth-child(1) { flex: 1 1 100%; }
+  .talla-fila-superior.form-row-3 > div:nth-child(2),
+  .talla-fila-superior.form-row-3 > div:nth-child(3) { flex: 1 1 calc(50% - 5px); min-width: 0; }
+
+  .talla-fila-inferior.form-row-3 {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .talla-fila-inferior.form-row-3 > div { flex: 1 1 100%; }
+
+  /* Cancelar / Guardar cambios: mismo ancho, ocupando toda la fila */
+  .modal-card-talla .talla-acciones-inline { flex-direction: row; }
+  .modal-card-talla .talla-acciones-inline button { flex: 1 1 0; }
 }
 
 @media (max-width: 480px) {
