@@ -296,20 +296,18 @@
 
       <p class="detalle-subtitulo">Pago</p>
       <div class="confirmar-pago">
-        <div class="confirmar-pago-fila" *ngFor="let p of venta.pagos">
-          <span>{{ p.metodo }} <span *ngIf="p.numero_operacion">· {{ p.numero_operacion }}</span></span>
-          <span>S/{{ p.monto.toFixed(2) }}</span>
+        <div class="confirmar-pago-fila" *ngFor="let p of venta.pagos" [class.pago-con-comprobante]="p.url_comprobante">
+          <div class="pago-info-row" style="display: flex; justify-content: space-between; width: 100%;">
+            <span>{{ p.metodo | titlecase }} <span *ngIf="p.numero_operacion">· {{ p.numero_operacion }}</span></span>
+            <span>S/{{ p.monto.toFixed(2) }}</span>
+          </div>
 
-          <!-- NUEVO: evidencia de pago, solo si existe -->
-          <a
-            *ngIf="p.url_comprobante"
-            [href]="imagenSrc(p.url_comprobante)"
-            target="_blank"
-            rel="noopener"
-            class="ver-comprobante-link"
-          >
-            Ver comprobante
-          </a>
+          <!-- Evidencia de pago incrustada -->
+          <div class="comprobante-wrapper" *ngIf="p.url_comprobante">
+            <a [href]="imagenSrc(p.url_comprobante)" target="_blank" rel="noopener" title="Abrir imagen completa">
+              <img [src]="imagenSrc(p.url_comprobante)" alt="Comprobante de pago" class="comprobante-img">
+            </a>
+          </div>
         </div>
         <div class="confirmar-pago-fila" *ngIf="venta.pagos.length > 1">
           <span>Total pagado</span>
