@@ -187,15 +187,15 @@ export interface OpcionesBrandingReporte {
 function cargarImagenEnCanvas(url: string): Promise<string | null> {
   return new Promise((resolve) => {
     if (!url) return resolve(null);
-    if (url.startsWith('data:')) return resolve(url);
+    if (url.startsWith('data:image/png') || url.startsWith('data:image/jpeg')) return resolve(url);
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width || 100;
-        canvas.height = img.naturalHeight || img.height || 100;
+        canvas.width = img.naturalWidth || img.width || 120;
+        canvas.height = img.naturalHeight || img.height || 120;
         const ctx = canvas.getContext('2d');
         if (!ctx) return resolve(null);
         ctx.drawImage(img, 0, 0);
@@ -204,7 +204,24 @@ function cargarImagenEnCanvas(url: string): Promise<string | null> {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      const img2 = new Image();
+      img2.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img2.naturalWidth || img2.width || 120;
+          canvas.height = img2.naturalHeight || img2.height || 120;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img2, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch {
+          resolve(null);
+        }
+      };
+      img2.onerror = () => resolve(null);
+      img2.src = url;
+    };
     img.src = url;
   });
 }

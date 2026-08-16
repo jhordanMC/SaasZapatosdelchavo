@@ -306,12 +306,16 @@ export class FinanzasComponent implements OnInit {
   private opcionesBranding() {
     const u = this.authService.usuarioActual();
     const topbarImg = document.querySelector('img.avatar-img') as HTMLImageElement | null;
-    let fotoUrl: string | null = topbarImg?.src || null;
+    let fotoUrl: string | null = (topbarImg && topbarImg.src && !topbarImg.src.includes('data:image/svg')) ? topbarImg.src : null;
 
     if (!fotoUrl && u?.avatarUrl) {
-      fotoUrl = u.avatarUrl.startsWith('http')
-        ? u.avatarUrl
-        : `${environment.apiUrl}${u.avatarUrl.startsWith('/') ? '' : '/'}${u.avatarUrl}`;
+      if (u.avatarUrl.startsWith('http') || u.avatarUrl.startsWith('data:')) {
+        fotoUrl = u.avatarUrl;
+      } else {
+        const path = u.avatarUrl.startsWith('/') ? u.avatarUrl : `/${u.avatarUrl}`;
+        const hostBase = environment.apiUrl.replace(/\/api\/v\d+.*$/, '');
+        fotoUrl = `${hostBase}${path}`;
+      }
     }
 
     return {
