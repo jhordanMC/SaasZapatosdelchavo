@@ -70,7 +70,17 @@ export class AuthService {
     private cuentasGuardadasService: CuentasGuardadasService,
   ) {
     if (this.tokenStore.accessToken()) {
-      this.cargarPerfilYPermisos().subscribe({
+      // omitirExpiracionGlobal: true — esta carga es automática, al
+      // arrancar la app, sin importar la ruta (el modal global vive
+      // fuera del router-outlet, ver app.html). Si el token guardado ya
+      // venció, NO debe interrumpir con el modal de "sesión expirada" a
+      // alguien que ni siquiera había iniciado sesión en esta visita
+      // (ej. está viendo "Inicio" o "Precios" con un token viejo en el
+      // navegador) — simplemente se limpia en silencio más abajo. El
+      // modal queda reservado para cuando la sesión expira DURANTE el
+      // uso activo del panel (empresa/admin), que es el caso real que
+      // amerita avisarle al usuario.
+      this.cargarPerfilYPermisos({ omitirExpiracionGlobal: true }).subscribe({
         next: () => this.finalizarInicializacion(),
         error: () => {
           this.tokenStore.limpiar();

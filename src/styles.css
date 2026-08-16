@@ -10,8 +10,40 @@
 }
 
 html {
+  /* Scrollbar delgado con los colores de marca, mismo criterio que
+     .modal-card en components.css — para que toda la web (no solo los
+     modales) tenga la barra "de VILCAS" en vez de la nativa del SO.
+     Esto SIEMPRE aplica (solo cambia cómo se ve la barra, no reserva
+     espacio, así que no afecta a ninguna vista). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-mint) transparent;
+}
+/* scrollbar-gutter SÍ reserva espacio físico, y eso rompe páginas de
+   pantalla única con fondo position:fixed;inset:0 (login, verificar-2fa,
+   olvide-contraseña: dejaba una franja blanca a la derecha porque el
+   fondo no cubre el gutter reservado). Por eso va scoped a una clase que
+   App (app.ts) prende/apaga según la ruta activa — solo en las familias
+   de vistas que SÍ navegan entre sí y necesitan no saltar de ancho
+   (público con navbar, y empresa/admin, aunque estas últimas ya tienen
+   su propio scroll interno por :host, así que ahí es un refuerzo). */
+html.pub-nav-gutter {
   scrollbar-gutter: stable;
 }
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--brand-mint);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-deep);
+}
+
 
 body {
   margin: 0;

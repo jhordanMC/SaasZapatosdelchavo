@@ -4,6 +4,14 @@ import { NavigationCancel, NavigationEnd, NavigationError, Router, RouterOutlet 
 import { filter, take } from 'rxjs';
 import { SessionExpiredModalComponent } from './shared/session-expired-modal/session-expired-modal';
 
+// Rutas de pantalla única con fondo `position:fixed; inset:0` (login,
+// verificar-2fa, olvide-contraseña): NO deben llevar scrollbar-gutter
+// reservado, porque el fondo fixed no cubre esa franja y se ve un hueco
+// blanco a la derecha (ver styles.css, .pub-nav-gutter). Todo lo demás
+// (público con navbar, empresa, admin, catálogo público) sí lo lleva,
+// para no saltar de ancho al navegar entre vistas con/sin scroll.
+const RUTAS_SIN_GUTTER = ['/login', '/verificar-2fa', '/olvide-contrasena', '/acceso-restringido'];
+
 @Component({
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, SessionExpiredModalComponent],
@@ -31,5 +39,12 @@ export class App {
         take(1),
       )
       .subscribe(() => this.cargandoInicial.set(false));
+
+    router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        const sinGutter = RUTAS_SIN_GUTTER.some((r) => e.urlAfterRedirects.startsWith(r));
+        document.documentElement.classList.toggle('pub-nav-gutter', !sinGutter);
+      });
   }
 }
