@@ -129,7 +129,7 @@ export class TicketsAdminComponent implements OnInit {
 
   nombreAutor(mensaje: TicketConMensajes['mensajes'][number]): string {
     if (mensaje.autor_tipo === 'staff_alba') return mensaje.autor_nombre_alba ?? 'Staff de ALBA';
-    if (mensaje.autor_tipo === 'bot') return 'Cirobot';
+    if (mensaje.autor_tipo === 'bot') return 'Varian Assist';
     return this.ticketSeleccionado?.nombre_usuario_reporta ?? 'Cliente';
   }
 }

@@ -98,9 +98,9 @@ export function ChatPanel({
 
   if (minimizado) {
     return (
-      <button className="cbot-mini-barra" onClick={onRestaurar} aria-label="Restaurar Cirobot">
+      <button className="cbot-mini-barra" onClick={onRestaurar} aria-label="Restaurar Varian Assist">
         <span className="cbot-avatar cbot-avatar-mini"><IconoBot size={14} /></span>
-        <span className="cbot-mini-texto">Cirobot</span>
+        <span className="cbot-mini-texto">Varian Assist</span>
         <span className={`cbot-estado-dot ${cargando ? 'cbot-estado-dot-activo' : ''}`} />
       </button>
     );
@@ -111,7 +111,7 @@ export function ChatPanel({
       <header className="cbot-header">
         <div className="cbot-avatar"><IconoBot size={19} className="cbot-avatar-icono" /></div>
         <div className="cbot-header-info">
-          <span className="cbot-header-titulo">Cirobot</span>
+          <span className="cbot-header-titulo">Varian Assist</span>
           <span className="cbot-header-sub">
             <span className={`cbot-estado-dot ${cargando ? 'cbot-estado-dot-activo' : ''}`} />
             {estadoTexto}
@@ -129,7 +129,7 @@ export function ChatPanel({
           >
             <IconoExpandir />
           </button>
-          <button className="cbot-icon-btn" onClick={onClose} title="Cerrar" aria-label="Cerrar Cirobot">
+          <button className="cbot-icon-btn" onClick={onClose} title="Cerrar" aria-label="Cerrar Varian Assist">
             <IconoCerrar />
           </button>
         </div>
@@ -162,7 +162,7 @@ export function ChatPanel({
 
             {cargando && (
               <div className="cbot-msg cbot-msg-bot cbot-pensando">
-                <span className="cbot-pensando-texto">Cirobot está pensando</span>
+                <span className="cbot-pensando-texto">Varian Assist está pensando</span>
                 <span className="cbot-pensando-barra"><span /></span>
               </div>
             )}
