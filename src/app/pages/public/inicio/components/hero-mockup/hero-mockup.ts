@@ -8,7 +8,6 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CirobotComponent } from '../../../../../shared/cirobot/cirobot';
 
 interface MockMetric {
   label: string;
@@ -67,7 +66,7 @@ interface MockScene {
 @Component({
   selector: 'app-hero-mockup',
   standalone: true,
-  imports: [CommonModule, CirobotComponent],
+  imports: [CommonModule],
   templateUrl: './hero-mockup.html',
   styleUrl: './hero-mockup.css',
 })
