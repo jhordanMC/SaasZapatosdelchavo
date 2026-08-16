@@ -22,40 +22,7 @@
   background: url('/FondoSaas.jpg') center center / cover no-repeat;
 }
 
-/* ── TARJETAS FLOTANTES (decorativas, mismo estilo que el login) ── */
-.fc {
-  position: fixed; z-index: 8;
-  background: rgba(255,255,255,0.93);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.9);
-  border-radius: 18px; padding: 16px 20px;
-  box-shadow: 0 8px 32px rgba(2,75,64,0.22);
-  max-width: 215px; cursor: default;
-  opacity: 0;
-  transform: translateY(16px) scale(0.94);
-  animation: fcIn 0.6s cubic-bezier(.22,.8,.35,1) both;
-}
-@keyframes fcIn {
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.fc-tl { top: clamp(24px,5vh,60px);    left: clamp(16px,2.5vw,48px); animation-delay: .3s; }
-.fc-bl { bottom: clamp(24px,5vh,60px); left: clamp(16px,2.5vw,48px); animation-delay: .45s; }
-.fc-tr { top: clamp(24px,5vh,60px);    right: clamp(16px,2.5vw,48px); animation-delay: .38s; }
-.fc-br { bottom: clamp(24px,5vh,60px); right: clamp(16px,2.5vw,48px); animation-delay: .52s; }
 
-.fc-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-.fc-label { font-size: 10px; font-weight: 700; color: #2d6e5a; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
-.fc-val   { font-size: 22px; font-weight: 700; color: #012e27; line-height: 1; }
-.fc-sub   { font-size: 11px; color: #2d6e5a; margin-top: 4px; font-weight: 500; }
-.fc-quote { font-size: 12px; color: #1a4a38; line-height: 1.5; font-style: italic; }
-.fc-auth  { font-size: 10px; color: #2d6e5a; margin-top: 8px; font-weight: 700; }
-.fc-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(100,213,156,0.2); border-radius: 20px;
-  padding: 3px 10px; font-size: 10px; font-weight: 700; color: #012e27; margin-top: 8px;
-}
-.fc-badge::before { content: '●'; font-size: 8px; color: var(--mint); }
 
 /* ── PÁGINA ── */
 .page {
@@ -204,7 +171,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card-wrap { animation: none; }
-  .fc { animation: none; opacity: 1; transform: none; }
 }
 
 /* ════════════════════════════════════════════
@@ -212,7 +178,6 @@
    ════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .card-wrap { width: clamp(320px, 46vmin, 400px); }
-  .fc { max-width: 190px; padding: 14px 16px; }
 }
 
 /* ════════════════════════════════════════════
@@ -220,8 +185,6 @@
    ════════════════════════════════════════════ */
 @media (max-width: 680px) {
   :host { min-height: auto; }
-
-  .fc { display: none !important; }
 
   .bg {
     background-position: center 38%;

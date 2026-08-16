@@ -40,31 +40,22 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   loading = false;
   success = false;
 
-  // ── Float cards (revelado por click) ──
-  cardsCount = 4;
-  revealedCount = 0;
-  revealed: boolean[] = [false, false, false, false];
-  showHint = false;
-
   // ── Parallax de la card (mouse en desktop, touch en móvil) ──
   private tx = 0; private ty = 0;
   private ox = 0; private oy = 0;
   private rafId: number | null = null;
-  private hintTimeout: ReturnType<typeof setTimeout> | null = null;
   private shakeEmailTimeout: ReturnType<typeof setTimeout> | null = null;
   private shakePwTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private router: Router, private authService: AuthService, private i18n: I18nService) {}
 
   ngAfterViewInit(): void {
-    this.hintTimeout = setTimeout(() => (this.showHint = true), 3000);
     this.rafId = requestAnimationFrame(() => this.loop());
     setTimeout(() => this.cardWrapRef.nativeElement.classList.add('in'), 200);
   }
 
   ngOnDestroy(): void {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-    if (this.hintTimeout) clearTimeout(this.hintTimeout);
     if (this.shakeEmailTimeout) clearTimeout(this.shakeEmailTimeout);
     if (this.shakePwTimeout) clearTimeout(this.shakePwTimeout);
   }
@@ -102,38 +93,6 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     const touch = e.touches[0];
     if (!touch) return;
     this.setParallaxTarget(touch.clientX, touch.clientY);
-  }
-
-  // ── Revelado de float cards al hacer click en el fondo ──
-  @HostListener('document:click', ['$event'])
-  onDocClick(e: MouseEvent): void {
-    const target = e.target as HTMLElement;
-    if (target.closest('.card-wrap') || target.closest('.fc')) return;
-
-    if (this.revealedCount < this.cardsCount) {
-      this.revealed[this.revealedCount] = true;
-      this.revealedCount++;
-      if (this.revealedCount >= this.cardsCount) this.showHint = false;
-    } else {
-      this.revealed = this.revealed.map(() => false);
-      this.revealedCount = 0;
-      setTimeout(() => (this.showHint = true), 800);
-    }
-  }
-
-  // ── Tilt 3D de cada float card ──
-  onFcMouseMove(e: MouseEvent, fc: HTMLElement): void {
-    const r = fc.getBoundingClientRect();
-    const rotX = ((e.clientY - r.top) / r.height - 0.5) * -14;
-    const rotY = ((e.clientX - r.left) / r.width - 0.5) * 14;
-    fc.style.transform = `perspective(600px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.04)`;
-    fc.style.transition = 'box-shadow .2s';
-  }
-
-  onFcMouseLeave(fc: HTMLElement): void {
-    fc.style.transform = '';
-    fc.style.transition =
-      'transform .4s cubic-bezier(.22,.8,.35,1), box-shadow .3s, opacity .38s';
   }
 
   togglePwd(): void {
