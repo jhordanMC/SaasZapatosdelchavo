@@ -27,8 +27,14 @@ import { RouterLink } from '@angular/router';
 import { Subject, forkJoin, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
+import { AuthService } from '../../../core/auth';
 import { environment } from '../../../../environments/environment';
 import { esArchivoDeImagen, esPrevisualizableEnNavegador } from '../../../utils/validar-imagen';
+import {
+  exportarBoletaSimple,
+  exportarBoletaVenta80mm,
+  exportarBoletaVentaNormal,
+} from '../../../utils/exportar-boleta-venta';
 import { SexoProducto } from '../../../services/inventario';
 import { ComprasService } from '../../../services/compras';
 import {
@@ -74,7 +80,11 @@ interface LineaPagoMixto {
   styleUrls: ['./ventas.css'],
 })
 export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
-  constructor(public ventasService: VentasService, private comprasService: ComprasService) {
+  constructor(
+    public ventasService: VentasService,
+    private comprasService: ComprasService,
+    private authService: AuthService
+  ) {
     // Debounce de 300ms: espera a que el usuario deje de teclear antes de
     // pedir la página 1 al backend con el nuevo texto de búsqueda.
     this.busquedaSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
@@ -1204,8 +1214,27 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resultadosProductoCambio.set([]);
   }
 
-  cambiarCantidadDevolucion(linea: (typeof this.lineasDevolucion)[number], valor: number): void {
-    linea.cantidad = Math.max(0, Math.min(valor || 0, linea.disponible));
+  private opcionesBranding() {
+    const u = this.authService.usuarioActual();
+    return {
+      nombreEmpresa: u?.nombreEmpresa ?? null,
+      clienteFotoUrl: u?.avatarUrl ? `${environment.apiUrl}${u.avatarUrl}` : null,
+    };
+  }
+
+  imprimirBoleta80mm(venta: VentaRead): void {
+    exportarBoletaVenta80mm(venta, this.opcionesBranding());
+  }
+
+  imprimirBoletaNormal(venta: VentaRead): void {
+    exportarBoletaVentaNormal(venta, this.opcionesBranding());
+  }
+
+  cambiarCantidadDevolucion(linea: (typeof this.lineasDevolucion)[number], valor: number | string): void {
+    let num = typeof valor === 'string' ? parseInt(valor, 10) : valor;
+    if (isNaN(num) || num < 0) num = 0;
+    if (num > linea.disponible) num = linea.disponible;
+    linea.cantidad = num;
   }
 
 

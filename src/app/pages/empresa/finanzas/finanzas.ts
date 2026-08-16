@@ -12,6 +12,7 @@ import {
 } from '../../../services/finanzas';
 import { InventarioService, ProductoListItem } from '../../../services/inventario';
 import { ComprasService } from '../../../services/compras';
+import { VentasService } from '../../../services/ventas';
 import {
   ResumenMensual,
   construirResumenMensual,
@@ -45,6 +46,7 @@ export class FinanzasComponent implements OnInit {
     public finanzasService: FinanzasService,
     private inventarioService: InventarioService,
     private comprasService: ComprasService,
+    private ventasService: VentasService,
     private authService: AuthService
   ) {}
 
@@ -285,10 +287,13 @@ export class FinanzasComponent implements OnInit {
       ),
       compras: this.comprasService.listarComprasEnRango(desde, hasta).pipe(
         catchError(() => of([]))
+      ),
+      ventasLista: this.ventasService.listarVentas({ desde, hasta }, 0, 50).pipe(
+        catchError(() => of([]))
       )
     }).subscribe({
-      next: ({ ventas, compras }) => {
-        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, compras || []);
+      next: ({ ventas, compras, ventasLista }) => {
+        this.resumenMensual = construirResumenMensual(this.mesSeleccionado, desde, hasta, ventas, compras || [], ventasLista || []);
         this.generandoResumenMensual = false;
       },
       error: () => {

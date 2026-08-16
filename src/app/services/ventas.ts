@@ -139,6 +139,8 @@ export interface VentaRead {
   id_local: string;
   id_usuario: string;
   id_cliente: string | null;
+  nombre_cliente?: string | null;
+  documento_cliente?: string | null;
   total: number;
   estado: EstadoVenta;
   detalles: DetalleVentaRead[];

@@ -22,6 +22,11 @@ import { ModalBrandHeaderComponent } from '../../../../shared/modal-brand-header
 import { AuthService } from '../../../../core/auth';
 import { environment } from '../../../../../environments/environment';
 import {
+  exportarBoletaSimple,
+  exportarBoletaVenta80mm,
+  exportarBoletaVentaNormal,
+} from '../../../../utils/exportar-boleta-venta';
+import {
   DetalleVentaRead,
   DevolucionListItem,
   DevolucionRead,
@@ -399,6 +404,26 @@ export class HistorialVentasComponent implements OnInit {
 
   totalPagos(venta: VentaRead): number {
     return venta.pagos.reduce((acc, p) => acc + p.monto, 0);
+  }
+
+  private opcionesBranding() {
+    const u = this.authService.usuarioActual();
+    return {
+      nombreEmpresa: u?.nombreEmpresa ?? null,
+      clienteFotoUrl: u?.avatarUrl ? `${environment.apiUrl}${u.avatarUrl}` : null,
+    };
+  }
+
+  emitirBoletaSimple(venta: VentaRead): void {
+    exportarBoletaSimple(venta, this.opcionesBranding());
+  }
+
+  imprimirBoleta80mm(venta: VentaRead): void {
+    exportarBoletaVenta80mm(venta, this.opcionesBranding());
+  }
+
+  imprimirBoletaNormal(venta: VentaRead): void {
+    exportarBoletaVentaNormal(venta, this.opcionesBranding());
   }
 
   // ── Detalle de devolución ────────────────────────────────────────────────

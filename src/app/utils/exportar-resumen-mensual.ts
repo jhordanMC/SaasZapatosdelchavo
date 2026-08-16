@@ -25,6 +25,15 @@ export interface ResumenMensualCompras {
   detalle: CompraRead[];
 }
 
+export interface ResumenMensualVistas {
+  id_venta: string;
+  total: number;
+  nombre_cliente?: string | null;
+  cantidad_items?: number;
+  creado_en?: string;
+  nombre_vendedor?: string | null;
+}
+
 export interface ResumenMensual {
   /** "2026-07" */
   mes: string;
@@ -34,6 +43,7 @@ export interface ResumenMensual {
   hasta: string;
   ventas: ResumenFinanciero;
   compras: ResumenMensualCompras;
+  ventasLista?: ResumenMensualVistas[];
   /** Ingresos del mes − compras de mercadería − gasto operativo del mes. */
   balanceNeto: number;
 }
@@ -107,7 +117,8 @@ export function construirResumenMensual(
   desde: string,
   hasta: string,
   ventas: ResumenFinanciero,
-  compras: CompraRead[] = []
+  compras: CompraRead[] = [],
+  ventasLista: ResumenMensualVistas[] = []
 ): ResumenMensual {
   const comprasSeguras = Array.isArray(compras) ? compras : [];
   const totalCompras = comprasSeguras.reduce((acc, c) => acc + (c?.monto || 0), 0);
@@ -161,6 +172,7 @@ export function construirResumenMensual(
       porProveedor,
       detalle: [...comprasSeguras].sort((a, b) => ((a?.fecha || '') < (b?.fecha || '') ? 1 : -1)),
     },
+    ventasLista: Array.isArray(ventasLista) ? ventasLista : [],
     balanceNeto: ingresosVentas - totalCompras - gastoOperativo,
   };
 }
@@ -209,13 +221,12 @@ export async function exportarResumenMensualPDF(
   const logoVilcasDataUrl = await imagenADataUrl('/vilcas.png');
   const logoAlbaDataUrl = await imagenADataUrl('/Logoalbasinfondo.png');
 
-  // Cabecera institucional
+  // Cabecera institucional estilo Boleta / Comprobante
   doc.setFillColor(2, 75, 64); // #024b40
   doc.rect(0, 0, 210, 36, 'F');
 
   let posXTexto = margenIzq;
 
-  // Foto de la marca / perfil del CLIENTE (GRANDE)
   if (clienteFotoDataUrl) {
     try {
       doc.addImage(clienteFotoDataUrl, formatoDesdeDataUrl(clienteFotoDataUrl), margenIzq, 6, 24, 24);
@@ -225,108 +236,168 @@ export async function exportarResumenMensualPDF(
     }
   }
 
-  // Nombre de la marca del CLIENTE en grande
   const nombreEmpresa = (opciones?.nombreEmpresa || 'Mi Empresa').toUpperCase();
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.text(nombreEmpresa, posXTexto, 16);
 
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(190, 225, 215);
-  doc.text('Resumen mensual de compras y ventas', posXTexto, 24);
+  doc.text('BOLETA DE RESUMEN FINANCIERO MENSUAL', posXTexto, 24);
 
-  // Logo de VILCAS (PEQUEÑO) en la esquina superior derecha
-  if (logoVilcasDataUrl) {
-    try {
-      doc.addImage(logoVilcasDataUrl, 'PNG', 186, 6, 10, 10);
-    } catch {
-      // Ignorar si no carga
-    }
-  }
-  doc.setFontSize(8);
+  // Recuadro derecho tipo Boleta
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(136, 5, 60, 26, 2, 2, 'FD');
+
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(200, 230, 220);
-  doc.text('Plataforma VILCAS', 184, 12, { align: 'right' });
+  doc.setTextColor(2, 75, 64);
+  doc.text('RESUMEN DE VENTA Y CAJA', 166, 12, { align: 'center' });
 
-  doc.setFontSize(8.5);
+  const numBoleta = `RPT-${r.mes.replace('-', '')}`;
+  doc.setFontSize(10);
+  doc.text(numBoleta, 166, 20, { align: 'center' });
+
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(255, 255, 255);
-  doc.text(`${r.etiquetaMes}  ·  ${r.desde} al ${r.hasta}`, 196, 28, { align: 'right' });
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Período: ${r.etiquetaMes}`, 166, 26, { align: 'center' });
 
-  y = 46;
+  y = 44;
 
-  doc.setFontSize(13);
+  // Bloque: Resumen general de la Boleta / Comprobante
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(2, 75, 64);
-  doc.text('Ventas', margenIzq, y);
-  y += 2;
+  doc.text('1. Indicadores Principales de Ventas', margenIzq, y);
+  y += 4;
+
+  const prodEstrellaStr = r.ventas.producto_estrella
+    ? `${r.ventas.producto_estrella} (${r.ventas.producto_estrella_unidades ?? 0} unids)`
+    : 'No registrado';
 
   autoTable(doc, {
-    startY: y + 2,
+    startY: y,
     theme: 'grid',
-    styles: { fontSize: 9.5, textColor: [31, 64, 52] },
+    styles: { fontSize: 8.5, textColor: [31, 64, 52] },
     headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
-    head: [['Indicador', 'Valor']],
+    head: [['Indicador de Venta', 'Valor Registrado']],
     body: [
-      ['Ingresos del mes', moneda(r.ventas.ingresos_periodo)],
-      ['Cantidad de ventas', String(r.ventas.cantidad_ventas)],
-      ['Ticket promedio', moneda(r.ventas.ticket_promedio)],
-      ['Margen bruto del mes', moneda(r.ventas.margen_bruto_periodo)],
+      ['Ingresos Totales por Ventas', moneda(r.ventas.ingresos_periodo)],
+      ['Cantidad de Operaciones / Ventas', String(r.ventas.cantidad_ventas)],
+      ['Ticket Promedio por Cliente', moneda(r.ventas.ticket_promedio)],
+      ['Margen Bruto de Ganancia', moneda(r.ventas.margen_bruto_periodo)],
+      ['Producto Más Vendido (Estrella)', prodEstrellaStr],
     ],
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  y = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(2, 75, 64);
-  doc.text('Compras', margenIzq, y);
+  y = (doc as any).lastAutoTable.finalY + 8;
 
-  autoTable(doc, {
-    startY: y + 2,
-    theme: 'grid',
-    styles: { fontSize: 9.5, textColor: [31, 64, 52] },
-    headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
-    head: [['Indicador', 'Valor']],
-    body: [
-      ['Total comprado', moneda(r.compras.total)],
-      ['Cantidad de compras', String(r.compras.cantidad)],
-      ['Gasto operativo del mes', moneda(r.ventas.gasto_operativo_periodo)],
-    ],
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  y = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(31, 64, 52);
-  doc.text('Balance neto del mes (ventas − compras − gasto operativo)', margenIzq, y);
-  y += 8;
-  doc.setFontSize(14);
-  doc.setTextColor(r.balanceNeto >= 0 ? 29 : 178, r.balanceNeto >= 0 ? 122 : 58, r.balanceNeto >= 0 ? 76 : 58);
-  doc.text(moneda(r.balanceNeto), margenIzq, y);
-
-  if (r.compras.detalle.length > 0) {
-    y += 10;
-    doc.setFontSize(13);
+  // Si hay desglose de lista de ventas/productos
+  if (r.ventasLista && r.ventasLista.length > 0) {
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(2, 75, 64);
-    doc.text('Detalle de compras del mes', margenIzq, y);
+    doc.text('Ventas Registradas en el Período', margenIzq, y);
+    y += 4;
+
+    const filasVentas = r.ventasLista.slice(0, 15).map((v) => [
+      `#${v.id_venta.slice(-6).toUpperCase()}`,
+      v.creado_en ? new Date(v.creado_en).toLocaleDateString('es-PE') : '—',
+      v.nombre_cliente || 'Cliente General',
+      v.nombre_vendedor || 'POS',
+      String(v.cantidad_items || 1),
+      moneda(v.total),
+    ]);
 
     autoTable(doc, {
-      startY: y + 2,
+      startY: y,
       theme: 'striped',
-      styles: { fontSize: 8.5, textColor: [31, 64, 52] },
+      styles: { fontSize: 8, textColor: [31, 64, 52] },
+      headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
+      head: [['Folio / ID', 'Fecha', 'Cliente', 'Vendedor', 'Ítems', 'Monto']],
+      body: filasVentas,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    y = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Seccion 2: Compras y Proveedores
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
+  doc.text('2. Compras y Mercadería Adquirida', margenIzq, y);
+  y += 4;
+
+  autoTable(doc, {
+    startY: y,
+    theme: 'grid',
+    styles: { fontSize: 8.5, textColor: [31, 64, 52] },
+    headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
+    head: [['Indicador de Compras', 'Valor Registrado']],
+    body: [
+      ['Total de Inversión en Compras', moneda(r.compras.total)],
+      ['Número de Compras / Facturas', String(r.compras.cantidad)],
+      ['Gastos Operativos del Período', moneda(r.ventas.gasto_operativo_periodo)],
+    ],
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  y = (doc as any).lastAutoTable.finalY + 8;
+
+  if (r.compras.detalle.length > 0) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(2, 75, 64);
+    doc.text('Detalle de Compras', margenIzq, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      theme: 'striped',
+      styles: { fontSize: 8, textColor: [31, 64, 52] },
       headStyles: { fillColor: [2, 75, 64], textColor: 255, fontStyle: 'bold' },
       head: [['Fecha', 'Proveedor', 'Concepto', 'Monto']],
       body: r.compras.detalle.map((c) => [c.fecha, c.proveedor, c.concepto, moneda(c.monto)]),
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    y = (doc as any).lastAutoTable.finalY + 8;
   }
 
-  // Pie de página - Powered by ALBA
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Cuadro Final de Cierre / Balance estilo Boleta
+  doc.setFillColor(248, 250, 249);
+  doc.setDrawColor(215, 225, 220);
+  doc.roundedRect(margenIzq, y, 182, 34, 2, 2, 'FD');
+
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(2, 75, 64);
+  doc.text('DESGLOSE Y BALANCE FINAL DE CAJA', margenIzq + 6, y + 8);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+
+  const totalIngresos = r.ventas.ingresos_periodo;
+  const totalInversiones = r.compras.total + r.ventas.gasto_operativo_periodo;
+  const igvEstimado = totalIngresos * 0.18;
+
+  doc.text(`(+) Ventas Totales: ${moneda(totalIngresos)}`, margenIzq + 6, y + 16);
+  doc.text(`(-) Compras y Gastos: ${moneda(totalInversiones)}`, margenIzq + 6, y + 23);
+  doc.text(`(*) IGV Referencial (18%): ${moneda(igvEstimado)}`, margenIzq + 6, y + 30);
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  const colorBalance = r.balanceNeto >= 0 ? [29, 122, 76] : [178, 58, 58];
+  doc.setTextColor(colorBalance[0], colorBalance[1], colorBalance[2]);
+  doc.text(`BALANCE NETO: ${moneda(r.balanceNeto)}`, margenIzq + 105, y + 20);
+
+  // Pie de página
   const totalPages = (doc as any).internal.getNumberOfPages();
   const albaLink = 'https://www.linkedin.com/in/alba-engineering-development-42a3493ab?utm_source=share_via&utm_content=profile&utm_medium=member_android';
 
@@ -335,20 +406,20 @@ export async function exportarResumenMensualPDF(
     doc.setDrawColor(220, 230, 225);
     doc.line(margenIzq, 280, 196, 280);
 
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(110, 130, 120);
-    doc.text('Powered by ALBA · Engineering & Development', margenIzq, 286);
+    doc.text(`Página ${page} de ${totalPages} · Resumen Financiero Boleta`, margenIzq, 286);
 
     doc.setTextColor(2, 75, 64);
     doc.setFont('helvetica', 'bold');
-    doc.textWithLink('Ver perfil de ALBA', 196, 286, { url: albaLink, align: 'right' });
+    doc.textWithLink('Powered by ALBA · Engineering & Development', 196, 286, { url: albaLink, align: 'right' });
 
     if (logoAlbaDataUrl) {
       try {
         doc.addImage(logoAlbaDataUrl, 'PNG', margenIzq + 68, 282, 10, 5);
       } catch {
-        // Ignorar si falla
+        // Ignorar
       }
     }
   }
