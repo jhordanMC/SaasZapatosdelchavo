@@ -122,10 +122,10 @@
     </div>
 
     <div class="modal-header">
-      <h3>{{ editandoId ? 'Editar producto' : 'Nuevo producto' }}</h3>
+      <h3>{{ vistaModal === 'talla' ? 'Editar talla y stock' : (editandoId ? 'Editar producto' : 'Nuevo producto') }}</h3>
     </div>
 
-    <div class="modal-body">
+    <div class="modal-body" *ngIf="vistaModal === 'producto'">
       <div class="foto-y-basicos">
         <!-- Foto (opcional) — se sube al backend recién al guardar el producto -->
         <div class="foto-upload-wrap">
@@ -373,7 +373,7 @@
             </svg>
             Gestionar almacenes
           </button>
-          <button class="btn-link" (click)="agregarFilaVariante()">+ Agregar talla</button>
+          <button class="btn-link" (click)="abrirNuevaTalla()">+ Agregar talla</button>
         </div>
       </div>
 
@@ -434,92 +434,77 @@
         </div>
       </div>
 
-      <div class="variante-columnas" *ngIf="form.variantes.length > 0">
-        <span>Talla</span>
-        <span>Stock</span>
-        <span>SKU</span>
-        <span>Cód. Barras (Opc)</span>
-        <span>Tipo</span>
-        <span>Almacén / Local</span>
-        <span></span>
+      <!-- Resumen compacto: solo lectura + acciones. Editar/agregar tallas pasa por el paso "talla". -->
+      <div class="variantes-tabla-resumen" *ngIf="form.variantes.length > 0">
+        <div class="variante-columnas variante-columnas-resumen">
+          <span>Talla</span>
+          <span>Almacén / Local</span>
+          <span>Stock</span>
+          <span>SKU</span>
+          <span>Cód. Barras</span>
+          <span class="col-acciones">Acciones</span>
+        </div>
+
+        <div class="variante-fila variante-fila-resumen" *ngFor="let v of form.variantes; let i = index">
+          <div class="field-wrap">
+            <span class="mobile-field-label">Talla</span>
+            <span class="resumen-valor resumen-valor-strong">{{ v.talla || '—' }}</span>
+          </div>
+          <div class="field-wrap">
+            <span class="mobile-field-label">Almacén / Local</span>
+            <span class="resumen-valor" [title]="nombreUbicacion(v)">{{ nombreUbicacion(v) }}</span>
+          </div>
+          <div class="field-wrap">
+            <span class="mobile-field-label">Stock</span>
+            <span class="resumen-valor">{{ v.cantidad || 0 }}</span>
+          </div>
+          <div class="field-wrap">
+            <span class="mobile-field-label">SKU</span>
+            <span class="resumen-valor" [title]="v.sku || ''">{{ v.sku || '—' }}</span>
+          </div>
+          <div class="field-wrap">
+            <span class="mobile-field-label">Cód. Barras</span>
+            <span class="resumen-valor" [title]="v.codigo_barras || ''">{{ v.codigo_barras || '—' }}</span>
+          </div>
+          <div class="resumen-acciones">
+            <button type="button" class="btn-icon-secundario" (click)="abrirEditarTalla(i)" title="Editar talla">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button type="button" class="btn-icon-danger" (click)="pedirEliminarTalla(i)" title="Eliminar talla">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="variante-fila" *ngFor="let v of form.variantes; let i = index">
-        <div class="field-wrap field-talla">
-          <span class="mobile-field-label">Talla</span>
-          <input type="text" placeholder="Talla (Ej: 39)" [(ngModel)]="v.talla" aria-label="Talla" />
-        </div>
-        <div class="field-wrap field-stock">
-          <span class="mobile-field-label">Stock</span>
-          <input
-            type="text"
-            inputmode="numeric"
-            class="no-spinner"
-            placeholder="Stock (Ej: 10)"
-            [ngModel]="v.cantidad"
-            (ngModelChange)="onCantidadVarianteChange(i, $event)"
-            aria-label="Stock"
-          />
-        </div>
-        <div class="field-wrap field-sku">
-          <span class="mobile-field-label">SKU</span>
-          <input type="text" placeholder="SKU (Ej: ZAP-39)" [(ngModel)]="v.sku" aria-label="SKU" />
-        </div>
-        <div class="field-wrap field-cod-barras">
-          <span class="mobile-field-label">Cód. Barras</span>
-          <input type="text" placeholder="Cód. Barras (Ej: 775123456789)" [(ngModel)]="v.codigo_barras" aria-label="Código de Barras" />
-        </div>
+      <div class="variantes-vacio" *ngIf="form.variantes.length === 0">
+        Aún no agregaste tallas. Usa "+ Agregar talla" para empezar.
+      </div>
 
-        <!-- Paso 1: elegir el tipo (Almacén o Local) -->
-        <div class="field-wrap field-tipo">
-          <span class="mobile-field-label">Tipo</span>
-          <select [ngModel]="v.tipoUbicacion" (ngModelChange)="onTipoUbicacionChange(i, $event)" aria-label="Tipo de ubicación">
-            <option value="">Tipo…</option>
-            <option value="almacen">Almacén</option>
-            <option value="local">Local</option>
-          </select>
-        </div>
-
-        <!-- Paso 2: según el tipo elegido, solo muestra almacenes o solo locales -->
-        <div class="field-wrap field-ubicacion">
-          <span class="mobile-field-label">Ubicación</span>
-          <select
-            *ngIf="v.tipoUbicacion === 'almacen'"
-            [(ngModel)]="v.ubicacion"
-            aria-label="Almacén"
-          >
-            <option value="">Seleccionar almacén</option>
-            <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
-          </select>
-
-          <select
-            *ngIf="v.tipoUbicacion === 'local'"
-            [(ngModel)]="v.ubicacion"
-            aria-label="Local"
-          >
-            <option value="">Seleccionar local</option>
-            <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
-          </select>
-
-          <select *ngIf="!v.tipoUbicacion" disabled aria-label="Almacén o local">
-            <option value="">Elige un tipo primero</option>
-          </select>
-        </div>
-
-        <button class="btn-icon-danger" (click)="quitarFilaVariante(i)" title="Quitar talla">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      <!-- Resumen de totales -->
+      <div class="variantes-resumen-totales" *ngIf="form.variantes.length > 0">
+        <div class="resumen-stat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
-        </button>
-      </div>
-
-      <!-- Total de stock sumado (alineado justo debajo de la columna "Stock") -->
-      <div class="variante-fila variantes-total-fila" *ngIf="form.variantes.length > 0">
-        <span></span>
-        <span class="variantes-total">Total de stock: <strong>{{ stockTotalForm }}</strong></span>
-        <span></span>
-        <span></span>
-        <span></span>
+          <div><strong>{{ form.variantes.length }}</strong><span>Tallas registradas</span></div>
+        </div>
+        <div class="resumen-stat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/>
+          </svg>
+          <div><strong>{{ almacenesActivosCount }}</strong><span>Almacenes activos</span></div>
+        </div>
+        <div class="resumen-stat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+          <div><strong>{{ stockTotalForm }}</strong><span>Total stock</span></div>
+        </div>
       </div>
 
       <!-- Error del modal -->
@@ -528,12 +513,153 @@
       </div>
     </div>
 
-    <div class="modal-footer">
+    <!-- ── Paso 2 del wizard: editar una sola talla ─────────────────────── -->
+    <div class="modal-body vista-editar-talla" *ngIf="vistaModal === 'talla' && varianteEditandoIndex !== null">
+      <div class="form-row-3">
+        <div class="form-row">
+          <label>Talla</label>
+          <input type="text" placeholder="Talla (Ej: 39)" [(ngModel)]="form.variantes[varianteEditandoIndex].talla" aria-label="Talla" />
+        </div>
+        <div class="form-row">
+          <label>Tipo de sede</label>
+          <select
+            [ngModel]="form.variantes[varianteEditandoIndex].tipoUbicacion"
+            (ngModelChange)="onTipoUbicacionChange(varianteEditandoIndex, $event)"
+            aria-label="Tipo de ubicación"
+          >
+            <option value="">Tipo…</option>
+            <option value="local">Local</option>
+            <option value="almacen">Almacén</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Sede / Almacén</label>
+          <select
+            *ngIf="form.variantes[varianteEditandoIndex].tipoUbicacion === 'local'"
+            [(ngModel)]="form.variantes[varianteEditandoIndex].ubicacion"
+            aria-label="Local"
+          >
+            <option value="">Seleccionar local</option>
+            <option *ngFor="let l of locales()" [value]="'local:' + l.id_local">{{ l.nombre }}</option>
+          </select>
+          <select
+            *ngIf="form.variantes[varianteEditandoIndex].tipoUbicacion === 'almacen'"
+            [(ngModel)]="form.variantes[varianteEditandoIndex].ubicacion"
+            aria-label="Almacén"
+          >
+            <option value="">Seleccionar almacén</option>
+            <option *ngFor="let a of almacenesReales()" [value]="'almacen:' + a.id_almacen">{{ a.nombre }}</option>
+          </select>
+          <select *ngIf="!form.variantes[varianteEditandoIndex].tipoUbicacion" disabled aria-label="Sede o almacén">
+            <option value="">Elige un tipo primero</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-row">
+          <label>Stock</label>
+          <input
+            type="text"
+            inputmode="numeric"
+            class="no-spinner"
+            placeholder="Stock (Ej: 10)"
+            [ngModel]="form.variantes[varianteEditandoIndex].cantidad"
+            (ngModelChange)="onCantidadVarianteChange(varianteEditandoIndex, $event)"
+            aria-label="Stock"
+          />
+        </div>
+        <div class="form-row">
+          <label>SKU</label>
+          <input type="text" placeholder="SKU (Ej: ZAP-39)" [(ngModel)]="form.variantes[varianteEditandoIndex].sku" aria-label="SKU" />
+        </div>
+        <div class="form-row">
+          <label>Código de barras <span class="opcional">(EAN-13, opcional)</span></label>
+          <input type="text" placeholder="Cód. Barras (Ej: 775123456789)" [(ngModel)]="form.variantes[varianteEditandoIndex].codigo_barras" aria-label="Código de Barras" />
+        </div>
+      </div>
+
+      <!-- Cancelar / Guardar cambios: justo debajo de los campos, antes de "Otras tallas" (pedido explícito) -->
+      <div class="talla-acciones-inline">
+        <button class="btn-secondary" (click)="cancelarEdicionTalla()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarCambiosTalla()">Guardar cambios</button>
+      </div>
+
+      <!-- Contexto: las demás tallas del producto, de solo lectura -->
+      <div class="otras-tallas" *ngIf="otrasTallas.length > 0">
+        <div class="otras-tallas-titulo">Otras tallas del producto</div>
+        <div class="otras-tallas-tabla">
+          <div class="otras-tallas-columnas">
+            <span>Talla</span>
+            <span>Almacén / Local</span>
+            <span>Stock</span>
+            <span>SKU</span>
+            <span>Cód. Barras</span>
+            <span class="col-acciones">Acciones</span>
+          </div>
+          <div class="otras-tallas-fila" *ngFor="let ot of otrasTallas">
+            <span class="resumen-valor resumen-valor-strong" data-label="Talla">{{ ot.variante.talla || '—' }}</span>
+            <span class="resumen-valor" data-label="Almacén / Local" [title]="nombreUbicacion(ot.variante)">{{ nombreUbicacion(ot.variante) }}</span>
+            <span class="resumen-valor" data-label="Stock">{{ ot.variante.cantidad || 0 }}</span>
+            <span class="resumen-valor" data-label="SKU" [title]="ot.variante.sku || ''">{{ ot.variante.sku || '—' }}</span>
+            <span class="resumen-valor" data-label="Cód. Barras" [title]="ot.variante.codigo_barras || ''">{{ ot.variante.codigo_barras || '—' }}</span>
+            <div class="otras-tallas-accion">
+              <button type="button" class="btn-icon-secundario" (click)="abrirEditarTalla(ot.index)" title="Editar esta talla">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aviso-info-talla">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        Los cambios en el stock, SKU y códigos de barras se reflejarán en el inventario de cada almacén.
+      </div>
+
+      <!-- Error del modal -->
+      <div class="modal-error" *ngIf="errorModal()">
+        {{ errorModal() }}
+      </div>
+    </div>
+
+    <div class="modal-footer" *ngIf="vistaModal === 'producto'">
       <button class="btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
       <button class="btn-primary" (click)="guardar()" [disabled]="guardando()">
         <span *ngIf="guardando()">Guardando…</span>
         <span *ngIf="!guardando()">Guardar producto</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: confirmar eliminación de una talla ─────────────────────── -->
+<div class="modal-overlay confirm-salir-overlay" *ngIf="varianteAEliminarIndex !== null">
+  <div class="confirm-salir-card" (click)="$event.stopPropagation()">
+    <div class="confirm-salir-icono">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirm-salir-titulo">¿Eliminar esta talla?</h2>
+    <p class="confirm-salir-desc">
+      Se quitará la talla{{ form.variantes[varianteAEliminarIndex!] ? ' ' + form.variantes[varianteAEliminarIndex!].talla : '' }} y su stock de este producto.
+    </p>
+
+    <div class="confirm-salir-actions">
+      <button class="btn-confirm-salir" (click)="confirmarEliminarTalla()">Sí, eliminar</button>
+      <button class="btn-confirm-seguir" (click)="cancelarEliminarTalla()">No, cancelar</button>
+    </div>
+
+    <div class="confirm-salir-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="confirm-salir-logo" />
+      <div class="confirm-salir-brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
     </div>
   </div>
 </div>
