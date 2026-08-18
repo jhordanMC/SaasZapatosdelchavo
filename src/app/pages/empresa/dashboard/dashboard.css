@@ -560,6 +560,35 @@
   .bar-list-row { grid-template-columns: 90px 1fr 60px; }
 }
 
+/* "Ventas y ganancias": con franjas de 2 horas son 12 columnas — a este
+   ancho ya no entran 12 etiquetas ("00:00", "02:00"...) sin pegarse unas
+   con otras (se leían corridas: "00:0002:0004:00..."). En vez de recortar
+   texto o rotarlo (ilegible en una franja tan angosta), se le da a cada
+   columna un ancho mínimo fijo y se deja scrollear horizontalmente SOLO
+   el cuerpo del gráfico — el eje Y de la izquierda se queda fijo. */
+@media (max-width: 640px) {
+  .evolucion-chart-wrap { align-items: stretch; }
+  .evolucion-chart-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px; /* separa el scrollbar de las etiquetas */
+  }
+  .evolucion-chart,
+  .evolucion-labels { width: max-content; min-width: 100%; }
+  .evolucion-col { flex: 0 0 36px; }
+  .evolucion-label { flex: 0 0 36px; font-size: 10px; }
+}
+
+/* "Cómo te están pagando": a este ancho la columna de 90px ya aprieta
+   etiquetas como "Transferencia" contra la barra. Se achica un poco más
+   la columna de texto y de monto, y se reduce el tipo para que no corte. */
+@media (max-width: 480px) {
+  .bar-list-row { grid-template-columns: 76px 1fr 52px; gap: 6px; }
+  .bar-list-label { font-size: 11px; }
+  .bar-list-valor { font-size: 11.5px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tab-btn,
   .chart-productos-fill,
