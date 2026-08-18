@@ -240,6 +240,14 @@
    Gráficos
 ══════════════════════════════ */
 .graficos-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+/* Ítem de grid: por spec, min-width por defecto es "auto" (= su
+   contenido mínimo), así que si algo adentro pide más ancho (el
+   scroll horizontal del gráfico en móvil) el navegador agranda el
+   TRACK del grid entero en vez de contener el overflow — eso es lo
+   que estaba corriendo toda la página hacia la derecha. min-width:0
+   fuerza a que el ítem respete el ancho del track y el overflow se
+   quede contenido adentro, donde sí tiene su propio scroll. */
+.graficos-grid > .panel { min-width: 0; }
 
 .evolucion-chart-wrap { display: flex; gap: 10px; }
 .evolucion-eje-y {
