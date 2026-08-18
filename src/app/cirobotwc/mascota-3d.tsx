@@ -1,4 +1,4 @@
-import { Suspense, useRef, useEffect } from 'react';
+import { Suspense, useRef, useEffect, useState, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import type { Group, Mesh } from 'three';
@@ -73,13 +73,82 @@ function FallbackBot() {
   );
 }
 
+/**
+ * Burbuja estática (puro CSS, sin WebGL) que se muestra si el contexto
+ * se pierde. Antes, cuando el proceso de GPU del navegador tumbaba el
+ * contexto (típico en celulares de gama media/baja bajo presión de
+ * memoria — ver el bug de Ventas: grid de fotos + animación "vuelo al
+ * carrito" + este canvas corriendo sin parar en TODAS las páginas de
+ * empresa), Chrome pintaba su propio ícono de "contexto perdido" arriba
+ * del canvas y ahí se quedaba frito para el resto de la sesión. Con esto
+ * al menos degradamos a algo intencional en vez del ícono roto del navegador.
+ */
+function BurbujaEstatica() {
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          width: '55%',
+          height: '55%',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 35% 30%, #7fe0ab, #2f8f63)',
+        }}
+      />
+    </div>
+  );
+}
+
 export function Mascota3D() {
   useGlobalMouseTracking();
+  const [contextoValido, setContextoValido] = useState(true);
+
+  // Reintenta un contexto nuevo si el usuario reabre/reinteractúa después
+  // de una pérdida — sin esto, aunque el navegador restaure el contexto
+  // solo, React seguiría pensando que sigue perdido.
+  const reintentar = useCallback(() => setContextoValido(true), []);
+
+  if (!contextoValido) {
+    return (
+      <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }} onClick={reintentar}>
+        <BurbujaEstatica />
+      </div>
+    );
+  }
 
   return (
     <Canvas
       camera={{ position: [0, 0, 2], fov: 50 }}
-      gl={{ alpha: true, antialias: true }}
+      // antialias:false y dpr topeado a 1.5 — este canvas mide ~300x300px,
+      // el MSAA de antialiasing y un devicePixelRatio de 3 (común en
+      // gama media) multiplican el framebuffer varias veces sin aporte
+      // visual real a ese tamaño, y son la principal causa de que el
+      // proceso de GPU se quede sin memoria en celulares. powerPreference
+      // low-power además evita pelear por la GPU discreta/de alto consumo
+      // con el resto de la página (grid de fotos, animaciones del carrito).
+      dpr={[1, 1.5]}
+      gl={{ alpha: true, antialias: false, powerPreference: 'low-power', preserveDrawingBuffer: false }}
+      onCreated={({ gl }) => {
+        const canvas = gl.domElement;
+        // El evento es cancelable a propósito: si no se llama
+        // preventDefault(), el navegador NUNCA intenta restaurar el
+        // contexto y el canvas queda muerto para siempre en esa pestaña.
+        const alPerderContexto = (e: Event) => {
+          e.preventDefault();
+          setContextoValido(false);
+        };
+        const alRestaurarContexto = () => setContextoValido(true);
+        canvas.addEventListener('webglcontextlost', alPerderContexto);
+        canvas.addEventListener('webglcontextrestored', alRestaurarContexto);
+      }}
       // pointer-events: none a propósito — el <canvas> que crea r3f no
       // hereda el pointer-events:none de .cbot-mascota-wrap (maneja sus
       // propios eventos para el raycasting), así que sin esto se queda

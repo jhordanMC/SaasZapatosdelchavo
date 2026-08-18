@@ -75,7 +75,7 @@
     <div class="ventas-grid">
       <div class="venta-card" [class.just-added]="p.id_producto === justAddedProductoId" *ngFor="let p of productos()" (click)="abrirSelectorVariante(p, $event)">
         <div class="venta-foto">
-          <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" />
+          <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" loading="lazy" decoding="async" />
           <span class="foto-placeholder" *ngIf="!p.imagen_url">Sin foto</span>
         </div>
         <div class="added-badge" *ngIf="p.id_producto === justAddedProductoId">
