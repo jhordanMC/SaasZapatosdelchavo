@@ -1,7 +1,7 @@
 :host { display: block; }
 
 /* ── 1. Hero ── */
-.hero { position: relative; padding: 72px 32px 88px; overflow: hidden; }
+.hero { position: relative; padding: 24px 32px 72px; overflow: hidden; }
 .hero-bg {
   position: absolute; inset: 0; z-index: -1;
   background: radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--brand-primary) 20%, transparent), transparent 55%);

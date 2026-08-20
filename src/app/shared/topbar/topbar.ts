@@ -16,6 +16,7 @@ import { InventarioService } from '../../services/inventario';
 import { esArchivoDeImagen } from '../../utils/validar-imagen';
 import { environment } from '../../../environments/environment';
 import { SidebarItem } from '../sidebar/sidebar';
+import { MenuAccesibilidadComponent } from '../menu-accesibilidad/menu-accesibilidad';
 
 /** Las secciones del menú de perfil — todas viven dentro del mismo modal/toolbar. */
 export type VistaPerfil = 'menu' | 'info' | 'calificar' | 'acerca' | 'password' | 'cuentas';
@@ -37,7 +38,7 @@ interface ResultadoBusqueda {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MenuAccesibilidadComponent],
   templateUrl: './topbar.html',
   styleUrls: ['./topbar.css'],
 })

@@ -51,3 +51,23 @@ body {
   background: var(--bg-canvas);
   color: var(--text-primary);
 }
+
+/* ── Clases globales de Accesibilidad (AccessibilityService) ── */
+html.acc-contrast-light { filter: brightness(0.92) contrast(0.97); }
+html.acc-contrast-dark { filter: invert(0.9) hue-rotate(180deg); }
+html.acc-contrast-dark img, html.acc-contrast-dark video { filter: invert(1) hue-rotate(180deg); }
+html.acc-contrast-text { background: #ffffff !important; color: #000000 !important; }
+html.acc-night-mode { filter: sepia(0.2) brightness(0.9); }
+html.acc-font-small { font-size: 88%; }
+html.acc-font-large { font-size: 112%; }
+html.acc-dyslexia * { font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important; }
+html.acc-big-cursor, html.acc-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cpath d='M6 3L6 28L13 21L18 32L22 30L17 19L27 19Z' fill='%23059669' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 4 4, auto !important;
+}
+html.acc-focus-mode *, html.acc-focus-mode *::before, html.acc-focus-mode *::after {
+  transition: none !important;
+}
+html.acc-focus-mode p, html.acc-focus-mode li {
+  line-height: 1.85 !important;
+  margin-bottom: 1.2em !important;
+}
