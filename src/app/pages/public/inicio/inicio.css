@@ -18,12 +18,14 @@
 }
 .hero h1 { font-size: 44px; line-height: 1.14; font-weight: 800; margin: 0 0 18px; letter-spacing: -0.02em; }
 .hero-accent { color: var(--brand-deep-700); }
-.hero-sub { font-size: 17px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 30px; max-width: 480px; }
-.hero-actions { display: flex; gap: 14px; margin-bottom: 44px; flex-wrap: wrap; }
-.hero-stats { display: flex; gap: 40px; }
-.stat { display: flex; flex-direction: column; gap: 2px; }
-.stat-val { font-size: 24px; font-weight: 800; color: var(--brand-deep-700); }
-.stat-label { font-size: 12.5px; color: var(--text-tertiary); }
+.hero-letter-gold { color: var(--brand-gold, #da9e0b); }
+.hero-sub { font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 30px; max-width: 520px; }
+.hero-actions { display: flex; justify-content: center; width: 100%; margin-bottom: 36px; }
+.hero-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 24px; width: 100%; }
+.stat { display: flex; flex-direction: column; gap: 3px; }
+.stat-val { font-size: 22px; font-weight: 800; color: var(--brand-deep-700); line-height: 1.1; }
+.stat-label { font-size: 13.5px; font-weight: 700; color: var(--text-primary); line-height: 1.35; }
+.stat-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
 .hero-visual { min-width: 0; }
 
 /* ── 2. Demo explorer (section-head sub) ── */
