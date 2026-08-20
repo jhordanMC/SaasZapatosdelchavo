@@ -24,6 +24,12 @@ interface Testimonio {
   foto: string;
 }
 
+interface StatHero {
+  val: string;
+  label: string;
+  desc: string;
+}
+
 @Component({
   selector: 'app-inicio',
   standalone: true,
@@ -32,10 +38,19 @@ interface Testimonio {
   styleUrl: './inicio.css',
 })
 export class InicioComponent implements OnInit, OnDestroy {
+  statActivo = 0;
   testimonioActivo = 0;
   testimonioVentana = 0;
+  private statTimerMobile?: ReturnType<typeof setInterval>;
   private testimonioTimerMobile?: ReturnType<typeof setInterval>;
   private testimonioTimerDesktop?: ReturnType<typeof setInterval>;
+
+  readonly heroStats: StatHero[] = [
+    { val: '0.3s', label: 'Sincronización instantánea', desc: 'Tu inventario y ventas actualizados al milisegundo.' },
+    { val: '99.9%', label: 'Disponibilidad activa', desc: 'Plataforma 24/7 siempre lista para abrirse desde cualquier dispositivo' },
+    { val: '0', label: 'Pérdida de datos', desc: 'Copias de seguridad continuas y automáticas en la nube' },
+    { val: '1 click', label: 'Exportación rápida', desc: 'Descarga reportes y boletas en Excel o PDF al instante' },
+  ];
 
   readonly features: Feature[] = [
     { icon: 'box', titulo: 'Inventario Inteligente', desc: 'Controla tu stock, categorías, precios y más.' },
@@ -101,8 +116,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     },
   ];
 
-  /** Ventana de 3 testimonios para escritorio: siempre muestra 3, y cada
-   *  10s avanza una posición (entra el siguiente, sale el primero). */
   get testimoniosVisiblesDesktop(): Testimonio[] {
     const total = this.testimonios.length;
     const visibles: Testimonio[] = [];
@@ -112,21 +125,28 @@ export class InicioComponent implements OnInit, OnDestroy {
     return visibles;
   }
 
+  setStatActivo(idx: number): void {
+    this.statActivo = idx;
+  }
+
   ngOnInit(): void {
+    // Carrusel automático para la tarjeta de métricas en vista móvil cada 8 segundos (8000ms)
+    this.statTimerMobile = setInterval(() => {
+      this.statActivo = (this.statActivo + 1) % 4;
+    }, 8000);
+
     this.testimonioTimerMobile = setInterval(() => {
       this.testimonioActivo = (this.testimonioActivo + 1) % this.testimonios.length;
     }, 5000);
+
     this.testimonioTimerDesktop = setInterval(() => {
       this.testimonioVentana = (this.testimonioVentana + 1) % this.testimonios.length;
     }, 10000);
   }
 
   ngOnDestroy(): void {
-    if (this.testimonioTimerMobile) {
-      clearInterval(this.testimonioTimerMobile);
-    }
-    if (this.testimonioTimerDesktop) {
-      clearInterval(this.testimonioTimerDesktop);
-    }
+    if (this.statTimerMobile) clearInterval(this.statTimerMobile);
+    if (this.testimonioTimerMobile) clearInterval(this.testimonioTimerMobile);
+    if (this.testimonioTimerDesktop) clearInterval(this.testimonioTimerDesktop);
   }
 }

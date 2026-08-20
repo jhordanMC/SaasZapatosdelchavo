@@ -62,10 +62,23 @@
   color: var(--sb-text); border-color: var(--sb-border);
 }
 .nav-cta .nav-login-btn {
-  color: var(--brand-gold);
+  color: #ffffff;
+  background: var(--brand-primary-dark, #059669);
+  border: 1px solid #34d399;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  transition: all 180ms ease;
 }
-.nav-cta .nav-login-btn:hover { background: var(--sb-hover-bg); }
-.nav-cta .btn-ghost:hover, .nav-login-mobile.btn-ghost:hover { background: var(--sb-hover-bg); }
+.nav-cta .nav-login-btn:hover {
+  background: #047857;
+  border-color: #6ee7b7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
 .nav-powered-by {
   display: inline-flex;
   align-items: center;
@@ -80,7 +93,6 @@
 .nav-powered-by-logo { height: 18px; width: auto; flex-shrink: 0; }
 .nav-powered-by .gd { color: var(--brand-gold); }
 .nav-powered-by:hover { color: var(--sb-text); }
-.nav-login-mobile { display: none; }
 .nav-burger { display: none; }
 
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -90,8 +102,7 @@
 
 .public-content { flex: 1; }
 
-/* Fade-in de la vista completa cada vez que cambia de ruta (ver
-   onRouteActivate() en el .ts, que retira y vuelve a poner esta clase). */
+/* Fade-in de la vista completa cada vez que cambia de ruta */
 .public-content.page-enter {
   animation: publicPageFadeIn var(--duration-slow, 480ms) var(--ease-standard) both;
 }
@@ -151,14 +162,31 @@
 }
 
 @media (max-width: 860px) {
-  .nav-cta { display: none; }
+  .nav-inner {
+    padding: 10px 16px;
+    gap: 8px;
+  }
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .nav-powered-by {
+    display: none;
+  }
+  .nav-cta .nav-login-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
   .nav-burger {
     display: flex; flex-direction: column; gap: 4px;
-    background: none; border: none; cursor: pointer; padding: 6px;
+    background: none; border: none; cursor: pointer; padding: 6px 4px;
+    margin-left: 2px;
   }
   .nav-burger span { width: 20px; height: 2px; background: var(--sb-text); border-radius: 2px; }
   .nav-links {
-    position: fixed; top: 61px; left: 0; right: 0;
+    position: fixed; top: 55px; left: 0; right: 0;
     flex-direction: column; align-items: flex-start; gap: 4px;
     background: var(--sb-bg-bottom); border-bottom: 1px solid var(--sb-border);
     padding: 12px 24px 20px;
@@ -167,5 +195,4 @@
   }
   .nav-links.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
   .nav-links a { padding: 10px 0; width: 100%; }
-  .nav-login-mobile { display: block; margin-top: 8px; text-align: center; }
 }

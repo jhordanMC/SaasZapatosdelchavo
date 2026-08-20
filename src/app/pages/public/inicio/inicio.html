@@ -10,26 +10,40 @@
       <div class="hero-actions">
         <a routerLink="/precios" class="btn btn-primary btn-lg">Ver planes</a>
       </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-val">0.3s</span>
-          <strong class="stat-label">Sincronización instantánea</strong>
-          <span class="stat-desc">Tu inventario y ventas actualizados al milisegundo.</span>
+      <!-- Grilla de Métricas para Escritorio -->
+      <div class="hero-stats hero-stats-desktop">
+        @for (s of heroStats; track s.label) {
+          <div class="stat">
+            <span class="stat-val">{{ s.val }}</span>
+            <strong class="stat-label">{{ s.label }}</strong>
+            <span class="stat-desc">{{ s.desc }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Carrusel de Métricas para Vista Móvil (Rotación automática a la derecha cada 8 segundos) -->
+      <div class="hero-stats-mobile">
+        <div class="stats-viewport">
+          <div class="stats-track" [style.transform]="'translateX(-' + (statActivo * 100) + '%)'">
+            @for (s of heroStats; track s.label) {
+              <div class="stat-card">
+                <span class="stat-val">{{ s.val }}</span>
+                <strong class="stat-label">{{ s.label }}</strong>
+                <span class="stat-desc">{{ s.desc }}</span>
+              </div>
+            }
+          </div>
         </div>
-        <div class="stat">
-          <span class="stat-val">99.9%</span>
-          <strong class="stat-label">Disponibilidad activa</strong>
-          <span class="stat-desc">Plataforma 24/7 siempre lista para abrirse desde cualquier dispositivo</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val">0</span>
-          <strong class="stat-label">Pérdida de datos</strong>
-          <span class="stat-desc">Copias de seguridad continuas y automáticas en la nube</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val">1 click</span>
-          <strong class="stat-label">Exportación rápida</strong>
-          <span class="stat-desc">Descarga reportes y boletas en Excel o PDF al instante</span>
+        <div class="stats-dots">
+          @for (s of heroStats; track s.label; let i = $index) {
+            <button
+              type="button"
+              class="stats-dot"
+              [class.active]="statActivo === i"
+              (click)="setStatActivo(i)"
+              [attr.aria-label]="'Ver métrica ' + (i + 1)"
+            ></button>
+          }
         </div>
       </div>
     </div>

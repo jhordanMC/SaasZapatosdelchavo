@@ -1,5 +1,5 @@
 <div class="acc-wrapper">
-  <!-- Botón Píldora Trigger (igual a la imagen PE ∨) -->
+  <!-- Botón Píldora Trigger (Diseño profesional con SVG) -->
   <button
     type="button"
     class="acc-pill-btn"
@@ -8,43 +8,89 @@
     aria-label="Menú de accesibilidad e idioma"
     title="Menú de accesibilidad e idioma"
   >
-    <span class="acc-pill-flag">{{ idiomaActual.flag }}</span>
+    <span class="acc-pill-icon-badge">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+        <path d="M12 12v8"/>
+        <path d="M8 14l4-2 4 2"/>
+      </svg>
+    </span>
     <span class="acc-pill-text">{{ idiomaActual.short }}</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="acc-pill-chevron">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="acc-pill-chevron">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   </button>
 
-  <!-- Panel Desplegable Modal -->
+  <!-- Panel Desplegable Modal Modal (Estética Premium Glassmorphism) -->
   <div class="acc-panel" *ngIf="isOpen()" (click)="$event.stopPropagation()">
-    <!-- Encabezado -->
+    <!-- Encabezado con Icono SVG de Accesibilidad -->
     <div class="acc-header">
       <div class="acc-header-info">
-        <span class="acc-header-badge">VILCAS</span>
+        <div class="acc-header-logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+            <path d="M12 12v8"/>
+            <path d="M8 14l4-2 4 2"/>
+          </svg>
+        </div>
         <div>
-          <h3>Accesibilidad</h3>
-          <p>Personaliza tu experiencia visual y de lectura</p>
+          <div class="acc-header-title-row">
+            <h3>Accesibilidad e Idioma</h3>
+            <span class="acc-header-badge">VILCAS</span>
+          </div>
+          <p>Personaliza tu experiencia visual y preferencia de idioma</p>
         </div>
       </div>
-      <button type="button" class="acc-close-btn" (click)="close()" aria-label="Cerrar">✕</button>
+      <button type="button" class="acc-close-btn" (click)="close()" aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- Navegación por pestañas -->
+    <!-- Navegación por pestañas con SVG icons profesionales -->
     <nav class="acc-tabs">
       <button type="button" class="acc-tab" [class.active]="activeTab() === 'vision'" (click)="setTab('vision')">
-        👁️ Visión
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Visión</span>
       </button>
+
       <button type="button" class="acc-tab" [class.active]="activeTab() === 'texto'" (click)="setTab('texto')">
-        🔤 Texto
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 7 4 4 20 4 20 7"/>
+          <line x1="9" y1="20" x2="15" y2="20"/>
+          <line x1="12" y1="4" x2="12" y2="20"/>
+        </svg>
+        <span>Texto</span>
       </button>
+
       <button type="button" class="acc-tab" [class.active]="activeTab() === 'idioma'" (click)="setTab('idioma')">
-        🌐 Idioma
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span>Idioma</span>
       </button>
+
       <button type="button" class="acc-tab" [class.active]="activeTab() === 'salud'" (click)="setTab('salud')">
-        💙 Salud Visual
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span>Salud</span>
       </button>
+
       <button type="button" class="acc-tab" [class.active]="activeTab() === 'enfoque'" (click)="setTab('enfoque')">
-        ⚡ Enfoque
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Enfoque</span>
       </button>
     </nav>
 
@@ -55,22 +101,51 @@
         <div class="acc-section-title">Contraste de Pantalla</div>
         <div class="acc-grid">
           <button type="button" class="acc-tile" [class.active]="acc.contrast() === 'normal'" (click)="acc.setContrast('normal')">
-            <span class="acc-tile-icon">☀️</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </span>
             <span class="acc-tile-label">Normal</span>
             <span class="acc-tile-sub">Predeterminado</span>
           </button>
+
           <button type="button" class="acc-tile" [class.active]="acc.contrast() === 'light'" (click)="acc.setContrast('light')">
-            <span class="acc-tile-icon">🌤️</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                <circle cx="12" cy="12" r="4"/>
+              </svg>
+            </span>
             <span class="acc-tile-label">Luz Suave</span>
             <span class="acc-tile-sub">Brillo reducido</span>
           </button>
+
           <button type="button" class="acc-tile" [class.active]="acc.contrast() === 'dark'" (click)="acc.setContrast('dark')">
-            <span class="acc-tile-icon">🌙</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </span>
             <span class="acc-tile-label">Modo Oscuro</span>
             <span class="acc-tile-sub">Invertir colores</span>
           </button>
+
           <button type="button" class="acc-tile" [class.active]="acc.contrast() === 'text'" (click)="acc.setContrast('text')">
-            <span class="acc-tile-icon">🔲</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/>
+              </svg>
+            </span>
             <span class="acc-tile-label">Alto Contraste</span>
             <span class="acc-tile-sub">Negro sobre blanco</span>
           </button>
@@ -79,7 +154,12 @@
         <div class="acc-section-title" style="margin-top: 16px;">Temperatura de Color</div>
         <button type="button" class="acc-toggle-row" [class.active]="acc.nightMode()" (click)="acc.toggleNightMode()">
           <div class="acc-toggle-info">
-            <strong>Modo Noche / Cálido</strong>
+            <div class="acc-toggle-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>
+              </svg>
+              <strong>Modo Noche / Cálido</strong>
+            </div>
             <small>Filtro ámbar suave para reducir la fatiga ocular</small>
           </div>
           <span class="acc-switch"></span>
@@ -91,15 +171,38 @@
         <div class="acc-section-title">Tamaño de Texto</div>
         <div class="acc-grid-3">
           <button type="button" class="acc-tile" [class.active]="acc.fontSize() === 'small'" (click)="acc.setFontSize('small')">
-            <span class="acc-tile-label" style="font-size: 11px;">Pequeño</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </span>
+            <span class="acc-tile-label" style="font-size: 11.5px;">Pequeño</span>
             <span class="acc-tile-sub">Compacto</span>
           </button>
+
           <button type="button" class="acc-tile" [class.active]="acc.fontSize() === 'medium'" (click)="acc.setFontSize('medium')">
+            <span class="acc-tile-icon-wrapper">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </span>
             <span class="acc-tile-label" style="font-size: 13px;">Mediano</span>
             <span class="acc-tile-sub">Estándar</span>
           </button>
+
           <button type="button" class="acc-tile" [class.active]="acc.fontSize() === 'large'" (click)="acc.setFontSize('large')">
-            <span class="acc-tile-label" style="font-size: 15px;">Grande</span>
+            <span class="acc-tile-icon-wrapper">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </span>
+            <span class="acc-tile-label" style="font-size: 14.5px;">Grande</span>
             <span class="acc-tile-sub">Legible</span>
           </button>
         </div>
@@ -107,19 +210,26 @@
         <div class="acc-section-title" style="margin-top: 16px;">Fuentes Especiales</div>
         <button type="button" class="acc-toggle-row" [class.active]="acc.dyslexiaFont()" (click)="acc.toggleDyslexiaFont()">
           <div class="acc-toggle-info">
-            <strong>Fuente para Dislexia</strong>
+            <div class="acc-toggle-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <strong>Fuente para Dislexia</strong>
+            </div>
             <small>OpenDyslexic de alta legibilidad</small>
           </div>
           <span class="acc-switch"></span>
         </button>
       </div>
 
-      <!-- 3. Pestaña: Idioma -->
+      <!-- 3. Pestaña: Idioma (SVG vectoriales profesionales) -->
       <div class="acc-pane" *ngIf="activeTab() === 'idioma'">
         <div class="acc-section-title">Seleccionar Idioma de la Plataforma</div>
-        <p class="acc-lang-subtitle" style="font-size: 11.5px; color: #6b7280; margin-bottom: 12px; margin-top: -4px;">
+        <p class="acc-lang-subtitle">
           Traducción automática en vivo impulsada por Google Translate (Español, Inglés y Quechua).
         </p>
+
         <div class="acc-lang-list">
           <button
             type="button"
@@ -128,12 +238,41 @@
             [class.active]="i18n.lang() === item.code"
             (click)="seleccionarIdioma(item.code)"
           >
-            <span class="acc-lang-flag">{{ item.flag }}</span>
+            <span class="acc-lang-svg-badge">
+              <ng-container [ngSwitch]="item.code">
+                <!-- Perú SVG -->
+                <svg *ngSwitchCase="'es'" width="22" height="16" viewBox="0 0 22 16" fill="none">
+                  <rect width="22" height="16" rx="2" fill="#D91023"/>
+                  <rect x="7.33" width="7.34" height="16" fill="#FFFFFF"/>
+                </svg>
+
+                <!-- Quechua Andean SVG -->
+                <svg *ngSwitchCase="'qu'" width="22" height="16" viewBox="0 0 22 16" fill="none">
+                  <rect width="22" height="16" rx="2" fill="#047857"/>
+                  <path d="M3 13L8 5L12 11L16 3L21 13H3Z" fill="#F59E0B" opacity="0.9"/>
+                </svg>
+
+                <!-- US SVG -->
+                <svg *ngSwitchCase="'en'" width="22" height="16" viewBox="0 0 22 16" fill="none">
+                  <rect width="22" height="16" rx="2" fill="#B22234"/>
+                  <rect y="2.46" width="22" height="2.46" fill="#FFFFFF"/>
+                  <rect y="7.38" width="22" height="2.46" fill="#FFFFFF"/>
+                  <rect y="12.3" width="22" height="2.46" fill="#FFFFFF"/>
+                  <rect width="8.8" height="8.6" fill="#3C3B6E"/>
+                </svg>
+              </ng-container>
+            </span>
+
             <div class="acc-lang-names">
               <strong>{{ item.nativeLabel }}</strong>
               <small>{{ item.label }}</small>
             </div>
-            <span class="acc-lang-check" *ngIf="i18n.lang() === item.code">✓</span>
+
+            <span class="acc-lang-check-svg" *ngIf="i18n.lang() === item.code">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
           </button>
         </div>
       </div>
@@ -141,7 +280,13 @@
       <!-- 4. Pestaña: Salud Visual (Regla 20-20-20) -->
       <div class="acc-pane" *ngIf="activeTab() === 'salud'">
         <div class="acc-timer-card">
-          <div class="acc-timer-badge">Regla 20-20-20</div>
+          <div class="acc-timer-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Regla 20-20-20
+          </div>
           <h4>Salud Visual & Pausas de Pantalla</h4>
           <p>Cada 20 minutos de trabajo, tómate 20 segundos para mirar a un punto lejano.</p>
 
@@ -171,7 +316,14 @@
         <div class="acc-section-title">Herramientas de Concentración</div>
         <button type="button" class="acc-toggle-row" [class.active]="acc.focusMode()" (click)="acc.toggleFocusMode()">
           <div class="acc-toggle-info">
-            <strong>Modo Enfoque (TDAH)</strong>
+            <div class="acc-toggle-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+              <strong>Modo Enfoque (TDAH)</strong>
+            </div>
             <small>Mayor espaciado de párrafos y menos distracciones visuales</small>
           </div>
           <span class="acc-switch"></span>
@@ -179,7 +331,12 @@
 
         <button type="button" class="acc-toggle-row" style="margin-top: 10px;" [class.active]="acc.bigCursor()" (click)="acc.toggleBigCursor()">
           <div class="acc-toggle-info">
-            <strong>Cursor Grande</strong>
+            <div class="acc-toggle-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3l7 18 3-7 7-3L3 3z"/>
+              </svg>
+              <strong>Cursor Grande</strong>
+            </div>
             <small>Aumenta la visibilidad del puntero del ratón</small>
           </div>
           <span class="acc-switch"></span>
@@ -190,6 +347,10 @@
     <!-- Pie del Panel -->
     <div class="acc-footer">
       <button type="button" class="acc-reset-btn" (click)="acc.resetAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
         Restablecer todo
       </button>
       <span class="acc-powered-by">Powered by <strong>ALBA</strong></span>

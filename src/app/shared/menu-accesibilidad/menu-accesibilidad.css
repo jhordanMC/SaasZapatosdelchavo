@@ -1,85 +1,99 @@
-:host {
-  display: inline-block;
-  position: relative;
-}
-
 .acc-wrapper {
   position: relative;
   display: inline-block;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
 }
 
-/* ── BOTÓN PÍLDORA TRIGGER (PE ∨ / ES ∨) ── */
+/* ── Botón Trigger (Píldora Profesional) ── */
 .acc-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: #f0fdf4;
-  border: 1px solid #d1fae5;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  background: var(--sb-bg-bottom, #0f172a);
+  border: 1px solid var(--sb-border, rgba(255, 255, 255, 0.15));
   border-radius: 9999px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #065f46;
+  color: var(--sb-text, #ffffff);
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 200ms ease;
-  user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  outline: none;
 }
 
 .acc-pill-btn:hover {
-  background: #dcfce7;
-  border-color: #a7f3d0;
-  color: #047857;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--brand-primary, #059669);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.12);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
 }
 
 .acc-pill-btn.active {
-  background: #059669;
-  border-color: #047857;
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3);
+  background: var(--brand-primary, #059669);
+  border-color: #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
 }
 
-.acc-pill-flag {
-  font-size: 14px;
-  line-height: 1;
+.acc-pill-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #34d399;
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.acc-pill-btn.active .acc-pill-icon-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.acc-pill-btn:hover .acc-pill-icon-badge {
+  transform: scale(1.08);
 }
 
 .acc-pill-text {
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 12px;
 }
 
 .acc-pill-chevron {
+  opacity: 0.75;
   transition: transform 200ms ease;
-  color: currentColor;
 }
 
 .acc-pill-btn.active .acc-pill-chevron {
   transform: rotate(180deg);
+  opacity: 1;
 }
 
-/* ── PANEL DESPLEGABLE ── */
+/* ── Panel Modal (Estética Glassmorphism & High-End) ── */
 .acc-panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
   width: 380px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 24px);
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.04);
-  z-index: 1000;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.22),
+              0 0 1px rgba(15, 23, 42, 0.15);
+  z-index: 9999;
   overflow: hidden;
-  animation: accPanelFade 220ms ease-out;
+  animation: accPanelSlideIn 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes accPanelFade {
+@keyframes accPanelSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.98);
+    transform: translateY(-8px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -89,114 +103,166 @@
 
 /* Encabezado */
 .acc-header {
-  background: linear-gradient(135deg, #024b40, #047857);
-  padding: 16px 20px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
+  padding: 16px 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .acc-header-info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.acc-header-badge {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #f59e0b;
-  text-transform: uppercase;
+.acc-header-logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.acc-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .acc-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: #ffffff;
-  line-height: 1.2;
+}
+
+.acc-header-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #059669;
+  color: #ffffff;
 }
 
 .acc-header p {
-  margin: 0;
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.8);
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.8);
+  line-height: 1.35;
 }
 
 .acc-close-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 180ms ease;
+  transition: all 180ms ease;
+  flex-shrink: 0;
 }
 
 .acc-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(239, 68, 68, 0.85);
+  border-color: transparent;
+  transform: rotate(90deg);
 }
 
-/* Navegación por pestañas */
+/* Pestañas */
 .acc-tabs {
   display: flex;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 4px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px;
   gap: 4px;
   overflow-x: auto;
   scrollbar-width: none;
 }
+.acc-tabs::-webkit-scrollbar { display: none; }
 
 .acc-tab {
   flex: 1;
-  padding: 8px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
   border: none;
   background: transparent;
   border-radius: 10px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 180ms ease;
+  white-space: nowrap;
   font-family: inherit;
 }
 
+.acc-tab svg {
+  color: #94a3b8;
+  transition: color 180ms ease;
+}
+
 .acc-tab:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.acc-tab:hover svg {
+  color: #059669;
 }
 
 .acc-tab.active {
   background: #ffffff;
-  color: #047857;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #059669;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
-/* Cuerpo de pestañas */
+.acc-tab.active svg {
+  color: #059669;
+}
+
+/* Cuerpo de Pestañas */
 .acc-body {
-  padding: 16px;
-  max-height: 340px;
+  padding: 18px 20px;
+  max-height: 420px;
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .acc-section-title {
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
+  letter-spacing: 0.05em;
+  color: #475569;
   margin-bottom: 10px;
 }
 
+.acc-lang-subtitle {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: -4px 0 14px;
+  line-height: 1.4;
+}
+
+/* Grilla de Contraste / Tamaño */
 .acc-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -206,63 +272,84 @@
 .acc-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
-/* Mosaycos / Tiles */
 .acc-tile {
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  padding: 14px 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 180ms ease;
+  text-align: center;
   font-family: inherit;
+}
+
+.acc-tile-icon-wrapper {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  margin-bottom: 8px;
+  transition: all 180ms ease;
 }
 
 .acc-tile:hover {
   background: #ffffff;
-  border-color: #34d399;
-  box-shadow: 0 2px 8px rgba(52, 211, 153, 0.15);
+  border-color: #a7f3d0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.acc-tile:hover .acc-tile-icon-wrapper {
+  color: #059669;
+  border-color: #6ee7b7;
 }
 
 .acc-tile.active {
   background: #ecfdf5;
   border-color: #059669;
-  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+  box-shadow: 0 0 0 1px #059669;
 }
 
-.acc-tile-icon {
-  font-size: 18px;
-  line-height: 1;
+.acc-tile.active .acc-tile-icon-wrapper {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
 }
 
 .acc-tile-label {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
+  margin-bottom: 2px;
 }
 
 .acc-tile-sub {
-  font-size: 10.5px;
-  color: #6b7280;
+  font-size: 11px;
+  color: #64748b;
 }
 
-/* Fila Toggle */
+/* Filas Toggle */
 .acc-toggle-row {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 180ms ease;
   text-align: left;
@@ -271,7 +358,7 @@
 
 .acc-toggle-row:hover {
   background: #ffffff;
-  border-color: #34d399;
+  border-color: #6ee7b7;
 }
 
 .acc-toggle-row.active {
@@ -282,24 +369,36 @@
 .acc-toggle-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+}
+
+.acc-toggle-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+}
+
+.acc-toggle-title svg {
+  color: #059669;
 }
 
 .acc-toggle-info strong {
   font-size: 13px;
-  color: #111827;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .acc-toggle-info small {
   font-size: 11px;
-  color: #6b7280;
+  color: #64748b;
 }
 
 .acc-switch {
-  width: 36px;
-  height: 20px;
+  width: 38px;
+  height: 22px;
   border-radius: 9999px;
-  background: #d1d5db;
+  background: #cbd5e1;
   position: relative;
   transition: background 200ms ease;
   flex-shrink: 0;
@@ -308,14 +407,14 @@
 .acc-switch::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 3px;
+  left: 3px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: #ffffff;
   transition: transform 200ms ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .acc-toggle-row.active .acc-switch {
@@ -326,11 +425,11 @@
   transform: translateX(16px);
 }
 
-/* Lista de Idiomas */
+/* Lista de Idiomas con SVG */
 .acc-lang-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .acc-lang-item {
@@ -338,9 +437,9 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 180ms ease;
   text-align: left;
@@ -349,17 +448,24 @@
 
 .acc-lang-item:hover {
   background: #ffffff;
-  border-color: #34d399;
+  border-color: #6ee7b7;
+  transform: translateX(2px);
 }
 
 .acc-lang-item.active {
   background: #ecfdf5;
   border-color: #059669;
+  box-shadow: 0 0 0 1px #059669;
 }
 
-.acc-lang-flag {
-  font-size: 20px;
-  line-height: 1;
+.acc-lang-svg-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .acc-lang-names {
@@ -369,71 +475,85 @@
 }
 
 .acc-lang-names strong {
-  font-size: 13px;
-  color: #111827;
+  font-size: 13.5px;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .acc-lang-names small {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 11.5px;
+  color: #64748b;
 }
 
-.acc-lang-check {
-  font-size: 14px;
-  font-weight: 800;
-  color: #059669;
-}
-
-/* Card Temporizador 20-20-20 */
-.acc-timer-card {
-  background: linear-gradient(135deg, #024b40, #047857);
-  border-radius: 14px;
-  padding: 18px;
+.acc-lang-check-svg {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #059669;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pestaña Salud Visual */
+.acc-timer-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 16px;
+  padding: 18px;
   text-align: center;
 }
 
 .acc-timer-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 4px 10px;
   border-radius: 9999px;
   margin-bottom: 8px;
 }
 
 .acc-timer-card h4 {
   margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #064e3b;
 }
 
 .acc-timer-card p {
-  margin: 0 0 14px;
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #047857;
+  line-height: 1.45;
 }
 
 .acc-timer-display {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 14px;
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08);
 }
 
 .acc-timer-mode {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: #f59e0b;
+  color: #047857;
+  margin-bottom: 4px;
 }
 
 .acc-timer-clock {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: 0.05em;
   font-family: monospace;
+  color: #065f46;
+  letter-spacing: 0.05em;
 }
 
 .acc-timer-actions {
@@ -444,83 +564,75 @@
 
 .btn-timer {
   padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
+  border-radius: 10px;
   font-size: 12px;
   font-weight: 700;
+  border: none;
   cursor: pointer;
   transition: all 180ms ease;
   font-family: inherit;
 }
 
 .btn-timer.primary {
-  background: #f59e0b;
-  color: #111827;
+  background: #059669;
+  color: #ffffff;
 }
 
 .btn-timer.primary:hover {
-  background: #d97706;
+  background: #047857;
 }
 
 .btn-timer.warning {
-  background: #ef4444;
+  background: #f59e0b;
   color: #ffffff;
 }
 
 .btn-timer.secondary {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: #e2e8f0;
+  color: #334155;
 }
 
 .btn-timer.secondary:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #cbd5e1;
 }
 
 /* Pie del Panel */
 .acc-footer {
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .acc-reset-btn {
-  background: none;
-  border: none;
-  color: #ef4444;
-  font-size: 12px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background 180ms ease;
+  transition: all 180ms ease;
   font-family: inherit;
 }
 
 .acc-reset-btn:hover {
-  background: #fee2e2;
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .acc-powered-by {
-  font-size: 11px;
-  color: #9ca3af;
+  font-size: 11.5px;
+  color: #64748b;
 }
 
 .acc-powered-by strong {
   color: #059669;
-}
-
-/* Responsive para pantallas móviles */
-@media (max-width: 640px) {
-  .acc-panel {
-    position: fixed;
-    top: 70px;
-    right: 16px;
-    left: 16px;
-    width: auto;
-    max-width: none;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-  }
 }

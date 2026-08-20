@@ -21,12 +21,83 @@
 .hero-letter-gold { color: var(--brand-gold, #da9e0b); }
 .hero-sub { font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 30px; max-width: 520px; }
 .hero-actions { display: flex; justify-content: center; width: 100%; margin-bottom: 36px; }
-.hero-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 24px; width: 100%; }
+.hero-stats-desktop { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 24px; width: 100%; }
+.hero-stats-mobile { display: none; width: 100%; }
 .stat { display: flex; flex-direction: column; gap: 3px; }
 .stat-val { font-size: 22px; font-weight: 800; color: var(--brand-deep-700); line-height: 1.1; }
 .stat-label { font-size: 13.5px; font-weight: 700; color: var(--text-primary); line-height: 1.35; }
 .stat-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
 .hero-visual { min-width: 0; }
+
+@media (max-width: 640px) {
+  .hero-stats-desktop { display: none; }
+  .hero-stats-mobile { display: block; margin-top: 12px; }
+
+  .stats-viewport {
+    overflow: hidden;
+    width: 100%;
+    border-radius: var(--radius-card, 16px);
+  }
+
+  .stats-track {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 100%;
+  }
+
+  .stat-card {
+    flex: 0 0 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 20px 18px;
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    border-radius: var(--radius-card, 16px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .stat-card .stat-val {
+    font-size: 28px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 15px;
+  }
+
+  .stat-card .stat-desc {
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  .stats-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .stats-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    background: var(--border-strong, #cbd5e1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+  }
+
+  .stats-dot.active {
+    background: var(--brand-primary, #059669);
+    width: 24px;
+    border-radius: 4px;
+  }
+}
 
 /* ── 2. Demo explorer (section-head sub) ── */
 .section-sub { font-size: 15px; color: var(--text-secondary); margin: 10px auto 0; line-height: 1.6; }
