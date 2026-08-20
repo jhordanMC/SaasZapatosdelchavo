@@ -127,6 +127,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     { valor: 'mujer', label: 'Mujer' },
     { valor: 'unisex', label: 'Unisex' },
     { valor: 'nino', label: 'Niño' },
+    { valor: 'nina', label: 'Niña' },
   ];
 
   // ── Modal de selección de variante ──────────────────────────────────────

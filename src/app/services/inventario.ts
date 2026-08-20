@@ -16,7 +16,7 @@ import { environment } from '../../environments/environment';
 // Tipos de dominio — espejean los schemas Pydantic del backend
 // ---------------------------------------------------------------------------
 
-export type SexoProducto = 'hombre' | 'mujer' | 'unisex' | 'nino';
+export type SexoProducto = 'hombre' | 'mujer' | 'unisex' | 'nino' | 'nina';
 
 export interface CategoriaRead {
   id_categoria: string;

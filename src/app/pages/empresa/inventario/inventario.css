@@ -1160,7 +1160,7 @@
    Mismo formato/colores que el modal de "Cerrar sesión"
 ══════════════════════════════ */
 .confirm-salir-overlay {
-  z-index: 1100;
+  z-index: 1200;
 }
 
 .confirm-salir-card {

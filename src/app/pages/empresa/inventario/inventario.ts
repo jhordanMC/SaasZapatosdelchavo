@@ -83,6 +83,7 @@ const SEXO_LABELS: Record<SexoProducto, string> = {
   mujer: 'Mujer',
   unisex: 'Unisex',
   nino: 'Niño',
+  nina: 'Niña',
 };
 
 // Sugerencias rápidas de categoría — tipos de calzado más comunes en el
@@ -216,6 +217,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     { valor: 'mujer', label: 'Mujer' },
     { valor: 'unisex', label: 'Unisex' },
     { valor: 'nino', label: 'Niño' },
+    { valor: 'nina', label: 'Niña' },
   ];
 
   sexoLabel(sexo: SexoProducto | null): string {
@@ -796,19 +798,35 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  categoriaAEliminar: CategoriaRead | null = null;
+  eliminandoCategoriaModal = signal<boolean>(false);
+
   /** Por si se agregó una categoría de más o por error — la borra del catálogo. */
   eliminarCategoriaGestion(cat: CategoriaRead): void {
-    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos que la usan quedarán sin categoría.`)) return;
+    this.categoriaAEliminar = cat;
+  }
 
+  cancelarEliminarCategoria(): void {
+    this.categoriaAEliminar = null;
+  }
+
+  confirmarEliminarCategoria(): void {
+    const cat = this.categoriaAEliminar;
+    if (!cat) return;
+    this.eliminandoCategoriaModal.set(true);
     this.errorCategoria.set(null);
     this.inventarioService.eliminarCategoria(cat.id_categoria).subscribe({
       next: () => {
         this.categorias.update((lista) => lista.filter((c) => c.id_categoria !== cat.id_categoria));
         if (this.form.id_categoria === cat.id_categoria) this.form.id_categoria = null;
         if (this.filtroIdCategoria === cat.id_categoria) this.filtroIdCategoria = null;
+        this.categoriaAEliminar = null;
+        this.eliminandoCategoriaModal.set(false);
       },
       error: (err) => {
         this.errorCategoria.set(err?.error?.detail ?? 'No se pudo eliminar la categoría.');
+        this.categoriaAEliminar = null;
+        this.eliminandoCategoriaModal.set(false);
       },
     });
   }
@@ -1118,17 +1136,33 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  eliminarAlmacenReal(almacen: AlmacenRead): void {
-    if (!confirm(`¿Eliminar el almacén "${almacen.nombre}"?`)) return;
+  almacenAEliminar: AlmacenRead | null = null;
+  eliminandoAlmacenModal = signal<boolean>(false);
 
+  eliminarAlmacenReal(almacen: AlmacenRead): void {
+    this.almacenAEliminar = almacen;
+  }
+
+  cancelarEliminarAlmacen(): void {
+    this.almacenAEliminar = null;
+  }
+
+  confirmarEliminarAlmacen(): void {
+    const almacen = this.almacenAEliminar;
+    if (!almacen) return;
+    this.eliminandoAlmacenModal.set(true);
     this.errorAlmacenReal.set(null);
     this.inventarioService.eliminarAlmacen(almacen.id_almacen).subscribe({
       next: () => {
         this.almacenesReales.update((lista) => lista.filter((a) => a.id_almacen !== almacen.id_almacen));
         if (this.editandoAlmacenRealId === almacen.id_almacen) this.cancelarEdicionAlmacenReal();
+        this.almacenAEliminar = null;
+        this.eliminandoAlmacenModal.set(false);
       },
       error: (err) => {
         this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
+        this.almacenAEliminar = null;
+        this.eliminandoAlmacenModal.set(false);
       },
     });
   }
@@ -1263,18 +1297,34 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  eliminarProveedorGestion(prov: ProveedorRead): void {
-    if (!confirm(`¿Eliminar el proveedor "${prov.razon_social}"?`)) return;
+  proveedorAEliminar: ProveedorRead | null = null;
+  eliminandoProveedorModal = signal<boolean>(false);
 
+  eliminarProveedorGestion(prov: ProveedorRead): void {
+    this.proveedorAEliminar = prov;
+  }
+
+  cancelarEliminarProveedor(): void {
+    this.proveedorAEliminar = null;
+  }
+
+  confirmarEliminarProveedor(): void {
+    const prov = this.proveedorAEliminar;
+    if (!prov) return;
+    this.eliminandoProveedorModal.set(true);
     this.errorProveedor.set(null);
     this.inventarioService.eliminarProveedor(prov.id_proveedor).subscribe({
       next: () => {
         this.proveedores.update((lista) => lista.filter((p) => p.id_proveedor !== prov.id_proveedor));
         if (this.form.id_proveedor === prov.id_proveedor) this.form.id_proveedor = null;
         if (this.editandoProveedorId === prov.id_proveedor) this.cancelarEdicionProveedor();
+        this.proveedorAEliminar = null;
+        this.eliminandoProveedorModal.set(false);
       },
       error: (err) => {
         this.errorProveedor.set(err?.error?.detail ?? 'No se pudo eliminar el proveedor.');
+        this.proveedorAEliminar = null;
+        this.eliminandoProveedorModal.set(false);
       },
     });
   }

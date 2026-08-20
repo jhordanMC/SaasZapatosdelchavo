@@ -597,6 +597,90 @@
   </div>
 </div>
 
+<!-- ── Modal: confirmar eliminación de categoría ──────────────────────── -->
+<div class="modal-overlay confirm-salir-overlay" *ngIf="categoriaAEliminar">
+  <div class="confirm-salir-card" (click)="$event.stopPropagation()">
+    <div class="confirm-salir-icono">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirm-salir-titulo">¿Estás seguro de eliminar la categoría?</h2>
+    <p class="confirm-salir-desc">Los productos que la usan quedarán sin categoría.</p>
+
+    <div class="confirm-salir-actions">
+      <button class="btn-confirm-salir" (click)="confirmarEliminarCategoria()" [disabled]="eliminandoCategoriaModal()">
+        <span *ngIf="eliminandoCategoriaModal()">Eliminando…</span>
+        <span *ngIf="!eliminandoCategoriaModal()">Sí, quiero eliminar</span>
+      </button>
+      <button class="btn-confirm-seguir" (click)="cancelarEliminarCategoria()" [disabled]="eliminandoCategoriaModal()">No, no quiero</button>
+    </div>
+
+    <div class="confirm-salir-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="confirm-salir-logo" />
+      <div class="confirm-salir-brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: confirmar eliminación de almacén ──────────────────────── -->
+<div class="modal-overlay confirm-salir-overlay" *ngIf="almacenAEliminar">
+  <div class="confirm-salir-card" (click)="$event.stopPropagation()">
+    <div class="confirm-salir-icono">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirm-salir-titulo">¿Estás seguro de eliminar el almacén?</h2>
+    <p class="confirm-salir-desc">Se eliminará permanentemente de tu inventario.</p>
+
+    <div class="confirm-salir-actions">
+      <button class="btn-confirm-salir" (click)="confirmarEliminarAlmacen()" [disabled]="eliminandoAlmacenModal()">
+        <span *ngIf="eliminandoAlmacenModal()">Eliminando…</span>
+        <span *ngIf="!eliminandoAlmacenModal()">Sí, quiero eliminar</span>
+      </button>
+      <button class="btn-confirm-seguir" (click)="cancelarEliminarAlmacen()" [disabled]="eliminandoAlmacenModal()">No, no quiero</button>
+    </div>
+
+    <div class="confirm-salir-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="confirm-salir-logo" />
+      <div class="confirm-salir-brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: confirmar eliminación de proveedor ──────────────────────── -->
+<div class="modal-overlay confirm-salir-overlay" *ngIf="proveedorAEliminar">
+  <div class="confirm-salir-card" (click)="$event.stopPropagation()">
+    <div class="confirm-salir-icono">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h2 class="confirm-salir-titulo">¿Estás seguro de eliminar el proveedor?</h2>
+    <p class="confirm-salir-desc">Se eliminará permanentemente de tu lista de proveedores.</p>
+
+    <div class="confirm-salir-actions">
+      <button class="btn-confirm-salir" (click)="confirmarEliminarProveedor()" [disabled]="eliminandoProveedorModal()">
+        <span *ngIf="eliminandoProveedorModal()">Eliminando…</span>
+        <span *ngIf="!eliminandoProveedorModal()">Sí, quiero eliminar</span>
+      </button>
+      <button class="btn-confirm-seguir" (click)="cancelarEliminarProveedor()" [disabled]="eliminandoProveedorModal()">No, no quiero</button>
+    </div>
+
+    <div class="confirm-salir-brand">
+      <img src="/vilcas.png" alt="VILCAS" class="confirm-salir-logo" />
+      <div class="confirm-salir-brand-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL: Gestionar Categorías ══ -->
 <div class="modal-overlay mgmt-overlay" *ngIf="modalGestionCategoriasAbierto" (click)="cerrarModalGestionCategorias()">
   <div class="modal-card mgmt-card" (click)="$event.stopPropagation()">
