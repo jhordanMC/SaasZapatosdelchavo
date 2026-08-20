@@ -421,6 +421,15 @@
   font-size: 10.5px;
   font-weight: 800;
   color: #047857;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hm-cbot-badge-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
 .hm-cbot-online-dot {
@@ -455,9 +464,11 @@
   transform: scale(1.08);
 }
 
-.hm-cbot-dog-face {
-  font-size: 20px;
-  line-height: 1;
+.hm-cbot-avatar-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
   user-select: none;
 }
 
