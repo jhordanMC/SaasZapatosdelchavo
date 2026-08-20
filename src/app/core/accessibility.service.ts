@@ -90,12 +90,20 @@ export class AccessibilityService {
   }
 
   setContrast(mode: ContrastMode): void {
-    this.contrast.set(mode);
+    if (this.contrast() === mode) {
+      this.contrast.set('normal');
+    } else {
+      this.contrast.set(mode);
+    }
     this.guardarConfiguracion();
   }
 
   setFontSize(size: FontSizeMode): void {
-    this.fontSize.set(size);
+    if (this.fontSize() === size) {
+      this.fontSize.set('medium');
+    } else {
+      this.fontSize.set(size);
+    }
     this.guardarConfiguracion();
   }
 

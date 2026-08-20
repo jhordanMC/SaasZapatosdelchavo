@@ -21,7 +21,7 @@ export class MenuAccesibilidadComponent {
   readonly activeTab = signal<AccTab>('vision');
 
   readonly idiomas: { code: AppLang; label: string; nativeLabel: string; flag: string; short: string }[] = [
-    { code: 'es', label: 'Español', nativeLabel: 'Español', flag: '🇵🇪', short: 'PE' },
+    { code: 'es', label: 'Castellano', nativeLabel: 'Castellano', flag: '🇵🇪', short: 'PE' },
     { code: 'qu', label: 'Quechua', nativeLabel: 'Runasimi', flag: '🏔️', short: 'QU' },
     { code: 'en', label: 'Inglés', nativeLabel: 'English', flag: '🇺🇸', short: 'EN' },
   ];
@@ -44,6 +44,11 @@ export class MenuAccesibilidadComponent {
 
   seleccionarIdioma(code: AppLang): void {
     this.i18n.setLang(code);
+  }
+
+  resetAll(): void {
+    this.acc.resetAll();
+    this.i18n.setLang('es');
   }
 
   @HostListener('document:click', ['$event'])
