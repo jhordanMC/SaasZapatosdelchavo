@@ -61,6 +61,7 @@ interface VarianteFormItem {
   // Filtro de UI: qué lista mostrar en el segundo select ('almacen' | 'local' | '').
   // No se envía al backend, solo decide qué opciones ve el usuario.
   tipoUbicacion: 'almacen' | 'local' | '';
+  version: number | null;
 }
 
 interface ProductoForm {
@@ -586,6 +587,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
             codigo_barras: v.codigo_barras || null,
             ubicacion: s.id_local ? `local:${s.id_local}` : (s.id_almacen ? `almacen:${s.id_almacen}` : ''),
             tipoUbicacion: s.id_local ? 'local' as const : (s.id_almacen ? 'almacen' as const : '' as const),
+            version: s.version,
           }))
       ),
     };
@@ -651,7 +653,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     const primerUbicacion = hayLocales
       ? `local:${this.locales()[0].id_local}`
       : (hayAlmacenes ? `almacen:${this.almacenesReales()[0].id_almacen}` : '');
-    return { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: primerUbicacion, tipoUbicacion: tipo };
+    return { talla: '', cantidad: '', sku: null, codigo_barras: null, ubicacion: primerUbicacion, tipoUbicacion: tipo, version: null };
   }
 
   /** Al cambiar el tipo (Almacén/Local) se limpia la ubicación elegida, para que
@@ -926,6 +928,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           codigo_barras: v.codigo_barras?.trim() || null,
           id_local: tipo === 'local' ? id : null,
           id_almacen: tipo === 'almacen' ? id : null,
+          version: v.version ?? null,
         };
       });
 

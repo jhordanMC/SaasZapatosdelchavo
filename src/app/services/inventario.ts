@@ -61,6 +61,7 @@ export interface StockVarianteRead {
   nombre_almacen: string | null;
   cantidad: number;
   cantidad_minima: number;
+  version: number;
 }
 
 export interface VarianteRead {
@@ -156,9 +157,10 @@ export interface VarianteStockInput {
   talla: string;
   cantidad: number;
   sku?: string | null;
-  codigo_barras?: string | null;
-  id_local?: string | null;
-  id_almacen?: string | null;
+  codigo_barras: string | null;
+  id_local: string | null;
+  id_almacen: string | null;
+  version?: number | null;
 }
 
 export interface ProductoCreateInput {
