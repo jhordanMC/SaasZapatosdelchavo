@@ -21,7 +21,6 @@
       (keydown.Enter)="confirmarSeleccionBusqueda()"
       (keydown.Escape)="cerrarResultadosBusqueda()"
     />
-    <kbd class="topbar-buscador-atajo" *ngIf="!busqueda">⌘K</kbd>
 
     <div class="buscador-dropdown-overlay" *ngIf="mostrarResultadosBusqueda" (click)="cerrarResultadosBusqueda()"></div>
     <div class="buscador-dropdown" *ngIf="mostrarResultadosBusqueda" (click)="$event.stopPropagation()">
