@@ -46,10 +46,26 @@ export class InicioComponent implements OnInit, OnDestroy {
   ];
 
   readonly pasosIA: PasoIA[] = [
-    { numero: 1, titulo: 'Sube tu referencia', desc: 'Una imagen de tu producto o describe cómo quieres que se vea.' },
-    { numero: 2, titulo: 'La IA analiza y diseña', desc: 'Analizando estilo, colores y estructura de tu catálogo.' },
-    { numero: 3, titulo: 'Vista previa del diseño', desc: 'Revisa el resultado antes de publicarlo.' },
-    { numero: 4, titulo: 'Publica tu catálogo', desc: '¡Listo! Comparte tu catálogo con el mundo.' },
+    {
+      numero: 1,
+      titulo: 'Análisis Financiero y de Inventario',
+      desc: 'Sube tu información y deja que la IA procese tus datos. Genera dashboards automáticos con tus ingresos, ventas y gastos operativos al instante.',
+    },
+    {
+      numero: 2,
+      titulo: 'Asistente Estratégico 24/7',
+      desc: 'Toma mejores decisiones. Pregúntale a tu bot: "¿Qué producto se vende más?" o "¿Qué stock tiene más demora en moverse?" y obtén respuestas precisas.',
+    },
+    {
+      numero: 3,
+      titulo: 'Plataforma 100% Inclusiva',
+      desc: 'Rompe las barreras del idioma y gestiona tu negocio como te sientas más cómodo. Interfaz completamente disponible en Quechua, Inglés y Español.',
+    },
+    {
+      numero: 4,
+      titulo: 'Cuidado de Salud Visual',
+      desc: 'Tu bienestar es nuestra prioridad. El sistema monitorea tu actividad y te notificará automáticamente tras 20 minutos de uso para que tomes un descanso visual.',
+    },
   ];
 
   readonly testimonios: Testimonio[] = [
