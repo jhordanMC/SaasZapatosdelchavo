@@ -98,9 +98,15 @@
 <div class="content" *ngIf="!cargando()">
   <div class="productos-grid">
     <div class="producto-card" *ngFor="let p of productos()">
-      <div class="producto-foto">
+      <div class="producto-foto" (click)="abrirModalVer(p)">
         <img *ngIf="p.imagen_url" [src]="imagenSrc(p.imagen_url)" alt="" />
         <span class="foto-placeholder" *ngIf="!p.imagen_url">Sin foto</span>
+        <div class="producto-foto-overlay">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>Ver producto</span>
+        </div>
       </div>
       <div class="producto-info">
         <div class="producto-nombre">{{ p.nombre }}</div>
@@ -164,7 +170,7 @@
     </div>
 
     <div class="modal-header">
-      <h3>{{ vistaModal === 'talla' ? 'Editar talla y stock' : (editandoId ? 'Editar producto' : 'Nuevo producto') }}</h3>
+      <h3>{{ vistaModal === 'talla' ? 'Editar talla y stock' : (vistaModal === 'ver_producto' ? 'Detalle de Producto' : (editandoId ? 'Editar producto' : 'Nuevo producto')) }}</h3>
     </div>
 
     <div class="modal-body" *ngIf="vistaModal === 'producto'">
@@ -511,6 +517,101 @@
         <span *ngIf="guardando()">Guardando…</span>
         <span *ngIf="!guardando()">Guardar producto</span>
       </button>
+    </div>
+
+    <!-- ── Vista de solo lectura ─────────────────────────────────────────── -->
+    <div class="modal-body vista-solo-lectura" *ngIf="vistaModal === 'ver_producto' && productoViendo">
+      <div class="foto-y-basicos">
+        <div class="foto-upload-wrap">
+          <div class="foto-upload-preview-card" *ngIf="productoViendo.imagen_url">
+            <img [src]="imagenSrc(productoViendo.imagen_url)" alt="Producto" />
+          </div>
+          <div class="foto-upload-box" *ngIf="!productoViendo.imagen_url" style="align-items:center; justify-content:center; text-align:center;">
+            <div class="foto-upload-titulo">Foto del producto</div>
+            <div style="color: var(--text-tertiary); font-size: 13px; margin-top: 10px;">Sin foto</div>
+          </div>
+        </div>
+
+        <div class="basicos-columna">
+          <div class="form-row">
+            <label>Nombre del producto</label>
+            <div class="readonly-valor">{{ productoViendo.nombre }}</div>
+          </div>
+          
+          <div class="form-row-2" style="margin-top: 12px;">
+            <div class="form-row">
+              <label>Categoría</label>
+              <div class="readonly-valor">{{ productoViendo.nombre_categoria || '—' }}</div>
+            </div>
+            <div class="form-row">
+              <label>Sexo</label>
+              <div class="readonly-valor">{{ sexoLabel(productoViendo.sexo) }}</div>
+            </div>
+            <div class="form-row">
+              <label>Proveedor <span class="opcional">(Opcional)</span></label>
+              <div class="readonly-valor">{{ productoViendo.nombre_proveedor || '—' }}</div>
+            </div>
+          </div>
+
+          <div class="form-row-3" style="margin-top: 12px;">
+            <div class="form-row">
+              <label>Costo de Compra (S/)</label>
+              <div class="readonly-valor">{{ productoViendo.costo_compra | number:'1.2-2' }}</div>
+            </div>
+            <div class="form-row">
+              <label>Precio de Venta (S/)</label>
+              <div class="readonly-valor">{{ productoViendo.precio_venta | number:'1.2-2' }}</div>
+            </div>
+            <div class="form-row">
+              <label>Margen de Ganancia</label>
+              <div class="readonly-valor" style="color:var(--brand-deep); font-weight:700;">S/ {{ productoViendo.margen | number:'1.2-2' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="variantes-header" style="margin-top: 24px;">
+        <label>Tallas y stock por almacén</label>
+      </div>
+
+      <div class="variantes-tabla-resumen" *ngIf="productoViendo.variantes.length > 0">
+        <div class="variante-columnas variante-columnas-resumen" style="grid-template-columns: 1fr 2fr 1fr 2fr 2fr;">
+          <span>Talla</span>
+          <span>Almacén / Local</span>
+          <span>Stock</span>
+          <span>SKU</span>
+          <span>Cód. Barras</span>
+        </div>
+
+        <ng-container *ngFor="let v of productoViendo.variantes">
+          <div class="variante-fila variante-fila-resumen" *ngFor="let s of v.stock" style="grid-template-columns: 1fr 2fr 1fr 2fr 2fr;">
+            <div class="field-wrap">
+              <span class="mobile-field-label">Talla</span>
+              <span class="resumen-valor resumen-valor-strong">{{ v.talla || '—' }}</span>
+            </div>
+            <div class="field-wrap">
+              <span class="mobile-field-label">Almacén / Local</span>
+              <span class="resumen-valor" [title]="s.nombre_almacen || s.nombre_local || ''">{{ s.nombre_almacen || s.nombre_local || '—' }}</span>
+            </div>
+            <div class="field-wrap">
+              <span class="mobile-field-label">Stock</span>
+              <span class="resumen-valor">{{ s.cantidad || 0 }}</span>
+            </div>
+            <div class="field-wrap">
+              <span class="mobile-field-label">SKU</span>
+              <span class="resumen-valor" [title]="v.sku || ''">{{ v.sku || '—' }}</span>
+            </div>
+            <div class="field-wrap">
+              <span class="mobile-field-label">Cód. Barras</span>
+              <span class="resumen-valor" [title]="v.codigo_barras || ''">{{ v.codigo_barras || '—' }}</span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="variantes-vacio" *ngIf="productoViendo.variantes.length === 0">
+        No hay tallas registradas para este producto.
+      </div>
     </div>
   </div>
 </div>

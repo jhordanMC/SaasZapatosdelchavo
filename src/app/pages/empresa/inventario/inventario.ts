@@ -142,7 +142,8 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Producto + acción cuyo detalle se está trayendo (Editar o Duplicar),
   //    para mostrar el spinner solo en el botón que se clickeó, no en el otro ──
-  cargandoDetalle = signal<{ id: string; accion: 'editar' | 'duplicar' } | null>(null);
+  productoViendo: any | null = null; // We can use 'any' or 'ProductoRead' here. Let's use 'any' or import ProductoRead. (I'll use any to avoid missing imports, actually ProductoRead is already imported!)
+  cargandoDetalle = signal<{ id: string; accion: 'editar' | 'duplicar' | 'ver' } | null>(null);
 
   // ── Paginación del catálogo (scroll infinito) ────────────────────────────
   private offset = 0;
@@ -163,7 +164,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   form: ProductoForm = this.formVacio();
 
   // ── Modal de producto: paso del wizard (resumen de tallas ↔ editar 1 talla) ──
-  vistaModal: 'producto' | 'talla' = 'producto';
+  vistaModal: 'producto' | 'talla' | 'ver_producto' = 'producto';
   varianteEditandoIndex: number | null = null;
   private varianteEditandoSnapshot: VarianteFormItem | null = null;
 
@@ -494,6 +495,22 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cerrarPanelGestionAlmacenes();
     this.resetVistaTalla();
     this.showModal = true;
+  }
+
+  abrirModalVer(p: ProductoListItem): void {
+    this.cargandoDetalle.set({ id: p.id_producto, accion: 'ver' });
+    this.inventarioService.obtenerProducto(p.id_producto).subscribe({
+      next: (detalle) => {
+        this.productoViendo = detalle;
+        this.vistaModal = 'ver_producto';
+        this.showModal = true;
+        this.cargandoDetalle.set(null);
+      },
+      error: () => {
+        this.error.set('No se pudo cargar el detalle del producto.');
+        this.cargandoDetalle.set(null);
+      },
+    });
   }
 
   abrirModalEditar(p: ProductoListItem): void {
