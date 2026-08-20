@@ -71,3 +71,27 @@ html.acc-focus-mode p, html.acc-focus-mode li {
   line-height: 1.85 !important;
   margin-bottom: 1.2em !important;
 }
+
+/* ── Google Translate: Ocultar banners nativos y popups molestos ── */
+#google_translate_element,
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-text-highlight,
+.VIpgJd-yD05df-IAcaAf-efpSp,
+.VIpgJd-yD05df-b22sBle-BxGlff {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.goog-te-combo {
+  font-family: inherit !important;
+}
