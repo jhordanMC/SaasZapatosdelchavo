@@ -1,3 +1,49 @@
+<!-- ── Botones de gestión de entidades ─────────────────────────────── -->
+<div class="gestion-botones-barra">
+  <div class="gestion-botones-card">
+    <button class="btn-gestion-card-item" (click)="abrirModalGestionCategorias()">
+      <div class="gestion-icon-box bg-blue-subtle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="gestion-text-col">
+        <span class="gestion-title">Gestionar categorías</span>
+        <span class="gestion-subtitle">Ver y administrar categorías</span>
+      </div>
+    </button>
+
+    <div class="gestion-divider"></div>
+
+    <button class="btn-gestion-card-item" (click)="abrirModalGestionProveedores()">
+      <div class="gestion-icon-box bg-green-subtle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="gestion-text-col">
+        <span class="gestion-title">Gestionar proveedores</span>
+        <span class="gestion-subtitle">Ver y administrar proveedores</span>
+      </div>
+    </button>
+
+    <div class="gestion-divider"></div>
+
+    <button class="btn-gestion-card-item" (click)="abrirModalGestionAlmacenesExt()">
+      <div class="gestion-icon-box bg-blue-subtle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/></svg>
+      </div>
+      <div class="gestion-text-col">
+        <span class="gestion-title">Gestionar almacenes</span>
+        <span class="gestion-subtitle">Ver y administrar almacenes</span>
+      </div>
+    </button>
+
+    <div class="gestion-divider hidden-mobile"></div>
+
+    <button class="btn-primary btn-gestion-principal" (click)="abrirModalNuevo()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo producto
+    </button>
+  </div>
+</div>
+
 <!-- ── Filtros ─────────────────────────────────────────────────────────── -->
 <div class="filtros-card">
   <div class="filtro-campo filtro-campo-buscar">
@@ -32,10 +78,6 @@
 
   <div class="filtro-acciones">
     <button class="btn-clear" *ngIf="hayFiltros" (click)="limpiarFiltros()">Limpiar</button>
-    <button class="btn-primary" (click)="abrirModalNuevo()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nuevo producto
-    </button>
   </div>
 </div>
 
@@ -188,24 +230,10 @@
             <!-- Categoría -->
             <div class="form-row">
               <label>Categoría</label>
-              <div class="categoria-field">
-                <select [(ngModel)]="form.id_categoria">
-                  <option [ngValue]="null">Sin categoría</option>
-                  <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
-                </select>
-                <button
-                  type="button"
-                  class="btn-add-categoria"
-                  [class.active]="mostrarNuevaCategoria"
-                  (click)="mostrarNuevaCategoria ? cerrarPanelNuevaCategoria() : abrirPanelNuevaCategoria()"
-                  title="Crear nueva categoría"
-                  aria-label="Crear nueva categoría"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                </button>
-              </div>
+              <select [(ngModel)]="form.id_categoria">
+                <option [ngValue]="null">Sin categoría</option>
+                <option *ngFor="let c of categorias()" [value]="c.id_categoria">{{ c.nombre }}</option>
+              </select>
             </div>
 
             <!-- Sexo -->
@@ -220,107 +248,18 @@
             <!-- Proveedor -->
             <div class="form-row">
               <label>Proveedor <span class="opcional">(Opcional)</span></label>
-              <div class="categoria-field">
-                <select [(ngModel)]="form.id_proveedor">
-                  <option [ngValue]="null">Sin proveedor</option>
-                  <option *ngFor="let p of proveedores()" [value]="p.id_proveedor">
-                    {{ p.razon_social }}
-                  </option>
-                </select>
-                <button
-                  type="button"
-                  class="btn-add-categoria"
-                  [class.active]="mostrarNuevoProveedor"
-                  (click)="mostrarNuevoProveedor ? cancelarNuevoProveedor() : abrirNuevoProveedor()"
-                  title="Crear nuevo proveedor"
-                  aria-label="Crear nuevo proveedor"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                </button>
-              </div>
+              <select [(ngModel)]="form.id_proveedor">
+                <option [ngValue]="null">Sin proveedor</option>
+                <option *ngFor="let p of proveedores()" [value]="p.id_proveedor">
+                  {{ p.razon_social }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Panel: gestionar categorías (crear, buscar, eliminar) -->
-      <div class="nueva-categoria-panel" *ngIf="mostrarNuevaCategoria">
-        <label>Nueva categoría</label>
 
-        <div class="categoria-chips" *ngIf="categoriasSugeridasDisponibles.length > 0">
-          <button
-            type="button"
-            class="chip"
-            *ngFor="let sugerida of categoriasSugeridasDisponibles"
-            [class.chip-activo]="nuevaCategoriaNombre === sugerida"
-            (click)="elegirCategoriaSugerida(sugerida)"
-          >
-            {{ sugerida }}
-          </button>
-        </div>
-
-        <div class="categoria-input-row">
-          <input
-            type="text"
-            placeholder="O escribe una categoría propia…"
-            [(ngModel)]="nuevaCategoriaNombre"
-            (keydown.enter)="crearCategoriaRapida()"
-          />
-          <button type="button" class="btn-primary btn-crear-categoria" (click)="crearCategoriaRapida()" [disabled]="creandoCategoria()">
-            <span *ngIf="!creandoCategoria()">Crear</span>
-            <span *ngIf="creandoCategoria()">Creando…</span>
-          </button>
-        </div>
-
-        <div class="categoria-error" *ngIf="errorCategoria()">{{ errorCategoria() }}</div>
-
-        <!-- Buscador + lista con scroll de las categorías ya creadas -->
-        <div class="gestion-divider">
-          <span>Categorías existentes ({{ categorias().length }})</span>
-        </div>
-
-        <div class="gestion-search" *ngIf="categorias().length > 5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" placeholder="Buscar categoría…" [(ngModel)]="busquedaCategoria" />
-        </div>
-
-        <div class="gestion-lista">
-          <div class="gestion-item" *ngFor="let c of categoriasFiltradas">
-            <span class="gestion-item-nombre">{{ c.nombre }}</span>
-            <button type="button" class="btn-icon-danger" (click)="eliminarCategoriaGestion(c)" title="Eliminar categoría">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </button>
-          </div>
-          <div class="gestion-vacio" *ngIf="categoriasFiltradas.length === 0">
-            No hay categorías que coincidan con la búsqueda.
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel: crear proveedor rápido -->
-      <div class="nueva-categoria-panel" *ngIf="mostrarNuevoProveedor">
-        <label>Nuevo proveedor</label>
-        <div class="categoria-input-row">
-          <input
-            type="text"
-            placeholder="Nombre de la empresa o proveedor…"
-            [(ngModel)]="nuevoProveedorNombre"
-            (keydown.enter)="guardarNuevoProveedor()"
-          />
-          <button type="button" class="btn-primary btn-crear-categoria" (click)="guardarNuevoProveedor()" [disabled]="creandoProveedor()">
-            <span *ngIf="!creandoProveedor()">Crear</span>
-            <span *ngIf="creandoProveedor()">Creando…</span>
-          </button>
-        </div>
-
-        <div class="categoria-error" *ngIf="errorProveedor()">{{ errorProveedor() }}</div>
-      </div>
 
       <!-- Precios + margen de ganancia (calculado, solo informativo) -->
       <div class="form-row form-row-3">
@@ -367,72 +306,11 @@
       <div class="variantes-header">
         <label>Tallas y stock por almacén</label>
         <div class="variantes-header-acciones">
-          <button type="button" class="btn-link" (click)="mostrarGestionAlmacenes ? cerrarPanelGestionAlmacenes() : abrirPanelGestionAlmacenes()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;">
-              <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/>
-            </svg>
-            Gestionar almacenes
-          </button>
           <button class="btn-link" (click)="abrirNuevaTalla()">+ Agregar talla</button>
         </div>
       </div>
 
-      <!-- Panel: gestionar Almacenes (entidad real) -->
-      <div class="nueva-categoria-panel" *ngIf="mostrarGestionAlmacenes">
-        <label>{{ editandoAlmacenRealId ? 'Editar almacén' : 'Nuevo almacén' }}</label>
-        <p class="page-subtitle" style="margin: 2px 0 10px;">
-          Depósitos/bodegas de stock, distintos de tus locales de venta.
-        </p>
 
-        <div class="almacen-form">
-          <input type="text" placeholder="Nombre del almacén (Ej: Depósito Central)" [(ngModel)]="almacenRealForm.nombre" />
-          <input type="text" placeholder="Dirección (opcional)" [(ngModel)]="almacenRealForm.direccion" />
-          <input type="text" placeholder="Descripción (opcional)" [(ngModel)]="almacenRealForm.descripcion" />
-        </div>
-
-        <div class="categoria-input-row">
-          <button type="button" class="btn-secondary" *ngIf="editandoAlmacenRealId" (click)="cancelarEdicionAlmacenReal()">Cancelar edición</button>
-          <button type="button" class="btn-primary btn-crear-categoria" (click)="guardarAlmacenReal()" [disabled]="guardandoAlmacenReal()">
-            <span *ngIf="guardandoAlmacenReal()">Guardando…</span>
-            <span *ngIf="!guardandoAlmacenReal() && editandoAlmacenRealId">Guardar cambios</span>
-            <span *ngIf="!guardandoAlmacenReal() && !editandoAlmacenRealId">Crear almacén</span>
-          </button>
-        </div>
-
-        <div class="categoria-error" *ngIf="errorAlmacenReal()">{{ errorAlmacenReal() }}</div>
-
-        <div class="gestion-divider">
-          <span>Almacenes existentes ({{ almacenesReales().length }})</span>
-        </div>
-
-        <div class="gestion-search" *ngIf="almacenesReales().length > 5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" placeholder="Buscar almacén…" [(ngModel)]="busquedaAlmacenReal" />
-        </div>
-
-        <div class="gestion-lista">
-          <div class="gestion-item" *ngFor="let a of almacenesRealesFiltrados">
-            <span class="gestion-item-nombre">{{ a.nombre }}</span>
-            <div class="gestion-item-acciones">
-              <button type="button" class="btn-icon-secundario" (click)="editarAlmacenReal(a)" title="Editar almacén">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-              <button type="button" class="btn-icon-danger" (click)="eliminarAlmacenReal(a)" title="Eliminar almacén">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="gestion-vacio" *ngIf="almacenesRealesFiltrados.length === 0">
-            No hay almacenes que coincidan con la búsqueda.
-          </div>
-        </div>
-      </div>
 
       <!-- Resumen compacto: solo lectura + acciones. Editar/agregar tallas pasa por el paso "talla". -->
       <div class="variantes-tabla-resumen" *ngIf="form.variantes.length > 0">
@@ -718,3 +596,231 @@
     </div>
   </div>
 </div>
+
+<!-- ══ MODAL: Gestionar Categorías ══ -->
+<div class="modal-overlay mgmt-overlay" *ngIf="modalGestionCategoriasAbierto" (click)="cerrarModalGestionCategorias()">
+  <div class="modal-card mgmt-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalGestionCategorias()" aria-label="Cerrar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
+    <div class="modal-header">
+      <h3>Gestionar categorías</h3>
+    </div>
+
+    <div class="mgmt-body">
+      <div class="mgmt-form-section">
+        <h3 class="mgmt-form-titulo">{{ editandoCategoriaId ? 'Editar categoría' : 'Nueva categoría' }}</h3>
+
+        <div class="mgmt-chips" *ngIf="!editandoCategoriaId && categoriasSugeridasDisponibles.length > 0">
+          <button
+            type="button"
+            class="chip"
+            *ngFor="let sugerida of categoriasSugeridasDisponibles"
+            [class.chip-activo]="nuevaCategoriaNombre === sugerida"
+            (click)="nuevaCategoriaNombre = sugerida"
+          >{{ sugerida }}</button>
+        </div>
+
+        <div class="mgmt-form-row">
+          <input
+            type="text"
+            class="mgmt-input"
+            [placeholder]="editandoCategoriaId ? 'Nuevo nombre...' : 'Nombre de la categoría...'"
+            [(ngModel)]="nuevaCategoriaNombre"
+            (keydown.enter)="editandoCategoriaId ? actualizarCategoriaGestion() : crearCategoriaRapida()"
+          />
+          <button *ngIf="editandoCategoriaId" type="button" class="btn-mgmt-cancel" (click)="cancelarEdicionCategoria()">Cancelar</button>
+          <button
+            type="button"
+            class="btn-mgmt-save"
+            [disabled]="creandoCategoria()"
+            (click)="editandoCategoriaId ? actualizarCategoriaGestion() : crearCategoriaRapida()"
+          >
+            <span *ngIf="creandoCategoria()">{{ editandoCategoriaId ? 'Guardando…' : 'Creando…' }}</span>
+            <span *ngIf="!creandoCategoria()">{{ editandoCategoriaId ? 'Guardar cambios' : '+ Crear' }}</span>
+          </button>
+        </div>
+        <div class="mgmt-error" *ngIf="errorCategoria()">{{ errorCategoria() }}</div>
+      </div>
+
+      <div class="mgmt-lista-section">
+        <div class="mgmt-lista-header">
+          <span class="mgmt-lista-titulo">Categorías existentes</span>
+          <div class="mgmt-search" *ngIf="categorias().length > 4">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar..." [(ngModel)]="busquedaCategoria" />
+          </div>
+        </div>
+        <div class="mgmt-lista">
+          <div class="mgmt-item" *ngFor="let c of categoriasFiltradas" [class.mgmt-item-editando]="editandoCategoriaId === c.id_categoria">
+            <span class="mgmt-item-nombre">{{ c.nombre }}</span>
+            <div class="mgmt-item-acciones">
+              <button type="button" class="btn-mgmt-edit" (click)="iniciarEdicionCategoria(c)" title="Editar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="btn-mgmt-delete" (click)="eliminarCategoriaGestion(c)" title="Eliminar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="mgmt-vacio" *ngIf="categoriasFiltradas.length === 0">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:0.3"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <p>{{ busquedaCategoria ? 'Sin coincidencias.' : 'Aún no hay categorías.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Gestionar Almacenes ══ -->
+<div class="modal-overlay mgmt-overlay" *ngIf="modalGestionAlmacenesAbierto" (click)="cerrarModalGestionAlmacenesExt()">
+  <div class="modal-card mgmt-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalGestionAlmacenesExt()" aria-label="Cerrar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
+    <div class="modal-header">
+      <h3>Gestionar almacenes</h3>
+    </div>
+
+    <div class="mgmt-body">
+      <div class="mgmt-form-section">
+        <h3 class="mgmt-form-titulo">{{ editandoAlmacenRealId ? 'Editar almacén' : 'Nuevo almacén' }}</h3>
+        <div class="mgmt-form-col">
+          <input type="text" class="mgmt-input" placeholder="Nombre (Ej: Depósito Central)" [(ngModel)]="almacenRealForm.nombre" />
+          <input type="text" class="mgmt-input" placeholder="Dirección (opcional)" [(ngModel)]="almacenRealForm.direccion" />
+          <input type="text" class="mgmt-input" placeholder="Descripción (opcional)" [(ngModel)]="almacenRealForm.descripcion" />
+        </div>
+        <div class="mgmt-form-row" style="margin-top: 10px;">
+          <button *ngIf="editandoAlmacenRealId" type="button" class="btn-mgmt-cancel" (click)="cancelarEdicionAlmacenReal()">Cancelar</button>
+          <button type="button" class="btn-mgmt-save" [disabled]="guardandoAlmacenReal()" (click)="guardarAlmacenReal()">
+            <span *ngIf="guardandoAlmacenReal()">Guardando…</span>
+            <span *ngIf="!guardandoAlmacenReal() && editandoAlmacenRealId">Guardar cambios</span>
+            <span *ngIf="!guardandoAlmacenReal() && !editandoAlmacenRealId">+ Crear almacén</span>
+          </button>
+        </div>
+        <div class="mgmt-error" *ngIf="errorAlmacenReal()">{{ errorAlmacenReal() }}</div>
+      </div>
+
+      <div class="mgmt-lista-section">
+        <div class="mgmt-lista-header">
+          <span class="mgmt-lista-titulo">Almacenes existentes</span>
+          <div class="mgmt-search" *ngIf="almacenesReales().length > 4">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar..." [(ngModel)]="busquedaAlmacenReal" />
+          </div>
+        </div>
+        <div class="mgmt-lista">
+          <div class="mgmt-item" *ngFor="let a of almacenesRealesFiltrados" [class.mgmt-item-editando]="editandoAlmacenRealId === a.id_almacen">
+            <div>
+              <span class="mgmt-item-nombre">{{ a.nombre }}</span>
+              <span class="mgmt-item-sub" *ngIf="a.direccion">{{ a.direccion }}</span>
+            </div>
+            <div class="mgmt-item-acciones">
+              <button type="button" class="btn-mgmt-edit" (click)="editarAlmacenReal(a)" title="Editar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="btn-mgmt-delete" (click)="eliminarAlmacenReal(a)" title="Eliminar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="mgmt-vacio" *ngIf="almacenesRealesFiltrados.length === 0">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:0.3"><path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/></svg>
+            <p>{{ busquedaAlmacenReal ? 'Sin coincidencias.' : 'Aún no hay almacenes registrados.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Gestionar Proveedores ══ -->
+<div class="modal-overlay mgmt-overlay" *ngIf="modalGestionProveedoresAbierto" (click)="cerrarModalGestionProveedores()">
+  <div class="modal-card mgmt-card" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="cerrarModalGestionProveedores()" aria-label="Cerrar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="modal-brand-top">
+      <img src="/vilcas.png" alt="VILCAS" class="modal-brand-top-logo" />
+      <div class="modal-brand-top-name">
+        <span class="dk">V</span><span class="dk">I</span><span class="dk">L</span><span class="dk">C</span><span class="gd">A</span><span class="dk">S</span>
+      </div>
+    </div>
+
+    <div class="modal-header">
+      <h3>Gestionar proveedores</h3>
+    </div>
+
+    <div class="mgmt-body">
+      <div class="mgmt-form-section">
+        <h3 class="mgmt-form-titulo">{{ editandoProveedorId ? 'Editar proveedor' : 'Nuevo proveedor' }}</h3>
+        <div class="mgmt-form-row">
+          <input
+            type="text"
+            class="mgmt-input"
+            [placeholder]="editandoProveedorId ? 'Nuevo nombre...' : 'Nombre o razón social...'"
+            [(ngModel)]="nuevoProveedorNombre"
+            (keydown.enter)="editandoProveedorId ? actualizarProveedorGestion() : guardarNuevoProveedor()"
+          />
+          <button *ngIf="editandoProveedorId" type="button" class="btn-mgmt-cancel" (click)="cancelarEdicionProveedor()">Cancelar</button>
+          <button type="button" class="btn-mgmt-save" [disabled]="creandoProveedor()" (click)="editandoProveedorId ? actualizarProveedorGestion() : guardarNuevoProveedor()">
+            <span *ngIf="creandoProveedor()">{{ editandoProveedorId ? 'Guardando…' : 'Creando…' }}</span>
+            <span *ngIf="!creandoProveedor()">{{ editandoProveedorId ? 'Guardar cambios' : '+ Crear' }}</span>
+          </button>
+        </div>
+        <div class="mgmt-error" *ngIf="errorProveedor()">{{ errorProveedor() }}</div>
+      </div>
+
+      <div class="mgmt-lista-section">
+        <div class="mgmt-lista-header">
+          <span class="mgmt-lista-titulo">Proveedores existentes</span>
+          <div class="mgmt-search" *ngIf="proveedores().length > 4">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar..." [(ngModel)]="busquedaProveedor" />
+          </div>
+        </div>
+        <div class="mgmt-lista">
+          <div class="mgmt-item" *ngFor="let p of proveedoresFiltrados" [class.mgmt-item-editando]="editandoProveedorId === p.id_proveedor">
+            <span class="mgmt-item-nombre">{{ p.razon_social }}</span>
+            <div class="mgmt-item-acciones">
+              <button type="button" class="btn-mgmt-edit" (click)="iniciarEdicionProveedor(p)" title="Editar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="btn-mgmt-delete" (click)="eliminarProveedorGestion(p)" title="Eliminar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="mgmt-vacio" *ngIf="proveedoresFiltrados.length === 0">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:0.3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <p>{{ busquedaProveedor ? 'Sin coincidencias.' : 'Aún no hay proveedores registrados.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

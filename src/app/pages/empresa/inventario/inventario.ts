@@ -190,6 +190,11 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   creandoProveedor = signal(false);
   errorProveedor = signal<string | null>(null);
 
+  // ── Modales de gestión independientes (fuera del modal de producto) ────────
+  modalGestionCategoriasAbierto = false;
+  modalGestionAlmacenesAbierto = false;
+  modalGestionProveedoresAbierto = false;
+
   // ── Gestión de Almacenes ─────────────────────────────────────────────────
   mostrarGestionAlmacenes = false;
   busquedaAlmacenReal = '';
@@ -197,6 +202,12 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   almacenRealForm: { nombre: string; direccion: string; descripcion: string } = this.almacenRealFormVacio();
   guardandoAlmacenReal = signal(false);
   errorAlmacenReal = signal<string | null>(null);
+
+  // ── Edición de Categorías (modal de gestión) ─────────────────────────
+  editandoCategoriaId: string | null = null;
+
+  // ── Edición de Proveedores (modal de gestión) ────────────────────────
+  editandoProveedorId: string | null = null;
 
   // ── Helpers de template ─────────────────────────────────────────────────
 
@@ -1121,4 +1132,150 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     });
   }
-}
+
+  // ══ Modales de gestión independientes ════════════════════════════════════
+
+  // ── Categorías ────────────────────────────────────────────────────────────
+
+  abrirModalGestionCategorias(): void {
+    this.modalGestionCategoriasAbierto = true;
+    this.busquedaCategoria = '';
+    this.nuevaCategoriaNombre = '';
+    this.editandoCategoriaId = null;
+    this.errorCategoria.set(null);
+  }
+
+  cerrarModalGestionCategorias(): void {
+    this.modalGestionCategoriasAbierto = false;
+    this.busquedaCategoria = '';
+    this.nuevaCategoriaNombre = '';
+    this.editandoCategoriaId = null;
+    this.errorCategoria.set(null);
+  }
+
+  iniciarEdicionCategoria(cat: CategoriaRead): void {
+    this.editandoCategoriaId = cat.id_categoria;
+    this.nuevaCategoriaNombre = cat.nombre;
+    this.errorCategoria.set(null);
+  }
+
+  cancelarEdicionCategoria(): void {
+    this.editandoCategoriaId = null;
+    this.nuevaCategoriaNombre = '';
+    this.errorCategoria.set(null);
+  }
+
+  actualizarCategoriaGestion(): void {
+    if (!this.editandoCategoriaId) return;
+    const nombre = this.nuevaCategoriaNombre.trim();
+    if (!nombre) {
+      this.errorCategoria.set('Escribe un nombre para la categoría.');
+      return;
+    }
+
+    this.creandoCategoria.set(true);
+    this.errorCategoria.set(null);
+
+    this.inventarioService.actualizarCategoria(this.editandoCategoriaId, { nombre }).subscribe({
+      next: (actualizada) => {
+        this.categorias.update((lista) =>
+          lista.map((c) => (c.id_categoria === actualizada.id_categoria ? actualizada : c))
+            .sort((a, b) => a.nombre.localeCompare(b.nombre))
+        );
+        this.creandoCategoria.set(false);
+        this.cancelarEdicionCategoria();
+      },
+      error: (err) => {
+        this.creandoCategoria.set(false);
+        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo actualizar la categoría.');
+      },
+    });
+  }
+
+  // ── Almacenes (modal externo) ─────────────────────────────────────────────
+
+  abrirModalGestionAlmacenesExt(): void {
+    this.modalGestionAlmacenesAbierto = true;
+    this.busquedaAlmacenReal = '';
+    this.cancelarEdicionAlmacenReal();
+  }
+
+  cerrarModalGestionAlmacenesExt(): void {
+    this.modalGestionAlmacenesAbierto = false;
+    this.busquedaAlmacenReal = '';
+    this.cancelarEdicionAlmacenReal();
+  }
+
+  // ── Proveedores ───────────────────────────────────────────────────────────
+
+  abrirModalGestionProveedores(): void {
+    this.modalGestionProveedoresAbierto = true;
+    this.busquedaProveedor = '';
+    this.nuevoProveedorNombre = '';
+    this.editandoProveedorId = null;
+    this.errorProveedor.set(null);
+  }
+
+  cerrarModalGestionProveedores(): void {
+    this.modalGestionProveedoresAbierto = false;
+    this.busquedaProveedor = '';
+    this.nuevoProveedorNombre = '';
+    this.editandoProveedorId = null;
+    this.errorProveedor.set(null);
+  }
+
+  iniciarEdicionProveedor(prov: ProveedorRead): void {
+    this.editandoProveedorId = prov.id_proveedor;
+    this.nuevoProveedorNombre = prov.razon_social;
+    this.errorProveedor.set(null);
+  }
+
+  cancelarEdicionProveedor(): void {
+    this.editandoProveedorId = null;
+    this.nuevoProveedorNombre = '';
+    this.errorProveedor.set(null);
+  }
+
+  actualizarProveedorGestion(): void {
+    if (!this.editandoProveedorId) return;
+    const razonSocial = this.nuevoProveedorNombre.trim();
+    if (!razonSocial) {
+      this.errorProveedor.set('Escribe un nombre para el proveedor.');
+      return;
+    }
+
+    this.creandoProveedor.set(true);
+    this.errorProveedor.set(null);
+
+    this.inventarioService.actualizarProveedor(this.editandoProveedorId, { razon_social: razonSocial }).subscribe({
+      next: (actualizado) => {
+        this.proveedores.update((lista) =>
+          lista.map((p) => (p.id_proveedor === actualizado.id_proveedor ? actualizado : p))
+            .sort((a, b) => a.razon_social.localeCompare(b.razon_social))
+        );
+        this.creandoProveedor.set(false);
+        this.cancelarEdicionProveedor();
+      },
+      error: (err) => {
+        this.creandoProveedor.set(false);
+        this.errorProveedor.set(err?.error?.detail ?? 'No se pudo actualizar el proveedor.');
+      },
+    });
+  }
+
+  eliminarProveedorGestion(prov: ProveedorRead): void {
+    if (!confirm(`¿Eliminar el proveedor "${prov.razon_social}"?`)) return;
+
+    this.errorProveedor.set(null);
+    this.inventarioService.eliminarProveedor(prov.id_proveedor).subscribe({
+      next: () => {
+        this.proveedores.update((lista) => lista.filter((p) => p.id_proveedor !== prov.id_proveedor));
+        if (this.form.id_proveedor === prov.id_proveedor) this.form.id_proveedor = null;
+        if (this.editandoProveedorId === prov.id_proveedor) this.cancelarEdicionProveedor();
+      },
+      error: (err) => {
+        this.errorProveedor.set(err?.error?.detail ?? 'No se pudo eliminar el proveedor.');
+      },
+    });
+  }
+}
