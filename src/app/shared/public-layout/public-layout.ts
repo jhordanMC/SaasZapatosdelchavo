@@ -1,10 +1,11 @@
 import { Component, HostListener, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { MenuAccesibilidadComponent } from '../menu-accesibilidad/menu-accesibilidad';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MenuAccesibilidadComponent],
   templateUrl: './public-layout.html',
   styleUrl: './public-layout.css',
 })
@@ -30,17 +31,8 @@ export class PublicLayoutComponent {
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    const currentY = window.scrollY;
-    const scrollingDown = currentY > this.lastScrollY;
-    const pastThreshold = currentY > 80;
-
-    // No ocultar la barra si el menú móvil está abierto, para no
-    // "tapar" el menú justo cuando el usuario lo está usando.
-    if (!this.menuAbierto) {
-      this.navHidden.set(scrollingDown && pastThreshold);
-    }
-
-    this.lastScrollY = currentY;
+    // La cabecera siempre sigue al usuario al hacer scroll (arriba o abajo)
+    this.navHidden.set(false);
   }
 
   /** (activate) del router-outlet: reinicia la clase de animación en cada
