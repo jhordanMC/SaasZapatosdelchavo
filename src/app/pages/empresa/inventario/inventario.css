@@ -1357,16 +1357,13 @@
 }
 
 .btn-gestion-principal {
-  flex: 1.5;
+  flex: none;
   justify-content: center;
   display: flex;
   align-items: center;
   gap: 7px;
   white-space: nowrap;
   align-self: center;
-  padding: 12px 18px;
-  border-radius: 10px;
-  height: 44px;
 }
 
 @media (max-width: 850px) {
