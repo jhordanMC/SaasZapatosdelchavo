@@ -95,9 +95,9 @@
 .nav-powered-by:hover { color: var(--sb-text); }
 .nav-burger { display: none; }
 
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
 .brand-logo { height: 32px; width: auto; flex-shrink: 0; }
-.brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--sb-text); }
+.brand-word { font-weight: 800; font-size: 17px; letter-spacing: 0.02em; color: var(--sb-text); white-space: nowrap; }
 .brand-word .gd { color: var(--brand-gold); }
 
 .public-content { flex: 1; }
@@ -163,14 +163,21 @@
 
 @media (max-width: 860px) {
   .nav-inner {
-    padding: 10px 16px;
+    padding: 10px 14px;
     gap: 8px;
+  }
+  .brand {
+    flex-shrink: 0;
+  }
+  .brand-word {
+    white-space: nowrap;
   }
   .nav-cta {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-left: auto;
+    flex-shrink: 0;
   }
   .nav-powered-by {
     display: none;
@@ -178,11 +185,14 @@
   .nav-cta .nav-login-btn {
     padding: 6px 12px;
     font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .nav-burger {
     display: flex; flex-direction: column; gap: 4px;
     background: none; border: none; cursor: pointer; padding: 6px 4px;
     margin-left: 2px;
+    flex-shrink: 0;
   }
   .nav-burger span { width: 20px; height: 2px; background: var(--sb-text); border-radius: 2px; }
   .nav-links {
@@ -195,4 +205,42 @@
   }
   .nav-links.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
   .nav-links a { padding: 10px 0; width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .nav-inner {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .brand {
+    gap: 6px;
+  }
+  .brand-logo {
+    height: 28px;
+  }
+  .brand-word {
+    font-size: 15px;
+  }
+  .nav-cta {
+    gap: 6px;
+  }
+  .nav-cta .nav-login-btn {
+    padding: 5px 10px;
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-inner {
+    padding: 8px 6px;
+    gap: 4px;
+  }
+  .brand-word {
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+  .nav-cta .nav-login-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
 }

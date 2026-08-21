@@ -1,5 +1,5 @@
 <div class="acc-wrapper">
-  <!-- Botón Píldora Trigger (Diseño profesional con SVG) -->
+  <!-- Botón Píldora Trigger con logo de accesibilidad -->
   <button
     type="button"
     class="acc-pill-btn"
@@ -8,32 +8,19 @@
     aria-label="Menú de accesibilidad e idioma"
     title="Menú de accesibilidad e idioma"
   >
-    <span class="acc-pill-icon-badge">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-        <path d="M12 12v8"/>
-        <path d="M8 14l4-2 4 2"/>
-      </svg>
-    </span>
-    <span class="acc-pill-text">{{ idiomaActual.short }}</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="acc-pill-chevron">
+    <img src="/accesibilidad.png" alt="Accesibilidad" class="acc-pill-logo-img" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="acc-pill-chevron">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   </button>
 
-  <!-- Panel Desplegable Modal Modal (Estética Premium Glassmorphism) -->
+  <!-- Panel Desplegable Modal (Estética Premium Glassmorphism) -->
   <div class="acc-panel" *ngIf="isOpen()" (click)="$event.stopPropagation()">
-    <!-- Encabezado con Icono SVG de Accesibilidad -->
+    <!-- Encabezado con Icono de Accesibilidad -->
     <div class="acc-header">
       <div class="acc-header-info">
         <div class="acc-header-logo-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-            <path d="M12 12v8"/>
-            <path d="M8 14l4-2 4 2"/>
-          </svg>
+          <img src="/accesibilidad.png" alt="Accesibilidad" class="acc-header-img" />
         </div>
         <div>
           <div class="acc-header-title-row">
