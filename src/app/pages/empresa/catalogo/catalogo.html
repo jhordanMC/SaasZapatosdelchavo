@@ -170,7 +170,7 @@
                           <button class="menu-item" (click)="abrirGestionProductos(c)">Gestionar productos</button>
                           <button class="menu-item" *ngIf="c.estado !== 'publicado'" (click)="publicar(c)">Publicar</button>
                           <button class="menu-item" *ngIf="c.estado === 'publicado'" (click)="despublicar(c)">Pasar a borrador</button>
-                          <button class="menu-item menu-item-peligro" (click)="eliminarCatalogo(c)">Eliminar</button>
+                          <button class="menu-item menu-item-peligro" (click)="$event.stopPropagation(); eliminarCatalogo(c)">Eliminar</button>
                         </div>
                       </div>
                     </div>
@@ -396,6 +396,7 @@
         <button class="btn btn-primary" (click)="guardarSeleccionPicker()" [disabled]="guardandoPicker() || cargandoPicker()">
           {{ guardandoPicker() ? 'Guardando...' : 'Guardar cambios' }}
         </button>
+      </div>
     </div>
   </div>
 </div>

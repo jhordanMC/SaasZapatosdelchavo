@@ -425,7 +425,10 @@ export class CatalogoComponent implements OnInit {
 
   eliminarCatalogo(item: CatalogoRead): void {
     this.menuAbierto.set(null);
-    this.catalogoAEliminar.set(item);
+    this.menuPos.set(null);
+    // Pequeño delay para que Angular destruya el menú flotante antes de abrir
+    // el modal (evita una race condition entre los *ngIf del menú y el overlay).
+    setTimeout(() => this.catalogoAEliminar.set(item), 0);
   }
 
   cancelarEliminarCatalogo(): void {
