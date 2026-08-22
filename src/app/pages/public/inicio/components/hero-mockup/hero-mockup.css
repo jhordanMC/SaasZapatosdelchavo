@@ -557,6 +557,12 @@
   }
   .hm-sidebar {
     width: 100%;
+    /* Sin esto, width:100% + padding se SUMAN (content-box es el default
+       del proyecto, no hay reset global de box-sizing) y el sidebar
+       termina ~28px más ancho que .hm-frame -> se recorta por el
+       overflow:hidden del frame, cortando "Catálogos/Ventas/Finanzas"
+       del nav en vista móvil. */
+    box-sizing: border-box;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
