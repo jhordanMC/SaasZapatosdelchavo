@@ -24,7 +24,21 @@
 }
 .section-head h2 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
 
-.page-section { max-width: 1180px; margin: 0 auto; padding: 64px 32px; }
+.page-section { max-width: 1180px; margin: 0 auto; padding: 64px var(--space-page, 32px); }
+
+/* Alinea .page-section con el resto de la app: en escritorio se ve "de
+   mucho aire" pero en móvil el padding vertical fijo (64px) se siente
+   excesivo entre secciones, y el título de 30px se ve grande junto al
+   padding lateral ya reducido por --space-page. Afecta a las 4 páginas
+   públicas (inicio, nosotros, precios, contacto) que comparten esta clase. */
+@media (max-width: 640px) {
+  .page-section { padding-top: 48px; padding-bottom: 48px; }
+  .section-head { margin-bottom: 32px; }
+  .section-head h2 { font-size: 24px; }
+}
+@media (max-width: 480px) {
+  .page-section { padding-top: 40px; padding-bottom: 40px; }
+}
 
 /* ── Aparición al hacer scroll (directiva appReveal) ──
    Arranca oculta/desplazada; la directiva agrega .is-visible por

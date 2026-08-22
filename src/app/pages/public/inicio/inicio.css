@@ -234,7 +234,12 @@
   .cta-final-dark { padding: 40px 20px; }
   .cta-final-copy h2 { font-size: 21px; }
   .cta-final-note { margin-top: 12px; }
+  .hero { padding: 20px var(--space-page, 20px) 48px; }
+  .ia-step { padding: 18px 14px; }
 }
 @media (max-width: 480px) {
   .features-grid { grid-template-columns: 1fr; }
+  .hero { padding: 18px var(--space-page, 16px) 40px; }
+  .hero-sub { font-size: 14.5px; }
+  .ia-steps { gap: 14px; }
 }
