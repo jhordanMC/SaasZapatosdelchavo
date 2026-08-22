@@ -18,7 +18,7 @@ export class PublicLayoutComponent {
   private lastScrollY = 0;
 
   /** Dispara el fade-in de la vista cada vez que el router activa un componente. */
-  readonly viewVisible = signal(true);
+  readonly viewVisible = signal(false);
 
   toggleMenu(): void {
     this.menuAbierto = !this.menuAbierto;
