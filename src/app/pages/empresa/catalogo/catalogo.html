@@ -401,7 +401,7 @@
 </div>
 
 <!-- ── Modal: confirmar eliminación de catálogo ──────────────────────── -->
-<div class="modal-overlay confirm-salir-overlay" *ngIf="catalogoAEliminar">
+<div class="modal-overlay confirm-salir-overlay" *ngIf="catalogoAEliminar()">
   <div class="confirm-salir-card" (click)="$event.stopPropagation()">
     <div class="confirm-salir-icono">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

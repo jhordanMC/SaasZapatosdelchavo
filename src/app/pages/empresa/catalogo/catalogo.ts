@@ -80,7 +80,7 @@ export class CatalogoComponent implements OnInit {
   /** id del catálogo cuyo estado (publicar/despublicar) se está actualizando. */
   actualizandoEstado = signal<string | null>(null);
   /** Catálogo que se está eliminando (para el modal de confirmación). */
-  catalogoAEliminar: CatalogoRead | null = null;
+  catalogoAEliminar = signal<CatalogoRead | null>(null);
   eliminandoCatalogo = signal(false);
 
   // ── Modal crear/editar ────────────────────────────────────────────────
@@ -425,15 +425,15 @@ export class CatalogoComponent implements OnInit {
 
   eliminarCatalogo(item: CatalogoRead): void {
     this.menuAbierto.set(null);
-    this.catalogoAEliminar = item;
+    this.catalogoAEliminar.set(item);
   }
 
   cancelarEliminarCatalogo(): void {
-    this.catalogoAEliminar = null;
+    this.catalogoAEliminar.set(null);
   }
 
   confirmarEliminarCatalogo(): void {
-    const item = this.catalogoAEliminar;
+    const item = this.catalogoAEliminar();
     if (!item) return;
     
     this.eliminandoCatalogo.set(true);
@@ -441,12 +441,12 @@ export class CatalogoComponent implements OnInit {
       next: () => {
         this.catalogos.set(this.catalogos().filter((c) => c.id_catalogo !== item.id_catalogo));
         this.eliminandoCatalogo.set(false);
-        this.catalogoAEliminar = null;
+        this.catalogoAEliminar.set(null);
       },
       error: (err) => {
         this.error.set(err?.error?.detail ?? 'No se pudo eliminar el catálogo.');
         this.eliminandoCatalogo.set(false);
-        this.catalogoAEliminar = null;
+        this.catalogoAEliminar.set(null);
       },
     });
   }
