@@ -219,6 +219,12 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 .modal-header h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-deep); }
+.modal-header-subtitulo {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
 .modal-close {
   position: absolute;
   top: 18px;
@@ -797,6 +803,18 @@
 ══════════════════════════════ */
 .vista-editar-talla .opcional { font-weight: 400; color: var(--text-tertiary); }
 
+/* Icono decorativo dentro de los inputs del form de talla (Talla, Stock, SKU, Cód. Barras) */
+.input-con-icono { position: relative; display: flex; }
+.input-con-icono input { padding-right: 34px; }
+.input-icono {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
 /* Cancelar / Guardar cambios, inline justo debajo de los campos (no al fondo del modal) */
 .talla-acciones-inline {
   display: flex;
@@ -863,6 +881,16 @@
   line-height: 1.4;
 }
 .aviso-info-talla svg { flex-shrink: 0; margin-top: 1px; color: var(--brand-deep); }
+
+/* El aviso "Stock inicial" va como celda hermana dentro de un form-row-2: debe verse en fila (icono + texto),
+   no en columna como fuerza la regla genérica ".form-row-2 > div". Esta regla es más específica y gana. */
+.form-row-2 > .aviso-info-talla-inline {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  align-self: stretch;
+}
 
 /* Foco de campos dentro del modal — mismo verde de acento que el modal de perfil/topbar */
 .modal-card input:not([type="file"]):focus,
@@ -1053,24 +1081,11 @@
 
   .otras-tallas-accion { order: 6; flex: 0 0 auto; margin-left: auto; margin-top: 6px; justify-content: flex-end; }
 
-  /* Campos del modal de talla: Talla en fila completa, Tipo de sede + Sede/Almacén en 2
-     columnas, y Stock/SKU/Cód. barras apilados uno debajo del otro, como el mockup mobile */
-  .talla-fila-superior.form-row-3 {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    gap: 14px 10px;
-  }
-  .talla-fila-superior.form-row-3 > div:nth-child(1) { flex: 1 1 100%; }
-  .talla-fila-superior.form-row-3 > div:nth-child(2),
-  .talla-fila-superior.form-row-3 > div:nth-child(3) { flex: 1 1 calc(50% - 5px); min-width: 0; }
-
-  .talla-fila-inferior.form-row-3 {
-    display: flex;
+  /* Campos del modal de talla: en pantallas chicas todo se apila en una sola columna
+     (Talla, Tipo de sede, Sede/Almacén, Stock + aviso, SKU, Cód. barras). */
+  .vista-editar-talla .form-row-2 {
     flex-direction: column;
-    gap: 14px;
   }
-  .talla-fila-inferior.form-row-3 > div { flex: 1 1 100%; }
 
   /* Cancelar / Guardar cambios: mismo ancho, ocupando toda la fila */
   .modal-card-talla .talla-acciones-inline { flex-direction: row; }
@@ -1719,4 +1734,4 @@
   .mgmt-lista-section { padding: 12px 16px 16px; }
   .mgmt-form-row { flex-wrap: wrap; }
   .btn-mgmt-save, .btn-mgmt-cancel { width: 100%; justify-content: center; }
-}
+}

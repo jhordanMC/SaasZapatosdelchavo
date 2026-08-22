@@ -167,7 +167,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Modal de producto: paso del wizard (resumen de tallas ↔ editar 1 talla) ──
   vistaModal: 'producto' | 'talla' | 'ver_producto' = 'producto';
   varianteEditandoIndex: number | null = null;
-  private varianteEditandoSnapshot: VarianteFormItem | null = null;
+  protected varianteEditandoSnapshot: VarianteFormItem | null = null;
 
   // ── Confirmación al eliminar una talla individual ────────────────────────
   varianteAEliminarIndex: number | null = null;
@@ -1348,4 +1348,4 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     });
   }
-}
+}
