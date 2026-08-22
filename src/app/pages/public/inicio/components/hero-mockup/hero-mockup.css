@@ -1,5 +1,9 @@
 :host { display: block; width: 100%; }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 .hm-frame {
   position: relative;
   display: flex;
