@@ -149,52 +149,20 @@
 
 .nf-visual-wrap {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   width: 100%;
 }
 
-/* Etiqueta VILCAS de marca auténtica */
-.nf-vilcas-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 18px;
-  background: color-mix(in srgb, var(--brand-deep) 7%, var(--bg-surface));
-  border: 1px solid color-mix(in srgb, var(--brand-deep) 18%, transparent);
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
-.nf-tag-brand {
-  font-weight: 800;
-  color: var(--brand-wordmark);
-  letter-spacing: -0.3px;
-}
-
-.nf-tag-dot {
-  color: var(--brand-gold);
-  font-size: 11px;
-}
-
-.nf-tag-status {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 12.5px;
-}
-
-.nf-illustration-box {
-  width: 100%;
-  max-width: 340px;
-  height: auto;
-}
-
-.nf-svg-hero {
+.nf-notfound-img {
+  max-width: 320px;
   width: 100%;
   height: auto;
+  object-fit: contain;
   display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 24px rgba(2, 75, 64, 0.12));
 }
 
 .nf-title {
