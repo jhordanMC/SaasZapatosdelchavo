@@ -29,42 +29,49 @@
     <div class="nf-container">
       <div class="nf-hero-card">
 
-        <!-- Visual / Ilustración vectorial SVG de VILCAS -->
+        <!-- Visual / Badge de marca VILCAS -->
         <div class="nf-visual-wrap">
-          <div class="nf-badge">
-            <span class="nf-badge-pulse"></span>
-            <span>ERROR 404</span>
+          <div class="nf-vilcas-tag">
+            <span class="nf-tag-brand">VILC<span class="gd">A</span>S</span>
+            <span class="nf-tag-dot">•</span>
+            <span class="nf-tag-status">Ruta no encontrada</span>
           </div>
 
+          <!-- Arte vectorial exclusivo VILCAS para 404 (sin círculos genéricos) -->
           <div class="nf-illustration-box">
-            <svg class="nf-svg-hero" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="nf-svg-hero" viewBox="0 0 340 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="vilcasGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="vilcas404Grad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="#024B40" />
-                  <stop offset="100%" stop-color="#0f2b23" />
+                  <stop offset="60%" stop-color="#05833B" />
+                  <stop offset="100%" stop-color="#0b2e27" />
                 </linearGradient>
-                <linearGradient id="vilcasGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#DA9E0B" />
+                  <stop offset="100%" stop-color="#F59E0B" />
+                </linearGradient>
+                <linearGradient id="mintAccent" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stop-color="#9FE7B1" />
-                  <stop offset="100%" stop-color="#05833B" />
+                  <stop offset="100%" stop-color="#7FD89A" />
                 </linearGradient>
-                <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="#9FE7B1" stop-opacity="0.35" />
-                  <stop offset="100%" stop-color="#9FE7B1" stop-opacity="0" />
-                </radialGradient>
               </defs>
 
-              <circle cx="160" cy="90" r="75" fill="url(#glowG)" />
+              <!-- Malla sutil de líneas de guía -->
+              <path d="M 20 25 H 320 M 20 60 H 320 M 20 95 H 320" stroke="#024B40" stroke-opacity="0.06" stroke-width="1.5" stroke-dasharray="6 6" />
 
-              <path d="M 40 125 C 90 125, 110 55, 160 55 C 210 55, 230 125, 280 125" stroke="#9FE7B1" stroke-width="2.5" stroke-dasharray="6 6" opacity="0.6" />
+              <!-- Cifra 404 en tipografía moderna -->
+              <text x="170" y="84" text-anchor="middle" fill="url(#vilcas404Grad)" font-family="Inter, sans-serif" font-weight="900" font-size="80" letter-spacing="-2">404</text>
 
-              <text x="160" y="105" text-anchor="middle" fill="url(#vilcasGrad2)" font-family="Inter, sans-serif" font-weight="900" font-size="64" letter-spacing="4">404</text>
+              <!-- Línea de acento dorado VILCAS -->
+              <rect x="135" y="96" width="70" height="4" rx="2" fill="url(#goldAccent)" />
+              <circle cx="215" cy="98" r="3" fill="#9FE7B1" />
 
-              <circle cx="160" cy="90" r="68" stroke="url(#vilcasGrad1)" stroke-width="3" opacity="0.25" />
-              <circle cx="160" cy="90" r="48" stroke="url(#vilcasGrad2)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5" />
+              <!-- Detalles vectoriales de trayectoria VILCAS -->
+              <path d="M 35 60 H 95" stroke="url(#mintAccent)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3" />
+              <circle cx="35" cy="60" r="4" fill="#024B40" stroke="#9FE7B1" stroke-width="1.5" />
               
-              <circle cx="75" cy="115" r="5" fill="#05833B" />
-              <circle cx="160" cy="55" r="6" fill="#9FE7B1" stroke="#024B40" stroke-width="2" />
-              <circle cx="245" cy="115" r="5" fill="#05833B" />
+              <path d="M 245 60 H 305" stroke="url(#goldAccent)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3" />
+              <circle cx="305" cy="60" r="4" fill="#DA9E0B" />
             </svg>
           </div>
         </div>
@@ -74,7 +81,7 @@
           <h1 class="nf-title">Esta página se nos escapó del inventario</h1>
           
           <p class="nf-description">
-            Buscamos en cada sección y registro de <strong>VILCAS</strong>, pero la dirección que intentas abrir no existe o cambió de lugar. No te preocupes, a veces hasta en los mejores negocios hay que recalcular el paso para seguir creciendo.
+            Buscamos en cada sección y registro de <strong>VILC<span class="gd">A</span>S</strong>, pero la dirección que intentas abrir no existe o cambió de lugar. No te preocupes, a veces hasta en los mejores negocios hay que recalcular el paso para seguir creciendo.
           </p>
 
           <p class="nf-subtext">¿Hacia dónde te gustaría dirigirte ahora?</p>
@@ -149,7 +156,7 @@
   <footer class="nf-footer">
     <div class="nf-footer-inner">
       <div class="nf-footer-brand">
-        <span class="nf-footer-title">VILCAS</span>
+        <span class="nf-footer-title">VILC<span class="gd">A</span>S</span>
         <span class="nf-footer-copy">&copy; {{ anioActual }} VILCAS. Todos los derechos reservados.</span>
       </div>
       <div class="nf-footer-empresa">
