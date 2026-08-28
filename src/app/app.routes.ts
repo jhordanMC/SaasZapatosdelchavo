@@ -195,5 +195,11 @@ export const routes: Routes = [
   { path: 'c/:slug', component: CatalogoPublicoComponent },
 
   // ⚠️ debe ir siempre al final: un wildcard antes se comería el resto de rutas
-  { path: '**', component: NotFoundComponent },
+  {
+    path: '**',
+    component: PublicLayoutComponent,
+    children: [
+      { path: '', component: NotFoundComponent }
+    ]
+  },
 ];
