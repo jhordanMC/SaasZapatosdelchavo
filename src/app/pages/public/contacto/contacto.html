@@ -26,10 +26,38 @@
         <!-- 2 -->
         <div class="faq-item" [class.open]="faqAbierto() === 2">
           <button type="button" class="faq-question" (click)="toggleFaq(2)">
-            <span>2. ¿En cuántos dispositivos puedo tenerlo?</span>
+            <span>2. Si soy empresario de otro rubro, ¿no podría usarlo?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           @if (faqAbierto() === 2) {
+            <div class="faq-answer">
+              <p>En realidad <strong>sí se puede</strong>, ya que VILCASpe es un software adaptable a cualquier rubro en el que manejes inventario y ventas.</p>
+              <p>Por ejemplo: tiendas de ropa y calzado, almacenes, minimarkets y bazares, farmacias, accesorios de autos/motos, perfumerías, tecnología y muchos más.</p>
+            </div>
+          }
+        </div>
+
+        <!-- 3 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 3">
+          <button type="button" class="faq-question" (click)="toggleFaq(3)">
+            <span>3. ¿Por qué debería usar VILCASpe?</span>
+            <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          @if (faqAbierto() === 3) {
+            <div class="faq-answer">
+              <p>Porque sabemos lo que es llevar un negocio con libreta y lapicero. Durante años vimos cómo el empresario peruano — el emprendedor, el mype, el de a pie — se quedaba fuera de la tecnología porque el software "bueno" siempre era carísimo o muy complicado.</p>
+              <p>Nosotros venimos haciendo soluciones para grandes empresas, pero decidimos voltear la mirada: ahora queremos ayudar a la persona de a pie a digitalizar su negocio con las mismas herramientas de alto nivel, a un precio justo. Somos ingenieros, sí, pero venimos de abajo — y sabemos lo que cuesta sacar adelante un negocio propio.</p>
+            </div>
+          }
+        </div>
+
+        <!-- 4 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 4">
+          <button type="button" class="faq-question" (click)="toggleFaq(4)">
+            <span>4. ¿En cuántos dispositivos puedo tenerlo?</span>
+            <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          @if (faqAbierto() === 4) {
             <div class="faq-answer">
               <p>Con tu plan te damos <strong>2 usuarios</strong>:</p>
               <ul>
@@ -40,13 +68,13 @@
           }
         </div>
 
-        <!-- 3 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 3">
-          <button type="button" class="faq-question" (click)="toggleFaq(3)">
-            <span>3. ¿En qué dispositivos puedo usarlo?</span>
+        <!-- 5 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 5">
+          <button type="button" class="faq-question" (click)="toggleFaq(5)">
+            <span>5. ¿En qué dispositivos puedo usarlo?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 3) {
+          @if (faqAbierto() === 5) {
             <div class="faq-answer">
               <p>En el que tengas a la mano: <strong>laptop, PC, celular o tablet.</strong> No necesitas comprar nada nuevo, ni instalar programas raros.</p>
               <p>Y lo mejor: lo que se registra desde el perfil vendedor, tú como dueño lo ves al toque en tu perfil. Todo conectado, todo al día.</p>
@@ -54,39 +82,39 @@
           }
         </div>
 
-        <!-- 4 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 4">
-          <button type="button" class="faq-question" (click)="toggleFaq(4)">
-            <span>4. Tengo más de un local, ¿tendría que contratar otro plan?</span>
+        <!-- 6 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 6">
+          <button type="button" class="faq-question" (click)="toggleFaq(6)">
+            <span>6. Tengo más de un local, ¿tendría que contratar otro plan?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 4) {
+          @if (faqAbierto() === 6) {
             <div class="faq-answer">
               <p>No necesariamente. Lo revisamos contigo y, en la mayoría de casos, se puede <strong>ampliar tu plan actual por un monto menor</strong> a contratar uno nuevo desde cero. Escríbenos y vemos qué te conviene más, estamos para ayudarte en ahorrar.</p>
             </div>
           }
         </div>
 
-        <!-- 5 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 5">
-          <button type="button" class="faq-question" (click)="toggleFaq(5)">
-            <span>5. ¿Puedo agregar otro vendedor?</span>
+        <!-- 7 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 7">
+          <button type="button" class="faq-question" (click)="toggleFaq(7)">
+            <span>7. ¿Puedo agregar otro vendedor?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 5) {
+          @if (faqAbierto() === 7) {
             <div class="faq-answer">
               <p>Sí, sin problema. Solo aplicaría un <strong>costo mínimo adicional</strong> por cada vendedor extra que sumes a tu cuenta.</p>
             </div>
           }
         </div>
 
-        <!-- 6 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 6">
-          <button type="button" class="faq-question" (click)="toggleFaq(6)">
-            <span>6. ¿Cuánto cuesta?</span>
+        <!-- 8 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 8">
+          <button type="button" class="faq-question" (click)="toggleFaq(8)">
+            <span>8. ¿Cuánto cuesta?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 6) {
+          @if (faqAbierto() === 8) {
             <div class="faq-answer">
               <p>Ahora mismo tenemos un <strong>precio especial por oferta de lanzamiento</strong>, así que este es un buen momento para empezar.</p>
               <a routerLink="/precios" class="faq-link-btn">
@@ -97,13 +125,13 @@
           }
         </div>
 
-        <!-- 7 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 7">
-          <button type="button" class="faq-question" (click)="toggleFaq(7)">
-            <span>7. ¿Quiénes hicieron VILCASpe?</span>
+        <!-- 9 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 9">
+          <button type="button" class="faq-question" (click)="toggleFaq(9)">
+            <span>9. ¿Quiénes hicieron VILCASpe?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 7) {
+          @if (faqAbierto() === 9) {
             <div class="faq-answer">
               <a routerLink="/nosotros" class="faq-link-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -113,27 +141,13 @@
           }
         </div>
 
-        <!-- 8 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 8">
-          <button type="button" class="faq-question" (click)="toggleFaq(8)">
-            <span>8. ¿Por qué debería usar VILCASpe?</span>
+        <!-- 10 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 10">
+          <button type="button" class="faq-question" (click)="toggleFaq(10)">
+            <span>10. ¿Tienen contrato de permanencia?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 8) {
-            <div class="faq-answer">
-              <p>Porque sabemos lo que es llevar un negocio con libreta y lapicero. Durante años vimos cómo el empresario peruano — el emprendedor, el mype, el de a pie — se quedaba fuera de la tecnología porque el software "bueno" siempre era carísimo o muy complicado.</p>
-              <p>Nosotros venimos haciendo soluciones para grandes empresas, pero decidimos voltear la mirada: ahora queremos ayudar a la persona de a pie a digitalizar su negocio con las mismas herramientas de alto nivel, a un precio justo. Somos ingenieros, sí, pero venimos de abajo — y sabemos lo que cuesta sacar adelante un negocio propio.</p>
-            </div>
-          }
-        </div>
-
-        <!-- 9 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 9">
-          <button type="button" class="faq-question" (click)="toggleFaq(9)">
-            <span>9. ¿Tienen contrato de permanencia?</span>
-            <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          @if (faqAbierto() === 9) {
+          @if (faqAbierto() === 10) {
             <div class="faq-answer">
               <p>No. <strong>Puedes retirarte cuando quieras</strong>, no aplica ninguna penalidad.</p>
               <p>El pago es por adelantado: si pagas hoy (por ejemplo, 19/08), tu servicio queda activo hasta el 19/09. Si decides retirarte antes de esa fecha, no hay ningún problema — igual mantienes el servicio activo hasta el 19/09. Eso sí, no se realizan devoluciones de dinero.</p>
@@ -141,13 +155,13 @@
           }
         </div>
 
-        <!-- 10 -->
-        <div class="faq-item" [class.open]="faqAbierto() === 10">
-          <button type="button" class="faq-question" (click)="toggleFaq(10)">
-            <span>10. ¿Qué pasa si tengo un problema técnico?</span>
+        <!-- 11 -->
+        <div class="faq-item" [class.open]="faqAbierto() === 11">
+          <button type="button" class="faq-question" (click)="toggleFaq(11)">
+            <span>11. ¿Qué pasa si tengo un problema técnico?</span>
             <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          @if (faqAbierto() === 10) {
+          @if (faqAbierto() === 11) {
             <div class="faq-answer">
               <p>Tienes varias formas de resolverlo, rapidito:</p>
               <ul class="faq-icon-list">
