@@ -409,6 +409,37 @@ export const CIROBOT_CSS = `
 }
 .cbot-chip:hover { background: var(--cbot-hover); border-color: var(--cbot-verde); transform: scale(1.02); }
 
+/* ── Barra de uso de IA (cupo mensual del plan) ── */
+.cbot-uso-ia {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 8px 16px 0;
+  flex-shrink: 0;
+}
+.cbot-uso-ia-fila {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--cbot-texto-sec);
+}
+.cbot-uso-ia-pista {
+  width: 100%; height: 5px;
+  border-radius: 999px;
+  background: var(--cbot-borde);
+  overflow: hidden;
+}
+.cbot-uso-ia-relleno {
+  height: 100%;
+  border-radius: 999px;
+  /* degradado verde por defecto — mismo par de verdes del resto de Cirobot */
+  background: linear-gradient(90deg, var(--cbot-verde), var(--cbot-verde-oscuro));
+  transition: width 0.4s ease;
+}
+.cbot-uso-ia-relleno.cbot-uso-ia-advertencia {
+  background: linear-gradient(90deg, var(--cbot-verde), var(--cbot-advertencia));
+}
+.cbot-uso-ia-relleno.cbot-uso-ia-critico {
+  background: linear-gradient(90deg, var(--cbot-advertencia), var(--cbot-error));
+}
+
 /* ── Input ── */
 .cbot-input-area {
   display: flex; align-items: center; gap: 6px;

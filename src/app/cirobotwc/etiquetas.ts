@@ -15,8 +15,10 @@ export function etiquetaHerramienta(nombre: string): string {
   return ETIQUETAS_HERRAMIENTA[nombre] ?? nombre.replace(/_/g, ' ');
 }
 
-export const ETIQUETA_PROVEEDOR: Record<'gemini' | 'groq' | 'grok', string> = {
+// Grok (xAI) queda fuera de la cadena de fallback por ahora (ver
+// GROK_HABILITADO en config.py del backend) — la key sigue mapeada acá
+// para no romper si se reactiva, pero el tipo de proveedor.ts ya no la ofrece.
+export const ETIQUETA_PROVEEDOR: Record<'gemini' | 'groq', string> = {
   gemini: 'Conectado a Gemini',
   groq: 'Conectado a Groq',
-  grok: 'Conectado a Grok',
 };

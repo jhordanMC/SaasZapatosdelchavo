@@ -3,7 +3,7 @@ import { Markdown } from './markdown';
 import { PanelInteligente } from './panel-inteligente';
 import { etiquetaHerramienta, ETIQUETA_PROVEEDOR } from './etiquetas';
 import { IconoAdjuntar, IconoBot, IconoCerrar, IconoEnviar, IconoExpandir, IconoMicrofono, IconoMinimizar } from './iconos';
-import type { CirobotCallbacks, PanelInteligente as PanelInteligenteTipo } from './tipos';
+import type { CirobotCallbacks, PanelInteligente as PanelInteligenteTipo, UsoIAEmpresa } from './tipos';
 
 interface Mensaje {
   rol: 'usuario' | 'bot';
@@ -48,7 +48,8 @@ export function ChatPanel({
   const [cargando, setCargando] = useState(false);
   const [sugerencias, setSugerencias] = useState<string[]>([]);
   const [panelActual, setPanelActual] = useState<PanelInteligenteTipo | null>(null);
-  const [proveedorActual, setProveedorActual] = useState<'gemini' | 'groq' | 'grok' | null>(null);
+  const [proveedorActual, setProveedorActual] = useState<'gemini' | 'groq' | null>(null);
+  const [usoIA, setUsoIA] = useState<UsoIAEmpresa | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +60,14 @@ export function ChatPanel({
   useEffect(() => {
     if (!minimizado) inputRef.current?.focus();
   }, [minimizado]);
+
+  // Carga el cupo al abrir el chat (una vez), sin bloquear la UI si falla
+  // o si el host (Angular) no pasó el callback — la barra simplemente no
+  // se muestra en ese caso, ver JSX abajo.
+  useEffect(() => {
+    if (!callbacks.onObtenerUsoIA) return;
+    callbacks.onObtenerUsoIA().then(setUsoIA).catch(() => {});
+  }, [callbacks]);
 
   async function enviar(texto: string) {
     const limpio = texto.trim();
@@ -77,6 +86,11 @@ export function ChatPanel({
       if (respuesta.proveedor) setProveedorActual(respuesta.proveedor);
       if (respuesta.accion?.tipo === 'navegar') {
         callbacks.onNavegar(respuesta.accion.vista);
+      }
+      // El mensaje que se acaba de responder ya gastó tokens — se refresca
+      // el cupo aparte (no bloquea el chat si esto falla).
+      if (callbacks.onObtenerUsoIA) {
+        callbacks.onObtenerUsoIA().then(setUsoIA).catch(() => {});
       }
     } catch {
       setMensajes((prev) => [
@@ -185,6 +199,23 @@ export function ChatPanel({
                   {s}
                 </button>
               ))}
+            </div>
+          )}
+
+          {usoIA && usoIA.limite_tokens != null && usoIA.porcentaje != null && (
+            <div className="cbot-uso-ia">
+              <div className="cbot-uso-ia-fila">
+                <span>Uso de IA este mes</span>
+                <span>{usoIA.porcentaje}%</span>
+              </div>
+              <div className="cbot-uso-ia-pista">
+                <div
+                  className={`cbot-uso-ia-relleno ${
+                    usoIA.porcentaje >= 100 ? 'cbot-uso-ia-critico' : usoIA.porcentaje >= 80 ? 'cbot-uso-ia-advertencia' : ''
+                  }`}
+                  style={{ width: `${Math.min(usoIA.porcentaje, 100)}%` }}
+                />
+              </div>
             </div>
           )}
 

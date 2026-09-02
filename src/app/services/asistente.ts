@@ -19,8 +19,17 @@ export interface AsistenteRespuesta {
   accion: AccionAsistente | null;
   panel: PanelInteligente | null;
   sugerencias: string[];
-  proveedor: 'gemini' | 'groq' | 'grok' | null;
+  // Grok (xAI) queda fuera de la cadena de fallback del backend por ahora
+  // (ver GROK_HABILITADO en config.py) — solo Gemini/Groq responden hoy.
+  proveedor: 'gemini' | 'groq' | null;
   herramientas: string[];
+}
+
+export interface UsoIAEmpresa {
+  tokens_usados: number;
+  limite_tokens: number | null;
+  porcentaje: number | null;
+  periodo: string;
 }
 
 /** Cliente HTTP de Cirobot — el componente React nunca llama esto directo, ver shared/cirobot/cirobot.ts. */
@@ -32,5 +41,9 @@ export class AsistenteService {
 
   enviarMensaje(mensaje: string): Observable<AsistenteRespuesta> {
     return this.http.post<AsistenteRespuesta>(`${this.base}/mensaje`, { mensaje });
+  }
+
+  obtenerUsoIA(): Observable<UsoIAEmpresa> {
+    return this.http.get<UsoIAEmpresa>(`${this.base}/uso-ia`);
   }
 }

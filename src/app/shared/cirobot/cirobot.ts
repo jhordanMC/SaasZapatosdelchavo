@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth';
-import { AsistenteRespuesta, AsistenteService } from '../../services/asistente';
+import { AsistenteRespuesta, AsistenteService, UsoIAEmpresa } from '../../services/asistente';
 
 /**
  * Mismo patrón de embedding React-en-Angular que ya usa
@@ -62,6 +62,7 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
       contexto,
       onEnviarMensaje: (texto: string) => this.enviarMensaje(texto),
       onNavegar: (vista: string) => this.navegar(vista),
+      onObtenerUsoIA: () => this.obtenerUsoIA(),
     });
   }
 
@@ -72,6 +73,10 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
 
   private enviarMensaje(texto: string): Promise<AsistenteRespuesta> {
     return firstValueFrom(this.asistenteService.enviarMensaje(texto));
+  }
+
+  private obtenerUsoIA(): Promise<UsoIAEmpresa> {
+    return firstValueFrom(this.asistenteService.obtenerUsoIA());
   }
 
   private navegar(vista: string): void {
