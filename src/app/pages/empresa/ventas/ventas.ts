@@ -926,9 +926,45 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   get pagoMixtoValido(): boolean {
     if (this.pagosDivididos.length < 2) return false;
     if (!this.pagoMixtoCuadraExacto) return false;
+    const efectivoInsuf = this.pagosDivididos.find((l) => l.metodo === 'efectivo' && l.montoRecibido < l.monto);
+    if (efectivoInsuf) return false;
     return this.pagosDivididos.every(
       (l) => l.monto > 0 && (!this.requiereFotoLinea(l) || !!l.fotoUrl)
     );
+  }
+
+  get errorDinamicoCheckout(): string | null {
+    if (this.pagoMixto) {
+      if (this.pagosDivididos.length < 2) {
+        return 'Agrega al menos 2 métodos de pago, o haz clic en "Usar un solo método".';
+      }
+      
+      const metodoCero = this.pagosDivididos.find(l => l.monto <= 0);
+      if (metodoCero) {
+        return 'Todos los métodos de pago agregados deben tener un monto mayor a 0.';
+      }
+
+      if (!this.pagoMixtoCuadraExacto) {
+        return 'El total asignado a los métodos de pago no cuadra con el Total a cobrar.';
+      }
+
+      const efectivoInsuf = this.pagosDivididos.find((l) => l.metodo === 'efectivo' && l.montoRecibido < l.monto);
+      if (efectivoInsuf) {
+        return 'En el pago con efectivo, el monto recibido del cliente no puede ser menor a lo asignado a cobrar.';
+      }
+      const lineaSinFoto = this.pagosDivididos.find((l) => this.requiereFotoLinea(l) && !l.fotoUrl);
+      if (lineaSinFoto) {
+        return `Falta adjuntar la foto del comprobante de ${lineaSinFoto.metodo}.`;
+      }
+    } else {
+      if (this.metodoPago === 'efectivo' && this.montoPagado < this.totalCarrito) {
+        return 'El monto pagado es menor al total. Verifica el importe recibido.';
+      }
+      if (this.requiereFotoComprobante && !this.fotoVentaUrl) {
+        return 'Adjunta la foto del comprobante para poder continuar.';
+      }
+    }
+    return null;
   }
 
   abrirCheckout(): void {
@@ -969,6 +1005,11 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
           this.saldoPendientePagoMixto > 0
             ? `Falta asignar S/${this.saldoPendientePagoMixto.toFixed(2)} del total.`
             : `Te pasaste por S/${Math.abs(this.saldoPendientePagoMixto).toFixed(2)}. Ajusta los montos.`;
+        return;
+      }
+      const lineaEfectivoInsuf = this.pagosDivididos.find((l) => l.metodo === 'efectivo' && l.montoRecibido < l.monto);
+      if (lineaEfectivoInsuf) {
+        this.checkoutError = 'En el pago con efectivo, el monto recibido del cliente no puede ser menor a lo asignado a cobrar.';
         return;
       }
       const lineaSinFoto = this.pagosDivididos.find((l) => this.requiereFotoLinea(l) && !l.fotoUrl);

@@ -23,15 +23,24 @@
     box-shadow var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard);
 }
-.btn:active {
+.btn:active:not(:disabled) {
   transform: scale(0.97);
+}
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
   background: var(--brand-deep);
   color: var(--text-on-brand-deep);
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--brand-deep-700);
   box-shadow: var(--shadow-glow-mint);
   transform: translateY(-1px);

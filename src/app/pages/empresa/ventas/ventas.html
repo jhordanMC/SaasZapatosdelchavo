@@ -485,12 +485,13 @@
         </div>
 
         <p class="error-text" *ngIf="errorFoto">{{ errorFoto }}</p>
-        <p class="error-text" *ngIf="checkoutError">{{ checkoutError }}</p>
+        <p class="error-text" *ngIf="errorDinamicoCheckout">{{ errorDinamicoCheckout }}</p>
+        <p class="error-text" *ngIf="checkoutError && !errorDinamicoCheckout">{{ checkoutError }}</p>
       </div>
 
       <div class="modal-footer">
         <button class="btn-secondary" (click)="cerrarCheckout()">Cancelar</button>
-        <button class="btn-primary" [disabled]="pagoMixto && !pagoMixtoValido" (click)="irAConfirmar()">Continuar</button>
+        <button class="btn-primary" [disabled]="(errorDinamicoCheckout !== null) || (pagoMixto && !pagoMixtoValido)" (click)="irAConfirmar()">Continuar</button>
       </div>
     </ng-container>
 
