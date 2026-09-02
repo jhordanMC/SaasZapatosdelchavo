@@ -915,6 +915,21 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Segunda mitad de guardar(): ya con form.fotoUrl resuelto a una URL real (o null). */
   private guardarProductoConDatos(): void {
+    // Validación: cualquier fila con talla escrita pero sin ubicación
+    // seleccionada (ej. el usuario cambió Local/Almacén y no volvió a
+    // elegir una opción del segundo selector) NO debe guardarse en
+    // silencio — antes se descartaba sin avisar, perdiendo la talla.
+    const filasSinUbicacion = this.form.variantes.filter(
+      (v) => v.talla.trim() && !v.ubicacion
+    );
+    if (filasSinUbicacion.length > 0) {
+      this.guardando.set(false);
+      this.errorModal.set(
+        `La talla "${filasSinUbicacion[0].talla.trim()}" no tiene un local o almacén seleccionado. Complétala antes de guardar.`
+      );
+      return;
+    }
+
     // Construye las variantes filtrando filas incompletas
     const variantes: VarianteStockInput[] = this.form.variantes
       .filter((v) => v.talla.trim() && v.ubicacion)
