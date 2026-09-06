@@ -52,6 +52,16 @@ interface Empresa {
   estado: 'activo' | 'inactivo';
   fechaAlta: string;
   ingresosMes: number;
+  // Real — empresa.nombre_vendedor (GET /empresas). null = alta sin
+  // vendedor registrado (empresas creadas antes de este campo, o el
+  // staff lo dejó vacío a propósito).
+  nombreVendedor: string | null;
+}
+
+interface FilaVendedor {
+  vendedor: string;
+  cantidadEmpresas: number;
+  ingresos: number;
 }
 
 interface FilaSector {
@@ -78,6 +88,8 @@ const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'O
 const SIN_PLAN = 'Sin plan';
 /** No es un sector real del catálogo — el valor que le ponemos a una empresa sin sector asignado. */
 const SIN_SECTOR = 'Sin sector';
+/** No es un vendedor real — el valor que le ponemos a una empresa sin nombre de vendedor registrado. */
+const SIN_VENDEDOR = 'Sin vendedor';
 /**
  * Paleta de colores anónima (no atada a ningún sector en particular —
  * los sectores ahora los define el admin dinámicamente en /admin/empresas,
@@ -190,6 +202,7 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
       estado: activa ? 'activo' : 'inactivo',
       fechaAlta: empresa.creado_en.slice(0, 10),
       ingresosMes: facturando ? Math.max(0, suscripcion!.monto_mensual - suscripcion!.descuento_monto) : 0,
+      nombreVendedor: empresa.nombre_vendedor,
     };
   }
 
@@ -393,6 +406,32 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
   }
   get ingresosMax(): number {
     return Math.max(...this.empresasFiltradas.map(e => e.ingresosMes), 1);
+  }
+
+  /**
+   * KPI "Top vendedores": agrupa las empresas FILTRADAS (mismo criterio
+   * que ingresosOrdenados arriba — respeta búsqueda/sector/rango de
+   * fechas del dashboard) por empresa.nombre_vendedor, sumando cuánto
+   * ingreso mensual generan las empresas que cada uno registró. 'Sin
+   * vendedor' agrupa las altas sin ese dato, igual criterio que SIN_PLAN
+   * y SIN_SECTOR.
+   */
+  get topVendedores(): FilaVendedor[] {
+    const mapa = new Map<string, { cantidadEmpresas: number; ingresos: number }>();
+    for (const e of this.empresasFiltradas) {
+      const vendedor = e.nombreVendedor?.trim() || SIN_VENDEDOR;
+      const actual = mapa.get(vendedor) ?? { cantidadEmpresas: 0, ingresos: 0 };
+      actual.cantidadEmpresas += 1;
+      actual.ingresos += e.ingresosMes;
+      mapa.set(vendedor, actual);
+    }
+    return Array.from(mapa.entries())
+      .map(([vendedor, v]) => ({ vendedor, cantidadEmpresas: v.cantidadEmpresas, ingresos: v.ingresos }))
+      .sort((a, b) => b.ingresos - a.ingresos)
+      .slice(0, 5);
+  }
+  get maxIngresoVendedor(): number {
+    return Math.max(1, ...this.topVendedores.map((v) => v.ingresos));
   }
 
   /* ── Helpers de formato ── */
