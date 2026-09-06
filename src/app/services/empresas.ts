@@ -22,6 +22,7 @@ export interface Empresa {
   estado: EstadoEmpresa;
   id_sector: string | null;
   nombre_sector: string | null;
+  nombre_vendedor: string | null;
   creado_en: string;
 }
 
@@ -64,6 +65,7 @@ export interface EmpresaUpdateInput {
   nombre?: string;
   estado?: EstadoEmpresa;
   id_sector?: string | null;
+  nombre_vendedor?: string | null;
 }
 
 /**
@@ -84,8 +86,12 @@ export class EmpresasService {
     return this.http.get<Empresa>(`${this.apiUrl}/empresas/${idEmpresa}`);
   }
 
-  crearEmpresa(nombre: string, idSector?: string | null): Observable<Empresa> {
-    return this.http.post<Empresa>(`${this.apiUrl}/empresas`, { nombre, id_sector: idSector || null });
+  crearEmpresa(nombre: string, idSector?: string | null, nombreVendedor?: string | null): Observable<Empresa> {
+    return this.http.post<Empresa>(`${this.apiUrl}/empresas`, {
+      nombre,
+      id_sector: idSector || null,
+      nombre_vendedor: nombreVendedor?.trim() || null,
+    });
   }
 
   actualizarEmpresa(idEmpresa: string, datos: EmpresaUpdateInput): Observable<Empresa> {

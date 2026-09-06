@@ -49,6 +49,7 @@ interface EditarEmpresaForm {
   nombre: string;
   estado: EstadoEmpresa;
   idSector: string | null;
+  nombreVendedor: string;
 }
 
 interface EditarLocalForm {
@@ -155,7 +156,7 @@ export class EmpresaDetalleComponent implements OnInit {
 
   // ── Modal "Editar empresa" (nombre / estado / sector) ───
   modalEditarEmpresaAbierto = false;
-  formEmpresa: EditarEmpresaForm = { nombre: '', estado: 'activa', idSector: null };
+  formEmpresa: EditarEmpresaForm = { nombre: '', estado: 'activa', idSector: null, nombreVendedor: '' };
   guardandoEmpresa = false;
   sectores = signal<Sector[]>([]);
 
@@ -169,7 +170,12 @@ export class EmpresaDetalleComponent implements OnInit {
   abrirModalEditarEmpresa(): void {
     const actual = this.empresa();
     if (!actual) return;
-    this.formEmpresa = { nombre: actual.nombre, estado: actual.estado, idSector: actual.id_sector };
+    this.formEmpresa = {
+      nombre: actual.nombre,
+      estado: actual.estado,
+      idSector: actual.id_sector,
+      nombreVendedor: actual.nombre_vendedor ?? '',
+    };
     this.modalEditarEmpresaAbierto = true;
   }
 
@@ -189,6 +195,7 @@ export class EmpresaDetalleComponent implements OnInit {
         nombre: this.formEmpresa.nombre.trim(),
         estado: this.formEmpresa.estado,
         id_sector: this.formEmpresa.idSector,
+        nombre_vendedor: this.formEmpresa.nombreVendedor.trim() || null,
       })
       .subscribe({
         next: (actualizada) => {

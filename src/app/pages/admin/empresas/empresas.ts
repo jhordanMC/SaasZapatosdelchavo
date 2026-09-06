@@ -19,6 +19,7 @@ interface NuevaEmpresaForm {
   nombre: string;
   locales: number;
   idSector: string | null;
+  nombreVendedor: string;
 }
 
 interface SectorForm {
@@ -73,7 +74,7 @@ export class EmpresasComponent implements OnInit {
   // ── Modal "Nueva empresa" (2 pasos: datos + locales) ────
   modalNuevaAbierto = false;
   pasoModal: 1 | 2 | 3 = 1;
-  nuevaEmpresa: NuevaEmpresaForm = { nombre: '', locales: 1, idSector: null };
+  nuevaEmpresa: NuevaEmpresaForm = { nombre: '', locales: 1, idSector: null, nombreVendedor: '' };
   modalLogoError = false;
   guardando = false;
 
@@ -234,7 +235,7 @@ export class EmpresasComponent implements OnInit {
 
   // ── Flujo modal "Nueva empresa" ────────────────────────
   abrirModalNueva(): void {
-    this.nuevaEmpresa = { nombre: '', locales: 1, idSector: null };
+    this.nuevaEmpresa = { nombre: '', locales: 1, idSector: null, nombreVendedor: '' };
     this.nuevoLocal = { nombre: '', direccion: '', descripcion: '' };
     this.localesCreadosTemp = [];
     this.pasoModal = 1;
@@ -310,32 +311,34 @@ export class EmpresasComponent implements OnInit {
     if (!this.paso1Valido || this.localesCreadosTemp.length === 0 || this.guardando) return;
 
     this.guardando = true;
-    this.empresasService.crearEmpresa(this.nuevaEmpresa.nombre.trim(), this.nuevaEmpresa.idSector).subscribe({
-      next: (empresaCreada) => {
-        const creaciones = this.localesCreadosTemp.map((local) =>
-          this.empresasService.crearLocal(empresaCreada.id_empresa, local)
-        );
-        forkJoin(creaciones).subscribe({
-          next: (locales) => {
-            this.guardando = false;
-            this.empresas.set([empresaCreada, ...this.empresas()]);
-            this.empresaRecienCreada = empresaCreada;
-            this.localesRecienCreados = locales;
-            this.cerrarModalNueva();
-            this.modalConfirmacionAbierto = true;
-          },
-          error: () => {
-            this.guardando = false;
-            this.error.set('La empresa se creó, pero hubo un error al registrar sus locales.');
-            this.cerrarModalNueva();
-          },
-        });
-      },
-      error: () => {
-        this.guardando = false;
-        this.error.set('No se pudo crear la empresa.');
-      },
-    });
+    this.empresasService
+      .crearEmpresa(this.nuevaEmpresa.nombre.trim(), this.nuevaEmpresa.idSector, this.nuevaEmpresa.nombreVendedor)
+      .subscribe({
+        next: (empresaCreada) => {
+          const creaciones = this.localesCreadosTemp.map((local) =>
+            this.empresasService.crearLocal(empresaCreada.id_empresa, local)
+          );
+          forkJoin(creaciones).subscribe({
+            next: (locales) => {
+              this.guardando = false;
+              this.empresas.set([empresaCreada, ...this.empresas()]);
+              this.empresaRecienCreada = empresaCreada;
+              this.localesRecienCreados = locales;
+              this.cerrarModalNueva();
+              this.modalConfirmacionAbierto = true;
+            },
+            error: () => {
+              this.guardando = false;
+              this.error.set('La empresa se creó, pero hubo un error al registrar sus locales.');
+              this.cerrarModalNueva();
+            },
+          });
+        },
+        error: () => {
+          this.guardando = false;
+          this.error.set('No se pudo crear la empresa.');
+        },
+      });
   }
 
   cerrarModalConfirmacion(): void {
