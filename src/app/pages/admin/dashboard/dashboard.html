@@ -15,7 +15,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Empresa
         </label>
-        <input type="text" placeholder="Buscar empresa..." [(ngModel)]="busqueda" />
+        <input type="text" placeholder="Buscar empresa..." [(ngModel)]="busqueda" (ngModelChange)="paginaIngresos = 0" />
       </div>
 
       <div class="filtro-campo">
@@ -23,7 +23,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/><path d="M7 21V12h10v9"/><path d="M9 7V4h6v3"/></svg>
           Sector
         </label>
-        <select [(ngModel)]="filtroSector">
+        <select [(ngModel)]="filtroSector" (ngModelChange)="paginaIngresos = 0">
           <option value="Todos">Todos</option>
           <option *ngFor="let s of sectoresPresentes" [value]="s">{{ s }}</option>
         </select>
@@ -34,14 +34,14 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Desde
         </label>
-        <input type="date" [(ngModel)]="fechaDesde" />
+        <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="paginaIngresos = 0" />
       </div>
       <div class="filtro-campo">
         <label>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Hasta
         </label>
-        <input type="date" [(ngModel)]="fechaHasta" />
+        <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="paginaIngresos = 0" />
       </div>
 
       <div class="filtro-acciones">
@@ -200,7 +200,7 @@
           </div>
         </div>
 
-        <div class="ingreso-row" *ngFor="let e of ingresosOrdenados">
+        <div class="ingreso-row" *ngFor="let e of ingresosPaginados">
           <div class="ingreso-top">
             <div class="ingreso-left">
               <span class="tipo-chip" [ngClass]="sectorStyle(e.sector)">{{ sectorAbrev(e.sector) }}</span>
@@ -211,6 +211,16 @@
           <div class="ingreso-bar-bg">
             <div class="ingreso-bar-fill" [class.zero]="e.ingresosMes === 0" [style.width.%]="(e.ingresosMes / ingresosMax) * 100"></div>
           </div>
+        </div>
+
+        <div class="paginacion-ingresos" *ngIf="totalPaginasIngresos > 1">
+          <button class="btn-pagina" [disabled]="!puedeIrPaginaIngresosAnterior" (click)="irPaginaIngresosAnterior()" aria-label="Página anterior">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="paginacion-ingresos-info">Página {{ paginaIngresosClamp + 1 }} de {{ totalPaginasIngresos }}</span>
+          <button class="btn-pagina" [disabled]="!puedeIrPaginaIngresosSiguiente" (click)="irPaginaIngresosSiguiente()" aria-label="Página siguiente">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
       </div>
     </div>

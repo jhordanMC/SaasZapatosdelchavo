@@ -398,14 +398,43 @@ export class DashboardAdminComponent implements OnInit, AfterViewInit, OnDestroy
     this.filtroSector = 'Todos';
     this.fechaDesde = '';
     this.fechaHasta = '';
+    this.paginaIngresos = 0;
   }
 
-  /* ── Ingresos por empresa (ordenados, para barra lateral) ── */
+  /* ── Ingresos por empresa (ordenados, paginados de 4 en 4) ── */
+  private readonly EMPRESAS_POR_PAGINA_INGRESOS = 4;
+  /** 0-indexado. Se resetea al cambiar cualquier filtro (ver inputs en el
+   *  html) y además se clampea solo si los filtros dejan menos páginas
+   *  de las que había — así nunca queda "colgada" en una página vacía. */
+  paginaIngresos = 0;
+
   get ingresosOrdenados(): Empresa[] {
     return [...this.empresasFiltradas].sort((a, b) => b.ingresosMes - a.ingresosMes);
   }
   get ingresosMax(): number {
     return Math.max(...this.empresasFiltradas.map(e => e.ingresosMes), 1);
+  }
+  get totalPaginasIngresos(): number {
+    return Math.max(1, Math.ceil(this.ingresosOrdenados.length / this.EMPRESAS_POR_PAGINA_INGRESOS));
+  }
+  get paginaIngresosClamp(): number {
+    return Math.min(this.paginaIngresos, this.totalPaginasIngresos - 1);
+  }
+  get ingresosPaginados(): Empresa[] {
+    const inicio = this.paginaIngresosClamp * this.EMPRESAS_POR_PAGINA_INGRESOS;
+    return this.ingresosOrdenados.slice(inicio, inicio + this.EMPRESAS_POR_PAGINA_INGRESOS);
+  }
+  get puedeIrPaginaIngresosAnterior(): boolean {
+    return this.paginaIngresosClamp > 0;
+  }
+  get puedeIrPaginaIngresosSiguiente(): boolean {
+    return this.paginaIngresosClamp < this.totalPaginasIngresos - 1;
+  }
+  irPaginaIngresosAnterior(): void {
+    if (this.puedeIrPaginaIngresosAnterior) this.paginaIngresos = this.paginaIngresosClamp - 1;
+  }
+  irPaginaIngresosSiguiente(): void {
+    if (this.puedeIrPaginaIngresosSiguiente) this.paginaIngresos = this.paginaIngresosClamp + 1;
   }
 
   /**
