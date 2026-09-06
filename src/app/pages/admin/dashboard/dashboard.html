@@ -317,28 +317,26 @@
     </div>
 
     <!-- Top vendedores: cuánto ingreso generan las empresas que cada uno registró -->
-    <div class="charts-row">
-      <div class="table-card full">
-        <div class="card-help" tabindex="0" data-help="Vendedores del equipo comercial de ALBA con más empresas registradas y cuánto ingreso mensual generan esas empresas a la plataforma. Respeta los filtros de búsqueda, sector y fecha de arriba." title="Top vendedores">?</div>
-        <div class="card-head">
-          <div>
-            <div class="card-title">Top vendedores</div>
-            <div class="card-sub">Ingreso mensual generado por las empresas que registró cada vendedor</div>
-          </div>
+    <div class="table-card full">
+      <div class="card-help" tabindex="0" data-help="Vendedores del equipo comercial de ALBA con más empresas registradas y cuánto ingreso mensual generan esas empresas a la plataforma. Respeta los filtros de búsqueda, sector y fecha de arriba." title="Top vendedores">?</div>
+      <div class="card-head">
+        <div>
+          <div class="card-title">Top vendedores</div>
+          <div class="card-sub">Ingreso mensual generado por las empresas que registró cada vendedor</div>
         </div>
-        <div class="ingreso-row" *ngFor="let v of topVendedores">
-          <div class="ingreso-top">
-            <div class="ingreso-left">
-              <span class="ingreso-nombre"><strong>{{ v.vendedor }}</strong> · {{ v.cantidadEmpresas }} empresa{{ v.cantidadEmpresas !== 1 ? 's' : '' }}</span>
-            </div>
-            <span class="ingreso-monto" [class.zero]="v.ingresos === 0">{{ fmtPEN(v.ingresos) }}</span>
-          </div>
-          <div class="ingreso-bar-bg">
-            <div class="ingreso-bar-fill" [class.zero]="v.ingresos === 0" [style.width.%]="(v.ingresos / maxIngresoVendedor) * 100"></div>
-          </div>
-        </div>
-        <p class="empty-msg" *ngIf="topVendedores.length === 0">No hay empresas que coincidan con los filtros.</p>
       </div>
+      <div class="ingreso-row" *ngFor="let v of topVendedores">
+        <div class="ingreso-top">
+          <div class="ingreso-left">
+            <span class="ingreso-nombre"><strong>{{ v.vendedor }}</strong> · {{ v.cantidadEmpresas }} empresa{{ v.cantidadEmpresas !== 1 ? 's' : '' }}</span>
+          </div>
+          <span class="ingreso-monto" [class.zero]="v.ingresos === 0">{{ fmtPEN(v.ingresos) }}</span>
+        </div>
+        <div class="ingreso-bar-bg">
+          <div class="ingreso-bar-fill" [class.zero]="v.ingresos === 0" [style.width.%]="(v.ingresos / maxIngresoVendedor) * 100"></div>
+        </div>
+      </div>
+      <p class="empty-msg" *ngIf="topVendedores.length === 0">No hay empresas que coincidan con los filtros.</p>
     </div>
 
     <!-- Evolución de altas de empresas -->
