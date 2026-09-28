@@ -8,6 +8,7 @@ import {
   IconoMinimizar, IconoProductos, IconoProforma, IconoReclamaciones, IconoSuscripciones, IconoTickets, IconoNavVentas,
 } from './iconos';
 import { VarianLogo, type EstadoVarian } from './varian-logo';
+import { useDictado } from './dictado';
 import type { CirobotCallbacks, PanelInteligente as PanelInteligenteTipo, UsoIAEmpresa } from './tipos';
 
 interface Mensaje {
@@ -102,6 +103,23 @@ export function ChatPanel({
   const [resultado, setResultado] = useState<'success' | 'error' | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Dictado por voz: el texto reconocido se escribe en el input (se ve mientras
+  // hablas) y se le antepone lo que ya estaba escrito. NO se envía solo: el
+  // usuario lo revisa y da Enter, por si el reconocimiento se equivoca.
+  const baseDictadoRef = useRef('');
+  const { soportado: vozSoportada, escuchando, error: errorVoz, iniciar, detener, limpiarError } = useDictado((texto) => {
+    const base = baseDictadoRef.current;
+    setInput(base ? `${base} ${texto}` : texto);
+  });
+
+  function alternarMicrofono() {
+    if (escuchando) {
+      detener();
+      return;
+    }
+    baseDictadoRef.current = input.trim();
+    iniciar();
+  }
 
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,7 +127,12 @@ export function ChatPanel({
 
   useEffect(() => {
     if (!minimizado) inputRef.current?.focus();
-  }, [minimizado]);
+    else detener(); // minimizado: no dejar el micrófono abierto en segundo plano
+  }, [minimizado, detener]);
+
+  useEffect(() => {
+    if (!escuchando) inputRef.current?.focus();
+  }, [escuchando]);
 
   useEffect(() => {
     if (!resultado) return;
@@ -128,6 +151,7 @@ export function ChatPanel({
   async function enviar(texto: string) {
     const limpio = texto.trim();
     if (!limpio || cargando) return;
+    detener();
 
     setMensajes((prev) => [...prev, { rol: 'usuario', texto: limpio }]);
     setInput('');
@@ -296,6 +320,12 @@ export function ChatPanel({
             </div>
           )}
 
+          {errorVoz && (
+            <div className="cbot-voz-aviso" role="status" onClick={limpiarError}>
+              {errorVoz}
+            </div>
+          )}
+
           <form 
             className="cbot-input-area"
             onSubmit={(e) => {
@@ -306,15 +336,26 @@ export function ChatPanel({
             <input
               ref={inputRef}
               className="cbot-input"
-              placeholder="Pregúntame cualquier cosa sobre tu empresa…"
+              placeholder={escuchando ? 'Escuchando… habla ahora' : 'Pregúntame cualquier cosa sobre tu empresa…'}
               value={input}
               disabled={cargando}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                if (escuchando) detener(); // si el usuario escribe a mano, se corta el dictado
+                setInput(e.target.value);
+              }}
             />
             <button type="button" className="cbot-input-icon" disabled title="Adjuntar (próximamente)" aria-label="Adjuntar">
               <IconoAdjuntar />
             </button>
-            <button type="button" className="cbot-input-icon" disabled title="Micrófono (próximamente)" aria-label="Micrófono">
+            <button
+              type="button"
+              className={`cbot-input-icon cbot-mic ${escuchando ? 'cbot-mic-activo' : ''}`}
+              disabled={!vozSoportada || cargando}
+              onClick={alternarMicrofono}
+              title={!vozSoportada ? 'Tu navegador no soporta dictado por voz (prueba Chrome o Edge)' : escuchando ? 'Detener dictado' : 'Dictar por voz'}
+              aria-label={escuchando ? 'Detener dictado' : 'Dictar por voz'}
+              aria-pressed={escuchando}
+            >
               <IconoMicrofono />
             </button>
             <button

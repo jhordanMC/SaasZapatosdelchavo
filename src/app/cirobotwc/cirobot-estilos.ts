@@ -662,6 +662,21 @@ export const CIROBOT_CSS = `
 .cbot-enviar { width: 46px; height: 46px; border-radius: 15px; background: linear-gradient(135deg, #16a34a, #117b3d); box-shadow: 0 6px 14px rgba(17,123,61,0.25); }
 .cbot-enviar:hover:not(:disabled) { background: linear-gradient(135deg, #138A52, #0F6B40); }
 
+/* Micrófono (dictado por voz): habilitado, y con anillo pulsante mientras escucha */
+.cbot-mic:not(:disabled) { cursor: pointer; opacity: 1; color: var(--cbot-verde-oscuro); transition: background 0.16s ease, color 0.16s ease; }
+.cbot-mic:not(:disabled):hover { background: var(--cbot-hover); }
+.cbot-mic:disabled { cursor: not-allowed; opacity: 0.45; }
+.cbot-mic-activo:not(:disabled), .cbot-mic-activo:not(:disabled):hover { background: #FEE2E2; color: #DC2626; animation: cbot-mic-pulso 1.3s ease-out infinite; }
+@keyframes cbot-mic-pulso {
+  0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+  100% { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+}
+.cbot-voz-aviso {
+  margin: 0 16px 6px; padding: 7px 12px; border-radius: 10px;
+  background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;
+  font-size: 12px; line-height: 1.4; cursor: pointer;
+}
+
 @media (max-width: 480px) {
   .cbot-bienvenida-mascota { width: 160px; }
   .cbot-bienvenida-mascota img { width: 108px; }
@@ -670,6 +685,6 @@ export const CIROBOT_CSS = `
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cbot-varian-thinking > svg, .cbot-bienvenida-mascota img, .cbot-destellos path, .cbot-varian-badge { animation: none !important; }
+  .cbot-varian-thinking > svg, .cbot-bienvenida-mascota img, .cbot-destellos path, .cbot-varian-badge, .cbot-mic-activo { animation: none !important; }
 }
 `;
