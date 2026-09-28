@@ -24,12 +24,14 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, sig
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject, forkJoin, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, forkJoin, from, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { ModalBrandHeaderComponent } from '../../../shared/modal-brand-header/modal-brand-header';
 import { AuthService } from '../../../core/auth';
 import { environment } from '../../../../environments/environment';
 import { esArchivoDeImagen, esPrevisualizableEnNavegador } from '../../../utils/validar-imagen';
+import { mensajeErrorHttp } from '../../../utils/errores-http';
+import { comprimirImagenParaSubir } from '../../../utils/comprimir-imagen';
 import {
   exportarBoletaSimple,
   exportarBoletaVenta80mm,
@@ -55,7 +57,16 @@ import {
   VentasService,
   SubirComprobanteResponse,
   requiereComprobante,
+  claveCarrito,
 } from '../../../services/ventas';
+
+/**
+ * Valor interno de "talla" para las variantes que no tienen talla
+ * (ferretería, tecnología, bodega…). `null` en tallaModalActiva significa
+ * "el usuario aún no eligió"; sin este centinela ambos casos se confundían y
+ * los productos sin talla nunca se podían agregar al carrito.
+ */
+const SIN_TALLA = '__sin_talla__';
 
 type PasoCheckout = 'formulario' | 'confirmar' | 'exito';
 
@@ -140,7 +151,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   private origenVueloEl: HTMLElement | null = null;
 
   // ── Edición de ítem en carrito ───────────────────────────────────────────
-  editandoVarianteId: string | null = null;
+  editandoClave: string | null = null;
 
   // ── Checkout ─────────────────────────────────────────────────────────────
   pasoCheckout: PasoCheckout = 'formulario';
@@ -179,7 +190,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Micro-interacciones ──────────────────────────────────────────────────
   justAddedProductoId: string | null = null;
   badgeBump = false;
-  removingVarianteId: string | null = null;
+  removingClave: string | null = null;
   totalPulse = false;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -207,8 +218,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
           this.cargando.set(false);
         }
       },
-      error: () => {
-        this.error.set('No se pudieron cargar las sedes. Verifica tu conexión.');
+      error: (err) => {
+        this.error.set(mensajeErrorHttp(err, 'No se pudieron cargar las sedes. Verifica tu conexión.'));
         this.cargando.set(false);
       },
     });
@@ -262,8 +273,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cargandoProductos.set(false);
         this.cargando.set(false);
       },
-      error: () => {
-        this.error.set('No se pudieron cargar los productos.');
+      error: (err) => {
+        this.error.set(mensajeErrorHttp(err, 'No se pudieron cargar los productos.'));
         this.cargandoProductos.set(false);
         this.cargando.set(false);
       },
@@ -411,7 +422,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
        }
     }
 
-    this.tallaModalActiva = preTalla;
+    // Producto sin tallas: no hay nada que elegir, se preselecciona "sin talla".
+    this.tallaModalActiva = this.esProductoSinTallas(p) ? SIN_TALLA : preTalla;
     this.ubicacionModalActiva = preUbi;
 
     this.cantidadSeleccionada = 1;
@@ -426,13 +438,40 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cerrarSelectorVariante(): void {
     this.showVariantePicker = null;
-    this.editandoVarianteId = null;
+    this.editandoClave = null;
+  }
+
+  /** Clave de talla de una variante: su talla, o SIN_TALLA si no tiene. */
+  private claveTalla(v: VariantePOSRead): string {
+    return v.talla?.trim() ? v.talla : SIN_TALLA;
+  }
+
+  /** ¿Ninguna variante del producto tiene talla? (no se muestra el selector de talla) */
+  private esProductoSinTallas(p: ProductoPOSRead): boolean {
+    return p.variantes.length > 0 && p.variantes.every((v) => !v.talla?.trim());
+  }
+
+  get productoSinTallas(): boolean {
+    return !!this.showVariantePicker && this.esProductoSinTallas(this.showVariantePicker);
+  }
+
+  /** Clave de una línea del carrito (variante + sede), para quitar/editar sin mezclar sedes. */
+  claveItem(item: ItemCarrito): string {
+    return claveCarrito(item.varianteId, item.idUbicacionOrigen);
+  }
+
+  /** Cantidad de esta variante EN ESTA SEDE que ya está en el carrito (0 si se está editando esa misma línea). */
+  private cantidadEnCarrito(v: VariantePOSRead): number {
+    const clave = claveCarrito(v.id_variante, v.id_ubicacion_origen);
+    if (this.editandoClave === clave) return 0;
+    const item = this.ventasService.carrito().find((i) => this.claveItem(i) === clave);
+    return item ? item.cantidad : 0;
   }
 
   get varianteSeleccionada(): VariantePOSRead | undefined {
     if (!this.tallaModalActiva || !this.ubicacionModalActiva) return undefined;
     return this.showVariantePicker?.variantes.find(
-      (v) => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === this.ubicacionModalActiva
+      (v) => this.claveTalla(v) === this.tallaModalActiva && v.id_ubicacion_origen === this.ubicacionModalActiva
     );
   }
 
@@ -440,10 +479,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
   _opcionesUbicacionModal: { id: string, label: string }[] = [];
 
   stockDisponibleReal(v: VariantePOSRead): number {
-    let enCarrito = 0;
-    const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === v.id_variante);
-    if (itemEnCarrito && this.editandoVarianteId !== v.id_variante) enCarrito = itemEnCarrito.cantidad;
-    return v.stock_disponible - enCarrito;
+    return v.stock_disponible - this.cantidadEnCarrito(v);
   }
 
   actualizarOpcionesModal() {
@@ -461,16 +497,21 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const set = new Set<string>();
     for (const v of varsTalla) {
-       if (v.talla) set.add(v.talla);
+       set.add(this.claveTalla(v));
     }
     this._opcionesTallaModal = Array.from(set).map(talla => ({
        talla,
-       label: talla
-    })).sort((a, b) => a.talla.localeCompare(b.talla, undefined, { numeric: true }));
+       label: talla === SIN_TALLA ? 'Sin talla' : talla
+    })).sort((a, b) => {
+       // "Sin talla" siempre al final; el resto en orden natural (36, 37, 40, M, L…)
+       if (a.talla === SIN_TALLA) return 1;
+       if (b.talla === SIN_TALLA) return -1;
+       return a.talla.localeCompare(b.talla, undefined, { numeric: true });
+    });
 
     let varsUbi = this.showVariantePicker.variantes;
     if (this.tallaModalActiva) {
-        varsUbi = varsUbi.filter(v => v.talla === this.tallaModalActiva && this.stockDisponibleReal(v) > 0);
+        varsUbi = varsUbi.filter(v => this.claveTalla(v) === this.tallaModalActiva && this.stockDisponibleReal(v) > 0);
     } else {
         varsUbi = varsUbi.filter(v => this.stockDisponibleReal(v) > 0);
     }
@@ -489,7 +530,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tallaModalActiva = talla;
     this.errorTalla = null;
     if (talla && this.ubicacionModalActiva) {
-       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && this.stockDisponibleReal(v) > 0);
+       const isValid = this.showVariantePicker?.variantes.some(v => this.claveTalla(v) === talla && v.id_ubicacion_origen === this.ubicacionModalActiva && this.stockDisponibleReal(v) > 0);
        if (!isValid) {
            this.ubicacionModalActiva = null;
        }
@@ -503,8 +544,8 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ubicacionModalActiva = idUbi;
     this.errorUbicacion = null;
     if (idUbi && this.tallaModalActiva) {
-       const isValid = this.showVariantePicker?.variantes.some(v => v.talla === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && this.stockDisponibleReal(v) > 0);
-       if (!isValid) {
+       const isValid = this.showVariantePicker?.variantes.some(v => this.claveTalla(v) === this.tallaModalActiva && v.id_ubicacion_origen === idUbi && this.stockDisponibleReal(v) > 0);
+       if (!isValid && !this.productoSinTallas) {
            this.tallaModalActiva = null;
        }
     }
@@ -549,7 +590,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let hasError = false;
 
-    if (!this.tallaModalActiva) {
+    if (!this.tallaModalActiva && !this.productoSinTallas) {
       this.errorTalla = 'Falta seleccionar talla';
       hasError = true;
     }
@@ -584,8 +625,9 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     const item: ItemCarrito = {
       varianteId: variante.id_variante,
       productoId: p.id_producto,
-      nombre: `${p.nombre} (talla ${variante.talla ?? variante.sku})`,
-      talla: variante.talla,
+      // Sin talla: solo el nombre (antes salía "(talla null)" o "(talla <sku>)")
+      nombre: variante.talla?.trim() ? `${p.nombre} (talla ${variante.talla})` : p.nombre,
+      talla: variante.talla?.trim() ? variante.talla : null,
       fotoUrl: p.imagen_url,
       precioUnitario: p.precio_venta,
       cantidad: this.cantidadSeleccionada,
@@ -596,18 +638,18 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       stockMaximo: variante.stock_disponible,
     };
 
-    if (this.editandoVarianteId) {
-      if (this.editandoVarianteId === variante.id_variante) {
-        this.ventasService.editarItemCarrito(variante.id_variante, {
+    if (this.editandoClave) {
+      if (this.editandoClave === claveCarrito(variante.id_variante, variante.id_ubicacion_origen)) {
+        this.ventasService.editarItemCarrito(this.editandoClave, {
           cantidad: this.cantidadSeleccionada,
           descuentoMonto: this.descuentoSeleccionado,
           tipoDescuento: this.tipoDescuentoSeleccionado
         });
       } else {
-        this.ventasService.quitarDelCarrito(this.editandoVarianteId);
+        this.ventasService.quitarDelCarrito(this.editandoClave);
         this.ventasService.agregarAlCarrito(item);
       }
-      this.editandoVarianteId = null;
+      this.editandoClave = null;
       this.showVariantePicker = null;
       this.pulseTotal();
       return;
@@ -619,12 +661,12 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dispararVueloAlCarrito();
   }
 
-  quitarDelCarrito(varianteId: string): void {
-    this.removingVarianteId = varianteId;
+  quitarDelCarrito(clave: string): void {
+    this.removingClave = clave;
     setTimeout(() => {
-      this.ventasService.quitarDelCarrito(varianteId);
-      if (this.editandoVarianteId === varianteId) this.editandoVarianteId = null;
-      this.removingVarianteId = null;
+      this.ventasService.quitarDelCarrito(clave);
+      if (this.editandoClave === clave) this.editandoClave = null;
+      this.removingClave = null;
       this.pulseTotal();
     }, 220);
   }
@@ -633,13 +675,18 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   iniciarEdicion(item: ItemCarrito): void {
     const p = this.productos().find(x => x.id_producto === item.productoId);
-    if (!p) return;
+    if (!p) {
+      // El producto ya no está en la página cargada (cambió un filtro o la búsqueda).
+      // Antes el botón "Editar" no hacía nada y el usuario no sabía por qué.
+      this.error.set('Ese producto no está en la lista actual. Limpia los filtros para poder editarlo, o quítalo y agrégalo de nuevo.');
+      return;
+    }
 
-    this.editandoVarianteId = item.varianteId;
+    this.editandoClave = this.claveItem(item);
     this.origenVueloEl = null;
     
     this.showVariantePicker = p;
-    this.tallaModalActiva = item.talla ?? null;
+    this.tallaModalActiva = item.talla?.trim() ? item.talla : SIN_TALLA;
     this.ubicacionModalActiva = item.idUbicacionOrigen ?? null;
     
     this.cantidadSeleccionada = item.cantidad;
@@ -662,27 +709,19 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let maxDisp = 0;
     if (this.varianteSeleccionada) {
-      let enCarrito = 0;
-      const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === this.varianteSeleccionada!.id_variante);
-      if (itemEnCarrito && this.editandoVarianteId !== this.varianteSeleccionada!.id_variante) {
-        enCarrito = itemEnCarrito.cantidad;
-      }
-      maxDisp = this.varianteSeleccionada.stock_disponible - enCarrito;
+      maxDisp = this.varianteSeleccionada.stock_disponible - this.cantidadEnCarrito(this.varianteSeleccionada);
     } else {
       let variantesFiltradas = p.variantes;
       
       if (this.tallaModalActiva) {
-        variantesFiltradas = variantesFiltradas.filter(v => v.talla === this.tallaModalActiva);
+        variantesFiltradas = variantesFiltradas.filter(v => this.claveTalla(v) === this.tallaModalActiva);
       }
       if (this.ubicacionModalActiva) {
         variantesFiltradas = variantesFiltradas.filter(v => v.id_ubicacion_origen === this.ubicacionModalActiva);
       }
 
       for (const v of variantesFiltradas) {
-        let enCarrito = 0;
-        const itemEnCarrito = this.ventasService.carrito().find(i => i.varianteId === v.id_variante);
-        if (itemEnCarrito && this.editandoVarianteId !== v.id_variante) enCarrito = itemEnCarrito.cantidad;
-        maxDisp += Math.max(0, v.stock_disponible - enCarrito);
+        maxDisp += Math.max(0, v.stock_disponible - this.cantidadEnCarrito(v));
       }
     }
 
@@ -1044,6 +1083,12 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.confirmando) return; // evita doble clic → venta duplicada
+    if (this.ventasService.carrito().length === 0) {
+      this.checkoutError = 'El carrito está vacío.';
+      return;
+    }
+
     this.checkoutError = '';
     this.confirmando = true;
 
@@ -1064,7 +1109,10 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
     // Sube todos los comprobantes pendientes en paralelo, mapea key → URL.
     forkJoin(
       archivosASubir.reduce((acc, { key, archivo }) => {
-        acc[key] = this.ventasService.subirComprobantePago(archivo);
+        // Se reduce la foto antes de subirla (menos datos móviles y no choca con topes de tamaño del servidor).
+        acc[key] = from(comprimirImagenParaSubir(archivo)).pipe(
+          switchMap((archivoLigero) => this.ventasService.subirComprobantePago(archivoLigero))
+        );
         return acc;
       }, {} as Record<string, Observable<SubirComprobanteResponse>>)
     ).subscribe({
@@ -1075,7 +1123,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         this.confirmando = false;
-        this.checkoutError = err?.error?.detail ?? 'No se pudo subir la foto del comprobante. Intenta nuevamente.';
+        this.checkoutError = mensajeErrorHttp(err, 'No se pudo subir la foto del comprobante. Intenta nuevamente.');
       },
     });
   }
@@ -1113,9 +1161,14 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cargarPrimeraPaginaProductosPOS();
       },
       error: (err) => {
-        this.checkoutError = err?.error?.detail ?? 'No se pudo registrar la venta. Intenta nuevamente.';
+        this.checkoutError = mensajeErrorHttp(err, 'No se pudo registrar la venta. Intenta nuevamente.');
         this.pasoCheckout = 'formulario';
         this.confirmando = false;
+        // 400/409 = el stock cambió (otra venta, otra caja): se recarga el catálogo
+        // para que el carrito y los máximos reflejen la realidad y el usuario pueda corregir.
+        if (err?.status === 400 || err?.status === 409) {
+          this.cargarPrimeraPaginaProductosPOS();
+        }
       },
     });
   }
@@ -1306,7 +1359,7 @@ export class VentasComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.registrandoDevolucion.set(false);
-          this.errorDevolucion.set(err?.error?.detail ?? 'No se pudo registrar la devolución.');
+          this.errorDevolucion.set(mensajeErrorHttp(err, 'No se pudo registrar la devolución.'));
         },
       });
   }

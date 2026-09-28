@@ -21,6 +21,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ModalBrandHeaderComponent } from '../../../../shared/modal-brand-header/modal-brand-header';
 import { AuthService } from '../../../../core/auth';
 import { environment } from '../../../../../environments/environment';
+import { mensajeErrorHttp } from '../../../../utils/errores-http';
 import {
   exportarBoletaSimple,
   exportarBoletaVenta80mm,
@@ -491,7 +492,7 @@ export class HistorialVentasComponent implements OnInit {
         },
         error: (err: any) => {
           this.eliminando.set(false);
-          this.errorEliminar.set(err?.error?.detail ?? 'No se pudo eliminar la venta.');
+          this.errorEliminar.set(mensajeErrorHttp(err, 'No se pudo eliminar la venta.'));
         },
       });
   }
@@ -523,7 +524,7 @@ export class HistorialVentasComponent implements OnInit {
         },
         error: (err) => {
           this.eliminandoDevolucion.set(false);
-          this.errorEliminarDevolucion.set(err?.error?.detail ?? 'No se pudo eliminar la devolución.');
+          this.errorEliminarDevolucion.set(mensajeErrorHttp(err, 'No se pudo eliminar la devolución.'));
         },
       });
   }
@@ -609,7 +610,7 @@ export class HistorialVentasComponent implements OnInit {
         },
         error: (err) => {
           this.registrandoDevolucion.set(false);
-          this.errorDevolucion.set(err?.error?.detail ?? 'No se pudo registrar la devolución.');
+          this.errorDevolucion.set(mensajeErrorHttp(err, 'No se pudo registrar la devolución.'));
         },
       });
   }

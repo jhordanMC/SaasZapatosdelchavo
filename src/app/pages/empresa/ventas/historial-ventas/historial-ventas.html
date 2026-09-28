@@ -280,7 +280,7 @@
           <div class="detalle-producto-info">
             <span class="detalle-producto-nombre">{{ d.nombre_producto ?? 'Producto eliminado' }}</span>
             <span class="detalle-producto-meta">
-              Talla {{ d.talla ?? '—' }} · {{ d.cantidad }} unidad(es) · S/{{ d.precio_unitario.toFixed(2) }} c/u
+              {{ d.talla ? 'Talla ' + d.talla + ' · ' : '' }}{{ d.cantidad }} unidad(es) · S/{{ d.precio_unitario.toFixed(2) }} c/u
               <span *ngIf="d.descuento_monto > 0"> · Descuento −S/{{ d.descuento_monto.toFixed(2) }}</span>
             </span>
             <span class="detalle-producto-meta">Desde: {{ d.nombre_local ?? d.nombre_almacen ?? '—' }}</span>
@@ -395,7 +395,7 @@
           <div class="devolucion-linea-info">
             <span class="devolucion-linea-nombre">{{ l.detalle.nombre_producto ?? 'Producto' }}</span>
             <span class="devolucion-linea-meta">
-              Talla {{ l.detalle.talla ?? '—' }} · {{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
+              {{ l.detalle.talla ? 'Talla ' + l.detalle.talla + ' · ' : '' }}{{ l.disponible }} de {{ l.detalle.cantidad }} disponible(s) para devolver
             </span>
           </div>
           <div class="devolucion-linea-controles" *ngIf="l.disponible > 0">
@@ -491,7 +491,7 @@
       <p class="detalle-subtitulo">Productos devueltos</p>
       <ul class="devolucion-item-lineas">
         <li *ngFor="let d of dev.detalles">
-          {{ d.cantidad }}× {{ d.nombre_producto ?? 'Producto' }} (talla {{ d.talla ?? '—' }}) — S/{{ d.monto_devuelto.toFixed(2) }}
+          {{ d.cantidad }}× {{ d.nombre_producto ?? 'Producto' }} {{ d.talla ? '(talla ' + d.talla + ')' : '' }} — S/{{ d.monto_devuelto.toFixed(2) }}
           <span [ngClass]="d.restaurar_stock ? 'texto-ok' : 'texto-alerta'">
             {{ d.restaurar_stock ? 'vuelve a stock' : 'no vuelve a stock' }}
           </span>

@@ -38,7 +38,7 @@ export interface SedePOSRead {
 export interface VariantePOSRead {
   id_variante: string;
   talla: string | null;
-  sku: string;
+  sku: string | null;
   stock_disponible: number;
   id_ubicacion_origen: string | null;
   nombre_ubicacion: string | null;
@@ -282,6 +282,16 @@ export const ETIQUETAS_TIPO_DEVOLUCION: Record<TipoDevolucion, string> = {
 // Carrito local — estado en memoria, no va al backend
 // ---------------------------------------------------------------------------
 
+/**
+ * Clave única de una línea del carrito: variante + sede de origen.
+ * Una misma variante puede tener stock en varias sedes (crear_producto ahora
+ * agrupa por talla), y vender 2 uds. desde la sede A y 3 desde la B son dos
+ * líneas distintas; con solo `varianteId` se mezclaban en una sola.
+ */
+export function claveCarrito(varianteId: string, idUbicacionOrigen: string | null): string {
+  return `${varianteId}|${idUbicacionOrigen ?? ''}`;
+}
+
 export interface ItemCarrito {
   /** UUID de la variante seleccionada. */
   varianteId: string;
@@ -477,11 +487,12 @@ export class VentasService {
 
   agregarAlCarrito(item: ItemCarrito): void {
     this.carrito.update((lista) => {
-      const existente = lista.find((i) => i.varianteId === item.varianteId);
+      const clave = claveCarrito(item.varianteId, item.idUbicacionOrigen);
+      const existente = lista.find((i) => claveCarrito(i.varianteId, i.idUbicacionOrigen) === clave);
       if (existente) {
-        // Si ya está en el carrito, suma la cantidad
+        // Si ya está en el carrito (misma variante y misma sede), suma la cantidad
         return lista.map((i) => {
-          if (i.varianteId === item.varianteId) {
+          if (claveCarrito(i.varianteId, i.idUbicacionOrigen) === clave) {
             let sum = i.cantidad + item.cantidad;
             if (i.stockMaximo !== undefined && sum > i.stockMaximo) {
               sum = i.stockMaximo;
@@ -495,17 +506,19 @@ export class VentasService {
     });
   }
 
-  quitarDelCarrito(varianteId: string): void {
-    this.carrito.update((lista) => lista.filter((i) => i.varianteId !== varianteId));
+  quitarDelCarrito(clave: string): void {
+    this.carrito.update((lista) =>
+      lista.filter((i) => claveCarrito(i.varianteId, i.idUbicacionOrigen) !== clave)
+    );
   }
 
   editarItemCarrito(
-    varianteId: string,
+    clave: string,
     cambios: Partial<Pick<ItemCarrito, 'cantidad' | 'descuentoMonto' | 'tipoDescuento'>>
   ): void {
     this.carrito.update((lista) =>
       lista.map((i) => {
-        if (i.varianteId === varianteId) {
+        if (claveCarrito(i.varianteId, i.idUbicacionOrigen) === clave) {
           let nuevaCant = cambios.cantidad ?? i.cantidad;
           if (i.stockMaximo !== undefined && nuevaCant > i.stockMaximo) {
             nuevaCant = i.stockMaximo;
