@@ -32,8 +32,12 @@ export interface UsoIAEmpresa {
 
 export type ContextoCirobot = 'empresa' | 'admin';
 
+export type RolCirobot = 'admin' | 'dueño' | 'vendedor';
+
 export interface CirobotCallbacks {
   contexto: ContextoCirobot;
+  // Opcional: si el host no lo pasa, se asume dueño (comportamiento anterior).
+  rol?: RolCirobot;
   onEnviarMensaje: (texto: string) => Promise<AsistenteRespuesta>;
   onNavegar: (vista: string) => void;
   // Opcional a propósito: si el host (Angular) no lo pasa, ChatPanel

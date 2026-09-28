@@ -21,6 +21,7 @@ const VISTA_A_RUTA: Record<string, string> = {
   // Empresa
   dashboard: '/empresa/dashboard',
   inventario: '/empresa/inventario',
+  catalogo: '/empresa/catalogo',
   ventas: '/empresa/ventas',
   historial_ventas: '/empresa/ventas/historial',
   proformas: '/empresa/ventas/proformas',
@@ -33,6 +34,7 @@ const VISTA_A_RUTA: Record<string, string> = {
   actividad: '/admin/actividad',
   anuncios: '/admin/anuncios',
   tickets: '/admin/tickets',
+  reclamaciones: '/admin/reclamaciones',
 };
 
 @Component({
@@ -58,8 +60,12 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
     // constante acá. Sirve para que la UI (chips iniciales, etc.) no le
     // ofrezca a un admin acciones que el backend igual le va a rechazar.
     const contexto = this.authService.tieneRol('admin') ? 'admin' : 'empresa';
+    // Rol solo para que la UI no ofrezca chips que el backend igual le va a negar
+    // (el permiso real lo valida el backend por rol y vistas; ver chatbot/mcp/permisos.py).
+    const rol = this.authService.tieneRol('admin') ? 'admin' : this.authService.tieneRol('dueño') ? 'dueño' : 'vendedor';
     await mountCirobot(this.hostRef.nativeElement, {
       contexto,
+      rol,
       onEnviarMensaje: (texto: string) => this.enviarMensaje(texto),
       onNavegar: (vista: string) => this.navegar(vista),
       onObtenerUsoIA: () => this.obtenerUsoIA(),

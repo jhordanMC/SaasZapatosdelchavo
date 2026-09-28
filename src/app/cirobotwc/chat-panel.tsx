@@ -16,8 +16,10 @@ type ModoVentana = 'flotante' | 'fullscreen';
 // Distintos según contexto — un admin no tiene tools de inventario/KPIs/ventas
 // (ver ChatbotService._tool_servers_para en el backend), así que ofrecerle esos
 // chips sería un callejón sin salida: Gemini respondería "no tengo acceso".
-const CHIPS_INICIALES_EMPRESA = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos'];
-const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard', 'Tickets'];
+const CHIPS_INICIALES_EMPRESA = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos', 'Catálogos'];
+// El vendedor no tiene Dashboard, Finanzas, Catálogos ni KPIs (ver chatbot/mcp/permisos.py en el backend).
+const CHIPS_INICIALES_VENDEDOR = ['Inventario', 'Ventas', 'Historial de ventas', 'Proformas', 'Ticket', 'Productos'];
+const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard', 'Tickets', 'Reclamaciones'];
 
 /**
  * Ventana de chat de Cirobot. Mensajes tipo ChatGPT/Claude (burbuja verde
@@ -103,7 +105,12 @@ export function ChatPanel({
   }
 
   const huboConversacion = mensajes.length > 0;
-  const chipsIniciales = callbacks.contexto === 'admin' ? CHIPS_INICIALES_ADMIN : CHIPS_INICIALES_EMPRESA;
+  const chipsIniciales =
+    callbacks.contexto === 'admin'
+      ? CHIPS_INICIALES_ADMIN
+      : callbacks.rol === 'vendedor'
+        ? CHIPS_INICIALES_VENDEDOR
+        : CHIPS_INICIALES_EMPRESA;
   const estadoTexto = cargando
     ? 'Analizando empresa…'
     : proveedorActual
