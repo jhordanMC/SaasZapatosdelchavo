@@ -599,4 +599,77 @@ export const CIROBOT_CSS = `
   }
   .cbot-estado-dot-activo, .cbot-pensando-barra span { animation: none !important; }
 }
+/* ══════════════ Rediseño Varian Assist (logo V + mascota + chips) ══════════════ */
+
+/* Logo con estados */
+.cbot-varian-logo { position: relative; display: inline-flex; flex-shrink: 0; line-height: 0; }
+.cbot-varian-logo > svg { display: block; filter: drop-shadow(0 3px 8px rgba(17,123,61,0.28)); border-radius: 22%; }
+.cbot-varian-thinking > svg { animation: cbot-logo-pensando 1.4s ease-in-out infinite; }
+.cbot-varian-error > svg { filter: drop-shadow(0 3px 8px rgba(210,147,55,0.35)); }
+@keyframes cbot-logo-pensando {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.72; transform: scale(0.94); }
+}
+.cbot-varian-badge {
+  position: absolute; right: -4px; bottom: -4px;
+  border-radius: 50%; border: 2px solid #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  animation: cbot-badge-in 0.2s cubic-bezier(0.22,0.8,0.35,1) both;
+}
+.cbot-varian-badge-ok { background: #16a34a; }
+.cbot-varian-badge-error { background: #f59e0b; }
+@keyframes cbot-badge-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+
+/* Header un poco más grande, título más presente */
+.cbot-header { height: 76px; }
+.cbot-header-titulo { font-size: 16.5px; letter-spacing: -0.01em; }
+.cbot-header-sub { font-size: 12px; }
+.cbot-estado-dot { width: 7px; height: 7px; }
+.cbot-mini-barra { padding: 8px 16px 8px 8px; }
+
+/* Bienvenida con mascota */
+.cbot-bienvenida { padding: 22px 22px 6px; }
+.cbot-bienvenida-mascota { position: relative; width: 190px; margin: 0 auto 10px; display: flex; justify-content: center; }
+.cbot-bienvenida-mascota img {
+  position: relative; display: block; width: 132px; height: auto;
+  animation: cbot-mascota-flota 3.6s ease-in-out infinite;
+}
+@keyframes cbot-mascota-flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.cbot-destellos {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  fill: none; stroke: #7fe0ab; stroke-width: 3.5; stroke-linecap: round;
+}
+.cbot-destellos path { animation: cbot-destello 2.4s ease-in-out infinite; }
+.cbot-destellos path:nth-child(2n) { animation-delay: 0.6s; }
+.cbot-destellos path:nth-child(3n) { animation-delay: 1.2s; }
+@keyframes cbot-destello { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+.cbot-bienvenida-titulo { font-size: 21px; letter-spacing: -0.02em; margin-bottom: 8px; }
+.cbot-bienvenida-sub { font-size: 13.5px; }
+
+/* Chips: pastillas con ícono */
+.cbot-chips { gap: 9px; padding: 6px 20px 18px; justify-content: center; }
+.cbot-chip-icono {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; padding: 8px 16px 8px 13px;
+  background: #F4FBF7;
+  border-color: #CFEBDB;
+}
+.cbot-chip-icono svg { color: var(--cbot-verde); flex-shrink: 0; }
+
+/* Input tipo píldora + botón enviar cuadrado redondeado */
+.cbot-input-area { gap: 8px; padding: 14px 16px 16px; }
+.cbot-input { border-radius: 999px; padding: 13px 18px; background: #F5F7F6; border-color: #E5E9E7; }
+.cbot-enviar { width: 46px; height: 46px; border-radius: 15px; background: linear-gradient(135deg, #16a34a, #117b3d); box-shadow: 0 6px 14px rgba(17,123,61,0.25); }
+.cbot-enviar:hover:not(:disabled) { background: linear-gradient(135deg, #138A52, #0F6B40); }
+
+@media (max-width: 480px) {
+  .cbot-bienvenida-mascota { width: 160px; }
+  .cbot-bienvenida-mascota img { width: 108px; }
+  .cbot-bienvenida-titulo { font-size: 18px; }
+  .cbot-chips { padding: 4px 14px 14px; gap: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cbot-varian-thinking > svg, .cbot-bienvenida-mascota img, .cbot-destellos path, .cbot-varian-badge { animation: none !important; }
+}
 `;

@@ -220,3 +220,153 @@ export const ICONO_POR_KPI: Record<string, (props: Props) => ReactElement> = {
   planes_contratados: IconoTicket,
   empresas_en_riesgo: IconoAlerta,
 };
+
+/* ── Íconos de los chips de bienvenida ──
+   Son los MISMOS trazos que usa el sidebar de la app (shared/sidebar) para
+   cada sección, así el chip "Inventario" se ve igual que la pantalla de
+   Inventario, etc. KPIs, Productos, Historial y Proformas no tienen ítem
+   propio en el sidebar y usan íconos lucide del mismo estilo. */
+export function IconoNavInventario({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+export function IconoNavVentas({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  );
+}
+
+export function IconoDashboard({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
+export function IconoFinanzas({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
+}
+
+export function IconoCatalogo({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  );
+}
+
+export function IconoTickets({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+export function IconoNavEmpresas({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13" />
+      <path d="M7 21V12h10v9" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+export function IconoSuscripciones({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  );
+}
+
+export function IconoActividad({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+}
+
+export function IconoAnuncios({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
+export function IconoReclamaciones({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M12 8v4" />
+      <path d="M12 16h.01" />
+    </svg>
+  );
+}
+
+export function IconoKpis({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+      <path d="M7 16v-3" />
+      <path d="M12 16V8" />
+      <path d="M17 16v-6" />
+    </svg>
+  );
+}
+
+export function IconoProductos({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+      <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconoHistorial({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l4 2" />
+    </svg>
+  );
+}
+
+export function IconoProforma({ size = 18, className }: Props) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+    </svg>
+  );
+}

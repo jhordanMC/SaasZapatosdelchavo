@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Markdown } from './markdown';
 import { PanelInteligente } from './panel-inteligente';
 import { etiquetaHerramienta, ETIQUETA_PROVEEDOR } from './etiquetas';
-import { IconoAdjuntar, IconoBot, IconoCerrar, IconoEnviar, IconoExpandir, IconoMicrofono, IconoMinimizar } from './iconos';
+import {
+  IconoActividad, IconoAdjuntar, IconoAnuncios, IconoCatalogo, IconoCerrar, IconoDashboard, IconoNavEmpresas,
+  IconoEnviar, IconoExpandir, IconoFinanzas, IconoHistorial, IconoNavInventario, IconoKpis, IconoMicrofono,
+  IconoMinimizar, IconoProductos, IconoProforma, IconoReclamaciones, IconoSuscripciones, IconoTickets, IconoNavVentas,
+} from './iconos';
+import { VarianLogo, type EstadoVarian } from './varian-logo';
 import type { CirobotCallbacks, PanelInteligente as PanelInteligenteTipo, UsoIAEmpresa } from './tipos';
 
 interface Mensaje {
@@ -16,10 +21,24 @@ type ModoVentana = 'flotante' | 'fullscreen';
 // Distintos según contexto — un admin no tiene tools de inventario/KPIs/ventas
 // (ver ChatbotService._tool_servers_para en el backend), así que ofrecerle esos
 // chips sería un callejón sin salida: Gemini respondería "no tengo acceso".
-const CHIPS_INICIALES_EMPRESA = ['Inventario', 'KPIs', 'Ventas', 'Dashboard', 'Ticket', 'Finanzas', 'Productos', 'Catálogos'];
+// Cada chip lleva su ícono (mockup Varian Assist). El texto que se envía al
+// bot sigue siendo `label`, así que el comportamiento no cambia.
+type ChipInicial = { label: string; icono: (p: { size?: number }) => ReactElement };
+const chip = (label: string, icono: ChipInicial['icono']): ChipInicial => ({ label, icono });
+
+const CHIPS_INICIALES_EMPRESA: ChipInicial[] = [
+  chip('Inventario', IconoNavInventario), chip('KPIs', IconoKpis), chip('Ventas', IconoNavVentas), chip('Dashboard', IconoDashboard),
+  chip('Ticket', IconoTickets), chip('Finanzas', IconoFinanzas), chip('Productos', IconoProductos), chip('Catálogos', IconoCatalogo),
+];
 // El vendedor no tiene Dashboard, Finanzas, Catálogos ni KPIs (ver chatbot/mcp/permisos.py en el backend).
-const CHIPS_INICIALES_VENDEDOR = ['Inventario', 'Ventas', 'Historial de ventas', 'Proformas', 'Ticket', 'Productos'];
-const CHIPS_INICIALES_ADMIN = ['Ver empresas', 'Suscripciones', 'Actividad', 'Anuncios', 'Dashboard', 'Tickets', 'Reclamaciones'];
+const CHIPS_INICIALES_VENDEDOR: ChipInicial[] = [
+  chip('Inventario', IconoNavInventario), chip('Ventas', IconoNavVentas), chip('Historial de ventas', IconoHistorial),
+  chip('Proformas', IconoProforma), chip('Ticket', IconoTickets), chip('Productos', IconoProductos),
+];
+const CHIPS_INICIALES_ADMIN: ChipInicial[] = [
+  chip('Ver empresas', IconoNavEmpresas), chip('Suscripciones', IconoSuscripciones), chip('Actividad', IconoActividad), chip('Anuncios', IconoAnuncios),
+  chip('Dashboard', IconoDashboard), chip('Tickets', IconoTickets), chip('Reclamaciones', IconoReclamaciones),
+];
 
 /**
  * Ventana de chat de Cirobot. Mensajes tipo ChatGPT/Claude (burbuja verde
@@ -52,6 +71,9 @@ export function ChatPanel({
   const [panelActual, setPanelActual] = useState<PanelInteligenteTipo | null>(null);
   const [proveedorActual, setProveedorActual] = useState<'gemini' | 'groq' | null>(null);
   const [usoIA, setUsoIA] = useState<UsoIAEmpresa | null>(null);
+  // Estado visual del logo: thinking mientras espera, success/error ~2.5s
+  // tras la respuesta y luego vuelve a online.
+  const [resultado, setResultado] = useState<'success' | 'error' | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +84,12 @@ export function ChatPanel({
   useEffect(() => {
     if (!minimizado) inputRef.current?.focus();
   }, [minimizado]);
+
+  useEffect(() => {
+    if (!resultado) return;
+    const id = window.setTimeout(() => setResultado(null), 2500);
+    return () => window.clearTimeout(id);
+  }, [resultado]);
 
   // Carga el cupo al abrir el chat (una vez), sin bloquear la UI si falla
   // o si el host (Angular) no pasó el callback — la barra simplemente no
@@ -78,10 +106,12 @@ export function ChatPanel({
     setMensajes((prev) => [...prev, { rol: 'usuario', texto: limpio }]);
     setInput('');
     setSugerencias([]);
+    setResultado(null);
     setCargando(true);
 
     try {
       const respuesta = await callbacks.onEnviarMensaje(limpio);
+      setResultado('success');
       setMensajes((prev) => [...prev, { rol: 'bot', texto: respuesta.respuesta, herramientas: respuesta.herramientas }]);
       setSugerencias(respuesta.sugerencias ?? []);
       setPanelActual(respuesta.panel ?? null);
@@ -95,6 +125,7 @@ export function ChatPanel({
         callbacks.onObtenerUsoIA().then(setUsoIA).catch(() => {});
       }
     } catch {
+      setResultado('error');
       setMensajes((prev) => [
         ...prev,
         { rol: 'bot', texto: 'No pude conectarme ahora mismo. Intenta de nuevo en un momento.' },
@@ -111,6 +142,7 @@ export function ChatPanel({
       : callbacks.rol === 'vendedor'
         ? CHIPS_INICIALES_VENDEDOR
         : CHIPS_INICIALES_EMPRESA;
+  const estadoLogo: EstadoVarian = cargando ? 'thinking' : (resultado ?? 'online');
   const estadoTexto = cargando
     ? 'Analizando empresa…'
     : proveedorActual
@@ -120,7 +152,7 @@ export function ChatPanel({
   if (minimizado) {
     return (
       <button className="cbot-mini-barra" onClick={onRestaurar} aria-label="Restaurar Varian Assist">
-        <span className="cbot-avatar cbot-avatar-mini"><IconoBot size={14} /></span>
+        <VarianLogo status={estadoLogo} size={28} />
         <span className="cbot-mini-texto">Varian Assist</span>
         <span className={`cbot-estado-dot ${cargando ? 'cbot-estado-dot-activo' : ''}`} />
       </button>
@@ -130,7 +162,7 @@ export function ChatPanel({
   return (
     <div className={`cbot-panel cbot-panel-${modo} ${panelActual ? 'cbot-con-panel-lateral' : ''}`}>
       <header className="cbot-header">
-        <div className="cbot-avatar"><IconoBot size={19} className="cbot-avatar-icono" /></div>
+        <VarianLogo status={estadoLogo} size={42} />
         <div className="cbot-header-info">
           <span className="cbot-header-titulo">Varian Assist</span>
           <span className="cbot-header-sub">
@@ -161,6 +193,13 @@ export function ChatPanel({
           <div className="cbot-mensajes">
             {!huboConversacion && (
               <div className="cbot-bienvenida">
+                <div className="cbot-bienvenida-mascota" aria-hidden="true">
+                  <svg className="cbot-destellos" viewBox="0 0 200 120">
+                    <path d="M28 40 L40 48" /><path d="M20 66 L34 66" /><path d="M28 92 L40 84" />
+                    <path d="M172 40 L160 48" /><path d="M180 66 L166 66" /><path d="M172 92 L160 84" />
+                  </svg>
+                  <img src="/varian-mascota.png" alt="" width="132" height="123" draggable={false} />
+                </div>
                 <p className="cbot-bienvenida-titulo">¿En qué te ayudo hoy?</p>
                 <p className="cbot-bienvenida-sub">Pregúntame cualquier cosa sobre tu empresa.</p>
               </div>
@@ -192,9 +231,10 @@ export function ChatPanel({
 
           {!huboConversacion && !cargando && (
             <div className="cbot-chips">
-              {chipsIniciales.map((s) => (
-                <button key={s} className="cbot-chip" onClick={() => enviar(s)}>
-                  {s}
+              {chipsIniciales.map(({ label, icono: Icono }) => (
+                <button key={label} className="cbot-chip cbot-chip-icono" onClick={() => enviar(label)}>
+                  <Icono size={15} />
+                  {label}
                 </button>
               ))}
             </div>
