@@ -40,6 +40,32 @@ const CHIPS_INICIALES_ADMIN: ChipInicial[] = [
   chip('Dashboard', IconoDashboard), chip('Tickets', IconoTickets), chip('Reclamaciones', IconoReclamaciones),
 ];
 
+// Las sugerencias que llegan DESPUÉS de cada respuesta vienen del backend como
+// texto suelto ("Ver Ventas", "Analizar KPIs"...). Se les asigna el mismo
+// ícono que a los chips iniciales según la palabra clave; el orden importa
+// ("historial de ventas" antes que "ventas"). Sin coincidencia = sin ícono.
+const ICONOS_POR_TEXTO: Array<[RegExp, ChipInicial['icono']]> = [
+  [/historial/, IconoHistorial],
+  [/proforma/, IconoProforma],
+  [/kpi|analiz|indicador|m[eé]trica/, IconoKpis],
+  [/inventario|stock/, IconoNavInventario],
+  [/venta/, IconoNavVentas],
+  [/dashboard|panel/, IconoDashboard],
+  [/finanza|ingreso|utilidad|margen/, IconoFinanzas],
+  [/cat[aá]logo/, IconoCatalogo],
+  [/ticket/, IconoTickets],
+  [/producto/, IconoProductos],
+  [/suscripci/, IconoSuscripciones],
+  [/actividad/, IconoActividad],
+  [/anuncio/, IconoAnuncios],
+  [/reclamaci/, IconoReclamaciones],
+  [/empresa/, IconoNavEmpresas],
+];
+function iconoParaTexto(texto: string): ChipInicial['icono'] | null {
+  const t = texto.toLowerCase();
+  return ICONOS_POR_TEXTO.find(([re]) => re.test(t))?.[1] ?? null;
+}
+
 /**
  * Ventana de chat de Cirobot. Mensajes tipo ChatGPT/Claude (burbuja verde
  * usuario, card gris muy claro IA — nunca oscuro), el Panel Inteligente
@@ -241,11 +267,15 @@ export function ChatPanel({
           )}
           {huboConversacion && sugerencias.length > 0 && !cargando && (
             <div className="cbot-chips">
-              {sugerencias.map((s) => (
-                <button key={s} className="cbot-chip" onClick={() => enviar(s)}>
-                  {s}
-                </button>
-              ))}
+              {sugerencias.map((s) => {
+                const Icono = iconoParaTexto(s);
+                return (
+                  <button key={s} className={`cbot-chip ${Icono ? 'cbot-chip-icono' : ''}`} onClick={() => enviar(s)}>
+                    {Icono && <Icono size={15} />}
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           )}
 
