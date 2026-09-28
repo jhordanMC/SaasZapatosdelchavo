@@ -103,18 +103,19 @@ export function ChatPanel({
   const [resultado, setResultado] = useState<'success' | 'error' | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Dictado por voz: el texto reconocido se escribe en el input (se ve mientras
-  // hablas) y se le antepone lo que ya estaba escrito. NO se envía solo: el
-  // usuario lo revisa y da Enter, por si el reconocimiento se equivoca.
+  // Dictado por voz: el texto reconocido se escribe en el input mientras hablas
+  // (se le antepone lo que ya estaba escrito) y, cuando terminas de hablar,
+  // se ENVÍA solo. Si hubo error o no se entendió nada, no se envía.
   const baseDictadoRef = useRef('');
-  const { soportado: vozSoportada, escuchando, error: errorVoz, iniciar, detener, limpiarError } = useDictado((texto) => {
-    const base = baseDictadoRef.current;
-    setInput(base ? `${base} ${texto}` : texto);
-  });
+  const unirConBase = (texto: string) => (baseDictadoRef.current ? `${baseDictadoRef.current} ${texto}` : texto);
+  const { soportado: vozSoportada, escuchando, error: errorVoz, iniciar, detener, limpiarError } = useDictado(
+    (texto) => setInput(unirConBase(texto)),
+    (texto) => enviar(unirConBase(texto)),
+  );
 
   function alternarMicrofono() {
     if (escuchando) {
-      detener();
+      detener(); // termina la sesión y envía lo dictado
       return;
     }
     baseDictadoRef.current = input.trim();
@@ -127,7 +128,7 @@ export function ChatPanel({
 
   useEffect(() => {
     if (!minimizado) inputRef.current?.focus();
-    else detener(); // minimizado: no dejar el micrófono abierto en segundo plano
+    else detener(true); // minimizado: no dejar el micrófono abierto ni enviar nada
   }, [minimizado, detener]);
 
   useEffect(() => {
@@ -151,7 +152,7 @@ export function ChatPanel({
   async function enviar(texto: string) {
     const limpio = texto.trim();
     if (!limpio || cargando) return;
-    detener();
+    detener(true); // Enter a mano durante el dictado: cortar SIN enviar doble
 
     setMensajes((prev) => [...prev, { rol: 'usuario', texto: limpio }]);
     setInput('');
@@ -336,11 +337,11 @@ export function ChatPanel({
             <input
               ref={inputRef}
               className="cbot-input"
-              placeholder={escuchando ? 'Escuchando… habla ahora' : 'Pregúntame cualquier cosa sobre tu empresa…'}
+              placeholder={escuchando ? 'Escuchando… habla y se envía solo' : 'Pregúntame cualquier cosa sobre tu empresa…'}
               value={input}
               disabled={cargando}
               onChange={(e) => {
-                if (escuchando) detener(); // si el usuario escribe a mano, se corta el dictado
+                if (escuchando) detener(true); // si el usuario escribe a mano, se corta el dictado sin enviar
                 setInput(e.target.value);
               }}
             />
@@ -352,8 +353,8 @@ export function ChatPanel({
               className={`cbot-input-icon cbot-mic ${escuchando ? 'cbot-mic-activo' : ''}`}
               disabled={!vozSoportada || cargando}
               onClick={alternarMicrofono}
-              title={!vozSoportada ? 'Tu navegador no soporta dictado por voz (prueba Chrome o Edge)' : escuchando ? 'Detener dictado' : 'Dictar por voz'}
-              aria-label={escuchando ? 'Detener dictado' : 'Dictar por voz'}
+              title={!vozSoportada ? 'Tu navegador no soporta dictado por voz (prueba Chrome o Edge)' : escuchando ? 'Terminar y enviar' : 'Dictar por voz'}
+              aria-label={escuchando ? 'Terminar dictado y enviar' : 'Dictar por voz'}
               aria-pressed={escuchando}
             >
               <IconoMicrofono />

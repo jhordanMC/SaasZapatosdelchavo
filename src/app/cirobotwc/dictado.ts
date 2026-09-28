@@ -9,6 +9,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * Requiere HTTPS (o localhost) y que el usuario dé permiso al micrófono.
  * Ojo: en Chrome/Edge el audio se procesa en el servicio de voz del
  * navegador, por eso necesita internet.
+ *
+ * Al terminar la sesión (el usuario dejó de hablar, o tocó el mic para
+ * cortar) se llama `onFin` con el texto final, para que el chat lo envíe
+ * solo. NO se llama si hubo error, si no se reconoció nada, o si la sesión
+ * se canceló a propósito (`detener(true)`: el usuario escribió a mano,
+ * dio Enter, minimizó o cerró el chat) — así nunca se envía doble.
  */
 
 // lib.dom de TypeScript no trae estos tipos, se declara lo mínimo que se usa.
@@ -49,7 +55,7 @@ const MENSAJES_ERROR: Record<string, string> = {
   network: 'El dictado necesita conexión a internet.',
 };
 
-export function useDictado(onTexto: (texto: string) => void, idioma = 'es-PE') {
+export function useDictado(onTexto: (texto: string) => void, onFin: (texto: string) => void, idioma = 'es-PE') {
   const Constructor = obtenerConstructor();
   const [escuchando, setEscuchando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,14 +64,26 @@ export function useDictado(onTexto: (texto: string) => void, idioma = 'es-PE') {
   // un ref para que la sesión de reconocimiento siempre llame a la última.
   const onTextoRef = useRef(onTexto);
   onTextoRef.current = onTexto;
+  const onFinRef = useRef(onFin);
+  onFinRef.current = onFin;
+  // Estado de la sesión en curso (no necesita re-render, por eso son refs).
+  const ultimoTextoRef = useRef('');
+  const canceladoRef = useRef(false);
+  const huboErrorRef = useRef(false);
 
-  const detener = useCallback(() => {
-    recRef.current?.stop();
+  /** `cancelar = true` corta sin enviar lo dictado; false lo deja terminar y enviar. */
+  const detener = useCallback((cancelar = false) => {
+    if (!recRef.current) return;
+    if (cancelar) canceladoRef.current = true;
+    recRef.current.stop();
   }, []);
 
   const iniciar = useCallback(() => {
     if (!Constructor || recRef.current) return;
     setError(null);
+    ultimoTextoRef.current = '';
+    canceladoRef.current = false;
+    huboErrorRef.current = false;
 
     const rec = new Constructor();
     rec.lang = idioma;
@@ -78,15 +96,22 @@ export function useDictado(onTexto: (texto: string) => void, idioma = 'es-PE') {
         .map((r) => r[0]?.transcript ?? '')
         .join('')
         .trim();
+      ultimoTextoRef.current = texto;
       onTextoRef.current(texto);
     };
     rec.onerror = (e) => {
       // 'aborted' = lo cancelamos nosotros (cerrar/minimizar), no es un error.
+      huboErrorRef.current = true;
       if (e.error !== 'aborted') setError(MENSAJES_ERROR[e.error] ?? 'No pude usar el micrófono. Intenta de nuevo.');
     };
     rec.onend = () => {
+      // recRef se limpia ANTES de llamar onFin: el envío llama detener() y no
+      // debe encontrar una sesión viva.
       recRef.current = null;
       setEscuchando(false);
+      const texto = ultimoTextoRef.current;
+      ultimoTextoRef.current = '';
+      if (texto && !canceladoRef.current && !huboErrorRef.current) onFinRef.current(texto);
     };
 
     recRef.current = rec;
@@ -100,7 +125,13 @@ export function useDictado(onTexto: (texto: string) => void, idioma = 'es-PE') {
   }, [Constructor, idioma]);
 
   // Al desmontar (cerrar el chat) se libera el micrófono.
-  useEffect(() => () => recRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      canceladoRef.current = true;
+      recRef.current?.abort();
+    },
+    [],
+  );
 
   return { soportado: Constructor !== null, escuchando, error, iniciar, detener, limpiarError: () => setError(null) };
 }
