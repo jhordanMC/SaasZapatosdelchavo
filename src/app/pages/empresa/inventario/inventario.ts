@@ -693,6 +693,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Abre el paso "Editar talla y stock" para una fila ya existente, guardando una copia por si cancela. */
   abrirEditarTalla(index: number): void {
+    this.errorModal.set(null);
     this.varianteEditandoSnapshot = { ...this.form.variantes[index] };
     this.varianteEditandoIndex = index;
     this.vistaModal = 'talla';
@@ -700,6 +701,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** "+ Agregar talla": crea la fila y abre directo su edición (sin snapshot: si cancela, se descarta entera). */
   abrirNuevaTalla(): void {
+    this.errorModal.set(null);
     this.form.variantes.push(this.nuevaFilaVarianteVacia());
     this.varianteEditandoSnapshot = null;
     this.varianteEditandoIndex = this.form.variantes.length - 1;
@@ -709,6 +711,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Vuelve al resumen. Descarta la fila si era nueva, o restaura su snapshot si ya existía. */
   cancelarEdicionTalla(): void {
     if (this.varianteEditandoIndex === null) return;
+    this.errorModal.set(null);
     if (this.varianteEditandoSnapshot) {
       this.form.variantes[this.varianteEditandoIndex] = this.varianteEditandoSnapshot;
     } else {
@@ -721,9 +724,55 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Confirma los cambios de la talla actual y vuelve al resumen (se persiste recién al guardar el producto). */
   guardarCambiosTalla(): void {
+    const index = this.varianteEditandoIndex;
+    if (index === null) return;
+    const fila = this.form.variantes[index];
+
+    const error = this.validarFilaVariante(fila) ?? this.validarDuplicadoFila(index);
+    if (error) {
+      // Se queda en el paso de edición y muestra el motivo, en vez de cerrar
+      // como si todo hubiera salido bien.
+      this.errorModal.set(error);
+      return;
+    }
+
+    fila.talla = fila.talla.trim();
+    fila.sku = fila.sku?.trim() || null;
+    fila.codigo_barras = fila.codigo_barras?.trim() || null;
+    this.errorModal.set(null);
     this.varianteEditandoSnapshot = null;
     this.varianteEditandoIndex = null;
     this.vistaModal = 'producto';
+  }
+
+  /** ¿La fila tiene algo escrito? La talla es opcional: una fila con solo sede + stock es válida. */
+  private filaTieneDatos(v: VarianteFormItem): boolean {
+    return !!(v.talla.trim() || v.cantidad.trim() || v.sku?.trim() || v.codigo_barras?.trim());
+  }
+
+  /** Validaciones de una fila de stock (mismas reglas que el backend). Devuelve el mensaje o null. */
+  private validarFilaVariante(v: VarianteFormItem): string | null {
+    if (v.talla.trim().length > 20) return 'La talla no puede tener más de 20 caracteres.';
+    if (!v.ubicacion) return 'Elige el local o almacén donde está este stock.';
+    const cantidad = v.cantidad.trim();
+    if (cantidad === '') return 'Ingresa el stock (si no tienes unidades, escribe 0).';
+    if (!/^\d+$/.test(cantidad)) return 'El stock debe ser un número entero mayor o igual a 0.';
+    if ((v.sku?.trim().length ?? 0) > 100) return 'El SKU no puede tener más de 100 caracteres.';
+    if ((v.codigo_barras?.trim().length ?? 0) > 50) return 'El código de barras no puede tener más de 50 caracteres.';
+    return null;
+  }
+
+  /** Evita repetir (talla, ubicación) contra las demás filas del formulario. */
+  private validarDuplicadoFila(index: number): string | null {
+    const f = this.form.variantes[index];
+    const talla = f.talla.trim().toLowerCase();
+    const repetida = this.form.variantes.some(
+      (o, i) => i !== index && o.ubicacion === f.ubicacion && o.talla.trim().toLowerCase() === talla
+    );
+    if (!repetida) return null;
+    return talla
+      ? `La talla "${f.talla.trim()}" ya está registrada en esa sede. Edita esa fila o usa otra talla.`
+      : 'Ya tienes una fila sin talla para esa sede. Edítala, o agrega una talla para diferenciarlas.';
   }
 
   pedirEliminarTalla(index: number): void {
@@ -812,7 +861,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         this.creandoCategoria.set(false);
-        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo crear la categoría.');
+        this.errorCategoria.set(this.mensajeError(err, 'No se pudo crear la categoría.'));
       },
     });
   }
@@ -843,7 +892,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.eliminandoCategoriaModal.set(false);
       },
       error: (err) => {
-        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo eliminar la categoría.');
+        this.errorCategoria.set(this.mensajeError(err, 'No se pudo eliminar la categoría.'));
         this.categoriaAEliminar = null;
         this.eliminandoCategoriaModal.set(false);
       },
@@ -882,7 +931,66 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return imagenUrl.startsWith('data:') ? imagenUrl : `${environment.apiUrl}${imagenUrl}`;
   }
 
+  /**
+   * Convierte cualquier error HTTP en un mensaje claro para el usuario.
+   * Cubre: sin conexión (status 0), `detail` en texto (HTTPException del
+   * backend), `detail` como lista (422 de validación de Pydantic), y los
+   * códigos típicos (401/403/404/413/429/5xx). Antes solo se leía
+   * `err.error.detail` y un 422 acababa mostrando "[object Object]".
+   */
+  private mensajeError(err: unknown, porDefecto: string): string {
+    const e = err as { status?: number; error?: unknown } | null;
+    const status = e?.status ?? -1;
+    if (status === 0) {
+      return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
+    }
+
+    const cuerpo = e?.error;
+    const detail =
+      cuerpo && typeof cuerpo === 'object' ? (cuerpo as { detail?: unknown }).detail : undefined;
+
+    if (typeof detail === 'string' && detail.trim()) return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      const mensajes = detail.map((d) => this.traducirErrorValidacion(d)).filter((m) => !!m);
+      if (mensajes.length > 0) return mensajes.slice(0, 3).join(' ');
+    }
+
+    switch (status) {
+      case 401: return 'Tu sesión expiró. Vuelve a iniciar sesión.';
+      case 403: return 'No tienes permiso para realizar esta acción.';
+      case 404: return 'No se encontró el registro. Puede que ya se haya eliminado; recarga la página.';
+      case 413: return 'El archivo es demasiado grande.';
+      case 429: return 'Demasiados intentos seguidos. Espera un momento e inténtalo otra vez.';
+    }
+    if (status >= 500) return 'Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.';
+    return porDefecto;
+  }
+
+  /** Un ítem del `detail` de un 422 de FastAPI → frase en español. */
+  private traducirErrorValidacion(d: unknown): string {
+    const item = d as { msg?: string; type?: string; loc?: unknown[]; ctx?: { max_length?: number } } | null;
+    const msg = String(item?.msg ?? '').replace(/^Value error,\s*/i, '');
+    const tipo = String(item?.type ?? '');
+    // Los value_error ya vienen redactados en español desde el backend.
+    if (tipo === 'value_error') return msg;
+
+    const loc = item?.loc ?? [];
+    const campo = String(loc[loc.length - 1] ?? '');
+    const etiquetas: Record<string, string> = {
+      nombre: 'Nombre', talla: 'Talla', cantidad: 'Stock', sku: 'SKU',
+      codigo_barras: 'Código de barras', costo_compra: 'Costo de compra',
+      precio_venta: 'Precio de venta',
+    };
+    const etiqueta = etiquetas[campo];
+    if (!etiqueta) return msg;
+    if (tipo === 'string_too_long') return `${etiqueta}: es demasiado largo (máximo ${item?.ctx?.max_length ?? '?'} caracteres).`;
+    if (tipo === 'greater_than_equal') return `${etiqueta}: no puede ser negativo.`;
+    if (tipo === 'missing' || tipo === 'string_too_short') return `${etiqueta}: es obligatorio.`;
+    return `${etiqueta}: el valor no es válido.`;
+  }
+
   guardar(): void {
+    if (this.guardando()) return; // evita doble clic → doble creación
     if (!this.form.nombre.trim()) {
       this.errorModal.set('El nombre del producto es obligatorio.');
       return;
@@ -904,7 +1012,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.guardando.set(false);
-          this.errorModal.set(err?.error?.detail ?? 'No se pudo subir la foto. Intenta de nuevo.');
+          this.errorModal.set(this.mensajeError(err, 'No se pudo subir la foto. Intenta de nuevo.'));
         },
       });
       return;
@@ -915,29 +1023,28 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Segunda mitad de guardar(): ya con form.fotoUrl resuelto a una URL real (o null). */
   private guardarProductoConDatos(): void {
-    // Validación: cualquier fila con talla escrita pero sin ubicación
-    // seleccionada (ej. el usuario cambió Local/Almacén y no volvió a
-    // elegir una opción del segundo selector) NO debe guardarse en
-    // silencio — antes se descartaba sin avisar, perdiendo la talla.
-    const filasSinUbicacion = this.form.variantes.filter(
-      (v) => v.talla.trim() && !v.ubicacion
-    );
-    if (filasSinUbicacion.length > 0) {
-      this.guardando.set(false);
-      this.errorModal.set(
-        `La talla "${filasSinUbicacion[0].talla.trim()}" no tiene un local o almacén seleccionado. Complétala antes de guardar.`
-      );
-      return;
+    // La talla es OPCIONAL (el sistema vende de todo, no solo calzado): una
+    // fila vale si tiene sede y algún dato. Ninguna fila con datos se
+    // descarta en silencio: o se guarda o se avisa exactamente qué falta.
+    const filasConDatos = this.form.variantes.filter((v) => this.filaTieneDatos(v));
+    for (const fila of filasConDatos) {
+      const error = this.validarFilaVariante(fila);
+      if (error) {
+        this.guardando.set(false);
+        this.errorModal.set(
+          fila.talla.trim() ? `Talla "${fila.talla.trim()}": ${error}` : `Fila sin talla: ${error}`
+        );
+        return;
+      }
     }
 
-    // Construye las variantes filtrando filas incompletas
-    const variantes: VarianteStockInput[] = this.form.variantes
-      .filter((v) => v.talla.trim() && v.ubicacion)
+    // Construye las variantes (las filas totalmente vacías no aportan nada)
+    const variantes: VarianteStockInput[] = filasConDatos
       .map((v) => {
         const [tipo, id] = v.ubicacion.split(':');
         const cantidadNum = parseInt(v.cantidad, 10) || 0;
         return {
-          talla: v.talla.trim(),
+          talla: v.talla.trim() || null,
           cantidad: cantidadNum,
           sku: v.sku?.trim() || null,
           codigo_barras: v.codigo_barras?.trim() || null,
@@ -952,12 +1059,14 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
     // 1. Variantes con combinación (talla + ubicación) duplicada
     const ubicacionesVistas = new Set<string>();
     for (const v of variantes) {
-      const clave = `${v.talla.toLowerCase()}|${v.id_local ?? ''}|${v.id_almacen ?? ''}`;
+      const clave = `${(v.talla ?? '').toLowerCase()}|${v.id_local ?? ''}|${v.id_almacen ?? ''}`;
       if (ubicacionesVistas.has(clave)) {
         const ubicacionStr = v.id_local ? 'el mismo local' : 'el mismo almacén';
         this.guardando.set(false);
         this.errorModal.set(
-          `La talla "${v.talla}" aparece más de una vez para ${ubicacionStr}.`
+          v.talla
+            ? `La talla "${v.talla}" aparece más de una vez para ${ubicacionStr}.`
+            : `Hay más de una fila sin talla para ${ubicacionStr}. Deja una sola o agrega una talla para diferenciarlas.`
         );
         return;
       }
@@ -1021,7 +1130,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           error: (err) => {
             this.guardando.set(false);
             this.errorModal.set(
-              err?.error?.detail ?? 'No se pudo actualizar el producto.'
+              this.mensajeError(err, 'No se pudo actualizar el producto.')
             );
           },
         });
@@ -1048,7 +1157,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
           error: (err) => {
             this.guardando.set(false);
             this.errorModal.set(
-              err?.error?.detail ?? 'No se pudo crear el producto.'
+              this.mensajeError(err, 'No se pudo crear el producto.')
             );
           },
         });
@@ -1078,7 +1187,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => {
         this.eliminandoProducto.set(false);
         this.productoAEliminar = null;
-        this.error.set(err?.error?.detail ?? 'No se pudo eliminar el producto.');
+        this.error.set(this.mensajeError(err, 'No se pudo eliminar el producto.'));
       },
     });
   }
@@ -1153,7 +1262,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.guardandoAlmacenReal.set(false);
-          this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo actualizar el almacén.');
+          this.errorAlmacenReal.set(this.mensajeError(err, 'No se pudo actualizar el almacén.'));
         },
       });
     } else {
@@ -1165,7 +1274,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.guardandoAlmacenReal.set(false);
-          this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo crear el almacén.');
+          this.errorAlmacenReal.set(this.mensajeError(err, 'No se pudo crear el almacén.'));
         },
       });
     }
@@ -1195,7 +1304,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.eliminandoAlmacenModal.set(false);
       },
       error: (err) => {
-        this.errorAlmacenReal.set(err?.error?.detail ?? 'No se pudo eliminar el almacén.');
+        this.errorAlmacenReal.set(this.mensajeError(err, 'No se pudo eliminar el almacén.'));
         this.almacenAEliminar = null;
         this.eliminandoAlmacenModal.set(false);
       },
@@ -1256,7 +1365,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         this.creandoCategoria.set(false);
-        this.errorCategoria.set(err?.error?.detail ?? 'No se pudo actualizar la categoría.');
+        this.errorCategoria.set(this.mensajeError(err, 'No se pudo actualizar la categoría.'));
       },
     });
   }
@@ -1327,7 +1436,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         this.creandoProveedor.set(false);
-        this.errorProveedor.set(err?.error?.detail ?? 'No se pudo actualizar el proveedor.');
+        this.errorProveedor.set(this.mensajeError(err, 'No se pudo actualizar el proveedor.'));
       },
     });
   }
@@ -1357,7 +1466,7 @@ export class InventarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.eliminandoProveedorModal.set(false);
       },
       error: (err) => {
-        this.errorProveedor.set(err?.error?.detail ?? 'No se pudo eliminar el proveedor.');
+        this.errorProveedor.set(this.mensajeError(err, 'No se pudo eliminar el proveedor.'));
         this.proveedorAEliminar = null;
         this.eliminandoProveedorModal.set(false);
       },

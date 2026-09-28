@@ -335,7 +335,7 @@
         <div class="variante-fila variante-fila-resumen" *ngFor="let v of form.variantes; let i = index">
           <div class="field-wrap">
             <span class="mobile-field-label">Talla</span>
-            <span class="resumen-valor resumen-valor-strong">{{ v.talla || '—' }}</span>
+            <span class="resumen-valor resumen-valor-strong">{{ v.talla || 'Sin talla' }}</span>
           </div>
           <div class="field-wrap">
             <span class="mobile-field-label">Almacén / Local</span>
@@ -404,9 +404,9 @@
     <div class="modal-body vista-editar-talla" *ngIf="vistaModal === 'talla' && varianteEditandoIndex !== null">
       <div class="form-row-2 talla-fila-superior">
         <div class="form-row">
-          <label>Talla</label>
+          <label>Talla <span class="label-opcional">(opcional)</span></label>
           <div class="input-con-icono">
-            <input type="text" placeholder="Talla (Ej: 39)" [(ngModel)]="form.variantes[varianteEditandoIndex].talla" aria-label="Talla" />
+            <input type="text" maxlength="20" placeholder="Talla (Ej: 39) — vacío si no aplica" [(ngModel)]="form.variantes[varianteEditandoIndex].talla" aria-label="Talla" />
             <svg class="input-icono" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
@@ -509,7 +509,7 @@
             <span class="col-acciones">Acciones</span>
           </div>
           <div class="otras-tallas-fila" *ngFor="let ot of otrasTallas">
-            <span class="resumen-valor resumen-valor-strong" data-label="Talla">{{ ot.variante.talla || '—' }}</span>
+            <span class="resumen-valor resumen-valor-strong" data-label="Talla">{{ ot.variante.talla || 'Sin talla' }}</span>
             <span class="resumen-valor" data-label="Almacén / Local" [title]="nombreUbicacion(ot.variante)">{{ nombreUbicacion(ot.variante) }}</span>
             <span class="resumen-valor" data-label="Stock">{{ ot.variante.cantidad || 0 }}</span>
             <span class="resumen-valor" data-label="SKU" [title]="ot.variante.sku || ''">{{ ot.variante.sku || '—' }}</span>
@@ -620,7 +620,7 @@
           <div class="variante-fila variante-fila-resumen" *ngFor="let s of v.stock" style="grid-template-columns: 1fr 2fr 1fr 2fr 2fr;">
             <div class="field-wrap">
               <span class="mobile-field-label">Talla</span>
-              <span class="resumen-valor resumen-valor-strong">{{ v.talla || '—' }}</span>
+              <span class="resumen-valor resumen-valor-strong">{{ v.talla || 'Sin talla' }}</span>
             </div>
             <div class="field-wrap">
               <span class="mobile-field-label">Almacén / Local</span>

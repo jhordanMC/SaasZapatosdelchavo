@@ -154,7 +154,8 @@ export interface ProveedorUpdateInput {
 // ---------------------------------------------------------------------------
 
 export interface VarianteStockInput {
-  talla: string;
+  /** Opcional: productos sin talla (ferretería, tecnología…) van con null. */
+  talla: string | null;
   cantidad: number;
   sku?: string | null;
   codigo_barras: string | null;

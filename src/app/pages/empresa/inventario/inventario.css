@@ -1735,3 +1735,12 @@
   .mgmt-form-row { flex-wrap: wrap; }
   .btn-mgmt-save, .btn-mgmt-cancel { width: 100%; justify-content: center; }
 }
+
+/* Indicador de campo opcional junto a un label (ej. Talla) */
+.label-opcional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.65;
+  font-size: 0.85em;
+}
