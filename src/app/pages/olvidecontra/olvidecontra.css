@@ -245,3 +245,5 @@
   .field { margin-bottom: 8px; }
   .sec-line { margin-top: 8px; }
 }
+
+.recovery-error { color: #EF4444; font-size: 13px; text-align: center; margin: 12px 0; }

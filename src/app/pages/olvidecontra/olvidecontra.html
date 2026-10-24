@@ -39,6 +39,7 @@
                    [(ngModel)]="email" required/>
           </div>
 
+          <p *ngIf="error" class="recovery-error" role="alert">{{ error }}</p>
           <button class="btn-login" type="submit" [class.loading]="loading" [disabled]="loading">
             <span>Enviar enlace</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -69,10 +70,11 @@
         </div>
         <div class="suc-title">¡Revisa tu correo!</div>
         <div class="suc-sub">
-          Enviamos un enlace de recuperación a<br/>
+          Si el correo está registrado, recibirás un enlace en<br/>
           <strong>{{ email }}</strong>
         </div>
 
+        <p *ngIf="error" class="recovery-error" role="alert">{{ error }}</p>
         <button class="btn-sso" type="button" (click)="onResend()" [disabled]="loading">
           <span *ngIf="!loading">Reenviar enlace</span>
           <span *ngIf="loading">Enviando...</span>

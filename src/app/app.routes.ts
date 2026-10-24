@@ -1,3 +1,4 @@
+import { ResetearPasswordComponent } from './pages/resetear-password/resetear-password';
 import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './shared/public-layout/public-layout';
 import { InicioComponent } from './pages/public/inicio/inicio';
@@ -54,6 +55,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [redirigirSiAutenticado] },
   { path: 'verificar-2fa', component: Verificar2faComponent },
   { path: 'olvide-contrasena', component: OlvidecontraComponent },
+  { path: 'resetear-password', component: ResetearPasswordComponent },
   { path: 'acceso-restringido', component: AccesoRestringidoComponent },
 
   // ── Vista admin: un solo layout (sidebar + topbar) para todas las hijas ──
