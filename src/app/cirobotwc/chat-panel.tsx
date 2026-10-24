@@ -36,6 +36,9 @@ const CHIPS_INICIALES_VENDEDOR: ChipInicial[] = [
   chip('Inventario', IconoNavInventario), chip('Ventas', IconoNavVentas), chip('Historial de ventas', IconoHistorial),
   chip('Proformas', IconoProforma), chip('Ticket', IconoTickets), chip('Productos', IconoProductos),
 ];
+const CHIPS_INICIALES_INVENTARIO: ChipInicial[] = [
+  chip('Inventario', IconoNavInventario), chip('Productos', IconoProductos), chip('Ticket', IconoTickets),
+];
 const CHIPS_INICIALES_ADMIN: ChipInicial[] = [
   chip('Ver empresas', IconoNavEmpresas), chip('Suscripciones', IconoSuscripciones), chip('Actividad', IconoActividad), chip('Anuncios', IconoAnuncios),
   chip('Dashboard', IconoDashboard), chip('Tickets', IconoTickets), chip('Reclamaciones', IconoReclamaciones),
@@ -192,7 +195,9 @@ export function ChatPanel({
       ? CHIPS_INICIALES_ADMIN
       : callbacks.rol === 'vendedor'
         ? CHIPS_INICIALES_VENDEDOR
-        : CHIPS_INICIALES_EMPRESA;
+        : callbacks.rol === 'inventario'
+          ? CHIPS_INICIALES_INVENTARIO
+          : CHIPS_INICIALES_EMPRESA;
   const estadoLogo: EstadoVarian = cargando ? 'thinking' : (resultado ?? 'online');
   const estadoTexto = cargando
     ? 'Analizando empresa…'

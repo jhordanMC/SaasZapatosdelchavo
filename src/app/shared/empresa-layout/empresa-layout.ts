@@ -39,6 +39,8 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     // mostraba "Dashboard" sin importar el rol, y el Vendedor terminaba
     // clickeando un link que el guard le rebotaba a /login.
     const esDueño = this.authService.tieneRol('dueño');
+    // El rol Inventario solo ve su vista (las rutas de ventas no lo admiten).
+    const vende = this.authService.tieneRol('dueño', 'vendedor');
 
     this.navItems = computed<SidebarItem[]>(() => {
       this.i18n.lang(); // dependencia reactiva: fuerza recálculo al cambiar idioma
@@ -58,7 +60,7 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
       if (esDueño && puedeVer('catalogo')) {
         base.push({ label: this.i18n.t('NAV.CATALOGO'), route: '/empresa/catalogo', icon: 'catalogo' });
       }
-      if (puedeVer('ventas')) {
+      if (vende && puedeVer('ventas')) {
         base.push({
           label: this.i18n.t('NAV.VENTAS'),
           route: '/empresa/ventas',
@@ -90,6 +92,7 @@ export class EmpresaLayoutComponent implements OnInit, OnDestroy {
     const rol = this.usuario()?.rol;
     if (rol === 'dueño') return this.i18n.t('NAV.ROL_DUENO');
     if (rol === 'vendedor') return this.i18n.t('NAV.ROL_VENDEDOR');
+    if (rol === 'inventario') return this.i18n.t('NAV.ROL_INVENTARIO');
     return this.i18n.t('NAV.ROL_USUARIO');
   }
 

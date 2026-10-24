@@ -355,7 +355,7 @@ export class AuthService {
     const esDueño = actual.rol === 'dueño';
     if (esDueño && this.puedeVerVista('dashboard')) return '/empresa/dashboard';
     if (this.puedeVerVista('inventario')) return '/empresa/inventario';
-    if (this.puedeVerVista('ventas')) return '/empresa/ventas';
+    if (actual.rol !== 'inventario' && this.puedeVerVista('ventas')) return '/empresa/ventas';
     if (esDueño && this.puedeVerVista('finanzas')) return '/empresa/finanzas';
     return null;
   }

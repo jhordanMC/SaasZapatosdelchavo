@@ -131,7 +131,7 @@ export const routes: Routes = [
         path: 'inventario',
         component: InventarioComponent,
         data: { title: 'Inventario', subtitle: 'Productos, tallas y stock por local' },
-        canActivate: [roleGuard('dueño', 'vendedor'), vistaGuard('inventario')],
+        canActivate: [roleGuard('dueño', 'vendedor', 'inventario'), vistaGuard('inventario')],
       },
       {
         path: 'catalogo',

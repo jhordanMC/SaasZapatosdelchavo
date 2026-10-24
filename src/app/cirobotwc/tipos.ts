@@ -32,7 +32,7 @@ export interface UsoIAEmpresa {
 
 export type ContextoCirobot = 'empresa' | 'admin';
 
-export type RolCirobot = 'admin' | 'dueño' | 'vendedor';
+export type RolCirobot = 'admin' | 'dueño' | 'vendedor' | 'inventario';
 
 export interface CirobotCallbacks {
   contexto: ContextoCirobot;

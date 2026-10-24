@@ -23,6 +23,7 @@ const DICT_ES: Record<string, string> = {
   'NAV.CONFIGURACION': 'Configuración',
   'NAV.ROL_DUENO': 'Dueño',
   'NAV.ROL_VENDEDOR': 'Vendedor',
+  'NAV.ROL_INVENTARIO': 'Inventario',
   'NAV.ROL_USUARIO': 'Usuario',
   'NAV.CERRAR_SESION': 'Cerrar sesión',
   'NAV.CERRAR': 'Cerrar',

@@ -62,7 +62,8 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
     const contexto = this.authService.tieneRol('admin') ? 'admin' : 'empresa';
     // Rol solo para que la UI no ofrezca chips que el backend igual le va a negar
     // (el permiso real lo valida el backend por rol y vistas; ver chatbot/mcp/permisos.py).
-    const rol = this.authService.tieneRol('admin') ? 'admin' : this.authService.tieneRol('dueño') ? 'dueño' : 'vendedor';
+    const rol = this.authService.tieneRol('admin') ? 'admin' : this.authService.tieneRol('dueño') ? 'dueño'
+      : this.authService.tieneRol('inventario') ? 'inventario' : 'vendedor';
     await mountCirobot(this.hostRef.nativeElement, {
       contexto,
       rol,

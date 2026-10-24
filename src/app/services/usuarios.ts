@@ -10,7 +10,7 @@ export type EstadoUsuario = 'activo' | 'inactivo' | 'suspendido';
 // core/auth.ts) para que services/usuarios.ts pueda armar VISTAS_POR_ROL
 // sin depender de auth.ts — auth.ts es quien re-exporta este tipo
 // (`export type { RolUsuario }`) para no romper los imports existentes.
-export type RolUsuario = 'admin' | 'dueño' | 'vendedor';
+export type RolUsuario = 'admin' | 'dueño' | 'vendedor' | 'inventario';
 
 // Nombres exactos de los roles de sistema sembrados en el backend
 // (app/scripts/seed_catalogo_rbac.py). Un usuario puede tener varios
@@ -19,6 +19,8 @@ export type RolUsuario = 'admin' | 'dueño' | 'vendedor';
 export function mapearRol(nombresRoles: string[]): RolUsuario {
   if (nombresRoles.includes('Administrador')) return 'admin';
   if (nombresRoles.includes('Dueño de empresa')) return 'dueño';
+  // Con 'Vendedor' también, conserva lo del vendedor (que ya incluye inventario).
+  if (nombresRoles.includes('Inventario') && !nombresRoles.includes('Vendedor')) return 'inventario';
   return 'vendedor';
 }
 
@@ -101,6 +103,9 @@ export const VISTAS_POR_ROL: Record<RolUsuario, PermisoVista[]> = {
   vendedor: [
     { clave: 'inventario', etiqueta: 'Inventario' },
     { clave: 'ventas', etiqueta: 'Ventas' },
+  ],
+  inventario: [
+    { clave: 'inventario', etiqueta: 'Inventario' },
   ],
 };
 
