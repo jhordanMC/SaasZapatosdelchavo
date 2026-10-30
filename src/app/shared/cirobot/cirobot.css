@@ -1,3 +1,145 @@
-/* Sin estilos acá a propósito: el contenido real de Cirobot lo renderiza
-   React con position:fixed (ver cirobotwc/cirobot-estilos.ts, inyectado
-   como <style> global) — este host <div> es solo el punto de montaje. */
+/* El contenido real de Cirobot lo renderiza React con position:fixed (ver
+   cirobotwc/cirobot-estilos.ts, inyectado como <style> global) — #host es
+   solo el punto de montaje. Lo único que vive acá es la animación de carga
+   (agujero negro), que tiene que pintarse ANTES de que llegue ese CSS. */
+
+/* ── Zona: misma caja que .cbot-mascota-wrap (cirobot-estilos.ts) ──
+   Mantener en sincronía con sus medidas y breakpoints: el agujero tiene que
+   quedar justo donde la cámara proyecta la cabeza dentro de ese canvas. */
+.agujero-zona {
+  position: fixed;
+  bottom: -100px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  pointer-events: none;
+  z-index: 9999;
+}
+@media (max-width: 768px) { .agujero-zona { bottom: -115px; right: -60px; } }
+@media (max-width: 480px) { .agujero-zona { bottom: -105px; right: -55px; width: 235px; height: 235px; } }
+@media (max-width: 400px) { .agujero-zona { bottom: -100px; right: -50px; width: 225px; height: 225px; } }
+@media (max-width: 360px) { .agujero-zona { bottom: -95px; right: -45px; width: 215px; height: 215px; } }
+
+/* La cabeza aparece centrada en x y a ~40% de alto del canvas, y mide ~21%
+   de su ancho (cámara en z=2, fov 50, modelo escalado 1.1). */
+.agujero {
+  position: absolute;
+  left: 50%;
+  top: 40.5%;
+  width: 22%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  /* Retraso: si la cabeza llega enseguida, el agujero nunca llega a verse. */
+  animation: agujero-entra 0.35s ease-out 0.15s both;
+}
+.agujero > * {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Halo verde difuso detrás de todo */
+.agujero-resplandor {
+  inset: -45%;
+  background: radial-gradient(circle, rgba(100, 213, 156, 0.38) 0%, rgba(100, 213, 156, 0.12) 38%, transparent 66%);
+  animation: agujero-latido 1.8s ease-in-out infinite;
+}
+
+/* Disco de acreción: elipse inclinada (wrapper) con un degradado cónico que
+   gira adentro (span). Se dibuja dos veces: la mitad de atrás queda detrás
+   del núcleo y la de adelante (clip a la mitad inferior) lo cruza por delante. */
+.agujero-disco {
+  inset: -40%;
+  transform: rotate(-14deg) scaleY(0.34);
+}
+.agujero-disco > span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(127, 224, 171, 0) 0deg,
+    #7fe0ab 50deg,
+    #f2fff8 85deg,
+    #64d59c 120deg,
+    rgba(47, 143, 99, 0) 175deg,
+    #2f8f63 230deg,
+    #b8f5d4 290deg,
+    rgba(127, 224, 171, 0) 360deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 46%, #000 53%, #000 76%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 46%, #000 53%, #000 76%, transparent 100%);
+  animation: agujero-giro 1.1s linear infinite;
+}
+.agujero-disco-frente {
+  clip-path: inset(50% 0 0 0);
+}
+
+/* Anillo de fotones alrededor del horizonte de eventos */
+.agujero-anillo {
+  inset: -10%;
+  background: conic-gradient(from 90deg, #e9fff3, #7fe0ab 25%, rgba(127, 224, 171, 0.15) 50%, #7fe0ab 75%, #e9fff3);
+  -webkit-mask: radial-gradient(closest-side, transparent 80%, #000 86%, #000 93%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 80%, #000 86%, #000 93%, transparent 100%);
+  animation: agujero-giro 2.4s linear infinite reverse;
+}
+
+.agujero-nucleo {
+  inset: 0;
+  background: radial-gradient(circle, #000 0 62%, #04140d 76%, #0b2a1d 100%);
+  box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* Partículas que caen en espiral hacia el centro (el núcleo las tapa al final) */
+.agujero-particula {
+  left: 50%;
+  top: 50%;
+  width: 7%;
+  height: 7%;
+  margin: -3.5% 0 0 -3.5%;
+  background: #c8f8de;
+  box-shadow: 0 0 4px #7fe0ab;
+  animation: agujero-cae 1.6s cubic-bezier(0.5, 0, 0.9, 0.6) infinite;
+  animation-delay: calc(var(--i) * -0.4s);
+}
+
+/* Al llegar la cabeza: se infla un instante y colapsa girando; la cabeza
+   sale en espiral desde ese mismo punto (ver mascota-3d.tsx). */
+.agujero.agujero-colapsa {
+  animation: agujero-colapso 0.5s cubic-bezier(0.55, -0.4, 0.75, 0.35) forwards;
+}
+
+@keyframes agujero-entra {
+  from { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+@keyframes agujero-colapso {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  30% { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0) rotate(220deg); opacity: 0; }
+}
+@keyframes agujero-desvanece {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes agujero-giro {
+  to { transform: rotate(360deg); }
+}
+@keyframes agujero-latido {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes agujero-cae {
+  0% { transform: rotate(calc(var(--i) * 90deg)) translateX(1300%) scale(1); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: rotate(calc(var(--i) * 90deg + 300deg)) translateX(0) scale(0.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agujero { animation: none; }
+  .agujero-resplandor,
+  .agujero-disco > span,
+  .agujero-anillo { animation: none; }
+  .agujero-particula { display: none; }
+  /* Igual tiene que terminar en una animación: su animationend retira el agujero. */
+  .agujero.agujero-colapsa { animation: agujero-desvanece 0.3s ease-out forwards; }
+}

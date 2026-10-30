@@ -9,6 +9,7 @@ import {
 } from './iconos';
 import { VarianLogo, type EstadoVarian } from './varian-logo';
 import { useDictado } from './dictado';
+import type { EstadoMascota } from './mascota-3d';
 import type { CirobotCallbacks, PanelInteligente as PanelInteligenteTipo, UsoIAEmpresa } from './tipos';
 
 interface Mensaje {
@@ -85,6 +86,7 @@ export function ChatPanel({
   onMinimizar,
   onRestaurar,
   onClose,
+  onEstadoMascota,
 }: {
   callbacks: CirobotCallbacks;
   modo: ModoVentana;
@@ -93,6 +95,7 @@ export function ChatPanel({
   onMinimizar: () => void;
   onRestaurar: () => void;
   onClose: () => void;
+  onEstadoMascota?: (estado: EstadoMascota) => void;
 }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [input, setInput] = useState('');
@@ -143,6 +146,14 @@ export function ChatPanel({
     const id = window.setTimeout(() => setResultado(null), 2500);
     return () => window.clearTimeout(id);
   }, [resultado]);
+
+  // La mascota sigue el mismo ciclo que el logo: piensa mientras espera y
+  // "habla" (asiente) los ~2.5s de éxito tras la respuesta.
+  useEffect(() => {
+    onEstadoMascota?.(cargando ? 'pensando' : resultado === 'success' ? 'hablando' : 'reposo');
+  }, [cargando, resultado, onEstadoMascota]);
+
+  useEffect(() => () => onEstadoMascota?.('reposo'), [onEstadoMascota]);
 
   // Carga el cupo al abrir el chat (una vez), sin bloquear la UI si falla
   // o si el host (Angular) no pasó el callback — la barra simplemente no

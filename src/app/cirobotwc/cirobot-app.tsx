@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mascota3D } from './mascota-3d';
+import { Mascota3D, type EstadoMascota } from './mascota-3d';
 import { ChatPanel } from './chat-panel';
 import type { CirobotCallbacks } from './tipos';
 
@@ -14,6 +14,9 @@ export function CirobotApp({ callbacks }: { callbacks: CirobotCallbacks }) {
   const [abierto, setAbierto] = useState(false);
   const [minimizado, setMinimizado] = useState(false);
   const [modo, setModo] = useState<ModoVentana>('flotante');
+  const [estadoMascota, setEstadoMascota] = useState<EstadoMascota>('reposo');
+  // Contador: cada apertura del chat dispara una vez el clip de saludo.
+  const [saludo, setSaludo] = useState(0);
 
   // La mascota tiene 3 estados posibles a resolver con un solo click:
   // cerrado -> abre; abierto-pero-minimizado -> restaura (NO cierra, para
@@ -24,6 +27,7 @@ export function CirobotApp({ callbacks }: { callbacks: CirobotCallbacks }) {
     if (!abierto) {
       setAbierto(true);
       setMinimizado(false);
+      setSaludo((n) => n + 1);
     } else if (minimizado) {
       setMinimizado(false);
     } else {
@@ -42,12 +46,13 @@ export function CirobotApp({ callbacks }: { callbacks: CirobotCallbacks }) {
           onMinimizar={() => setMinimizado(true)}
           onRestaurar={() => setMinimizado(false)}
           onClose={() => setAbierto(false)}
+          onEstadoMascota={setEstadoMascota}
         />
       )}
 
       <div className="cbot-mascota-wrap">
         <div className={`cbot-mascota-visual ${abierto && !minimizado ? 'cbot-mascota-acercada' : ''}`}>
-          <Mascota3D />
+          <Mascota3D estado={estadoMascota} saludo={saludo} onListo={callbacks.onModeloListo} />
         </div>
         <div
           className="cbot-mascota-click"

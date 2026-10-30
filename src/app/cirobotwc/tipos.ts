@@ -43,4 +43,7 @@ export interface CirobotCallbacks {
   // Opcional a propósito: si el host (Angular) no lo pasa, ChatPanel
   // simplemente no muestra la barra de uso en vez de romper.
   onObtenerUsoIA?: () => Promise<UsoIAEmpresa>;
+  // Opcional: avisa cuando la cabeza 3D ya se dibuja (o cuando WebGL falló y
+  // quedó la burbuja estática), para que el host retire su animación de carga.
+  onModeloListo?: () => void;
 }

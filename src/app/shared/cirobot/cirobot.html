@@ -1,1 +1,22 @@
 <div #host></div>
+
+<!-- Hermano de #host, no hijo: React reemplaza el contenido de #host al montarse. -->
+@if (faseAgujero() !== 'oculto') {
+  <div class="agujero-zona" aria-hidden="true">
+    <div
+      class="agujero"
+      [class.agujero-colapsa]="faseAgujero() === 'colapsando'"
+      (animationend)="alTerminarAnimacionAgujero($event)"
+    >
+      <div class="agujero-resplandor"></div>
+      <div class="agujero-disco"><span></span></div>
+      <span class="agujero-particula" style="--i: 0"></span>
+      <span class="agujero-particula" style="--i: 1"></span>
+      <span class="agujero-particula" style="--i: 2"></span>
+      <span class="agujero-particula" style="--i: 3"></span>
+      <div class="agujero-anillo"></div>
+      <div class="agujero-nucleo"></div>
+      <div class="agujero-disco agujero-disco-frente"><span></span></div>
+    </div>
+  </div>
+}

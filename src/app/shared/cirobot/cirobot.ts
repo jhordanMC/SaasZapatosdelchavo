@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, AfterViewInit, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -37,6 +37,12 @@ const VISTA_A_RUTA: Record<string, string> = {
   reclamaciones: '/admin/reclamaciones',
 };
 
+type FaseAgujero = 'girando' | 'colapsando' | 'oculto';
+
+// Si la cabeza llega casi al instante (chunk y .glb ya en caché), no se
+// muestra el agujero: colapsarlo apenas apareció sería un parpadeo.
+const UMBRAL_CARGA_INSTANTANEA_MS = 250;
+
 @Component({
   selector: 'app-cirobot',
   standalone: true,
@@ -47,6 +53,16 @@ const VISTA_A_RUTA: Record<string, string> = {
 export class CirobotComponent implements AfterViewInit, OnDestroy {
   @ViewChild('host', { static: true }) hostRef!: ElementRef<HTMLDivElement>;
 
+  /**
+   * Animación de carga (agujero negro) mientras bajan el chunk de React +
+   * three.js y cirobot.glb. Vive acá, en HTML/CSS de Angular, y no en React
+   * a propósito: este componente se pinta con el layout, mientras que todo
+   * lo de cirobotwc llega por import() dinámico — en un celular con datos
+   * lentos, cualquier loader hecho en React aparecería recién al final.
+   */
+  readonly faseAgujero = signal<FaseAgujero>('girando');
+  private readonly montadoEn = performance.now();
+
   constructor(
     private asistenteService: AsistenteService,
     private router: Router,
@@ -54,6 +70,31 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
   ) {}
 
   async ngAfterViewInit(): Promise<void> {
+    try {
+      await this.montar();
+    } catch (error) {
+      // Sin Cirobot no tiene sentido dejar el agujero girando para siempre.
+      this.faseAgujero.set('oculto');
+      throw error;
+    }
+  }
+
+  alModeloListo(): void {
+    if (this.faseAgujero() !== 'girando') return;
+    const instantaneo = performance.now() - this.montadoEn < UMBRAL_CARGA_INSTANTANEA_MS;
+    this.faseAgujero.set(instantaneo ? 'oculto' : 'colapsando');
+  }
+
+  alTerminarAnimacionAgujero(evento: AnimationEvent): void {
+    // Los hijos tienen animaciones infinitas; solo interesa el colapso del
+    // contenedor. Se busca por fragmento porque Angular renombra los
+    // @keyframes por componente (encapsulación emulada).
+    if (evento.target === evento.currentTarget && /colapso|desvanece/.test(evento.animationName)) {
+      this.faseAgujero.set('oculto');
+    }
+  }
+
+  private async montar(): Promise<void> {
     const { mountCirobot } = await import('../../cirobotwc/cirobot-wrapper');
     // Mismo criterio que el backend (router.py: id_empresa === EMPRESA_ALBA_ID),
     // pero del lado Angular ya viene resuelto en el rol — evita duplicar esa
@@ -70,6 +111,7 @@ export class CirobotComponent implements AfterViewInit, OnDestroy {
       onEnviarMensaje: (texto: string) => this.enviarMensaje(texto),
       onNavegar: (vista: string) => this.navegar(vista),
       onObtenerUsoIA: () => this.obtenerUsoIA(),
+      onModeloListo: () => this.alModeloListo(),
     });
   }
 
